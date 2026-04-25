@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ════════════════════════════════════════════════════════════════
+// PLATFORM-LEVEL MODELS (No tenantId — global data)
+// ════════════════════════════════════════════════════════════════
+
+model PlatformUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("super_admin")
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Tenant {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  legalName   String?
+  taxId       String?
+  logoUrl     String?
+  currency    String   @default("VND")
+  currencySymbol String @default("₫")
+  language    String   @default("vi")
+  timezone    String   @default("Asia/Ho_Chi_Minh")
+  dateFormat  String   @default("DD/MM/YYYY")
+  enabledModules String @default("{}")
+  country     String   @default("VN")
+  eudrCompliant Boolean @default(false)
+  certifications String?
+  plan        String   @default("starter")
+  maxUsers    Int      @default(10)
+  maxFarmers  Int      @default(500)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  farmers     Farmer[]
+  farmLands   FarmLand[]
+  cultivations Cultivation[]
+  hashChainBlocks HashChainBlock[]
+  auditLogs   AuditLog[]
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  color       String?
+  category    String?
+  version     String   @default("1.0.0")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ════════════════════════════════════════════════════════════════
+// TENANT-LEVEL MODELS
+// ════════════════════════════════════════════════════════════════
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  name         String
+  role         String   @default("farmer")
+  phone        String?
+  avatar       String?
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  @@unique([email, tenantId])
+}
+
+model Farmer {
+  id                String   @id @default(cuid())
+  tenantId          String
+  createdBy         String?
+  enrollmentDate    DateTime @default(now())
+  enrollmentPlace   String?
+  farmerCode        String?
+  isCertified       Boolean  @default(false)
+  certificationType String?
+  yearOfICS         String?
+  cooperative       String?
+  fullName          String
+  firstName         String?
+  lastName          String?
+  middleName        String?
+  contactNumber     String
+  farmerPhoto       String?
+  nationalIdType    String?
+  nationalIdNo      String?
+  idProofPhoto      String?
+  ekycConsent       Boolean  @default(false)
+  gender            String?
+  dob               DateTime?
+  age               Int?
+  education         String?
+  maritalStatus     String?
+  yearsOfFarmingExperience Int?
+  email             String?
+  country           String?
+  province          String?
+  district          String?
+  commune           String?
+  village           String?
+  latitude          Float?
+  longitude         Float?
+  creditScore       Float?
+  loanTaken         Boolean  @default(false)
+  loanAmount        Float?
+  smartphoneOwnership Boolean @default(false)
+  gapTrainingAttended Boolean @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
+  farmLands    FarmLand[]
+  cultivations Cultivation[]
+  @@unique([farmerCode, tenantId])
+}
+
+model FarmLand {
+  id              String   @id @default(cuid())
+  tenantId        String
+  farmerId        String
+  createdBy       String?
+  farmName        String
+  plotBlockId     String?
+  totalLandHolding Float?
+  altitude        Float?
+  latitude        Float?
+  longitude       Float?
+  landOwnership   String?
+  soilType        String?
+  waterSource     String?
+  noOfTrees       Int?
+  estYield        Float?
+  childLabourPolicy    Boolean @default(false)
+  minimumWageCompliance Boolean @default(false)
+  ppeAvailable         Boolean @default(false)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  cultivations Cultivation[]
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model Cultivation {
+  id              String   @id @default(cuid())
+  tenantId        String
+  farmerId        String
+  farmLandId      String
+  createdBy       String?
+  farmPlotName    String
+  cultivatedCrop  String?
+  cropVariety     String?
+  cultivationArea Float?
+  sowingDate      DateTime?
+  estYield        String?
+  seedSource      String?
+  seedType        String?
+  seedQuantity    Float?
+  seedCost        Float?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  farmer     Farmer     @relation(fields: [farmerId], references: [id])
+  farmLand   FarmLand   @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model HashChainBlock {
+  id            String   @id @default(cuid())
+  tenantId      String
+  batchId       String
+  blockIndex    Int
+  stage         String
+  data          String
+  dataHash      String
+  previousHash  String
+  blockHash     String
+  timestamp     DateTime @default(now())
+  recordedBy    String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, batchId, blockIndex])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  tenantId    String
+  userId      String?
+  action      String
+  entity      String
+  entityId    String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+}
