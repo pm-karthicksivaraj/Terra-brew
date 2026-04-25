@@ -1,0 +1,1106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ MODULE / TENANT ============
+
+model Module {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users        User[]
+  tenants      Tenant[]
+  farmers      Farmer[]
+  farmLands    FarmLand[]
+  cultivations Cultivation[]
+  coffeeInspections CoffeeInspection[]
+  certAssessments CertAssessment[]
+  cropMasters  CropMaster[]
+  seasonMasters SeasonMaster[]
+  nurseries    Nursery[]
+  landPreparations LandPreparation[]
+  cropMonitorings CropMonitoring[]
+  fertilizerApps FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities HarvestTraceability[]
+  smartContracts SmartContract[]
+  marketplaceListings MarketplaceListing[]
+  saleTransactions    SaleTransaction[]
+  collectionCentres CollectionCentre[]
+  procurementRecords ProcurementRecord[]
+  procurementTransports ProcurementTransport[]
+  processingJobOrders ProcessingJobOrder[]
+  processingStageRecords ProcessingStageRecord[]
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  moduleId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module Module  @relation(fields: [moduleId], references: [id])
+  users  User[]
+}
+
+// ============ USER / AUTH ============
+
+model User {
+  id              String   @id @default(cuid())
+  email           String
+  password        String
+  name            String
+  role            String   @default("farmer")
+  phone           String?
+  avatar          String?
+  isActive        Boolean  @default(true)
+  moduleId        String
+  tenantId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  module      Module        @relation(fields: [moduleId], references: [id])
+  tenant      Tenant?       @relation(fields: [tenantId], references: [id])
+  createdFarmers   Farmer[]  @relation("FarmerCreator")
+  createdFarmLands FarmLand[] @relation("FarmLandCreator")
+  createdCultivations Cultivation[] @relation("CultivationCreator")
+
+  @@unique([email, moduleId])
+}
+
+// ============ S1 - FARMER REGISTRATION ============
+
+model Farmer {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  createdBy         String?
+
+  // Registration
+  enrollmentDate    DateTime @default(now())
+  enrollmentPlace   String?
+  farmerCode        String?
+  isCertified       Boolean  @default(false)
+  certificationType String?
+  yearOfICS         String?
+  cooperative       String?
+
+  // Personal Information
+  fullName          String
+  firstName         String?
+  lastName          String?
+  middleName        String?
+  contactNumber     String
+  farmerPhoto       String?
+  nationalIdType    String?
+  nationalIdNo      String?
+  idProofPhoto      String?
+  ekycConsent       Boolean  @default(false)
+  gender            String?
+  dob               DateTime?
+  age               Int?
+  education         String?
+  maritalStatus     String?
+  guardianName      String?
+  ethnicGroup       String?
+  primaryLanguage   String?
+  yearsOfFarmingExperience Int?
+  email             String?
+
+  // Contact / Address
+  country           String?
+  province          String?
+  district          String?
+  commune           String?
+  village           String?
+  zipCode           String?
+  latitude          Float?
+  longitude         Float?
+
+  // Family
+  spouseName        String?
+  noOfFamilyMembers Int?
+  childrenBelow18Male Int?
+  childrenBelow18Female Int?
+  schoolGoingMale   Int?
+  schoolGoingFemale Int?
+
+  // Assets
+  housingOwnership  String?
+  houseType         String?
+  consumerElectronics String?
+  vehicles          String?
+  smartphoneOwnership Boolean?
+  solarPanelInstalled Boolean?
+
+  // Finance
+  accountType       String?
+  accountNumber     String?
+  bankName          String?
+  branchDetails     String?
+  sortCodeSwift     String?
+  annualFarmIncome  Float?
+  offFarmIncomeSources String?
+  taxId             String?
+
+  // Loans
+  loanTaken         Boolean  @default(false)
+  loanTakenFrom     String?
+  loanAmount        Float?
+  loanPurpose       String?
+  loanInterest      Float?
+  loanInterestPeriod String?
+  loanSecurity      Boolean?
+  loanRepaymentAmt  Float?
+  loanRepaymentDate DateTime?
+  repaymentTrackRecord String?
+
+  // Insurance (expanded)
+  lifeInsurance         Boolean @default(false)
+  lifeInsProvider       String?
+  lifeInsAmount         Float?
+  lifeInsStartDate      DateTime?
+  lifeInsEndDate        DateTime?
+  healthInsurance       Boolean @default(false)
+  healthInsProvider     String?
+  healthInsAmount       Float?
+  healthInsStartDate    DateTime?
+  healthInsEndDate      DateTime?
+  cropInsurance         Boolean @default(false)
+  cropInsProvider       String?
+  cropInsCrops          String?
+  cropInsAreaHa         Float?
+  cropInsStartDate      DateTime?
+  cropInsEndDate        DateTime?
+  socialInsurance       Boolean @default(false)
+  socialInsProvider     String?
+  socialInsStartDate    DateTime?
+  socialInsEndDate      DateTime?
+  otherInsuranceDetails String?
+
+  // Farm Equipment (JSON array)
+  farmEquipmentsJson    String?
+
+  // Animal Husbandry (JSON array)
+  animalHusbandryJson   String?
+
+  // Training & Compliance
+  gapTrainingAttended   Boolean @default(false)
+  trainingDate          DateTime?
+  trainingProvider      String?
+  trainingCertificate   String?
+
+  creditScore       Float?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  creator      User?       @relation("FarmerCreator", fields: [createdBy], references: [id])
+  farmLands    FarmLand[]
+  cultivations Cultivation[]
+  coffeeInspections CoffeeInspection[]
+  certAssessments CertAssessment[]
+  nurseries    Nursery[]
+  landPreparations LandPreparation[]
+  cropMonitorings CropMonitoring[]
+  fertilizerApps FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities HarvestTraceability[]
+  procurementRecords ProcurementRecord[]
+}
+
+// ============ S2 - FARM LAND CREATION ============
+
+model FarmLand {
+  id              String   @id @default(cuid())
+  moduleId        String
+  tenantId        String?
+  farmerId        String
+  createdBy       String?
+
+  // Field / Farm Information
+  farmName        String
+  plotBlockId     String?
+  totalLandHolding Float?
+  altitude        Float?
+  agroEcologicalZone String?
+  latitude        Float?
+  longitude       Float?
+  farmBoundaryPlot String?
+  eudrGeojson     String?
+  farmPhoto       String?
+  landSurveyNo    String?
+  redBookLandTitle String?
+  landOwnership   String?
+  approachRoad    String?
+  landTopology    String?
+  landGradient    String?
+  landDocument    String?
+  waterSource     String?
+  powerSource     String?
+
+  // Soil & Irrigation
+  fertilityStatus String?
+  soilType        String?
+  irrigationSource String?
+  irrigationType  String?
+  noOfTrees       Int?
+  shadeTreeSpecies String?
+  shadeTreeDensity Int?
+  shadeTreeCover  Int?
+  bufferZoneDistanceToWater Float?
+
+  // Farm Labour
+  fullTimeWorkers Int?
+  partTimeWorkers Int?
+  seasonalWorkers Int?
+  familyWorkers   Int?
+  childLabourPolicy    Boolean @default(false)
+  minimumWageCompliance Boolean @default(false)
+  ppeAvailable         Boolean @default(false)
+
+  // Conversion Information
+  lastChemicalAppDate DateTime?
+  conventionalLands Float?
+  fallowPastureLand Float?
+  previousCropHistory String?
+  conventionalCrops String?
+  estYield        Float?
+
+  conversionCertType String?
+  currentConversionStatus String?
+  conversionDate     DateTime?
+  inspectorName      String?
+  qualified          Boolean?
+  conversionRemarks  String?
+
+  // Soil Analysis header
+  soilCollectionDate DateTime?
+  soilLabName        String?
+  soilLabTestDate    DateTime?
+  soilResultDate     DateTime?
+  soilReportUpload   String?
+  soilSamplesInfo    String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  creator      User?       @relation("FarmLandCreator", fields: [createdBy], references: [id])
+  cultivations Cultivation[]
+  soilAnalysis SoilAnalysis[]
+  nurseries    Nursery[]
+  landPreparations LandPreparation[]
+  cropMonitorings CropMonitoring[]
+  fertilizerApps FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities HarvestTraceability[]
+  procurementRecords ProcurementRecord[]
+}
+
+model SoilAnalysis {
+  id               String   @id @default(cuid())
+  farmLandId       String
+  criteria         String?
+  criteriaValue    String?
+  unit             String?
+  minPermissible   String?
+  maxPermissible   String?
+  organicMatter    Float?
+  heavyMetals      String?
+  createdAt        DateTime @default(now())
+
+  farmLand FarmLand @relation(fields: [farmLandId], references: [id], onDelete: Cascade)
+}
+
+// ============ S2a - CULTIVATION CREATION ============
+
+model Cultivation {
+  id              String   @id @default(cuid())
+  moduleId        String
+  tenantId        String?
+  farmerId        String
+  farmLandId      String
+  createdBy       String?
+
+  // Cultivation Information
+  farmPlotName    String
+  plotBlockId     String?
+  cropCategory    String?
+  intercroppingSpecies String?
+  harvestSeason   String?
+  cultivatedCrop  String?
+  cropVariety     String?
+  coffeeSpecies   String?
+  cultivationArea Float?
+  plantingSpacing Float?
+  treeDensity     Int?
+  sowingDate      DateTime?
+  cropCalendar    String?
+  estYield        String?
+  intendedProcessingMethod String?
+  irrigationMethod String?
+  shadeCover      Int?
+  latitude        Float?
+  longitude       Float?
+  photo           String?
+
+  // Seed Information
+  seedSource      String?
+  nurseryId       String?
+  isSeedTreated   Boolean  @default(false)
+  treatmentDetails String?
+  seedType        String?
+  seedQuantity    Float?
+  seedPrice       Float?
+  seedCost        Float?
+  sowingType      String?
+  sowingChargeBy  String?
+  sowingCharges   Float?
+  sowingCost      Float?
+
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  module     Module     @relation(fields: [moduleId], references: [id])
+  farmer     Farmer     @relation(fields: [farmerId], references: [id])
+  farmLand   FarmLand   @relation(fields: [farmLandId], references: [id])
+  creator    User?      @relation("CultivationCreator", fields: [createdBy], references: [id])
+  harvests   Harvest[]
+  nurseries  Nursery[]
+  landPreparations LandPreparation[]
+  cropMonitorings CropMonitoring[]
+  fertilizerApps FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities HarvestTraceability[]
+  smartContracts SmartContract[]
+  coffeeInspections CoffeeInspection[]
+  certAssessments CertAssessment[]
+  procurementRecords ProcurementRecord[]
+}
+
+// ============ HARVEST & PROCESSING ============
+
+model Harvest {
+  id              String   @id @default(cuid())
+  cultivationId   String
+  harvestDate     DateTime?
+  harvestQty      Float?
+  unit            String?
+  quality         String?
+  processingMethod String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  cultivation Cultivation @relation(fields: [cultivationId], references: [id], onDelete: Cascade)
+  lots        Lot[]
+}
+
+// ============ SUPPLY CHAIN / LOT TRACEABILITY ============
+
+model Lot {
+  id              String   @id @default(cuid())
+  lotCode         String   @unique
+  harvestId       String
+
+  processingDate  DateTime?
+  millName        String?
+  exportDate      DateTime?
+  exporterName    String?
+  importerName    String?
+  roasterName     String?
+  destination     String?
+  qrCode          String?
+  status          String   @default("processing")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  harvest Harvest @relation(fields: [harvestId], references: [id])
+}
+
+// ============ CROP / SEASON MASTERS ============
+
+model CropMaster {
+  id        String   @id @default(cuid())
+  moduleId  String
+  name      String
+  category  String?
+  duration  Int?
+  expExpensePerHa Float?
+  expIncomePerHa  Float?
+  expYieldPerHa   Float?
+  climateZone     String?
+  waterRequirement String?
+
+  module    Module     @relation(fields: [moduleId], references: [id])
+  varieties CropVariety[]
+
+  @@unique([name, moduleId])
+}
+
+model CropVariety {
+  id        String   @id @default(cuid())
+  cropId    String
+  name      String
+  cycleDays Int?
+  maturityType String?
+  yieldPotential String?
+
+  crop      CropMaster @relation(fields: [cropId], references: [id], onDelete: Cascade)
+
+  @@unique([name, cropId])
+}
+
+model SeasonMaster {
+  id        String   @id @default(cuid())
+  moduleId  String
+  name      String
+  startDate DateTime?
+  endDate   DateTime?
+
+  module    Module     @relation(fields: [moduleId], references: [id])
+
+  @@unique([name, moduleId])
+}
+
+// ============ S3 - PRE-HARVEST & NURSERY MANAGEMENT ============
+
+model Nursery {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  nurseryId         String   @unique
+  nurseryCapacity   Int?
+  coffeeVariety     String?
+  coffeeSpecies     String?
+  rootstockType     String?
+  shadingConditions Int?
+  sowingDate        DateTime?
+  germinationRate   Float?
+  seedlingHealth    String?  @default("Good")
+  transplantDate    DateTime?
+  nurseryGpsLat     Float?
+  nurseryGpsLng     Float?
+  shadingMethod     String?
+  nurseryLossCount  Int?
+  survivalRate      Float?
+
+  wateringSchedule  String?
+  fertilizerApp     String?
+  pestDiseaseChecks String?
+  photoDoc          String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S4 - LAND PREPARATION & PLANTING ============
+
+model LandPreparation {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  // Land Preparation
+  eventDate         DateTime?
+  plotBlockId       String?
+  activity          String?  @default("Plowing")
+  implementsUsed    String?
+  compostApplied    Boolean  @default(false)
+  compostType       String?
+  compostQuantity   Float?
+  labourCost        Float?
+  photoCapture      String?
+
+  // Planting
+  plantingDate      DateTime?
+  plantingPlotBlockId String?
+  gpsPlotLat        Float?
+  gpsPlotLng        Float?
+  plantingMethod    String?  @default("Hole Planting")
+  seedlingAge       Int?
+  plantsPerHa       Int?
+  spacing           String?
+  shadeTreePlanted  Boolean  @default(false)
+  shadeTreeSpecies  String?
+  shadeTreesPerHa   Int?
+  soilTypeAtPlanting String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S5 - CROP MONITORING & ALERTS ============
+
+model CropMonitoring {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  // Field Visit
+  visitDate         DateTime?
+  plotBlockId       String?
+  coffeeTreeAge     Int?
+  growthStage       String?
+  plantHeight       Float?
+  canopyCover       Float?
+  leafColorIndex    String?  @default("Green")
+  soilMoisture      String?  @default("Adequate")
+  irrigationStatus  String?
+  ndviIndex         Float?
+  observationGpsLat Float?
+  observationGpsLng Float?
+  weatherConditions String?
+
+  // Stress & Pests
+  pestInfestation   Boolean  @default(false)
+  pestType          String?
+  diseaseSymptoms   Boolean  @default(false)
+  diseaseType       String?
+  recommendation    String?
+  alertTriggered    Boolean  @default(false)
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S6 - FERTILIZER & NUTRIENT MANAGEMENT ============
+
+model FertilizerApplication {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  // Nutrient Planning
+  soilTestDate      DateTime?
+  ph                String?
+  nitrogen          String?
+  phosphorus        String?
+  potassium         String?
+  organicMatter     Float?
+
+  // Application
+  applicationDate   DateTime?
+  plotBlockId       String?
+  fertilizerType    String?  @default("Chemical")
+  organicCertFlag   Boolean  @default(false)
+  product           String?
+  dosePerHa         String?
+  appliedQty        String?
+  costPerUnit       Float?
+  totalCost         Float?
+  labourCost        Float?
+  applicationMethod String?  @default("Broadcasting")
+  weatherAtApp      String?
+  photo             String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S7 - PEST & DISEASE MANAGEMENT ============
+
+model PestDiseaseManagement {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  // Scouting
+  scoutingDate      DateTime?
+  plotBlockId       String?
+  pestIdentified    Boolean  @default(false)
+  pestType          String?
+  pestDensity       String?
+  diseaseIdentified Boolean  @default(false)
+  diseaseType       String?
+  severityLevel     String?  @default("Medium")
+  weatherConditions String?
+
+  // Treatment
+  treatmentDate     DateTime?
+  treatmentType     String?  @default("Chemical")
+  product           String?
+  dose              String?
+  phiDays           Int?
+  reiHours          Int?
+  windSpeed         String?
+  rainForecast24h   Boolean  @default(false)
+  bufferZoneRespected Boolean @default(false)
+  equipmentUsed     String?  @default("Knapsack")
+  laborCost         Float?
+  totalCost         Float?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S8 - HARVEST & POST-HARVEST TRACEABILITY ============
+
+model HarvestTraceability {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String
+  farmerId          String
+  farmLandId        String
+
+  // Harvest Planning
+  plannedHarvestDate DateTime?
+  plotBlockId       String?
+  coffeeVariety     String?
+  estimatedYield    String?
+  actualHarvestDate DateTime?
+  harvestMethod     String?  @default("Selective Picking")
+  harvestEquipment  String?
+  fieldMoisture     String?
+  cherryRipeness    Float?
+  harvestLabourCost Float?
+
+  // Yield Recording
+  sampleWeight      Float?
+  sampleArea        Float?
+  sampleYield       Float?
+  estimatedYieldPerHa Float?
+
+  // Post-Harvest QC
+  processingMethod  String?
+  dryingMethod      String?
+  dryingDurationDays Int?
+  targetMoisture    Float?
+  moistureContent   Float?
+  defectiveBeans    Float?
+  foreignMatter     Float?
+  cupScore          Float?
+
+  // Traceability Batch
+  batchId           String   @unique
+  coffeeVarietyAtBatch String?
+  processingStage   String?  @default("Harvested")
+  batchTimestamp    DateTime @default(now())
+  location          String?  @default("Farm")
+  actor             String?  @default("Farmer")
+  batchNotes        String?
+  batchPhotos       String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module      @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand    @relation(fields: [farmLandId], references: [id])
+}
+
+// ============ S9 - CERTIFICATION & SMART CONTRACTS ============
+
+model SmartContract {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String?
+
+  contractId        String   @unique
+  buyer             String?
+  farmerId          String?
+  batchId           String?
+  quantity          Float?
+  pricePerKg        Float?
+  paymentTerms      String?
+  paymentTriggerCondition String?
+  contractDate      DateTime?
+  status            String   @default("Open")
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation? @relation(fields: [cultivationId], references: [id])
+}
+
+// ============ S10 - MARKETPLACE & SALES ============
+
+model MarketplaceListing {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+
+  listingId         String   @unique
+  batchId           String?
+  coffeeVariety     String?
+  processingMethod  String?
+  cupScore          Float?
+  certificationLabels String?
+  listingDate       DateTime @default(now())
+  availableQty      Float?
+  pricePerKg        Float?
+  priceValidUntil   DateTime?
+  buyerRequests     String?
+
+  transactions      SaleTransaction[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+}
+
+model SaleTransaction {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+
+  transactionId     String   @unique
+  listingId         String
+  dateOfSale        DateTime?
+  quantitySold      Float?
+  totalAmount       Float?
+  paymentStatus     String   @default("Pending")
+  costOfProduction  Float?
+  grossMargin       Float?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module   Module            @relation(fields: [moduleId], references: [id])
+  listing  MarketplaceListing @relation(fields: [listingId], references: [id])
+}
+
+// ============ S11 - CERTIFICATION ASSESSMENT (3-Tier Scoring) ============
+
+model CertAssessment {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String?
+  farmerId          String?
+  farmLandId        String?
+
+  assessmentId      String   @unique
+  previousAssessmentId String?
+  certificationStandard String?
+  assessmentDate    DateTime @default(now())
+  assessorName      String?
+  gpsAtAssessmentLat Float?
+  gpsAtAssessmentLng Float?
+  farmManagementPlanDoc String?
+
+  // 11 Category scores stored as JSON: [{question, score, maxScore, status}]
+  cat1FarmManagement       String?
+  cat2EnvironmentalProtection String?
+  cat3SoilManagement       String?
+  cat4PestDisease          String?
+  cat5FertilizerUse        String?
+  cat6HarvestPostHarvest   String?
+  cat7WorkerWelfare        String?
+  cat8CommunityRelations   String?
+  cat9Training             String?
+  cat10UsdaOrganic         String?
+  cat11ClimateCarbon       String?
+
+  // Outcome
+  certificationOutcome String?
+  totalScorePercentage Float?
+  scoreBreakdown       String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation? @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer?      @relation(fields: [farmerId], references: [id])
+}
+
+// ============ S12 - COFFEE INSPECTION & AUDIT ============
+
+model CoffeeInspection {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  cultivationId     String?
+  farmerId          String?
+
+  // === Certification Details ===
+  inspectionId      String   @unique
+  previousCertificationId String?
+  certificationType String?  @default("Organic")
+  certifyingBody    String?
+  certificateNo     String?
+  certStatus        String?  @default("Pending")
+  auditDate         DateTime?
+  certIssueDate     DateTime?
+  certExpiryDate    DateTime?
+  auditorName       String?
+  complianceStatus  String?  @default("Compliant")
+  auditReport       String?
+
+  // === Inspection / Audit Details ===
+  inspectionDate    DateTime @default(now())
+  inspectorName     String?
+  inspectorOrganisation String?
+  inspectionType    String?  @default("Field")
+  inspectionScope   String?
+  inspectionGpsLat  Float?
+  inspectionGpsLng  Float?
+  observations      String?
+  inspectionStatus  String?  @default("Open")
+
+  // === Non-Conformance ===
+  nonConformanceIdentified Boolean @default(false)
+  nonConformanceDetails    String?
+  nonConformanceCategory   String?
+  correctiveActions        String?
+  actionDueDate            DateTime?
+
+  // === Follow-up ===
+  followUpDate      DateTime?
+  followUpFindings  String?
+  photos            String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation? @relation(fields: [cultivationId], references: [id])
+  farmer       Farmer?      @relation(fields: [farmerId], references: [id])
+}
+
+// ============ S13 - PROCUREMENT ============
+
+model CollectionCentre {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+
+  centreId          String   @unique
+  centreName        String
+  centreGpsLat      Float?
+  centreGpsLng      Float?
+  province          String?
+  district          String?
+  commune           String?
+  managerName       String
+  contactNumber     String
+  storageCapacityKg Int?
+  scaleType         String?
+  scaleLastCalibrationDate DateTime?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  procurementRecords ProcurementRecord[]
+}
+
+model ProcurementRecord {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+
+  procurementId     String   @unique
+  procurementDate   DateTime @default(now())
+  collectionCentreId String?
+  cultivationId     String?
+  farmerId          String?
+  farmLandId        String?
+  batchId           String   @unique
+
+  coffeeType        String?
+  coffeeVariety     String?
+  grossWeight       Float?
+  tareWeight        Float?
+  netWeight         Float?
+  moistureContentAtGate Float?
+  moistureDeduction Float?
+  adjustedNetWeight Float?
+  cherryRipenessGrade String?
+  defects           Float?
+  purchasePricePerKg Float?
+  totalPurchaseAmount  Float?
+  priceBasis        String?
+  certPremiumApplied Float?
+  paymentMethod     String?
+  paymentStatus     String   @default("Pending")
+  paymentDate       DateTime?
+  receiptVoucherNo  String?
+  weighingPhoto     String?
+  samplePhoto       String?
+  notes             String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  cultivation  Cultivation? @relation(fields: [cultivationId], references: [id])
+  collectionCentre CollectionCentre? @relation(fields: [collectionCentreId], references: [id])
+  farmer       Farmer?      @relation(fields: [farmerId], references: [id])
+  farmLand     FarmLand?    @relation(fields: [farmLandId], references: [id])
+  transport    ProcurementTransport?
+}
+
+model ProcurementTransport {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+  procurementRecordId String   @unique
+
+  transportId       String   @unique
+  departureDateTime DateTime?
+  arrivalDateTime   DateTime?
+  vehiclePlateNo    String?
+  driverName        String?
+  transportRoute    String?
+  transportCost     Float?
+  temperatureDuringTransport Float?
+  receivedAtPlantKg Float?
+  weightVariance    Float?
+  deliveryReceiptUpload String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+  procurementRecord ProcurementRecord @relation(fields: [procurementRecordId], references: [id])
+}
+
+// ============ S14a - PROCESSING STAGE RECORDS (Individual Stage CRUD) ============
+
+model ProcessingStageRecord {
+  id          String   @id @default(cuid())
+  moduleId    String
+  batchId     String
+  stageType   String
+  stageData   String
+  notes       String?
+  recordedBy  String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module      Module   @relation(fields: [moduleId], references: [id])
+
+  @@index([moduleId, stageType])
+  @@index([batchId])
+}
+
+// ============ S14 - PROCESSING (11-Stage Pipeline) ============
+
+model ProcessingJobOrder {
+  id                String   @id @default(cuid())
+  moduleId          String
+  tenantId          String?
+
+  jobOrderId        String   @unique
+  processingDate    DateTime @default(now())
+  batchIdInput      String?
+  coffeeTypeInput   String?
+  coffeeVarietyInput String?
+  inputQuantityKg   Float?
+  processingMethod  String?
+  targetOutputProduct String?
+  operatorName      String?
+  plantFacilityName String?
+
+  // 11 Processing Stages stored as JSON objects
+  stage1Cleaning    String?
+  stage2Depulping   String?
+  stage3Fermentation String?
+  stage4Washing     String?
+  stage5Drying      String?
+  stage6Hulling     String?
+  stage7Grading     String?
+  stage8Blending    String?
+  stage9Roasting    String?
+  stage10Grinding   String?
+  stage11Packaging  String?
+
+  // QC & Yield Summary
+  inputWeightKg     Float?
+  finalOutputWeightKg Float?
+  overallOutturn    Float?
+  totalProcessingCost Float?
+  costPerKg         Float?
+  finalMoistureContent Float?
+  cupScore          Float?
+  cuppingNotes      String?
+  qcApprovedBy      String?
+  qcApprovalDate    DateTime?
+  qcReportUpload    String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  module       Module       @relation(fields: [moduleId], references: [id])
+}
