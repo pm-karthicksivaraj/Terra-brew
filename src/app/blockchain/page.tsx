@@ -7,11 +7,16 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, Link2, Search, Loader2,
   ShieldCheck, ShieldX, ArrowDown, CheckCircle2, XCircle,
+  Anchor, ExternalLink, Link as LinkIcon, Box, Calendar, Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 
@@ -35,6 +40,22 @@ interface VerificationResult {
   message: string
 }
 
+interface AnchorData {
+  id?: string
+  batchId?: string
+  blockIndex?: number
+  merkleRoot?: string
+  blockCount?: number
+  firstBlockHash?: string
+  lastBlockHash?: string
+  txHash?: string
+  network?: string
+  blockNumber?: number
+  anchorBlockHash?: string
+  anchoredAt?: string
+  createdAt?: string
+}
+
 function truncateHash(hash: string, len = 8): string {
   if (!hash) return '-'
   return `${hash.slice(0, len)}...${hash.slice(-len)}`
@@ -51,7 +72,24 @@ export default function BlockchainPage() {
   const [verifying, setVerifying] = useState(false)
   const [searched, setSearched] = useState(false)
 
+  // On-chain anchor states
+  const [anchoring, setAnchoring] = useState(false)
+  const [anchorStatus, setAnchorStatus] = useState<{ anchored: boolean; anchor: AnchorData | null } | null>(null)
+  const [showAnchorDialog, setShowAnchorDialog] = useState(false)
+
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  const checkAnchorStatus = useCallback(async (batch: string) => {
+    try {
+      const res = await fetch(`/api/on-chain/anchor?batchId=${encodeURIComponent(batch)}`)
+      const data = await res.json()
+      if (data.success) {
+        setAnchorStatus(data.data)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const fetchChain = useCallback(async () => {
     if (!batchId.trim()) {
@@ -61,11 +99,14 @@ export default function BlockchainPage() {
     try {
       setLoading(true)
       setSearched(true)
+      setAnchorStatus(null)
       const res = await fetch(`/api/hash-chain?batchId=${encodeURIComponent(batchId.trim())}`)
       const data = await res.json()
       if (data.success) {
         setBlocks(data.data.blocks)
         setVerification(data.data.verification)
+        // Check anchor status after blocks are loaded
+        checkAnchorStatus(batchId.trim())
       } else {
         toast.error(data.error || t('Lỗi khi tải', 'Error loading'))
         setBlocks([])
@@ -78,7 +119,7 @@ export default function BlockchainPage() {
     } finally {
       setLoading(false)
     }
-  }, [batchId, t])
+  }, [batchId, t, checkAnchorStatus])
 
   const verifyChain = useCallback(async () => {
     if (!batchId.trim()) return
@@ -102,11 +143,40 @@ export default function BlockchainPage() {
     }
   }, [batchId, t])
 
+  const handleAnchor = useCallback(async () => {
+    if (!batchId.trim()) return
+    try {
+      setAnchoring(true)
+      const res = await fetch('/api/on-chain/anchor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId: batchId.trim() }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(t('Đã neo trên chuỗi thành công!', 'Anchored on-chain successfully!'))
+        // Refresh anchor status
+        checkAnchorStatus(batchId.trim())
+      } else {
+        toast.error(data.error || t('Lỗi khi neo trên chuỗi', 'Anchoring error'))
+      }
+    } catch {
+      toast.error(t('Lỗi kết nối khi neo', 'Connection error during anchoring'))
+    } finally {
+      setAnchoring(false)
+      setShowAnchorDialog(false)
+    }
+  }, [batchId, t, checkAnchorStatus])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       fetchChain()
     }
   }
+
+  // Determine if "Anchor On-Chain" button should be shown
+  const hasOnChainAnchorStage = blocks.some(b => b.stage === 'on_chain_anchor')
+  const showAnchorButton = blocks.length > 0 && !hasOnChainAnchorStage
 
   if (status === 'loading') {
     return (
@@ -144,8 +214,8 @@ export default function BlockchainPage() {
         </div>
 
         {/* Search */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="relative flex-1 max-w-lg">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="relative flex-1 max-w-lg min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
             <Input
               value={batchId}
@@ -174,6 +244,17 @@ export default function BlockchainPage() {
               {t('Xác minh chuỗi', 'Verify Chain')}
             </Button>
           )}
+          {showAnchorButton && (
+            <Button
+              onClick={() => setShowAnchorDialog(true)}
+              disabled={anchoring}
+              variant="outline"
+              className="gap-2 rounded-xl border-amber-400 text-amber-700 hover:bg-amber-50 bg-amber-50/50"
+            >
+              {anchoring ? <Loader2 className="w-4 h-4 animate-spin" /> : <Anchor className="w-4 h-4" />}
+              {t('Neo trên chuỗi', 'Anchor On-Chain')}
+            </Button>
+          )}
         </div>
 
         {/* Verification Result Banner */}
@@ -183,7 +264,7 @@ export default function BlockchainPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className={`mb-6 p-4 rounded-2xl flex items-center gap-3 ${
+              className={`mb-4 p-4 rounded-2xl flex items-center gap-3 ${
                 verification.valid
                   ? 'bg-green-50 border border-green-200'
                   : 'bg-red-50 border border-red-200'
@@ -208,6 +289,177 @@ export default function BlockchainPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Anchor Status Banner */}
+        <AnimatePresence>
+          {anchorStatus && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="mb-6"
+            >
+              {anchorStatus.anchored && anchorStatus.anchor ? (
+                <div className="p-4 rounded-2xl bg-green-50 border border-green-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                      <Anchor className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">
+                        {t('Đã neo trên chuỗi', 'Anchored On-Chain')}
+                      </p>
+                      <p className="text-xs text-green-600">
+                        {t('Dữ liệu đã được xác nhận trên blockchain', 'Data has been confirmed on the blockchain')}
+                      </p>
+                    </div>
+                    <Badge className="bg-green-100 text-green-700 text-[10px] border-0 ml-auto">
+                      {anchorStatus.anchor.network || 'sepolia'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* Tx Hash */}
+                    {anchorStatus.anchor.txHash && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <LinkIcon className="w-3 h-3" />
+                          {t('Tx Hash', 'Tx Hash')}
+                        </p>
+                        <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
+                          {truncateHash(anchorStatus.anchor.txHash, 14)}
+                        </p>
+                      </div>
+                    )}
+                    {/* Merkle Root */}
+                    {anchorStatus.anchor.merkleRoot && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <Box className="w-3 h-3" />
+                          {t('Merkle Root', 'Merkle Root')}
+                        </p>
+                        <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
+                          {truncateHash(anchorStatus.anchor.merkleRoot, 14)}
+                        </p>
+                      </div>
+                    )}
+                    {/* Block Number */}
+                    {anchorStatus.anchor.blockNumber != null && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <Box className="w-3 h-3" />
+                          {t('Số khối', 'Block Number')}
+                        </p>
+                        <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1">
+                          {anchorStatus.anchor.blockNumber.toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                    {/* Network */}
+                    {anchorStatus.anchor.network && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <Network className="w-3 h-3" />
+                          {t('Mạng', 'Network')}
+                        </p>
+                        <p className="text-[10px] text-green-800 bg-green-100/60 rounded-lg px-2 py-1 capitalize">
+                          {anchorStatus.anchor.network}
+                        </p>
+                      </div>
+                    )}
+                    {/* Anchored At */}
+                    {anchorStatus.anchor.anchoredAt && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {t('Thời gian neo', 'Anchored At')}
+                        </p>
+                        <p className="text-[10px] text-green-800 bg-green-100/60 rounded-lg px-2 py-1">
+                          {new Date(anchorStatus.anchor.anchoredAt).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    )}
+                    {/* Anchor Block Hash */}
+                    {anchorStatus.anchor.anchorBlockHash && (
+                      <div className="space-y-0.5">
+                        <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
+                          <ShieldCheck className="w-3 h-3" />
+                          {t('Băm khối neo', 'Anchor Block Hash')}
+                        </p>
+                        <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
+                          {truncateHash(anchorStatus.anchor.anchorBlockHash, 14)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <Anchor className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      {t('Chưa được neo trên chuỗi', 'Not yet anchored on-chain')}
+                    </p>
+                    <p className="text-xs text-amber-600">
+                      {t('Dữ liệu chuỗi băm chưa được xác nhận trên blockchain. Nhấn "Neo trên chuỗi" để xác nhận.', 'Hash chain data has not been confirmed on the blockchain. Click "Anchor On-Chain" to confirm.')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Anchor Confirmation Dialog */}
+        <AlertDialog open={showAnchorDialog} onOpenChange={setShowAnchorDialog}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-coffee-900">
+                <Anchor className="w-5 h-5 text-amber-600" />
+                {t('Xác nhận neo trên chuỗi', 'Confirm On-Chain Anchoring')}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-coffee-600">
+                {t(
+                  `Bạn có chắc chắn muốn neo dữ liệu của lô "${batchId}" lên blockchain? Hành động này không thể hoàn tác và sẽ ghi dữ liệu Merkle root lên mạng blockchain.`,
+                  `Are you sure you want to anchor the data for batch "${batchId}" on the blockchain? This action cannot be undone and will record the Merkle root on the blockchain network.`
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-2 p-3 rounded-xl bg-coffee-50 border border-coffee-100">
+              <p className="text-[10px] font-bold text-coffee-500 uppercase mb-1">{t('Mã lô', 'Batch ID')}</p>
+              <p className="text-sm text-coffee-800 font-mono font-bold">{batchId}</p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl border-coffee-200 text-coffee-600 hover:bg-coffee-50">
+                {t('Hủy', 'Cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleAnchor}
+                disabled={anchoring}
+                className="rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white gap-2"
+              >
+                {anchoring ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('Đang neo...', 'Anchoring...')}
+                  </>
+                ) : (
+                  <>
+                    <Anchor className="w-4 h-4" />
+                    {t('Xác nhận neo', 'Confirm Anchor')}
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Empty State */}
         {!searched && blocks.length === 0 && (

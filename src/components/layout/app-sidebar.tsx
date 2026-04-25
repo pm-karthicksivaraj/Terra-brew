@@ -9,7 +9,7 @@ import {
   TreePine, Tractor, Activity, FlaskConical, Shield,
   Wheat, Truck, Factory,
   Award, ClipboardCheck, FileText, Store,
-  UserCog, Link2, QrCode, GitBranch,
+  UserCog, Link2, QrCode, GitBranch, Nfc,
   Coffee, ChevronLeft, ChevronRight, Globe,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -85,6 +85,7 @@ const NAVIGATION: NavGroup[] = [
       { label: 'Users & Roles', labelVi: 'Người dùng & Vai trò', href: '/users', icon: UserCog },
       { label: 'Blockchain', labelVi: 'Blockchain', href: '/blockchain', icon: Link2 },
       { label: 'QR Verify', labelVi: 'Xác minh QR', href: '/qr-verify', icon: QrCode },
+      { label: 'NFC Tags', labelVi: 'NFC Tags', href: '/nfc-tags', icon: Nfc },
       { label: 'Traceability', labelVi: 'Truy xuất', href: '/traceability', icon: GitBranch },
     ],
   },

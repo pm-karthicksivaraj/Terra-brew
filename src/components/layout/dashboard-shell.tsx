@@ -47,6 +47,7 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   users: { en: 'Users & Roles', vi: 'Người dùng & Vai trò' },
   blockchain: { en: 'Blockchain', vi: 'Blockchain' },
   'qr-verify': { en: 'QR Verify', vi: 'Xác minh QR' },
+  'nfc-tags': { en: 'NFC Tags', vi: 'NFC Tags' },
   traceability: { en: 'Traceability', vi: 'Truy xuất' },
 }
 

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, GitBranch, Search, Loader2, CheckCircle2, Clock,
   MinusCircle, Shield, ChevronDown, ChevronUp, FileText,
+  ArrowRight, ArrowLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -125,6 +126,147 @@ function StageDetail({ data }: { data: StageData }) {
   )
 }
 
+// ─── Supply Chain Pipeline Component ──────────────────────────────
+
+function SupplyChainPipeline({
+  stages,
+  lang,
+  onStageClick,
+}: {
+  stages: TraceStage[]
+  lang: 'vi' | 'en'
+  onStageClick: (index: number) => void
+}) {
+  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const statusStyles = {
+    completed: {
+      nodeBorder: 'border-green-400',
+      nodeBg: 'bg-green-50',
+      nodeShadow: 'shadow-green-100',
+      indicator: <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />,
+      arrowColor: 'text-green-400',
+      arrowLine: 'bg-green-300',
+    },
+    pending: {
+      nodeBorder: 'border-amber-400',
+      nodeBg: 'bg-amber-50',
+      nodeShadow: 'shadow-amber-100',
+      indicator: <Clock className="w-3.5 h-3.5 text-amber-600" />,
+      arrowColor: 'text-amber-400',
+      arrowLine: 'bg-amber-300',
+    },
+    not_available: {
+      nodeBorder: 'border-gray-300',
+      nodeBg: 'bg-gray-50',
+      nodeShadow: 'shadow-gray-100',
+      indicator: <MinusCircle className="w-3.5 h-3.5 text-gray-400" />,
+      arrowColor: 'text-gray-300',
+      arrowLine: 'bg-gray-200',
+    },
+  }
+
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+          <GitBranch className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-coffee-800">
+            {t('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
+          </h3>
+          <p className="text-[10px] text-coffee-400">
+            {t('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
+          </p>
+        </div>
+      </div>
+
+      {/* Horizontal scrollable pipeline */}
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-coffee-200 scrollbar-track-transparent"
+      >
+        <div className="flex items-center gap-0 min-w-max px-1">
+          {stages.map((stage, index) => {
+            const style = statusStyles[stage.status]
+            const isLast = index === stages.length - 1
+
+            return (
+              <div key={stage.key} className="flex items-center shrink-0">
+                {/* Pipeline Node */}
+                <button
+                  onClick={() => onStageClick(index)}
+                  className="group flex flex-col items-center gap-1 focus:outline-none"
+                  aria-label={`${t(stage.nameVi, stage.nameEn)} - ${stage.status}`}
+                >
+                  <motion.div
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`
+                      w-[80px] h-[80px] rounded-xl border-2 flex flex-col items-center justify-center gap-0.5
+                      transition-colors duration-200 cursor-pointer
+                      ${style.nodeBorder} ${style.nodeBg} ${style.nodeShadow}
+                      shadow-sm hover:shadow-md
+                    `}
+                  >
+                    <span className="text-xl leading-none">{stage.icon}</span>
+                    <span className="text-[9px] font-semibold text-coffee-700 leading-tight text-center px-1 line-clamp-2">
+                      {t(stage.nameVi, stage.nameEn).length > 14
+                        ? t(stage.nameVi, stage.nameEn).substring(0, 13) + '…'
+                        : t(stage.nameVi, stage.nameEn)}
+                    </span>
+                    <div className="mt-0.5">{style.indicator}</div>
+                  </motion.div>
+                </button>
+
+                {/* Arrow connector */}
+                {!isLast && (
+                  <div className="flex items-center mx-1 shrink-0">
+                    {/* Desktop: arrow line + chevron */}
+                    <div className="hidden sm:flex items-center gap-0">
+                      <div className={`w-4 h-0.5 ${style.arrowLine} rounded-full`} />
+                      <ArrowRight className={`w-3.5 h-3.5 ${style.arrowColor}`} />
+                    </div>
+                    {/* Mobile: shorter connector */}
+                    <div className="sm:hidden flex items-center gap-0">
+                      <div className={`w-2 h-0.5 ${style.arrowLine} rounded-full`} />
+                      <ArrowRight className={`w-2.5 h-2.5 ${style.arrowColor}`} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-coffee-100">
+        <div className="flex items-center gap-1.5">
+          <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+          <span className="text-[10px] text-coffee-600">
+            {t('Hoàn thành', 'Completed')}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-amber-600" />
+          <span className="text-[10px] text-coffee-600">
+            {t('Đang chờ', 'Pending')}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <MinusCircle className="w-3.5 h-3.5 text-gray-400" />
+          <span className="text-[10px] text-coffee-600">
+            {t('Không có', 'N/A')}
+          </span>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 // ─── Timeline Stage Card ──────────────────────────────────────────
 
 function TimelineCard({
@@ -172,6 +314,7 @@ function TimelineCard({
 
   return (
     <motion.div
+      id={`timeline-stage-${index}`}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.4, ease: 'easeOut' }}
@@ -409,6 +552,18 @@ export default function TraceabilityPage() {
   const [traceData, setTraceData] = useState<TraceabilityData | null>(null)
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  const scrollToStage = useCallback((index: number) => {
+    const el = document.getElementById(`timeline-stage-${index}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Flash highlight effect
+      el.classList.add('ring-2', 'ring-coffee-400', 'ring-offset-2', 'rounded-xl')
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-coffee-400', 'ring-offset-2', 'rounded-xl')
+      }, 1500)
+    }
+  }, [])
 
   const handleSearch = useCallback(async () => {
     if (!batchId.trim()) {
@@ -689,6 +844,13 @@ export default function TraceabilityPage() {
                   </div>
                 </div>
               </Card>
+
+              {/* ── Supply Chain Pipeline View ── */}
+              <SupplyChainPipeline
+                stages={traceData.stages}
+                lang={lang}
+                onStageClick={scrollToStage}
+              />
 
               {/* Timeline */}
               <div className="relative">

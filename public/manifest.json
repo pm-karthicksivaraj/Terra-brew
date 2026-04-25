@@ -1,0 +1,27 @@
+{
+  "name": "Terra Brew — Nền tảng Truy xuất Nguồn gốc Cà phê",
+  "short_name": "Terra Brew",
+  "description": "End-to-End Coffee Traceability Platform — Multi-tenant, RBAC, Blockchain-verified",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FEFCE8",
+  "theme_color": "#6B4226",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "vi",
+  "dir": "ltr"
+}

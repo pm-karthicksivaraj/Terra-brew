@@ -75,3 +75,51 @@ export async function POST(req: Request) {
     return apiError(e.message, 500)
   }
 }
+
+export async function PUT(req: Request) {
+  const user = await getAuthUser(req)
+  const authError = requireTenantAccess(user, 'farmers', 'update')
+  if (authError) return authError
+
+  try {
+    const body = await req.json()
+    const { id, ...data } = body
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.farmer.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Farmer not found', 404)
+
+    const item = await db.farmer.update({
+      where: { id },
+      data,
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
+
+export async function DELETE(req: Request) {
+  const user = await getAuthUser(req)
+  const authError = requireTenantAccess(user, 'farmers', 'delete')
+  if (authError) return authError
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.farmer.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Farmer not found', 404)
+
+    const item = await db.farmer.update({
+      where: { id },
+      data: { isActive: false },
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
