@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'crop-monitorings', 'read')
   if (authError) return authError
 
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'crop-monitorings', 'create')
   if (authError) return authError
 
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'crop-monitorings', 'update')
   if (authError) return authError
 
@@ -95,7 +95,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'crop-monitorings', 'delete')
   if (authError) return authError
 

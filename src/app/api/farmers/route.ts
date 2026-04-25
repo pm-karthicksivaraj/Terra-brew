@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'farmers', 'read')
   if (authError) return authError
 
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'farmers', 'create')
   if (authError) return authError
 

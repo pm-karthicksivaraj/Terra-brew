@@ -12,7 +12,10 @@ import { getServerSession } from 'next-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth/config'
 import { z, ZodSchema } from 'zod'
-import type { AuthenticatedUser, Action, ModuleSlug, PermissionMap } from '@/types'
+import jwt from 'jsonwebtoken'
+import type { AuthenticatedUser, Action, ModuleSlug, PermissionMap, PlatformRole, TenantRole } from '@/types'
+
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret-change-me'
 
 // ════════════════════════════════════════════════════════════════
 // RBAC PERMISSION MATRIX
@@ -85,7 +88,34 @@ export function hasPermission(role: string, module: ModuleSlug, action: Action):
 // API ROUTE HELPERS
 // ════════════════════════════════════════════════════════════════
 
-export async function getAuthUser(): Promise<AuthenticatedUser | null> {
+export async function getAuthUser(req?: Request | null): Promise<AuthenticatedUser | null> {
+  // 1. Try JWT Bearer token first (for mobile app clients)
+  if (req) {
+    const authHeader = req.headers.get('Authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as Record<string, unknown>
+        return {
+          id: decoded.id as string,
+          email: decoded.email as string,
+          name: decoded.name as string,
+          role: decoded.role as PlatformRole | TenantRole,
+          tenantId: decoded.tenantId as string | undefined,
+          tenantSlug: decoded.tenantSlug as string | undefined,
+          tenantName: decoded.tenantName as string | undefined,
+          currency: decoded.currency as string | undefined,
+          currencySymbol: decoded.currencySymbol as string | undefined,
+          language: decoded.language as string | undefined,
+          isPlatformAdmin: decoded.isPlatformAdmin as boolean | undefined,
+        }
+      } catch {
+        // Invalid or expired JWT, fall through to session auth
+      }
+    }
+  }
+
+  // 2. Fall back to NextAuth session (for web browser clients)
   const session = await getServerSession(authOptions)
   if (!session?.user) return null
   return session.user as unknown as AuthenticatedUser

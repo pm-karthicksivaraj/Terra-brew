@@ -15,7 +15,7 @@ function maskUser(user: Record<string, unknown>) {
 }
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'users', 'read')
   if (authError) return authError
 
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   // Only tenant_admin can create users
   if (user!.role !== 'tenant_admin' && !user!.isPlatformAdmin) {
     return apiError('Only tenant admins can create users', 403)
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   // Only tenant_admin can update users
   if (user!.role !== 'tenant_admin' && !user!.isPlatformAdmin) {
     return apiError('Only tenant admins can update users', 403)
@@ -123,7 +123,7 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   // Only tenant_admin can delete users
   if (user!.role !== 'tenant_admin' && !user!.isPlatformAdmin) {
     return apiError('Only tenant admins can delete users', 403)

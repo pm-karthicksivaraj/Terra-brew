@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, requireTenantAccess, apiResponse, apiError } from '@/lib/api-middleware'
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'dashboard', 'read')
   if (authError) return authError
 

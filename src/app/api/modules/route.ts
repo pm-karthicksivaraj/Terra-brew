@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getAuthUser, requirePlatformAdmin, apiResponse } from '@/lib/api-middleware'
 
 export async function GET(request: NextRequest) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(request)
   const permError = requirePlatformAdmin(user)
   if (permError) return permError
 

@@ -19,7 +19,7 @@ const ENTITY_MODELS: Record<string, { include: Record<string, boolean> }> = {
 }
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'harvest-traceabilities', 'read')
   if (authError) return authError
 
@@ -146,7 +146,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'harvest-traceabilities', 'create')
   if (authError) return authError
 
