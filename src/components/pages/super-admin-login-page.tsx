@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle, Shield } from 'lucide-react'
@@ -10,6 +10,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
 
+// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return x - Math.floor(x)
+}
+
 export default function SuperAdminLoginPage() {
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [email, setEmail] = useState('admin@terrabrew.platform')
@@ -17,9 +23,25 @@ export default function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  // Pre-compute particle positions using deterministic random
+  const particles = useMemo(() =>
+    Array.from({ length: 15 }, (_, i) => ({
+      width: 3 + seededRandom(i * 3 + 1) * 6,
+      height: 3 + seededRandom(i * 3 + 2) * 6,
+      left: seededRandom(i * 3 + 3) * 100,
+      top: seededRandom(i * 3 + 4) * 100,
+      opacity: 0.08 + seededRandom(i * 3 + 5) * 0.15,
+      duration: 8 + seededRandom(i * 3 + 6) * 6,
+      delay: seededRandom(i * 3 + 7) * 4,
+    })),
+  [])
+
+  useEffect(() => { setMounted(true) }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,20 +81,20 @@ export default function SuperAdminLoginPage() {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-coffee-900" />
 
-      {/* Floating elements */}
-      {Array.from({ length: 15 }, (_, i) => (
+      {/* Floating elements — only after mount to prevent hydration mismatch */}
+      {mounted && particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 3 + Math.random() * 6,
-            height: 3 + Math.random() * 6,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: `rgba(212, 165, 116, ${0.08 + Math.random() * 0.15})`,
+            width: p.width,
+            height: p.height,
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            background: `rgba(212, 165, 116, ${p.opacity})`,
           }}
           animate={{ y: [0, -30, 0], opacity: [0.05, 0.2, 0.05] }}
-          transition={{ duration: 8 + Math.random() * 6, repeat: Infinity, delay: Math.random() * 4 }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay }}
         />
       ))}
 

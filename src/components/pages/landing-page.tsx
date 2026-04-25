@@ -1,18 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Coffee, Globe, ChevronRight, Leaf, Shield, TrendingUp, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 
+// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return x - Math.floor(x)
+}
+
 const floatingBeans = Array.from({ length: 12 }, (_, i) => ({
   id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: 12 + Math.random() * 24,
-  duration: 8 + Math.random() * 12,
-  delay: Math.random() * 5,
+  x: seededRandom(i * 5 + 1) * 100,
+  y: seededRandom(i * 5 + 2) * 100,
+  size: 12 + seededRandom(i * 5 + 3) * 24,
+  duration: 8 + seededRandom(i * 5 + 4) * 12,
+  delay: seededRandom(i * 5 + 5) * 5,
 }))
 
 const features = [

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
@@ -10,6 +10,12 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
 
+// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return x - Math.floor(x)
+}
+
 export default function LoginPage() {
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [email, setEmail] = useState('admin@metrang-coffee.terrabrew.com')
@@ -18,9 +24,26 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  // Pre-compute particle positions using deterministic random to avoid hydration mismatch
+  const particles = useMemo(() =>
+    Array.from({ length: 20 }, (_, i) => ({
+      width: 4 + seededRandom(i * 3 + 1) * 8,
+      height: 4 + seededRandom(i * 3 + 2) * 8,
+      left: seededRandom(i * 3 + 3) * 100,
+      top: seededRandom(i * 3 + 4) * 100,
+      opacity: 0.1 + seededRandom(i * 3 + 5) * 0.2,
+      duration: 6 + seededRandom(i * 3 + 6) * 8,
+      xShift: seededRandom(i * 3 + 7) * 20 - 10,
+      delay: seededRandom(i * 3 + 8) * 5,
+    })),
+  [])
+
+  useEffect(() => { setMounted(true) }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,27 +84,27 @@ export default function LoginPage() {
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
-      {/* Floating particles */}
-      {Array.from({ length: 20 }, (_, i) => (
+      {/* Floating particles — only after mount to prevent hydration mismatch */}
+      {mounted && particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 4 + Math.random() * 8,
-            height: 4 + Math.random() * 8,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: `rgba(212, 165, 116, ${0.1 + Math.random() * 0.2})`,
+            width: p.width,
+            height: p.height,
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            background: `rgba(212, 165, 116, ${p.opacity})`,
           }}
           animate={{
             y: [0, -40, 0],
-            x: [0, Math.random() * 20 - 10, 0],
+            x: [0, p.xShift, 0],
             opacity: [0.1, 0.3, 0.1],
           }}
           transition={{
-            duration: 6 + Math.random() * 8,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 5,
+            delay: p.delay,
             ease: 'easeInOut',
           }}
         />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,6 +10,12 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+
+// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 233280
+  return x - Math.floor(x)
+}
 
 // ─── Types ───────────────────────────────────────────────────────
 interface TraceStep {
@@ -97,8 +103,25 @@ export default function PublicVerifyPage() {
   const [pageState, setPageState] = useState<PageState>('loading')
   const [data, setData] = useState<VerifyData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  // Pre-compute particle positions using deterministic random
+  const particles = useMemo(() =>
+    Array.from({ length: 15 }, (_, i) => ({
+      width: 3 + seededRandom(i * 4 + 1) * 6,
+      height: 3 + seededRandom(i * 4 + 2) * 6,
+      left: seededRandom(i * 4 + 3) * 100,
+      top: seededRandom(i * 4 + 4) * 100,
+      opacity: 0.08 + seededRandom(i * 4 + 5) * 0.15,
+      xShift: seededRandom(i * 4 + 6) * 16 - 8,
+      duration: 5 + seededRandom(i * 4 + 7) * 8,
+      delay: seededRandom(i * 4 + 8) * 4,
+    })),
+  [])
+
+  useEffect(() => { setMounted(true) }, [])
 
   // Fetch verification data on mount
   useEffect(() => {
@@ -184,27 +207,27 @@ export default function PublicVerifyPage() {
       {/* ─── Background ─── */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
-      {/* Floating coffee particles */}
-      {Array.from({ length: 15 }, (_, i) => (
+      {/* Floating coffee particles — only after mount to prevent hydration mismatch */}
+      {mounted && particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 3 + Math.random() * 6,
-            height: 3 + Math.random() * 6,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: `rgba(212, 165, 116, ${0.08 + Math.random() * 0.15})`,
+            width: p.width,
+            height: p.height,
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            background: `rgba(212, 165, 116, ${p.opacity})`,
           }}
           animate={{
             y: [0, -30, 0],
-            x: [0, Math.random() * 16 - 8, 0],
+            x: [0, p.xShift, 0],
             opacity: [0.08, 0.25, 0.08],
           }}
           transition={{
-            duration: 5 + Math.random() * 8,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 4,
+            delay: p.delay,
             ease: 'easeInOut',
           }}
         />
