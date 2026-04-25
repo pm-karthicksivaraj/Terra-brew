@@ -1,0 +1,347 @@
+'use client'
+
+import { useMemo } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  BarChart3, Users, MapPin, Sprout,
+  TreePine, Tractor, Activity, FlaskConical, Shield,
+  Wheat, Truck, Factory,
+  Award, ClipboardCheck, FileText, Store,
+  UserCog, Link2, QrCode, GitBranch,
+  Coffee, ChevronLeft, ChevronRight, Globe,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
+
+// ─── Navigation types ────────────────────────────────────────────
+
+interface NavItem {
+  label: string
+  labelVi: string
+  href: string
+  icon: LucideIcon
+}
+
+interface NavGroup {
+  title: string
+  titleVi: string
+  items: NavItem[]
+}
+
+// ─── Navigation definition ───────────────────────────────────────
+
+const NAVIGATION: NavGroup[] = [
+  {
+    title: 'Core',
+    titleVi: 'Chính',
+    items: [
+      { label: 'Dashboard', labelVi: 'Bảng điều khiển', href: '/dashboard', icon: BarChart3 },
+      { label: 'Farmers', labelVi: 'Nông dân', href: '/farmers', icon: Users },
+      { label: 'Farm Lands', labelVi: 'Đất nông trại', href: '/farmlands', icon: MapPin },
+      { label: 'Cultivations', labelVi: 'Canh tác', href: '/cultivations', icon: Sprout },
+    ],
+  },
+  {
+    title: 'Farm Management',
+    titleVi: 'Quản lý nông trại',
+    items: [
+      { label: 'Nurseries', labelVi: 'Vườn ươm', href: '/nurseries', icon: TreePine },
+      { label: 'Land Preparation', labelVi: 'Chuẩn bị đất', href: '/land-preparations', icon: Tractor },
+      { label: 'Crop Monitoring', labelVi: 'Giám sát cây trồng', href: '/crop-monitorings', icon: Activity },
+      { label: 'Fertilizer', labelVi: 'Phân bón', href: '/fertilizer-apps', icon: FlaskConical },
+      { label: 'Pest & Disease', labelVi: 'Sâu bệnh', href: '/pest-disease', icon: Shield },
+    ],
+  },
+  {
+    title: 'Supply Chain',
+    titleVi: 'Chuỗi cung ứng',
+    items: [
+      { label: 'Harvest', labelVi: 'Thu hoạch', href: '/harvest', icon: Wheat },
+      { label: 'Procurement', labelVi: 'Thu mua', href: '/procurement', icon: Truck },
+      { label: 'Processing', labelVi: 'Chế biến', href: '/processing', icon: Factory },
+    ],
+  },
+  {
+    title: 'Compliance & Trade',
+    titleVi: 'Tuân thủ & Thương mại',
+    items: [
+      { label: 'Certifications', labelVi: 'Chứng nhận', href: '/cert-assessments', icon: Award },
+      { label: 'Inspections', labelVi: 'Kiểm tra', href: '/coffee-inspections', icon: ClipboardCheck },
+      { label: 'Smart Contracts', labelVi: 'HĐ thông minh', href: '/smart-contracts', icon: FileText },
+      { label: 'Marketplace', labelVi: 'Thị trường', href: '/marketplace', icon: Store },
+    ],
+  },
+  {
+    title: 'System',
+    titleVi: 'Hệ thống',
+    items: [
+      { label: 'Users & Roles', labelVi: 'Người dùng & Vai trò', href: '/users', icon: UserCog },
+      { label: 'Blockchain', labelVi: 'Blockchain', href: '/blockchain', icon: Link2 },
+      { label: 'QR Verify', labelVi: 'Xác minh QR', href: '/qr-verify', icon: QrCode },
+      { label: 'Traceability', labelVi: 'Truy xuất', href: '/traceability', icon: GitBranch },
+    ],
+  },
+]
+
+// ─── Sub-components ───────────────────────────────────────────────
+
+function NavItemLink({
+  item,
+  collapsed,
+  isActive,
+  lang,
+}: {
+  item: NavItem
+  collapsed: boolean
+  isActive: boolean
+  lang: 'vi' | 'en'
+}) {
+  const label = lang === 'vi' ? item.labelVi : item.label
+  const Icon = item.icon
+
+  const linkContent = (
+    <Link
+      href={item.href}
+      className={cn(
+        'flex items-center gap-3 rounded-xl px-3 py-2 text-xs transition-all duration-200',
+        isActive
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-bold shadow-sm'
+          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+        collapsed && 'justify-center px-2'
+      )}
+    >
+      <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-4 h-4')} />
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={{ duration: 0.2 }}
+            className="truncate overflow-hidden whitespace-nowrap"
+          >
+            {label}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
+  )
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return linkContent
+}
+
+function SidebarContent({
+  collapsed,
+  tenantName,
+  userRole,
+  lang,
+  onLangToggle,
+  onNavClick,
+}: {
+  collapsed: boolean
+  tenantName: string
+  userRole: string
+  lang: 'vi' | 'en'
+  onLangToggle: () => void
+  onNavClick?: () => void
+}) {
+  const pathname = usePathname()
+
+  const isActive = useMemo(
+    () => (href: string) => {
+      if (href === '/dashboard') return pathname === '/dashboard'
+      return pathname.startsWith(href)
+    },
+    [pathname]
+  )
+
+  return (
+    <div className="flex flex-col h-full" style={{ fontFamily: '"Space Mono", monospace' }}>
+      {/* Tenant header */}
+      <div className={cn('px-3 pt-4 pb-2', collapsed && 'px-2')}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center shrink-0 shadow-sm">
+            <Coffee className="w-5 h-5 text-white" />
+          </div>
+          <AnimatePresence initial={false}>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <p className="text-sm font-bold text-sidebar-foreground truncate">{tenantName || 'Terra Brew'}</p>
+                <p className="text-[10px] text-sidebar-foreground/60 truncate capitalize">{userRole?.replace('_', ' ')}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <Separator className="mx-3 my-1 bg-sidebar-border" />
+
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-2">
+        <div className="py-2 space-y-4">
+          {NAVIGATION.map((group) => (
+            <div key={group.title}>
+              <AnimatePresence initial={false}>
+                {!collapsed && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-sidebar-foreground/40"
+                  >
+                    {lang === 'vi' ? group.titleVi : group.title}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <div key={item.href} onClick={onNavClick}>
+                    <NavItemLink
+                      item={item}
+                      collapsed={collapsed}
+                      isActive={isActive(item.href)}
+                      lang={lang}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      <Separator className="mx-3 bg-sidebar-border" />
+
+      {/* Footer: Language toggle */}
+      <div className={cn('px-3 py-3', collapsed && 'px-2')}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onLangToggle}
+          className={cn(
+            'w-full gap-2 text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 text-xs rounded-xl',
+            collapsed && 'justify-center px-2'
+          )}
+        >
+          <Globe className="w-4 h-4 shrink-0" />
+          <AnimatePresence initial={false}>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden whitespace-nowrap"
+              >
+                {lang === 'vi' ? 'Tiếng Anh' : 'Tiếng Việt'}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {!collapsed && (
+            <span className="ml-auto text-[10px] font-bold text-sidebar-foreground/50">
+              {lang === 'vi' ? 'VI' : 'EN'}
+            </span>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main AppSidebar ──────────────────────────────────────────────
+
+interface AppSidebarProps {
+  collapsed: boolean
+  onToggleCollapse: () => void
+  tenantName: string
+  userRole: string
+  lang: 'vi' | 'en'
+  onLangToggle: () => void
+  mobileOpen: boolean
+  onMobileOpenChange: (open: boolean) => void
+}
+
+export function AppSidebar({
+  collapsed,
+  onToggleCollapse,
+  tenantName,
+  userRole,
+  lang,
+  onLangToggle,
+  mobileOpen,
+  onMobileOpenChange,
+}: AppSidebarProps) {
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <motion.aside
+        className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border"
+        animate={{ width: collapsed ? 64 : 256 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        style={{ fontFamily: '"Space Mono", monospace' }}
+      >
+        <SidebarContent
+          collapsed={collapsed}
+          tenantName={tenantName}
+          userRole={userRole}
+          lang={lang}
+          onLangToggle={onLangToggle}
+        />
+
+        {/* Collapse toggle button */}
+        <div className="px-2 pb-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className="w-full justify-center text-sidebar-foreground/50 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 rounded-xl h-8"
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+        </div>
+      </motion.aside>
+
+      {/* Mobile drawer */}
+      <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
+        <SheetContent side="left" className="w-72 p-0 bg-sidebar-background border-sidebar-border">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation</SheetTitle>
+          </SheetHeader>
+          <SidebarContent
+            collapsed={false}
+            tenantName={tenantName}
+            userRole={userRole}
+            lang={lang}
+            onLangToggle={onLangToggle}
+            onNavClick={() => onMobileOpenChange(false)}
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  )
+}

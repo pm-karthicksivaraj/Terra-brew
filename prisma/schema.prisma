@@ -24,34 +24,52 @@ model PlatformUser {
 }
 
 model Tenant {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  name        String
-  legalName   String?
-  taxId       String?
-  logoUrl     String?
-  currency    String   @default("VND")
-  currencySymbol String @default("₫")
-  language    String   @default("vi")
-  timezone    String   @default("Asia/Ho_Chi_Minh")
-  dateFormat  String   @default("DD/MM/YYYY")
-  enabledModules String @default("{}")
-  country     String   @default("VN")
-  eudrCompliant Boolean @default(false)
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  legalName      String?
+  taxId          String?
+  logoUrl        String?
+  currency       String   @default("VND")
+  currencySymbol String   @default("₫")
+  language       String   @default("vi")
+  timezone       String   @default("Asia/Ho_Chi_Minh")
+  dateFormat     String   @default("DD/MM/YYYY")
+  enabledModules String   @default("{}")
+  country        String   @default("VN")
+  eudrCompliant  Boolean  @default(false)
   certifications String?
-  plan        String   @default("starter")
-  maxUsers    Int      @default(10)
-  maxFarmers  Int      @default(500)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  plan           String   @default("starter")
+  maxUsers       Int      @default(10)
+  maxFarmers     Int      @default(500)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  users       User[]
-  farmers     Farmer[]
-  farmLands   FarmLand[]
-  cultivations Cultivation[]
-  hashChainBlocks HashChainBlock[]
-  auditLogs   AuditLog[]
+  users                  User[]
+  farmers                Farmer[]
+  farmLands              FarmLand[]
+  cultivations           Cultivation[]
+  nurseries              Nursery[]
+  landPreparations       LandPreparation[]
+  cropMonitorings        CropMonitoring[]
+  fertilizerApplications FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities  HarvestTraceability[]
+  collectionCentres      CollectionCentre[]
+  procurementRecords     ProcurementRecord[]
+  processingJobOrders    ProcessingJobOrder[]
+  processingStageRecords ProcessingStageRecord[]
+  certAssessments        CertAssessment[]
+  coffeeInspections      CoffeeInspection[]
+  smartContracts         SmartContract[]
+  marketplaceListings    MarketplaceListing[]
+  saleTransactions       SaleTransaction[]
+  hashChainBlocks        HashChainBlock[]
+  auditLogs              AuditLog[]
+  qrVerifications        QRVerification[]
+  soilAnalyses           SoilAnalysis[]
+  lots                   Lot[]
 }
 
 model Module {
@@ -86,115 +104,755 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   @@unique([email, tenantId])
+  @@index([tenantId])
 }
 
 model Farmer {
-  id                String   @id @default(cuid())
-  tenantId          String
-  createdBy         String?
-  enrollmentDate    DateTime @default(now())
-  enrollmentPlace   String?
-  farmerCode        String?
-  isCertified       Boolean  @default(false)
-  certificationType String?
-  yearOfICS         String?
-  cooperative       String?
-  fullName          String
-  firstName         String?
-  lastName          String?
-  middleName        String?
-  contactNumber     String
-  farmerPhoto       String?
-  nationalIdType    String?
-  nationalIdNo      String?
-  idProofPhoto      String?
-  ekycConsent       Boolean  @default(false)
-  gender            String?
-  dob               DateTime?
-  age               Int?
-  education         String?
-  maritalStatus     String?
+  id                      String   @id @default(cuid())
+  tenantId                String
+  createdBy               String?
+  enrollmentDate          DateTime @default(now())
+  enrollmentPlace         String?
+  farmerCode              String?
+  isCertified             Boolean  @default(false)
+  certificationType       String?
+  yearOfICS               String?
+  cooperative             String?
+  fullName                String
+  firstName               String?
+  lastName                String?
+  middleName              String?
+  contactNumber           String
+  farmerPhoto             String?
+  nationalIdType          String?
+  nationalIdNo            String?
+  idProofPhoto            String?
+  ekycConsent             Boolean  @default(false)
+  gender                  String?
+  dob                     DateTime?
+  age                     Int?
+  education               String?
+  maritalStatus           String?
+  spouseName              String?
+  noOfFamilyMembers       Int?
+  housingOwnership        String?
+  houseType               String?
   yearsOfFarmingExperience Int?
-  email             String?
-  country           String?
-  province          String?
-  district          String?
-  commune           String?
-  village           String?
-  latitude          Float?
-  longitude         Float?
-  creditScore       Float?
-  loanTaken         Boolean  @default(false)
-  loanAmount        Float?
-  smartphoneOwnership Boolean @default(false)
-  gapTrainingAttended Boolean @default(false)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  email                   String?
+  country                 String?
+  province                String?
+  district                String?
+  commune                 String?
+  village                 String?
+  zipCode                 String?
+  latitude                Float?
+  longitude               Float?
+  creditScore             Float?
+  loanTaken               Boolean  @default(false)
+  loanTakenFrom           String?
+  loanAmount              Float?
+  loanPurpose             String?
+  loanInterest            Float?
+  loanSecurity            Boolean  @default(false)
+  cropInsurance           Boolean  @default(false)
+  lifeInsurance           Boolean  @default(false)
+  healthInsurance         Boolean  @default(false)
+  smartphoneOwnership     Boolean  @default(false)
+  gapTrainingAttended     Boolean  @default(false)
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  tenant       Tenant      @relation(fields: [tenantId], references: [id])
-  farmLands    FarmLand[]
-  cultivations Cultivation[]
+  tenant                    Tenant                    @relation(fields: [tenantId], references: [id])
+  farmLands                 FarmLand[]
+  cultivations              Cultivation[]
+  landPreparations          LandPreparation[]
+  cropMonitorings           CropMonitoring[]
+  fertilizerApplications    FertilizerApplication[]
+  pestDiseaseManagements    PestDiseaseManagement[]
+  harvestTraceabilities     HarvestTraceability[]
+  procurementRecords        ProcurementRecord[]
+  nurseries                 Nursery[]
+  certAssessments           CertAssessment[]
+  coffeeInspections         CoffeeInspection[]
+  smartContracts            SmartContract[]
+  marketplaceListings       MarketplaceListing[]
   @@unique([farmerCode, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, province])
 }
 
 model FarmLand {
-  id              String   @id @default(cuid())
-  tenantId        String
-  farmerId        String
-  createdBy       String?
-  farmName        String
-  plotBlockId     String?
-  totalLandHolding Float?
-  altitude        Float?
-  latitude        Float?
-  longitude       Float?
-  landOwnership   String?
-  soilType        String?
-  waterSource     String?
-  noOfTrees       Int?
-  estYield        Float?
-  childLabourPolicy    Boolean @default(false)
-  minimumWageCompliance Boolean @default(false)
-  ppeAvailable         Boolean @default(false)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  tenantId                 String
+  farmerId                 String
+  createdBy                String?
+  farmName                 String
+  plotBlockId              String?
+  totalLandHolding         Float?
+  altitude                 Float?
+  agroEcologicalZone       String?
+  latitude                 Float?
+  longitude                Float?
+  landOwnership            String?
+  soilType                 String?
+  irrigationSource         String?
+  irrigationType           String?
+  waterSource              String?
+  powerSource              String?
+  noOfTrees                Int?
+  shadeTreeSpecies         String?
+  shadeTreeDensity         Int?
+  fullTimeWorkers          Int?
+  partTimeWorkers          Int?
+  seasonalWorkers          Int?
+  familyWorkers            Int?
+  estYield                 Float?
+  conversionCertType       String?
+  currentConversionStatus  String?
+  fertilityStatus          String?
+  childLabourPolicy        Boolean  @default(false)
+  minimumWageCompliance    Boolean  @default(false)
+  ppeAvailable             Boolean  @default(false)
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
-  tenant       Tenant      @relation(fields: [tenantId], references: [id])
-  farmer       Farmer      @relation(fields: [farmerId], references: [id])
-  cultivations Cultivation[]
+  tenant                Tenant                @relation(fields: [tenantId], references: [id])
+  farmer                Farmer                @relation(fields: [farmerId], references: [id])
+  cultivations          Cultivation[]
+  landPreparations      LandPreparation[]
+  cropMonitorings       CropMonitoring[]
+  fertilizerApplications FertilizerApplication[]
+  pestDiseaseManagements PestDiseaseManagement[]
+  harvestTraceabilities HarvestTraceability[]
+  soilAnalyses          SoilAnalysis[]
+  certAssessments       CertAssessment[]
+  coffeeInspections     CoffeeInspection[]
   @@index([tenantId])
   @@index([tenantId, farmerId])
 }
 
 model Cultivation {
-  id              String   @id @default(cuid())
-  tenantId        String
-  farmerId        String
-  farmLandId      String
-  createdBy       String?
-  farmPlotName    String
-  cultivatedCrop  String?
-  cropVariety     String?
-  cultivationArea Float?
-  sowingDate      DateTime?
-  estYield        String?
-  seedSource      String?
-  seedType        String?
-  seedQuantity    Float?
-  seedCost        Float?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  tenantId                String
+  farmerId                String
+  farmLandId              String
+  createdBy               String?
+  farmPlotName            String
+  plotBlockId             String?
+  cropCategory            String?
+  intercroppingSpecies    String?
+  harvestSeason           String?
+  cultivatedCrop          String?
+  cropVariety             String?
+  coffeeSpecies           String?
+  cultivationArea         Float?
+  plantingSpacing         Float?
+  treeDensity             Int?
+  sowingDate              DateTime?
+  estYield                String?
+  intendedProcessingMethod String?
+  irrigationMethod        String?
+  shadeCover              Int?
+  latitude                Float?
+  longitude               Float?
+  seedSource              String?
+  isSeedTreated           Boolean  @default(false)
+  treatmentDetails        String?
+  seedType                String?
+  seedQuantity            Float?
+  seedPrice               Float?
+  seedCost                Float?
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   tenant     Tenant     @relation(fields: [tenantId], references: [id])
   farmer     Farmer     @relation(fields: [farmerId], references: [id])
   farmLand   FarmLand   @relation(fields: [farmLandId], references: [id])
   @@index([tenantId])
   @@index([tenantId, farmerId])
+  @@index([tenantId, farmLandId])
+}
+
+model Nursery {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String?
+  createdBy           String?
+  nurseryName         String
+  nurseryCode         String?
+  location            String?
+  province            String?
+  district            String?
+  commune             String?
+  latitude            Float?
+  longitude           Float?
+  nurseryType         String?
+  capacity            Int?
+  currentStock        Int?
+  species             String?
+  variety             String?
+  seedSource          String?
+  plantingDate        DateTime?
+  expectedReadyDate   DateTime?
+  germinationRate     Float?
+  survivalRate        Float?
+  healthStatus        String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  farmer  Farmer?  @relation(fields: [farmerId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model LandPreparation {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String
+  farmLandId          String
+  createdBy           String?
+  preparationDate     DateTime?
+  preparationType     String?
+  method              String?
+  equipmentUsed       String?
+  laborCount          Int?
+  laborCost           Float?
+  materialsUsed       String?
+  materialCost        Float?
+  totalCost           Float?
+  soilPhBefore        Float?
+  soilPhAfter         Float?
+  organicMatterPct    Float?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  farmer   Farmer   @relation(fields: [farmerId], references: [id])
+  farmLand FarmLand @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model CropMonitoring {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String
+  farmLandId          String
+  cultivationId       String?
+  createdBy           String?
+  monitoringDate      DateTime?
+  monitoringType      String?
+  growthStage         String?
+  plantHeight         Float?
+  canopyDiameter      Float?
+  leafColor           String?
+  healthScore         Float?
+  pestPressure        String?
+  diseaseSymptoms     String?
+  weatherCondition    String?
+  temperature         Float?
+  rainfall            Float?
+  humidity            Float?
+  soilMoisture        Float?
+  alertTriggered      Boolean  @default(false)
+  alertType           String?
+  alertSeverity       String?
+  remedialAction      String?
+  photoUrl            String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  farmer      Farmer      @relation(fields: [farmerId], references: [id])
+  farmLand    FarmLand    @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+  @@index([tenantId, alertTriggered])
+}
+
+model FertilizerApplication {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String
+  farmLandId          String
+  cultivationId       String?
+  createdBy           String?
+  applicationDate     DateTime?
+  fertilizerType      String?
+  fertilizerName      String?
+  nutrientContent     String?
+  applicationRate     Float?
+  unit                String?
+  totalQuantity       Float?
+  applicationMethod   String?
+  costPerUnit         Float?
+  totalCost           Float?
+  weatherAtApplication String?
+  appliedBy           String?
+  isOrganic           Boolean  @default(false)
+  certificationNumber String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  farmer   Farmer   @relation(fields: [farmerId], references: [id])
+  farmLand FarmLand @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model PestDiseaseManagement {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String
+  farmLandId          String
+  cultivationId       String?
+  createdBy           String?
+  detectionDate       DateTime?
+  pestOrDisease       String?
+  type                String?
+  severity            String?
+  affectedArea        Float?
+  affectedTrees       Int?
+  symptoms            String?
+  treatmentMethod     String?
+  treatmentProduct    String?
+  dosage              String?
+  applicationDate     DateTime?
+  followUpDate        DateTime?
+  outcome             String?
+  cost                Float?
+  preventionMeasures  String?
+  photoUrl            String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  farmer   Farmer   @relation(fields: [farmerId], references: [id])
+  farmLand FarmLand @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model HarvestTraceability {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  cultivationId       String?
+  farmerId            String
+  farmLandId          String
+  createdBy           String?
+  plannedHarvestDate  DateTime?
+  plotBlockId         String?
+  coffeeVariety       String?
+  estimatedYield      String?
+  actualHarvestDate   DateTime?
+  harvestMethod       String?
+  cherryRipeness      Float?
+  harvestLabourCost   Float?
+  sampleWeight        Float?
+  sampleArea          Float?
+  sampleYield         Float?
+  estimatedYieldPerHa Float?
+  processingMethod    String?
+  dryingMethod        String?
+  dryingDurationDays  Int?
+  targetMoisture      Float?
+  moistureContent     Float?
+  defectiveBeans      Float?
+  foreignMatter       Float?
+  cupScore            Float?
+  batchId             String?
+  coffeeVarietyAtBatch String?
+  processingStage     String?
+  batchTimestamp      DateTime?
+  location            String?
+  actor               String?
+  batchNotes          String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  farmer     Farmer     @relation(fields: [farmerId], references: [id])
+  farmLand   FarmLand   @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+  @@index([tenantId, batchId])
+}
+
+model CollectionCentre {
+  id                String   @id @default(cuid())
+  tenantId          String
+  centreId          String?
+  centreName        String
+  centreGpsLat      Float?
+  centreGpsLng      Float?
+  province          String?
+  district          String?
+  commune           String?
+  address           String?
+  managerName       String?
+  contactNumber     String?
+  storageCapacityKg Float?
+  scaleType         String?
+  operatingHours    String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id])
+  procurementRecords ProcurementRecord[]
+  @@index([tenantId])
+}
+
+model ProcurementRecord {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  collectionCentreId    String?
+  cultivationId         String?
+  farmerId              String
+  farmLandId            String?
+  createdBy             String?
+  procurementId         String?
+  procurementDate       DateTime?
+  batchId               String?
+  coffeeType            String?
+  coffeeVariety         String?
+  grossWeight           Float?
+  tareWeight            Float?
+  netWeight             Float?
+  moistureContentAtGate Float?
+  adjustedNetWeight     Float?
+  cherryRipenessGrade   String?
+  defects               Float?
+  purchasePricePerKg    Float?
+  totalPurchaseAmount   Float?
+  priceBasis            String?
+  certPremiumApplied    Float?
+  paymentMethod         String?
+  paymentStatus         String?
+  paymentDate           DateTime?
+  transportId           String?
+  vehicleNumber         String?
+  driverName            String?
+  departureTime         DateTime?
+  arrivalTime           DateTime?
+  destination           String?
+  transportCost         Float?
+  transportNotes        String?
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  farmer           Farmer           @relation(fields: [farmerId], references: [id])
+  collectionCentre CollectionCentre? @relation(fields: [collectionCentreId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+  @@index([tenantId, batchId])
+}
+
+model ProcessingJobOrder {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  createdBy             String?
+  jobOrderId            String?
+  processingDate        DateTime?
+  batchIdInput          String?
+  coffeeTypeInput       String?
+  coffeeVarietyInput    String?
+  inputQuantityKg       Float?
+  processingMethod      String?
+  targetOutputProduct   String?
+  operatorName          String?
+  plantFacilityName     String?
+  inputWeightKg         Float?
+  finalOutputWeightKg   Float?
+  overallOutturn        Float?
+  totalProcessingCost   Float?
+  costPerKg             Float?
+  finalMoistureContent  Float?
+  cupScore              Float?
+  cuppingNotes          String?
+  qcApprovedBy          String?
+  qcApprovalDate        DateTime?
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant             Tenant             @relation(fields: [tenantId], references: [id])
+  processingStages   ProcessingStageRecord[]
+  @@index([tenantId])
+  @@index([tenantId, batchIdInput])
+}
+
+model ProcessingStageRecord {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  jobOrderId          String
+  stageType           String?
+  stageDate           DateTime?
+  inputWeight         Float?
+  outputWeight        Float?
+  durationMinutes     Int?
+  temperature         Float?
+  humidity            Float?
+  machineUsed         String?
+  operatorName        String?
+  qualityCheckPassed  Boolean  @default(false)
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id])
+  jobOrder  ProcessingJobOrder @relation(fields: [jobOrderId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, jobOrderId])
+}
+
+model CertAssessment {
+  id                      String   @id @default(cuid())
+  tenantId                String
+  farmerId                String?
+  farmLandId              String?
+  createdBy               String?
+  assessmentId            String?
+  assessmentDate          DateTime?
+  certificationStandard   String?
+  certifyingBody          String?
+  assessmentType          String?
+  scope                   String?
+  status                  String?
+  score                   Float?
+  maxScore                Float?
+  findings                String?
+  nonConformities         String?
+  correctiveActions       String?
+  validFrom               DateTime?
+  validUntil              DateTime?
+  certificateNumber       String?
+  certificateDocumentUrl  String?
+  notes                   String?
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  farmer   Farmer?   @relation(fields: [farmerId], references: [id])
+  farmLand FarmLand? @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmerId])
+}
+
+model CoffeeInspection {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String?
+  farmLandId          String?
+  batchId             String?
+  createdBy           String?
+  inspectionId        String?
+  inspectionDate      DateTime?
+  inspectorName       String?
+  inspectorCertNo     String?
+  inspectionType      String?
+  inspectionStandard  String?
+  sampleSize          Float?
+  moistureContent     Float?
+  defectCount         Float?
+  foreignMatter       Float?
+  screenSize          String?
+  color               String?
+  aroma               String?
+  taste               String?
+  body                String?
+  acidity             String?
+  aftertaste          String?
+  cupScore            Float?
+  overallGrade        String?
+  passFail             String?
+  remarks             String?
+  photoUrl            String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  farmer   Farmer?   @relation(fields: [farmerId], references: [id])
+  farmLand FarmLand? @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, batchId])
+}
+
+model SmartContract {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String?
+  buyerId             String?
+  createdBy           String?
+  contractId          String?
+  contractType        String?
+  title               String?
+  description         String?
+  partyA              String?
+  partyB              String?
+  quantityKg          Float?
+  pricePerKg          Float?
+  totalValue          Float?
+  currency            String?
+  deliveryDate        DateTime?
+  deliveryLocation    String?
+  qualityGrade        String?
+  terms               String?
+  status              String?
+  signedByA           Boolean  @default(false)
+  signedByB           Boolean  @default(false)
+  signedDateA         DateTime?
+  signedDateB         DateTime?
+  effectiveDate       DateTime?
+  expiryDate          DateTime?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  farmer Farmer? @relation(fields: [farmerId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model MarketplaceListing {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmerId            String?
+  createdBy           String?
+  listingId           String?
+  title               String
+  description         String?
+  coffeeType          String?
+  coffeeVariety       String?
+  grade               String?
+  quantityKg          Float?
+  pricePerKg          Float?
+  totalValue          Float?
+  currency            String?
+  origin              String?
+  processingMethod    String?
+  cupScore            Float?
+  certifications      String?
+  harvestYear         String?
+  availability        String?
+  listingStatus       String?
+  listingDate         DateTime?
+  expiryDate          DateTime?
+  buyerId             String?
+  saleDate            DateTime?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  farmer Farmer? @relation(fields: [farmerId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, listingStatus])
+}
+
+model SaleTransaction {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  listingId           String?
+  buyerId             String?
+  sellerId            String?
+  createdBy           String?
+  transactionId       String?
+  quantityKg          Float?
+  pricePerKg          Float?
+  totalAmount         Float?
+  currency            String?
+  paymentMethod       String?
+  paymentStatus       String?
+  paymentDate         DateTime?
+  deliveryStatus      String?
+  deliveryDate        DateTime?
+  deliveryAddress     String?
+  trackingNumber      String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+}
+
+model Lot {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  createdBy           String?
+  lotId               String?
+  batchIds            String?
+  totalWeightKg       Float?
+  coffeeType          String?
+  grade               String?
+  cupScore            Float?
+  processingMethod    String?
+  warehouseLocation   String?
+  status              String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+}
+
+model SoilAnalysis {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  farmLandId          String
+  createdBy           String?
+  analysisDate        DateTime?
+  labName             String?
+  phLevel             Float?
+  organicCarbon       Float?
+  nitrogen            Float?
+  phosphorus          Float?
+  potassium           Float?
+  calcium             Float?
+  magnesium           Float?
+  cec                 Float?
+  ec                  Float?
+  zinc                Float?
+  boron               Float?
+  recommendations     String?
+  reportUrl           String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  farmLand FarmLand @relation(fields: [farmLandId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, farmLandId])
 }
 
 model HashChainBlock {
@@ -214,6 +872,26 @@ model HashChainBlock {
 
   tenant        Tenant   @relation(fields: [tenantId], references: [id])
   @@unique([tenantId, batchId, blockIndex])
+  @@index([tenantId])
+  @@index([tenantId, batchId])
+}
+
+model QRVerification {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  entityType          String
+  entityId            String
+  qrCode              String
+  hmacSignature       String
+  scanCount           Int      @default(0)
+  lastScannedAt       DateTime?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+
+  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  @@unique([qrCode])
+  @@index([tenantId])
+  @@index([entityType, entityId])
 }
 
 model AuditLog {
@@ -230,4 +908,5 @@ model AuditLog {
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id])
   @@index([tenantId])
+  @@index([tenantId, entity])
 }

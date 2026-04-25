@@ -172,6 +172,13 @@ export interface DashboardStats {
   recentMarketplace: any[]
   cropAlerts: any[]
   recentInspections: any[]
+  recentActivity: Array<{
+    id: string
+    type: string
+    action: string
+    entity: string
+    time: string
+  }>
 }
 
 // ════════════════════════════════════════════════════════════════

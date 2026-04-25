@@ -127,7 +127,7 @@ export function requireTenantAccess(user: AuthenticatedUser | null, module: Modu
 export function validateBody<T>(schema: ZodSchema<T>, body: unknown): { data: T } | { error: NextResponse } {
   const result = schema.safeParse(body)
   if (!result.success) {
-    const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    const errors = result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
     return { error: NextResponse.json({ success: false, error: `Validation failed: ${errors}` }, { status: 400 }) }
   }
   return { data: result.data }

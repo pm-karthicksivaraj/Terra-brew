@@ -44,13 +44,49 @@ export const createTenantSchema = z.object({
   plan: z.enum(['starter', 'professional', 'enterprise']).default('starter'),
   maxUsers: z.number().int().positive().default(10),
   maxFarmers: z.number().int().positive().default(500),
-  enabledModules: z.record(z.boolean()).default({}),
+  enabledModules: z.record(z.string(), z.boolean()).default({}),
 })
 
-export const updateTenantSchema = createTenantSchema.partial()
+export const updateTenantSchema = z.object({
+  tenantId: z.string().min(1, 'Tenant ID required'),
+  name: z.string().min(2, 'Tenant name required').optional(),
+  slug: z.string().min(2, 'Slug required').regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with dashes').optional(),
+  legalName: z.string().optional(),
+  taxId: z.string().optional(),
+  currency: z.string().optional(),
+  currencySymbol: z.string().optional(),
+  language: z.string().optional(),
+  timezone: z.string().optional(),
+  country: z.string().optional(),
+  plan: z.enum(['starter', 'professional', 'enterprise']).optional(),
+  maxUsers: z.number().int().positive().optional(),
+  maxFarmers: z.number().int().positive().optional(),
+  enabledModules: z.record(z.string(), z.boolean()).optional(),
+  isActive: z.boolean().optional(),
+})
 
 export const updateModuleConfigSchema = z.object({
-  enabledModules: z.record(z.boolean()),
+  enabledModules: z.record(z.string(), z.boolean()),
+})
+
+// ════════════════════════════════════════════════════════════════
+// PLATFORM USER SCHEMAS
+// ════════════════════════════════════════════════════════════════
+
+export const createPlatformUserSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  role: z.enum(['super_admin', 'support']).default('support'),
+})
+
+export const updatePlatformUserSchema = z.object({
+  userId: z.string().min(1, 'User ID required'),
+  email: z.string().email('Invalid email format').optional(),
+  password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  role: z.enum(['super_admin', 'support']).optional(),
+  isActive: z.boolean().optional(),
 })
 
 // ════════════════════════════════════════════════════════════════

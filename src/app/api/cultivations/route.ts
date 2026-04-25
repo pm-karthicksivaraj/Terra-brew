@@ -1,67 +1,113 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, requireTenantAccess, validateBody, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
-import { createCultivationSchema } from '@/lib/validators'
+import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
 
-export async function GET(request: NextRequest) {
+export async function GET(req: Request) {
   const user = await getAuthUser()
-  const permError = requireTenantAccess(user, 'cultivations', 'read')
-  if (permError) return permError
+  const authError = requireTenantAccess(user, 'cultivations', 'read')
+  if (authError) return authError
 
-  const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(request)
-  const tenantId = user.tenantId!
+  try {
+    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
+    const tenantId = user!.tenantId!
 
-  const where: Record<string, unknown> = { tenantId, isActive: true }
-  if (search) {
-    where.OR = [
-      { farmPlotName: { contains: search } },
-      { cultivatedCrop: { contains: search } },
-    ]
+    const where: any = { tenantId, isActive: true }
+    if (search) {
+      where.OR = [
+        { farmPlotName: { contains: search, mode: 'insensitive' } },
+        { plotBlockId: { contains: search, mode: 'insensitive' } },
+        { cultivatedCrop: { contains: search, mode: 'insensitive' } },
+        { cropVariety: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const [items, total] = await Promise.all([
+      db.cultivation.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          farmer: { select: { id: true, fullName: true, farmerCode: true } },
+          farmLand: { select: { id: true, farmName: true, plotBlockId: true } },
+        },
+      }),
+      db.cultivation.count({ where }),
+    ])
+
+    return apiResponse({ data: items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
+  } catch (e: any) {
+    return apiError(e.message, 500)
   }
-
-  const [cultivations, total] = await Promise.all([
-    db.cultivation.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: {
-        farmer: { select: { id: true, fullName: true } },
-        farmLand: { select: { id: true, farmName: true } },
-      },
-    }),
-    db.cultivation.count({ where }),
-  ])
-
-  return apiResponse({ cultivations, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   const user = await getAuthUser()
-  const permError = requireTenantAccess(user, 'cultivations', 'create')
-  if (permError) return permError
+  const authError = requireTenantAccess(user, 'cultivations', 'create')
+  if (authError) return authError
 
-  const body = await request.json()
-  const result = validateBody(createCultivationSchema, body)
-  if ('error' in result) return result.error
+  try {
+    const body = await req.json()
+    const tenantId = user!.tenantId!
 
-  const data = result.data
-  const tenantId = user.tenantId!
+    const item = await db.cultivation.create({
+      data: {
+        ...body,
+        tenantId,
+        createdBy: user!.id,
+      },
+    })
 
-  // Verify farmer and farmland belong to tenant
-  const farmer = await db.farmer.findFirst({ where: { id: data.farmerId, tenantId } })
-  if (!farmer) return apiError('Farmer not found in this tenant', 404)
-  const farmLand = await db.farmLand.findFirst({ where: { id: data.farmLandId, tenantId } })
-  if (!farmLand) return apiError('Farm land not found in this tenant', 404)
+    return apiResponse(item, 201)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
 
-  const cultivation = await db.cultivation.create({
-    data: {
-      ...data,
-      tenantId,
-      createdBy: user.id,
-      sowingDate: data.sowingDate ? new Date(data.sowingDate) : undefined,
-    } as any,
-  })
+export async function PUT(req: Request) {
+  const user = await getAuthUser()
+  const authError = requireTenantAccess(user, 'cultivations', 'update')
+  if (authError) return authError
 
-  return apiResponse(cultivation, 201)
+  try {
+    const body = await req.json()
+    const { id, ...data } = body
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.cultivation.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Cultivation not found', 404)
+
+    const item = await db.cultivation.update({
+      where: { id },
+      data,
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
+
+export async function DELETE(req: Request) {
+  const user = await getAuthUser()
+  const authError = requireTenantAccess(user, 'cultivations', 'delete')
+  if (authError) return authError
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.cultivation.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Cultivation not found', 404)
+
+    const item = await db.cultivation.update({
+      where: { id },
+      data: { isActive: false },
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
 }

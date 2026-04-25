@@ -26,7 +26,7 @@ export default function LandingPage() {
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => { setMounted(true) }, []) // eslint-disable-line react-hooks/set-state-in-effect
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 

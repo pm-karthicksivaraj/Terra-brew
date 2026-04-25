@@ -1,60 +1,111 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAuthUser, requireTenantAccess, validateBody, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
-import { createFarmLandSchema } from '@/lib/validators'
+import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
 
-export async function GET(request: NextRequest) {
+export async function GET(req: Request) {
   const user = await getAuthUser()
-  const permError = requireTenantAccess(user, 'farmlands', 'read')
-  if (permError) return permError
+  const authError = requireTenantAccess(user, 'farmlands', 'read')
+  if (authError) return authError
 
-  const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(request)
-  const tenantId = user.tenantId!
+  try {
+    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
+    const tenantId = user!.tenantId!
 
-  const where: Record<string, unknown> = { tenantId, isActive: true }
-  if (search) {
-    where.OR = [
-      { farmName: { contains: search } },
-    ]
+    const where: any = { tenantId, isActive: true }
+    if (search) {
+      where.OR = [
+        { farmName: { contains: search, mode: 'insensitive' } },
+        { plotBlockId: { contains: search, mode: 'insensitive' } },
+        { soilType: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const [items, total] = await Promise.all([
+      db.farmLand.findMany({
+        where,
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          farmer: { select: { id: true, fullName: true, farmerCode: true, province: true } },
+        },
+      }),
+      db.farmLand.count({ where }),
+    ])
+
+    return apiResponse({ data: items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
+  } catch (e: any) {
+    return apiError(e.message, 500)
   }
-
-  const [farmLands, total] = await Promise.all([
-    db.farmLand.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      include: { farmer: { select: { id: true, fullName: true, farmerCode: true } } },
-    }),
-    db.farmLand.count({ where }),
-  ])
-
-  return apiResponse({ farmLands, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   const user = await getAuthUser()
-  const permError = requireTenantAccess(user, 'farmlands', 'create')
-  if (permError) return permError
+  const authError = requireTenantAccess(user, 'farmlands', 'create')
+  if (authError) return authError
 
-  const body = await request.json()
-  const result = validateBody(createFarmLandSchema, body)
-  if ('error' in result) return result.error
+  try {
+    const body = await req.json()
+    const tenantId = user!.tenantId!
 
-  const data = result.data
-  const tenantId = user.tenantId!
+    const item = await db.farmLand.create({
+      data: {
+        ...body,
+        tenantId,
+        createdBy: user!.id,
+      },
+    })
 
-  // Verify farmer belongs to tenant
-  const farmer = await db.farmer.findFirst({ where: { id: data.farmerId, tenantId } })
-  if (!farmer) return apiError('Farmer not found in this tenant', 404)
+    return apiResponse(item, 201)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
 
-  const farmLand = await db.farmLand.create({
-    data: {
-      ...data,
-      tenantId,
-      createdBy: user.id,
-    } as any,
-  })
+export async function PUT(req: Request) {
+  const user = await getAuthUser()
+  const authError = requireTenantAccess(user, 'farmlands', 'update')
+  if (authError) return authError
 
-  return apiResponse(farmLand, 201)
+  try {
+    const body = await req.json()
+    const { id, ...data } = body
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.farmLand.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Farm land not found', 404)
+
+    const item = await db.farmLand.update({
+      where: { id },
+      data,
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
+}
+
+export async function DELETE(req: Request) {
+  const user = await getAuthUser()
+  const authError = requireTenantAccess(user, 'farmlands', 'delete')
+  if (authError) return authError
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return apiError('ID is required', 400)
+
+    const existing = await db.farmLand.findFirst({ where: { id, tenantId: user!.tenantId!, isActive: true } })
+    if (!existing) return apiError('Farm land not found', 404)
+
+    const item = await db.farmLand.update({
+      where: { id },
+      data: { isActive: false },
+    })
+
+    return apiResponse(item)
+  } catch (e: any) {
+    return apiError(e.message, 500)
+  }
 }
