@@ -89,15 +89,19 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const isDesktop = useIsDesktop()
 
   // Sidebar collapse state persisted to localStorage
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    try {
-      return localStorage.getItem('sidebar-collapsed') === 'true'
-    } catch {
-      return false
-    }
-  })
+  // Initialize with false (server-safe), then read from localStorage in effect
+  const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Read localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sidebar-collapsed')
+      if (saved === 'true') setCollapsed(true)
+    } catch {
+      // ignore storage errors
+    }
+  }, [])
 
   const handleToggleCollapse = useCallback(() => {
     setCollapsed((prev) => {

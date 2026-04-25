@@ -478,7 +478,21 @@ export default function SuperAdminDashboard() {
     )
   }
 
-  if (!mounted || !session?.user?.isPlatformAdmin) return null
+  if (!mounted || !session?.user?.isPlatformAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
+            <Shield className="w-9 h-9 text-white animate-pulse" />
+          </div>
+          <div className="flex items-center gap-2 text-stone-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Đang tải...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // ════════════════════════════════════════════════════════════════
   // RENDER

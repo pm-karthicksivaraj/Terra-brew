@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={`${spaceMono.variable} antialiased bg-background text-foreground`} style={{ fontFamily: '"Space Mono", monospace' }}>
+      <body className={`${spaceMono.variable} antialiased bg-background text-foreground`} style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>
