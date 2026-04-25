@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
 
-// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+// Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 233280
   return x - Math.floor(x)
@@ -28,7 +27,7 @@ export default function LoginPage() {
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
-  // Pre-compute particle positions using deterministic random to avoid hydration mismatch
+  // Pre-compute particle positions using deterministic random
   const particles = useMemo(() =>
     Array.from({ length: 20 }, (_, i) => ({
       width: 4 + seededRandom(i * 3 + 1) * 8,
@@ -48,8 +47,6 @@ export default function LoginPage() {
     setError('')
 
     try {
-      // Single-step login: custom API validates credentials AND sets the
-      // NextAuth session cookie directly (no signIn() CSRF issues).
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,8 +60,6 @@ export default function LoginPage() {
         return
       }
 
-      // Session cookie is already set by the API response.
-      // Navigate to dashboard and refresh to sync SessionProvider.
       toast.success(t('Đăng nhập thành công!', 'Login successful!'))
       router.push('/dashboard')
       router.refresh()
@@ -81,9 +76,9 @@ export default function LoginPage() {
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
-      {/* Floating particles — deterministic positions prevent hydration mismatch */}
+      {/* Floating particles — pure CSS, no framer-motion */}
       {particles.map((p, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
@@ -92,50 +87,42 @@ export default function LoginPage() {
             left: `${p.left}%`,
             top: `${p.top}%`,
             background: `rgba(212, 165, 116, ${p.opacity})`,
-          }}
-          animate={{
-            y: [0, -40, 0],
-            x: [0, p.xShift, 0],
-            opacity: [0.1, 0.3, 0.1],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: 'easeInOut',
+            animation: `loginFloat ${p.duration}s ease-in-out ${p.delay}s infinite`,
           }}
         />
       ))}
 
-      {/* Gradient orbs */}
-      <motion.div
+      {/* Gradient orbs — pure CSS */}
+      <div
         className="absolute w-[500px] h-[500px] rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #d4a574, transparent)', top: '-10%', right: '-10%' }}
-        animate={{ scale: [1, 1.3, 1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          background: 'radial-gradient(circle, #d4a574, transparent)',
+          top: '-10%',
+          right: '-10%',
+          animation: 'loginPulse 10s ease-in-out infinite',
+        }}
       />
-      <motion.div
+      <div
         className="absolute w-[400px] h-[400px] rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #8b5a1e, transparent)', bottom: '-5%', left: '-5%' }}
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          background: 'radial-gradient(circle, #8b5a1e, transparent)',
+          bottom: '-5%',
+          left: '-5%',
+          animation: 'loginPulse 12s ease-in-out infinite',
+        }}
       />
 
-      {/* Login Card */}
-      <motion.div
+      {/* Login Card — CSS entrance */}
+      <div
         className="relative z-10 w-full max-w-md mx-4"
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        style={{ animation: 'loginFadeUp 0.6s ease-out 0.2s both' }}
       >
         <Card className="bg-white/95 backdrop-blur-xl border-coffee-200/30 shadow-2xl shadow-black/20 rounded-2xl overflow-hidden">
           <CardHeader className="pb-2 pt-8 px-8">
-            {/* Logo */}
-            <motion.div
+            {/* Logo — CSS scale-in */}
+            <div
               className="flex flex-col items-center mb-4"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.4 }}
+              style={{ animation: 'loginScaleIn 0.5s ease-out 0.4s both' }}
             >
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center shadow-lg shadow-coffee-400/30 mb-4">
                 <Coffee className="w-9 h-9 text-white" />
@@ -144,7 +131,7 @@ export default function LoginPage() {
               <p className="text-coffee-500 text-sm mt-1">
                 {t('Đăng nhập vào Nền tảng', 'Sign in to Platform')}
               </p>
-            </motion.div>
+            </div>
 
             {/* Language toggle */}
             <div className="flex justify-center">
@@ -219,19 +206,12 @@ export default function LoginPage() {
               </div>
 
               {/* Error Message */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 text-xs"
-                    initial={{ opacity: 0, y: -10, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: 'auto' }}
-                    exit={{ opacity: 0, y: -10, height: 0 }}
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {error && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
 
               {/* Demo info */}
               <div className="bg-coffee-50 border border-coffee-200/50 rounded-xl p-3 text-xs text-coffee-600">
@@ -284,7 +264,27 @@ export default function LoginPage() {
         <p className="text-center text-coffee-400/60 text-xs mt-6">
           © 2024 Terra Brew — {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
         </p>
-      </motion.div>
+      </div>
+
+      {/* CSS Keyframes — injected once, no DOM manipulation */}
+      <style jsx global>{`
+        @keyframes loginFloat {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.1; }
+          50% { transform: translateY(-40px) translateX(${seededRandom(42) * 20 - 10}px); opacity: 0.3; }
+        }
+        @keyframes loginPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+        }
+        @keyframes loginFadeUp {
+          from { opacity: 0; transform: translateY(30px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes loginScaleIn {
+          from { transform: scale(0); }
+          to { transform: scale(1); }
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,31 +1,15 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Coffee, Globe, ChevronRight, Leaf, Shield, TrendingUp, Loader2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Coffee, Globe, ChevronRight, Leaf, Shield, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 
-// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+// Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 233280
   return x - Math.floor(x)
 }
-
-const floatingBeans = Array.from({ length: 12 }, (_, i) => ({
-  id: i,
-  x: seededRandom(i * 5 + 1) * 100,
-  y: seededRandom(i * 5 + 2) * 100,
-  size: 12 + seededRandom(i * 5 + 3) * 24,
-  duration: 8 + seededRandom(i * 5 + 4) * 12,
-  delay: seededRandom(i * 5 + 5) * 5,
-}))
-
-const features = [
-  { icon: Leaf, title: 'Truy xuất Nguồn gốc', titleEn: 'Full Traceability', desc: 'Từ nông trại đến tách cà phê', descEn: 'From farm to cup' },
-  { icon: Shield, title: 'Bảo mật Dữ liệu', titleEn: 'Data Security', desc: 'Mã hóa AES-256 & Chuỗi khối', descEn: 'AES-256 & Blockchain' },
-  { icon: TrendingUp, title: 'Phân tích Thời gian thực', titleEn: 'Real-time Analytics', desc: 'Bảng điều khiển thông minh', descEn: 'Smart dashboards' },
-]
 
 export default function LandingPage() {
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
@@ -33,69 +17,65 @@ export default function LandingPage() {
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
+  const floatingBeans = useMemo(() =>
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      x: seededRandom(i * 5 + 1) * 100,
+      y: seededRandom(i * 5 + 2) * 100,
+      size: 12 + seededRandom(i * 5 + 3) * 24,
+      duration: 8 + seededRandom(i * 5 + 4) * 12,
+      delay: seededRandom(i * 5 + 5) * 5,
+    })),
+  [])
+
+  const features = [
+    { icon: Leaf, title: 'Truy xuất Nguồn gốc', titleEn: 'Full Traceability', desc: 'Từ nông trại đến tách cà phê', descEn: 'From farm to cup' },
+    { icon: Shield, title: 'Bảo mật Dữ liệu', titleEn: 'Data Security', desc: 'Mã hóa AES-256 & Chuỗi khối', descEn: 'AES-256 & Blockchain' },
+    { icon: TrendingUp, title: 'Phân tích Thời gian thực', titleEn: 'Real-time Analytics', desc: 'Bảng điều khiển thông minh', descEn: 'Smart dashboards' },
+  ]
+
   return (
     <div className="min-h-screen flex flex-col overflow-hidden relative" style={{ fontFamily: '"Space Mono", monospace' }}>
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-50 via-amber-50 to-stone-100" />
 
-      {/* Floating coffee beans */}
+      {/* Floating coffee beans — pure CSS */}
       {floatingBeans.map((bean) => (
-        <motion.div
+        <div
           key={bean.id}
           className="absolute text-coffee-200/30 pointer-events-none select-none"
-          style={{ left: `${bean.x}%`, top: `${bean.y}%` }}
-          animate={{
-            y: [0, -30, 0, 20, 0],
-            x: [0, 15, -10, 5, 0],
-            rotate: [0, 180, 360],
-          }}
-          transition={{
-            duration: bean.duration,
-            repeat: Infinity,
-            delay: bean.delay,
-            ease: 'easeInOut',
+          style={{
+            left: `${bean.x}%`,
+            top: `${bean.y}%`,
+            animation: `beanFloat ${bean.duration}s ease-in-out ${bean.delay}s infinite, beanRotate ${bean.duration}s linear ${bean.delay}s infinite`,
           }}
         >
           <Coffee size={bean.size} />
-        </motion.div>
+        </div>
       ))}
 
-      {/* Gradient orbs */}
-      <motion.div
+      {/* Gradient orbs — pure CSS */}
+      <div
         className="absolute w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #d4a574, transparent)', top: '10%', right: '-5%' }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ background: 'radial-gradient(circle, #d4a574, transparent)', top: '10%', right: '-5%', animation: 'orbPulse 8s ease-in-out infinite' }}
       />
-      <motion.div
+      <div
         className="absolute w-80 h-80 rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #8b5a1e, transparent)', bottom: '5%', left: '-3%' }}
-        animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ background: 'radial-gradient(circle, #8b5a1e, transparent)', bottom: '5%', left: '-3%', animation: 'orbPulse 10s ease-in-out infinite' }}
       />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="flex items-center justify-between px-6 md:px-12 py-6">
-          <motion.div
-            className="flex items-center gap-3"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+        <header className="flex items-center justify-between px-6 md:px-12 py-6" style={{ animation: 'fadeIn 0.6s ease-out both' }}>
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-coffee-600 to-coffee-800 flex items-center justify-center">
               <Coffee className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-coffee-800 tracking-tight">Terra Brew</span>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="flex items-center gap-3"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
@@ -105,66 +85,54 @@ export default function LandingPage() {
               <Globe className="w-4 h-4" />
               {lang === 'vi' ? 'EN' : 'VI'}
             </Button>
-          </motion.div>
+          </div>
         </header>
 
         {/* Hero Section */}
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <motion.div
+          <div
             className="text-center max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            style={{ animation: 'fadeIn 0.8s ease-out 0.2s both' }}
           >
             {/* Logo */}
-            <motion.div
+            <div
               className="mb-8 flex justify-center"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.3 }}
+              style={{ animation: 'scaleIn 0.5s ease-out 0.3s both' }}
             >
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-coffee-500 via-coffee-600 to-coffee-800 flex items-center justify-center shadow-2xl shadow-coffee-400/30">
                 <Coffee className="w-14 h-14 md:w-20 md:h-20 text-white" />
               </div>
-            </motion.div>
+            </div>
 
             {/* Title */}
-            <motion.h1
+            <h1
               className="text-4xl md:text-6xl lg:text-7xl font-bold text-coffee-900 mb-4 leading-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              style={{ animation: 'fadeIn 0.6s ease-out 0.5s both' }}
             >
               Terra Brew
-            </motion.h1>
+            </h1>
 
-            <motion.p
+            <p
               className="text-lg md:text-2xl text-coffee-600 mb-3 font-medium"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
+              style={{ animation: 'fadeIn 0.6s ease-out 0.7s both' }}
             >
               {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
-            </motion.p>
+            </p>
 
-            <motion.p
+            <p
               className="text-sm md:text-base text-coffee-400 mb-10 max-w-2xl mx-auto leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
+              style={{ animation: 'fadeIn 0.6s ease-out 0.8s both' }}
             >
               {t(
                 'Giải pháp toàn diện cho chuỗi cung ứng cà phê — từ nông trại, thu hoạch, chế biến đến thị trường. Được bảo vệ bởi chuỗi khối và mã hóa AES-256.',
                 'End-to-end solution for the coffee supply chain — from farm, harvest, processing to market. Protected by blockchain and AES-256 encryption.'
               )}
-            </motion.p>
+            </p>
 
             {/* CTA Buttons */}
-            <motion.div
+            <div
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
+              style={{ animation: 'fadeIn 0.6s ease-out 0.9s both' }}
             >
               <Button
                 size="lg"
@@ -183,24 +151,18 @@ export default function LandingPage() {
               >
                 {t('Quản trị Nền tảng', 'Platform Admin')}
               </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Feature Cards */}
-          <motion.div
+          <div
             className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto w-full"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.1 }}
+            style={{ animation: 'fadeIn 0.6s ease-out 1.1s both' }}
           >
             {features.map((feature, i) => (
-              <motion.div
+              <div
                 key={i}
                 className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-coffee-200/50 hover:border-coffee-300/80 hover:shadow-lg transition-all duration-300 group"
-                whileHover={{ y: -4, scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1.2 + i * 0.15 }}
               >
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center mb-4 group-hover:from-coffee-200 group-hover:to-coffee-300 transition-colors">
                   <feature.icon className="w-6 h-6 text-coffee-700" />
@@ -211,9 +173,9 @@ export default function LandingPage() {
                 <p className="text-coffee-500 text-xs leading-relaxed">
                   {t(feature.desc, feature.descEn)}
                 </p>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </main>
 
         {/* Footer */}
@@ -223,6 +185,32 @@ export default function LandingPage() {
           </p>
         </footer>
       </div>
+
+      {/* CSS Keyframes */}
+      <style jsx global>{`
+        @keyframes beanFloat {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-30px) translateX(15px); }
+          50% { transform: translateY(0) translateX(-10px); }
+          75% { transform: translateY(20px) translateX(5px); }
+        }
+        @keyframes beanRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes orbPulse {
+          0%, 100% { transform: scale(1); opacity: 0.15; }
+          50% { transform: scale(1.2); opacity: 0.25; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { transform: scale(0); }
+          to { transform: scale(1); }
+        }
+      `}</style>
     </div>
   )
 }

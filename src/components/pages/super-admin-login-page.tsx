@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
 
-// Deterministic pseudo-random based on seed to avoid SSR/client mismatch
+// Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 233280
   return x - Math.floor(x)
@@ -46,8 +45,6 @@ export default function SuperAdminLoginPage() {
     setError('')
 
     try {
-      // Single-step login: custom API validates credentials AND sets the
-      // NextAuth session cookie directly (no signIn() CSRF issues).
       const res = await fetch('/api/auth/platform-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,7 +58,6 @@ export default function SuperAdminLoginPage() {
         return
       }
 
-      // Session cookie is already set by the API response.
       toast.success(t('Đăng nhập thành công!', 'Login successful!'))
       router.push('/super-admin/dashboard')
       router.refresh()
@@ -78,9 +74,9 @@ export default function SuperAdminLoginPage() {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-coffee-900" />
 
-      {/* Floating elements — deterministic positions prevent hydration mismatch */}
+      {/* Floating elements — pure CSS, no framer-motion */}
       {particles.map((p, i) => (
-        <motion.div
+        <div
           key={i}
           className="absolute rounded-full pointer-events-none"
           style={{
@@ -89,28 +85,28 @@ export default function SuperAdminLoginPage() {
             left: `${p.left}%`,
             top: `${p.top}%`,
             background: `rgba(212, 165, 116, ${p.opacity})`,
+            animation: `saFloat ${p.duration}s ease-in-out ${p.delay}s infinite`,
           }}
-          animate={{ y: [0, -30, 0], opacity: [0.05, 0.2, 0.05] }}
-          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay }}
         />
       ))}
 
-      {/* Login Card */}
-      <motion.div
+      {/* Login Card — CSS entrance */}
+      <div
         className="relative z-10 w-full max-w-md mx-4"
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6 }}
+        style={{ animation: 'saFadeUp 0.6s ease-out both' }}
       >
         <Card className="bg-white/95 backdrop-blur-xl border-stone-200/30 shadow-2xl shadow-black/20 rounded-2xl">
           <CardHeader className="pb-2 pt-8 px-8">
-            <motion.div className="flex flex-col items-center mb-4" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}>
+            <div
+              className="flex flex-col items-center mb-4"
+              style={{ animation: 'saScaleIn 0.5s ease-out 0.2s both' }}
+            >
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center shadow-lg mb-4">
                 <Shield className="w-9 h-9 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-stone-800">{t('Quản trị Nền tảng', 'Platform Admin')}</h1>
               <p className="text-stone-500 text-sm mt-1">Terra Brew</p>
-            </motion.div>
+            </div>
             <div className="flex justify-center">
               <Button variant="ghost" size="sm" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')} className="gap-1.5 text-stone-500 hover:text-stone-800 text-xs">
                 <Globe className="w-3.5 h-3.5" />
@@ -136,10 +132,10 @@ export default function SuperAdminLoginPage() {
               </div>
 
               {error && (
-                <motion.div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 text-xs" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 text-xs">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {error}
-                </motion.div>
+                </div>
               )}
 
               <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 text-xs text-stone-600">
@@ -159,7 +155,23 @@ export default function SuperAdminLoginPage() {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
+
+      {/* CSS Keyframes — no DOM manipulation */}
+      <style jsx global>{`
+        @keyframes saFloat {
+          0%, 100% { transform: translateY(0); opacity: 0.05; }
+          50% { transform: translateY(-30px); opacity: 0.2; }
+        }
+        @keyframes saFadeUp {
+          from { opacity: 0; transform: translateY(30px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes saScaleIn {
+          from { transform: scale(0); }
+          to { transform: scale(1); }
+        }
+      `}</style>
     </div>
   )
 }
