@@ -21,23 +21,37 @@ export const authOptions: NextAuthOptions = {
         tenantSlug: { label: 'Tenant', type: 'text' },
       },
       async authorize(credentials) {
+        console.log('[Auth] tenant-login attempt:', { email: credentials?.email, tenantSlug: credentials?.tenantSlug })
+
         if (!credentials?.email || !credentials?.password || !credentials?.tenantSlug) {
+          console.log('[Auth] Missing required fields')
           throw new Error('Missing required fields')
         }
 
         const tenant = await db.tenant.findUnique({
           where: { slug: credentials.tenantSlug, isActive: true },
         })
-        if (!tenant) throw new Error('Tenant not found or inactive')
+        if (!tenant) {
+          console.log('[Auth] Tenant not found:', credentials.tenantSlug)
+          throw new Error('Tenant not found or inactive')
+        }
 
         const user = await db.user.findUnique({
           where: { email_tenantId: { email: credentials.email, tenantId: tenant.id } },
         })
-        if (!user) throw new Error('Invalid credentials')
+        if (!user) {
+          console.log('[Auth] User not found:', credentials.email)
+          throw new Error('Invalid credentials')
+        }
         if (!user.isActive) throw new Error('Account deactivated')
 
         const valid = await verifyPassword(credentials.password, user.passwordHash)
-        if (!valid) throw new Error('Invalid credentials')
+        if (!valid) {
+          console.log('[Auth] Invalid password for:', credentials.email)
+          throw new Error('Invalid credentials')
+        }
+
+        console.log('[Auth] Login successful:', credentials.email)
 
         return {
           id: user.id,

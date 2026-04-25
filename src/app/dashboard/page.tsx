@@ -111,7 +111,18 @@ export default function DashboardPage() {
     )
   }
 
-  if (!session) return null
+  if (!session) {
+    return (
+      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+        <div className="flex items-center justify-center py-32">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-6 h-6 animate-spin text-coffee-500" />
+            <span className="text-sm text-coffee-500">{t('Đang chuyển hướng...', 'Redirecting...')}</span>
+          </div>
+        </div>
+      </DashboardShell>
+    )
+  }
 
   const currency = session.user?.currency || 'VND'
 

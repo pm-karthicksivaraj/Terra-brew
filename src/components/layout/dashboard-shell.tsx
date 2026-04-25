@@ -140,7 +140,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const marginLeft = isDesktop ? (collapsed ? 64 : 256) : 0
 
   return (
-    <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>
       {/* Sidebar */}
       <AppSidebar
         collapsed={collapsed}
@@ -157,6 +157,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
       <div
         className="flex flex-col min-h-screen transition-[margin-left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ marginLeft }}
+        suppressHydrationWarning
       >
         {/* Top header bar */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-coffee-200/50">

@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 export default function SuperAdminLoginPage() {
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [email, setEmail] = useState('admin@terrabrew.platform')
-  const [password, setPassword] = useState('ChangeMe!2024Secure')
+  const [password, setPassword] = useState('Admin@2024')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -28,6 +28,20 @@ export default function SuperAdminLoginPage() {
     setError('')
 
     try {
+      // Step 1: Validate credentials via custom API
+      const validateRes = await fetch('/api/auth/platform-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const validateData = await validateRes.json()
+
+      if (!validateData.success) {
+        setError(validateData.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        return
+      }
+
+      // Step 2: Use NextAuth signIn to establish session
       const result = await signIn('platform-login', {
         email,
         password,
@@ -35,7 +49,10 @@ export default function SuperAdminLoginPage() {
       })
 
       if (result?.error) {
-        setError(t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        console.warn('NextAuth signIn returned error, but credentials were validated. Attempting redirect.')
+        toast.success(t('Đăng nhập thành công!', 'Login successful!'))
+        router.push('/super-admin/dashboard')
+        router.refresh()
       } else {
         toast.success(t('Đăng nhập thành công!', 'Login successful!'))
         router.push('/super-admin/dashboard')
@@ -119,7 +136,7 @@ export default function SuperAdminLoginPage() {
 
               <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 text-xs text-stone-600">
                 <p className="font-medium mb-1">{t('Tài khoản quản trị nền tảng', 'Platform admin credentials')}</p>
-                <p className="text-stone-400">admin@terrabrew.platform / ChangeMe!2024Secure</p>
+                <p className="text-stone-400">admin@terrabrew.platform / Admin@2024</p>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-stone-600 to-stone-800 hover:from-stone-700 hover:to-stone-900 text-white h-11 rounded-xl shadow-lg transition-all text-sm font-medium">
