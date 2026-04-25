@@ -145,7 +145,6 @@ export default function TenantDetailPage() {
   const params = useParams()
   const tenantId = params.id as string
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
-  const [mounted, setMounted] = useState(false)
   const [tenant, setTenant] = useState<TenantDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -159,8 +158,6 @@ export default function TenantDetailPage() {
   })
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
-
-  useEffect(() => setMounted(true), [])
 
   const fetchTenant = useCallback(async () => {
     try {
@@ -330,7 +327,7 @@ export default function TenantDetailPage() {
     )
   }
 
-  if (!mounted || !session?.user?.isPlatformAdmin || !tenant) {
+  if (!session?.user?.isPlatformAdmin || !tenant) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
         <div className="flex flex-col items-center gap-4">

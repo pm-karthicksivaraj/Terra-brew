@@ -133,7 +133,6 @@ export default function SuperAdminDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [lang, setLang] = useState<'vi' | 'en'>('vi')
-  const [mounted, setMounted] = useState(false)
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [modules, setModules] = useState<ModuleDef[]>([])
   const [platformUsers, setPlatformUsers] = useState<PlatformUser[]>([])
@@ -168,8 +167,6 @@ export default function SuperAdminDashboard() {
   })
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
-
-  useEffect(() => setMounted(true), [])
 
   const resetForm = () => {
     setForm({
@@ -242,10 +239,10 @@ export default function SuperAdminDashboard() {
 
   // Refetch audit logs when filters change
   useEffect(() => {
-    if (mounted && session?.user?.isPlatformAdmin) {
+    if (session?.user?.isPlatformAdmin) {
       fetchAuditLogs()
     }
-  }, [logFilter, fetchAuditLogs, mounted, session?.user?.isPlatformAdmin])
+  }, [logFilter, fetchAuditLogs, session?.user?.isPlatformAdmin])
 
   // ════════════════════════════════════════════════════════════════
   // TENANT HANDLERS
@@ -478,7 +475,7 @@ export default function SuperAdminDashboard() {
     )
   }
 
-  if (!mounted || !session?.user?.isPlatformAdmin) {
+  if (!session?.user?.isPlatformAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
         <div className="flex flex-col items-center gap-4">
