@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
@@ -29,43 +28,29 @@ export default function LoginPage() {
     setError('')
 
     try {
-      // Step 1: Validate credentials via our custom API
-      const validateRes = await fetch('/api/auth/login', {
+      // Single-step login: custom API validates credentials AND sets the
+      // NextAuth session cookie directly (no signIn() CSRF issues).
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, tenantSlug }),
       })
-      const validateData = await validateRes.json()
+      const data = await res.json()
 
-      if (!validateData.success) {
-        setError(validateData.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
-        toast.error(validateData.error || t('Đăng nhập thất bại', 'Login failed'))
+      if (!data.success) {
+        setError(data.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        toast.error(data.error || t('Đăng nhập thất bại', 'Login failed'))
         return
       }
 
-      // Step 2: Use NextAuth signIn to establish session
-      // The browser handles cookies and CSRF automatically for same-origin requests
-      const result = await signIn('tenant-login', {
-        email,
-        password,
-        tenantSlug,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        // Credentials were validated but NextAuth session creation failed
-        // Try navigating to dashboard anyway — session might still be valid
-        console.warn('NextAuth signIn returned error, but credentials were validated. Attempting redirect.')
-        toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-        router.push('/dashboard')
-        router.refresh()
-      } else {
-        toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-        router.push('/dashboard')
-        router.refresh()
-      }
+      // Session cookie is already set by the API response.
+      // Navigate to dashboard and refresh to sync SessionProvider.
+      toast.success(t('Đăng nhập thành công!', 'Login successful!'))
+      router.push('/dashboard')
+      router.refresh()
     } catch {
       setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
+      toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))
     } finally {
       setLoading(false)
     }

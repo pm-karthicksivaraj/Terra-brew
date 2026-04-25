@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle, Shield } from 'lucide-react'
@@ -28,38 +27,28 @@ export default function SuperAdminLoginPage() {
     setError('')
 
     try {
-      // Step 1: Validate credentials via custom API
-      const validateRes = await fetch('/api/auth/platform-login', {
+      // Single-step login: custom API validates credentials AND sets the
+      // NextAuth session cookie directly (no signIn() CSRF issues).
+      const res = await fetch('/api/auth/platform-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      const validateData = await validateRes.json()
+      const data = await res.json()
 
-      if (!validateData.success) {
-        setError(validateData.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+      if (!data.success) {
+        setError(data.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        toast.error(data.error || t('Đăng nhập thất bại', 'Login failed'))
         return
       }
 
-      // Step 2: Use NextAuth signIn to establish session
-      const result = await signIn('platform-login', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        console.warn('NextAuth signIn returned error, but credentials were validated. Attempting redirect.')
-        toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-        router.push('/super-admin/dashboard')
-        router.refresh()
-      } else {
-        toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-        router.push('/super-admin/dashboard')
-        router.refresh()
-      }
+      // Session cookie is already set by the API response.
+      toast.success(t('Đăng nhập thành công!', 'Login successful!'))
+      router.push('/super-admin/dashboard')
+      router.refresh()
     } catch {
       setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
+      toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))
     } finally {
       setLoading(false)
     }

@@ -88,6 +88,11 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
 
+  // Hydration guard: only render dynamic layout after client mount.
+  // This prevents removeChild errors from margin-left / collapsed state
+  // differing between server and client.
+  const [mounted, setMounted] = useState(false)
+
   // Sidebar collapse state persisted to localStorage
   // Initialize with false (server-safe), then read from localStorage in effect
   const [collapsed, setCollapsed] = useState(false)
@@ -101,6 +106,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
     } catch {
       // ignore storage errors
     }
+    setMounted(true)
   }, [])
 
   const handleToggleCollapse = useCallback(() => {
@@ -137,7 +143,32 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const userRole = session?.user?.role || ''
 
   // Compute margin-left: only on desktop, matches sidebar width
-  const marginLeft = isDesktop ? (collapsed ? 64 : 256) : 0
+  // Before mount, always use 0 to match SSR output and prevent hydration mismatch
+  const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 256) : 0
+
+  // Before client mount, render a minimal shell that matches the server output.
+  // After mount, render the full dynamic layout.
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }}>
+        <div className="flex flex-col min-h-screen">
+          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-coffee-200/50">
+            <div className="flex items-center justify-between px-4 md:px-6 py-2.5">
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-coffee-500">...</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-coffee-500">...</span>
+              </div>
+            </div>
+          </header>
+          <main className="flex-1 px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
+            {children}
+          </main>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>

@@ -12,6 +12,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultTheme="light"
         enableSystem={false}
         disableTransitionOnChange
+        // Prevents hydration mismatch by not injecting a script tag
+        // that modifies the DOM before React hydration completes
+        enableColorScheme={false}
       >
         {children}
         <Toaster richColors position="top-right" />
