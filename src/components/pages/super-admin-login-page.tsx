@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle, Shield } from 'lucide-react'
@@ -23,7 +23,6 @@ export default function SuperAdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
@@ -40,8 +39,6 @@ export default function SuperAdminLoginPage() {
       delay: seededRandom(i * 3 + 7) * 4,
     })),
   [])
-
-  useEffect(() => { setMounted(true) }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,8 +78,8 @@ export default function SuperAdminLoginPage() {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-coffee-900" />
 
-      {/* Floating elements — only after mount to prevent hydration mismatch */}
-      {mounted && particles.map((p, i) => (
+      {/* Floating elements — deterministic positions prevent hydration mismatch */}
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"

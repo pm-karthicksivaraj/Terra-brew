@@ -103,7 +103,6 @@ export default function PublicVerifyPage() {
   const [pageState, setPageState] = useState<PageState>('loading')
   const [data, setData] = useState<VerifyData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [mounted, setMounted] = useState(false)
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
@@ -120,8 +119,6 @@ export default function PublicVerifyPage() {
       delay: seededRandom(i * 4 + 8) * 4,
     })),
   [])
-
-  useEffect(() => { setMounted(true) }, [])
 
   // Fetch verification data on mount
   useEffect(() => {
@@ -207,8 +204,8 @@ export default function PublicVerifyPage() {
       {/* ─── Background ─── */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
-      {/* Floating coffee particles — only after mount to prevent hydration mismatch */}
-      {mounted && particles.map((p, i) => (
+      {/* Floating coffee particles — deterministic positions prevent hydration mismatch */}
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"

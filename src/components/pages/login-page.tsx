@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
@@ -42,8 +41,6 @@ export default function LoginPage() {
       delay: seededRandom(i * 3 + 8) * 5,
     })),
   [])
-
-  useEffect(() => { setMounted(true) }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,8 +81,8 @@ export default function LoginPage() {
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
-      {/* Floating particles — only after mount to prevent hydration mismatch */}
-      {mounted && particles.map((p, i) => (
+      {/* Floating particles — deterministic positions prevent hydration mismatch */}
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
