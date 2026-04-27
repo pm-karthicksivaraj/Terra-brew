@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, Users, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
@@ -184,7 +183,7 @@ export default function FarmersPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -460,15 +459,9 @@ export default function FarmersPage() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {farmers.map((farmer, i) => (
-                    <motion.tr
-                      key={farmer.id}
-                      className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                    >
+                {farmers.map((farmer, i) => (
+                    <tr key={farmer.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                       <td className="px-4 py-3 text-xs text-coffee-500 font-mono">{farmer.farmerCode || '-'}</td>
                       <td className="px-4 py-3">
                         <div>
@@ -506,10 +499,9 @@ export default function FarmersPage() {
                           {farmer.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
                         </Badge>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
-                </AnimatePresence>
-              </tbody>
+</tbody>
             </table>
           </div>
 
@@ -557,7 +549,7 @@ export default function FarmersPage() {
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

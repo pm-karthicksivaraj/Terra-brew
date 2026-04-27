@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   BarChart3, Users, MapPin, Sprout,
   TreePine, Tractor, Activity, FlaskConical, Shield,
@@ -119,20 +118,12 @@ function NavItemLink({
       )}
     >
       <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-4 h-4')} />
-      <AnimatePresence initial={false}>
-        {!collapsed && (
-          <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.2 }}
-            className="truncate overflow-hidden whitespace-nowrap"
-          >
+      {!collapsed && (
+          <span className="truncate overflow-hidden whitespace-nowrap">
             {label}
-          </motion.span>
+          </span>
         )}
-      </AnimatePresence>
-    </Link>
+</Link>
   )
 
   if (collapsed) {
@@ -182,21 +173,13 @@ function SidebarContent({
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center shrink-0 shadow-sm">
             <Coffee className="w-5 h-5 text-white" />
           </div>
-          <AnimatePresence initial={false}>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
+          {!collapsed && (
+              <div className="overflow-hidden">
                 <p className="text-sm font-bold text-sidebar-foreground truncate">{tenantName || 'Terra Brew'}</p>
                 <p className="text-[10px] text-sidebar-foreground/60 truncate capitalize">{userRole?.replace('_', ' ')}</p>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
+</div>
       </div>
 
       <Separator className="mx-3 my-1 bg-sidebar-border" />
@@ -206,20 +189,12 @@ function SidebarContent({
         <div className="py-2 space-y-4">
           {NAVIGATION.map((group) => (
             <div key={group.title}>
-              <AnimatePresence initial={false}>
-                {!collapsed && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-sidebar-foreground/40"
-                  >
+              {!collapsed && (
+                  <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-sidebar-foreground/40">
                     {lang === 'vi' ? group.titleVi : group.title}
-                  </motion.p>
+                  </p>
                 )}
-              </AnimatePresence>
-              <div className="space-y-0.5">
+<div className="space-y-0.5">
                 {group.items.map((item) => (
                   <div key={item.href} onClick={onNavClick}>
                     <NavItemLink
@@ -250,20 +225,12 @@ function SidebarContent({
           )}
         >
           <Globe className="w-4 h-4 shrink-0" />
-          <AnimatePresence initial={false}>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                {lang === 'vi' ? 'Tiếng Anh' : 'Tiếng Việt'}
-              </motion.span>
-            )}
-          </AnimatePresence>
           {!collapsed && (
+              <span className="overflow-hidden whitespace-nowrap">
+                {lang === 'vi' ? 'Tiếng Anh' : 'Tiếng Việt'}
+              </span>
+            )}
+{!collapsed && (
             <span className="ml-auto text-[10px] font-bold text-sidebar-foreground/50">
               {lang === 'vi' ? 'VI' : 'EN'}
             </span>
@@ -300,12 +267,8 @@ export function AppSidebar({
   return (
     <>
       {/* Desktop sidebar */}
-      <motion.aside
-        className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border"
-        animate={{ width: collapsed ? 64 : 256 }}
-        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        style={{ fontFamily: '"Space Mono", monospace' }}
-      >
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border"
+ style={{ fontFamily: '"Space Mono", monospace' }}>
         <SidebarContent
           collapsed={collapsed}
           tenantName={tenantName}
@@ -325,7 +288,7 @@ export function AppSidebar({
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Mobile drawer */}
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Shield, Users, Building2, Package,
   Globe, LogOut, Loader2, Plus, Pencil,
@@ -556,7 +555,7 @@ export default function SuperAdminDashboard() {
               OVERVIEW TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="overview">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
@@ -565,7 +564,7 @@ export default function SuperAdminDashboard() {
                   { title: t('Tổng nông dân', 'Total Farmers'), value: totalFarmers, icon: Leaf, color: 'from-teal-600 to-teal-800' },
                   { title: t('Tổng người dùng', 'Total Users'), value: totalUsers, icon: Users, color: 'from-cyan-600 to-cyan-800' },
                 ].map((stat, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
+                  <div key={i} >
                     <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur">
                       <CardContent className="p-4">
                         <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 shadow-sm`}>
@@ -575,7 +574,7 @@ export default function SuperAdminDashboard() {
                         <p className="text-xl font-bold text-stone-100">{stat.value}</p>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -661,14 +660,14 @@ export default function SuperAdminDashboard() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               TENANTS TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="tenants">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-stone-500" />
@@ -800,13 +799,8 @@ export default function SuperAdminDashboard() {
                           enabledCount = Object.values(modObj).filter(Boolean).length
                         } catch {}
                         return (
-                          <motion.tr
-                            key={tenant.id}
-                            className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.03 }}
-                          >
+                          <tr key={tenant.id}
+ className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
                             <td className="px-4 py-3">
                               <button
                                 onClick={() => router.push(`/super-admin/dashboard/tenants/${tenant.id}`)}
@@ -876,7 +870,7 @@ export default function SuperAdminDashboard() {
                                 </AlertDialog>
                               </div>
                             </td>
-                          </motion.tr>
+                          </tr>
                         )
                       })}
                     </tbody>
@@ -888,14 +882,14 @@ export default function SuperAdminDashboard() {
                   </div>
                 )}
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               PLATFORM USERS TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="users">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <UserCog className="w-5 h-5 text-stone-500" />
@@ -968,13 +962,8 @@ export default function SuperAdminDashboard() {
                     </thead>
                     <tbody>
                       {platformUsers.map((pUser, i) => (
-                        <motion.tr
-                          key={pUser.id}
-                          className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.03 }}
-                        >
+                        <tr key={pUser.id}
+ className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center shrink-0">
@@ -1032,7 +1021,7 @@ export default function SuperAdminDashboard() {
                               </AlertDialog>
                             </div>
                           </td>
-                        </motion.tr>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
@@ -1043,14 +1032,14 @@ export default function SuperAdminDashboard() {
                   </div>
                 )}
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               AUDIT LOG TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="audit">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-stone-500" />
@@ -1095,13 +1084,8 @@ export default function SuperAdminDashboard() {
                     </thead>
                     <tbody>
                       {auditLogs.map((log, i) => (
-                        <motion.tr
-                          key={log.id}
-                          className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.02 }}
-                        >
+                        <tr key={log.id}
+ className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
                           <td className="px-4 py-3 text-[10px] text-stone-500 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <Clock className="w-3 h-3" />
@@ -1117,7 +1101,7 @@ export default function SuperAdminDashboard() {
                           <td className="px-4 py-3 text-[10px] text-stone-400 max-w-[200px] truncate">{log.details || '—'}</td>
                           <td className="px-4 py-3 text-[10px] text-stone-500 hidden lg:table-cell">{log.tenant?.name || '—'}</td>
                           <td className="px-4 py-3 text-[10px] text-stone-600 hidden lg:table-cell font-mono">{log.ipAddress || '—'}</td>
-                        </motion.tr>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
@@ -1128,21 +1112,21 @@ export default function SuperAdminDashboard() {
                   </div>
                 )}
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               MODULES TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="modules">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2 mb-4">
                 <Package className="w-5 h-5 text-stone-500" />
                 {t('Thị trường Modules', 'Module Marketplace')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {modules.map((mod, i: number) => (
-                  <motion.div key={mod.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                  <div key={mod.id} >
                     <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur hover:border-stone-700 transition-colors">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
@@ -1164,10 +1148,10 @@ export default function SuperAdminDashboard() {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

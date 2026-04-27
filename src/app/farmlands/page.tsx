@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, MapPin, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
@@ -244,7 +243,7 @@ export default function FarmLandsPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -527,8 +526,7 @@ export default function FarmLandsPage() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {items.length === 0 ? (
+                {items.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-4 py-12 text-center text-coffee-400 text-sm">
                         {t('Không tìm thấy dữ liệu', 'No data found')}
@@ -536,13 +534,8 @@ export default function FarmLandsPage() {
                     </tr>
                   ) : (
                     items.map((item, i) => (
-                      <motion.tr
-                        key={item.id}
-                        className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                      >
+                      <tr key={item.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                         <td className="px-4 py-3">
                           <p className="text-xs font-medium text-coffee-800">{item.farmName}</p>
                         </td>
@@ -582,11 +575,10 @@ export default function FarmLandsPage() {
                             )}
                           </div>
                         </td>
-                      </motion.tr>
+                      </tr>
                     ))
                   )}
-                </AnimatePresence>
-              </tbody>
+</tbody>
             </table>
           </div>
 
@@ -634,7 +626,7 @@ export default function FarmLandsPage() {
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

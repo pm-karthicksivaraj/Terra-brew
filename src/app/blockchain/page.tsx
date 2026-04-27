@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, Link2, Search, Loader2,
   ShieldCheck, ShieldX, ArrowDown, CheckCircle2, XCircle,
@@ -203,7 +202,7 @@ export default function BlockchainPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
@@ -258,18 +257,12 @@ export default function BlockchainPage() {
         </div>
 
         {/* Verification Result Banner */}
-        <AnimatePresence>
-          {verification && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className={`mb-4 p-4 rounded-2xl flex items-center gap-3 ${
-                verification.valid
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
-              }`}
-            >
+        {verification && (
+            <div className={`mb-4 p-4 rounded-2xl flex items-center gap-3 ${
+ verification.valid
+ ? 'bg-green-50 border border-green-200'
+ : 'bg-red-50 border border-red-200'
+ }`}>
               {verification.valid ? (
                 <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
               ) : (
@@ -286,19 +279,11 @@ export default function BlockchainPage() {
                   {' '}&bull; {t(`${verification.totalBlocks} khối`, `${verification.totalBlocks} blocks`)}
                 </p>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-
-        {/* Anchor Status Banner */}
-        <AnimatePresence>
-          {anchorStatus && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="mb-6"
-            >
+{/* Anchor Status Banner */}
+        {anchorStatus && (
+            <div className="mb-6">
               {anchorStatus.anchored && anchorStatus.anchor ? (
                 <div className="p-4 rounded-2xl bg-green-50 border border-green-200">
                   <div className="flex items-center gap-3 mb-3">
@@ -413,11 +398,9 @@ export default function BlockchainPage() {
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-
-        {/* Anchor Confirmation Dialog */}
+{/* Anchor Confirmation Dialog */}
         <AlertDialog open={showAnchorDialog} onOpenChange={setShowAnchorDialog}>
           <AlertDialogContent className="rounded-2xl">
             <AlertDialogHeader>
@@ -500,18 +483,12 @@ export default function BlockchainPage() {
         {/* Chain Visualization */}
         {blocks.length > 0 && !loading && (
           <div className="space-y-0">
-            <AnimatePresence>
-              {blocks.map((block, i) => {
+            {blocks.map((block, i) => {
                 const isBroken = verification && !verification.valid && verification.brokenAt !== undefined && block.blockIndex >= verification.brokenAt
                 const isVerified = verification ? verification.valid || (verification.brokenAt !== undefined && block.blockIndex < verification.brokenAt) : true
 
                 return (
-                  <motion.div
-                    key={block.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1, duration: 0.4 }}
-                  >
+                  <div key={block.id}>
                     {/* Connector Arrow */}
                     {i > 0 && (
                       <div className="flex justify-center py-1">
@@ -612,19 +589,12 @@ export default function BlockchainPage() {
                         )}
                       </div>
                     </Card>
-                  </motion.div>
+                  </div>
                 )
               })}
-            </AnimatePresence>
-
-            {/* Chain Summary */}
+{/* Chain Summary */}
             {verification && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: blocks.length * 0.1 + 0.2 }}
-                className="mt-6"
-              >
+              <div className="mt-6">
                 <Card className="rounded-2xl border-0 shadow-sm p-4 bg-coffee-50/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -654,11 +624,11 @@ export default function BlockchainPage() {
                     </div>
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             )}
           </div>
         )}
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

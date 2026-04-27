@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Wheat, Search, Plus, ChevronLeft, ChevronRight, Loader2,
   Pencil, Trash2, AlertTriangle, Hash,
@@ -313,7 +312,7 @@ export default function HarvestPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -574,8 +573,7 @@ export default function HarvestPage() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {records.length === 0 ? (
+                {records.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="text-center py-12 text-coffee-400 text-sm">
                         <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -584,13 +582,8 @@ export default function HarvestPage() {
                     </tr>
                   ) : (
                     records.map((record, i) => (
-                      <motion.tr
-                        key={record.id}
-                        className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                      >
+                      <tr key={record.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                         <td className="px-4 py-3">
                           {record.batchId ? (
                             <Badge className="bg-coffee-100 text-coffee-800 text-[10px] border border-coffee-200 font-mono font-bold">
@@ -633,11 +626,10 @@ export default function HarvestPage() {
                             </Button>
                           </div>
                         </td>
-                      </motion.tr>
+                      </tr>
                     ))
                   )}
-                </AnimatePresence>
-              </tbody>
+</tbody>
             </table>
           </div>
 
@@ -656,7 +648,7 @@ export default function HarvestPage() {
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

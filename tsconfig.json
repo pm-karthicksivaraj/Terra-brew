@@ -42,6 +42,7 @@
     "examples",
     "mini-services",
     "upload",
-    "mobile"
+    "mobile",
+    "mobile-app"
   ]
 }

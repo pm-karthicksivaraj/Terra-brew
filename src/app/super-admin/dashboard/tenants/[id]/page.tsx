@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import {
   Shield, Users, Building2, Package, ArrowLeft,
   Loader2, Pencil, Power, Check, X, Activity,
@@ -434,7 +433,7 @@ export default function TenantDetailPage() {
               OVERVIEW TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="overview">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
@@ -443,7 +442,7 @@ export default function TenantDetailPage() {
                   { title: t('Đất nông nghiệp', 'Farmlands'), value: tenant._count?.farmLands || 0, icon: MapPin, color: 'from-emerald-600 to-emerald-800' },
                   { title: t('Nhật ký', 'Audit Logs'), value: tenant._count?.auditLogs || 0, icon: FileText, color: 'from-stone-600 to-stone-800' },
                 ].map((stat, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
+                  <div key={i} >
                     <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur">
                       <CardContent className="p-4">
                         <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 shadow-sm`}>
@@ -459,7 +458,7 @@ export default function TenantDetailPage() {
                         ) : null}
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
 
@@ -557,14 +556,14 @@ export default function TenantDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               MODULES TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="modules">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
@@ -606,14 +605,14 @@ export default function TenantDetailPage() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               USERS TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="users">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
@@ -634,13 +633,8 @@ export default function TenantDetailPage() {
                       </thead>
                       <tbody>
                         {tenant.users?.map((u, i) => (
-                          <motion.tr
-                            key={u.id}
-                            className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.03 }}
-                          >
+                          <tr key={u.id}
+ className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
                             <td className="px-4 py-2.5">
                               <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 rounded-full bg-stone-800 flex items-center justify-center shrink-0">
@@ -665,7 +659,7 @@ export default function TenantDetailPage() {
                                 {u.isActive ? t('HĐ', 'Active') : t('Tắt', 'Off')}
                               </Badge>
                             </td>
-                          </motion.tr>
+                          </tr>
                         ))}
                       </tbody>
                     </table>
@@ -675,14 +669,14 @@ export default function TenantDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
 
           {/* ══════════════════════════════════════════════════════════
               AUDIT LOG TAB
               ══════════════════════════════════════════════════════════ */}
           <TabsContent value="audit">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
               <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
@@ -704,13 +698,8 @@ export default function TenantDetailPage() {
                       </thead>
                       <tbody>
                         {tenant.auditLogs?.map((log, i) => (
-                          <motion.tr
-                            key={log.id}
-                            className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.02 }}
-                          >
+                          <tr key={log.id}
+ className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
                             <td className="px-4 py-2.5 text-[10px] text-stone-500 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
@@ -725,7 +714,7 @@ export default function TenantDetailPage() {
                             <td className="px-4 py-2.5 text-[10px] text-stone-400">{log.entity}</td>
                             <td className="px-4 py-2.5 text-[10px] text-stone-400 max-w-[250px] truncate">{log.details || '—'}</td>
                             <td className="px-4 py-2.5 text-[10px] text-stone-600 hidden lg:table-cell font-mono">{log.ipAddress || '—'}</td>
-                          </motion.tr>
+                          </tr>
                         ))}
                       </tbody>
                     </table>
@@ -735,7 +724,7 @@ export default function TenantDetailPage() {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

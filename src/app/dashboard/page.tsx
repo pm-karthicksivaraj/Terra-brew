@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import {
   Coffee, Users, MapPin, Wheat, DollarSign, Award,
   ShoppingCart, Store, FileCheck, TreePine, ClipboardCheck,
@@ -21,19 +20,6 @@ import { formatCurrency } from '@/types'
 import type { DashboardStats } from '@/types'
 
 const CHART_COLORS = ['#8b5a1e', '#d4a574', '#4a7c59', '#c08850', '#6d4516', '#a06b2d', '#2e7d32']
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06 },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-}
 
 function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
   const [display, setDisplay] = useState(0)
@@ -93,11 +79,7 @@ export default function DashboardPage() {
     return (
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
-          <motion.div
-            className="flex flex-col items-center gap-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
+          <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
@@ -105,7 +87,7 @@ export default function DashboardPage() {
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
-          </motion.div>
+          </div>
         </div>
       </DashboardShell>
     )
@@ -146,19 +128,19 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible">
+      <div>
         {/* Title */}
-        <motion.div variants={itemVariants} className="mb-6">
+        <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-coffee-900">
             {t('Bảng điều khiển', 'Dashboard')}
           </h2>
           <p className="text-sm text-coffee-500">{t('Phân tích theo thời gian thực', 'Real-time analytics')}</p>
-        </motion.div>
+        </div>
 
         {/* Primary KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {primaryKPIs.map((kpi, i) => (
-            <motion.div key={i} variants={itemVariants}>
+            <div key={i} >
               <Card className="rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardContent className="p-4">
                   <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${kpi.gradient} flex items-center justify-center mb-3 shadow-sm`}>
@@ -178,14 +160,14 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Secondary KPI Cards */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
           {secondaryKPIs.map((kpi, i) => (
-            <motion.div key={i} variants={itemVariants}>
+            <div key={i} >
               <Card className="rounded-xl border border-coffee-200/50 bg-white/60 backdrop-blur-sm">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-1">
@@ -197,14 +179,14 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Supply Chain Trends */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -235,10 +217,10 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Crop Distribution */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -271,13 +253,13 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
         {/* Second Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Processing Pipeline */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -301,10 +283,10 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Quality Distribution */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -335,13 +317,13 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
         {/* Bottom Row: Recent Activity + Farmers Per Province */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -369,13 +351,8 @@ export default function DashboardPage() {
                       }
                       const Icon = typeIcons[activity.type] || Activity
                       return (
-                        <motion.div
-                          key={activity.id}
-                          className="flex items-start gap-3 p-2 rounded-lg hover:bg-coffee-50 transition-colors"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.08 }}
-                        >
+                        <div key={activity.id}
+ className="flex items-start gap-3 p-2 rounded-lg hover:bg-coffee-50 transition-colors">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[activity.type] || 'bg-gray-100 text-gray-700'}`}>
                             <Icon className="w-4 h-4" />
                           </div>
@@ -384,17 +361,17 @@ export default function DashboardPage() {
                             <p className="text-[10px] text-coffee-500 truncate">{activity.entity}</p>
                             <p className="text-[10px] text-coffee-400 mt-0.5">{activity.time}</p>
                           </div>
-                        </motion.div>
+                        </div>
                       )
                     })}
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Farmers Per Province */}
-          <motion.div variants={itemVariants}>
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
@@ -421,9 +398,9 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

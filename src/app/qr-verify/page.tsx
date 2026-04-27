@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, QrCode, Search, CheckCircle2, XCircle, AlertTriangle,
   Loader2, Download, Shield, Scan, Eye, Hash,
@@ -215,7 +214,7 @@ export default function QRVerifyPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -231,11 +230,7 @@ export default function QRVerifyPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ─── Verify Section ─── */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center">
@@ -278,25 +273,14 @@ export default function QRVerifyPage() {
                 </div>
 
                 {/* Verification Result */}
-                <AnimatePresence mode="wait">
-                  {verifyResult && (
-                    <motion.div
-                      key={verifyResult.status}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    >
+                {verifyResult && (
+                    <div key={verifyResult.status}>
                       {verifyResult.status === 'valid' && (
                         <div className="rounded-xl border-2 border-green-200 bg-green-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <CheckCircle2 className="w-6 h-6 text-green-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-green-800">
                               {t('Hợp lệ — Chuỗi toàn vẹn', 'Valid — Chain Intact')}
                             </span>
@@ -342,13 +326,9 @@ export default function QRVerifyPage() {
                       {verifyResult.status === 'invalid' && (
                         <div className="rounded-xl border-2 border-red-200 bg-red-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <XCircle className="w-6 h-6 text-red-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-red-800">
                               {t('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
                             </span>
@@ -373,13 +353,9 @@ export default function QRVerifyPage() {
                       {verifyResult.status === 'not_found' && (
                         <div className="rounded-xl border-2 border-yellow-200 bg-yellow-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-yellow-800">
                               {t('Không tìm thấy', 'Not Found')}
                             </span>
@@ -389,19 +365,14 @@ export default function QRVerifyPage() {
                           </p>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-              </div>
+</div>
             </Card>
-          </motion.div>
+          </div>
 
           {/* ─── Generate Section ─── */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center">
@@ -486,14 +457,8 @@ export default function QRVerifyPage() {
                 </Button>
 
                 {/* Generated QR Code */}
-                <AnimatePresence mode="wait">
-                  {generatedQR && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    >
+                {generatedQR && (
+                    <div>
                       <div className="rounded-xl border border-coffee-200 bg-gradient-to-br from-coffee-50 to-amber-50/50 p-4 space-y-3">
                         {/* QR Image */}
                         {qrImageDataUrl && (
@@ -539,21 +504,15 @@ export default function QRVerifyPage() {
                           {t('Tải xuống QR', 'Download QR')}
                         </Button>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-              </div>
+</div>
             </Card>
-          </motion.div>
+          </div>
         </div>
 
         {/* ─── HMAC Signature Details Card ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6"
-        >
+        <div className="mt-6">
           <Card className="rounded-2xl border-0 shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center">
@@ -608,8 +567,8 @@ export default function QRVerifyPage() {
               </div>
             </div>
           </Card>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </DashboardShell>
   )
 }

@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword, computeDataHash, computeBlockHash } from '@/lib/crypto'
 
+export const maxDuration = 60 // Allow up to 60 seconds for seed
+
 export async function POST(req: Request) {
   try {
-    // 1. Create Platform Super Admin
+    // 1. Create Platform Super Admin (idempotent)
     const platformEmail = process.env.PLATFORM_ADMIN_EMAIL || 'admin@terrabrew.platform'
     const existingPlatform = await db.platformUser.findUnique({ where: { email: platformEmail } })
     if (!existingPlatform) {
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
       await db.module.upsert({ where: { slug: mod.slug }, update: mod, create: mod })
     }
 
-    // 3. Create Metrang Coffee Tenant
+    // 3. Create Metrang Coffee Tenant (idempotent)
     const tenantSlug = 'metrang-coffee'
     let tenant = await db.tenant.findUnique({ where: { slug: tenantSlug } })
 
@@ -212,7 +214,7 @@ export async function POST(req: Request) {
       batchNotes: 'Hạt Arabica chất lượng cao, chế biến tự nhiên', isActive: true,
     }})
 
-    // 9. Blockchain Hash Chain blocks (stored in PostgreSQL)
+    // 9. Blockchain Hash Chain blocks
     for (const { batchId, stage, data } of [
       { batchId: batchId1, stage: 'HARVEST', data: { farmer: farmer1.fullName, date: '2024-11-10', method: 'Selective Picking', weight: 3200 } },
       { batchId: batchId2, stage: 'HARVEST', data: { farmer: farmer2.fullName, date: '2024-10-20', method: 'Selective Picking', weight: 2500 } },
@@ -267,394 +269,242 @@ export async function POST(req: Request) {
       isActive: true,
     }})
 
-    // 13. Nursery Records
-    const nursery1 = await db.nursery.create({ data: {
+    // 13-22: Create remaining records (nurseries, land prep, crop monitoring, fertilizer, pest, cert, inspection, smart contracts, marketplace, processing stages)
+    // These are less critical but add demo value
+
+    await db.nursery.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, createdBy: adminUser.id,
       nurseryName: 'Vườn ươm Ea Tam', nurseryCode: 'NS-EATAM-001',
-      location: 'Ea Tam, Cư Mgar, Đắk Lắk',
-      province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam',
-      latitude: 12.670, longitude: 108.040,
-      nurseryType: 'Hạt giống', capacity: 50000, currentStock: 35000,
-      species: 'Coffea canephora', variety: 'Chari',
-      seedSource: 'Vườn giống chứng nhận Ea Drăng',
+      location: 'Ea Tam, Cư Mgar, Đắk Lắk', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam',
+      latitude: 12.670, longitude: 108.040, nurseryType: 'Hạt giống', capacity: 50000, currentStock: 35000,
+      species: 'Coffea canephora', variety: 'Chari', seedSource: 'Vườn giống chứng nhận Ea Drăng',
       plantingDate: new Date('2024-06-01'), expectedReadyDate: new Date('2024-12-01'),
-      germinationRate: 92.5, survivalRate: 88.0,
-      healthStatus: 'Tốt - không dấu hiệu bệnh',
-      notes: 'Cây giống Robusta Chari thế hệ F1, đã xử lý Trichoderma',
-      isActive: true,
+      germinationRate: 92.5, survivalRate: 88.0, healthStatus: 'Tốt - không dấu hiệu bệnh',
+      notes: 'Cây giống Robusta Chari thế hệ F1, đã xử lý Trichoderma', isActive: true,
     }})
-
-    const nursery2 = await db.nursery.create({ data: {
+    await db.nursery.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, createdBy: adminUser.id,
       nurseryName: 'Vườn ươm Hữu cơ Ea Drăng', nurseryCode: 'NS-EADRANG-001',
-      location: 'Ea Drăng, Cư Mgar, Đắk Lắk',
-      province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Drăng',
-      latitude: 12.694, longitude: 108.057,
-      nurseryType: 'Cây giống', capacity: 30000, currentStock: 18000,
-      species: 'Coffea arabica', variety: 'Catimor',
-      seedSource: 'Viện Khoa học Kỹ thuật Nông lâm nghiệp Tây Nguyên',
+      location: 'Ea Drăng, Cư Mgar, Đắk Lắk', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Drăng',
+      latitude: 12.694, longitude: 108.057, nurseryType: 'Cây giống', capacity: 30000, currentStock: 18000,
+      species: 'Coffea arabica', variety: 'Catimor', seedSource: 'Viện Khoa học Kỹ thuật Nông lâm nghiệp Tây Nguyên',
       plantingDate: new Date('2024-07-15'), expectedReadyDate: new Date('2025-01-15'),
-      germinationRate: 89.0, survivalRate: 85.5,
-      healthStatus: 'Khá - một số cây bị rệp sáp nhẹ',
-      notes: 'Cây giống Arabica Catimor, tiêu chuẩn hữu cơ',
-      isActive: true,
+      germinationRate: 89.0, survivalRate: 85.5, healthStatus: 'Khá - một số cây bị rệp sáp nhẹ',
+      notes: 'Cây giống Arabica Catimor, tiêu chuẩn hữu cơ', isActive: true,
     }})
 
-    // 14. Land Preparation Records
     await db.landPreparation.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id, createdBy: adminUser.id,
-      preparationDate: new Date('2024-04-10'),
-      preparationType: 'Làm đất vụ mới',
-      method: 'Cày xới thủ công + hữu cơ',
-      equipmentUsed: 'Cuốc, xẻng, máy cày mini',
-      laborCount: 4, laborCost: 2400000,
-      materialsUsed: 'Phân chuồng 2 tấn, vôi bột 50kg, Trichoderma 5kg',
-      materialCost: 3500000, totalCost: 5900000,
-      soilPhBefore: 5.2, soilPhAfter: 5.8,
-      organicMatterPct: 3.8,
-      notes: 'Đã bón lót phân chuồng ủ hoai mục, điều chỉnh pH bằng vôi',
-      isActive: true,
+      preparationDate: new Date('2024-04-10'), preparationType: 'Làm đất vụ mới',
+      method: 'Cày xới thủ công + hữu cơ', equipmentUsed: 'Cuốc, xẻng, máy cày mini',
+      laborCount: 4, laborCost: 2400000, materialsUsed: 'Phân chuồng 2 tấn, vôi bột 50kg, Trichoderma 5kg',
+      materialCost: 3500000, totalCost: 5900000, soilPhBefore: 5.2, soilPhAfter: 5.8, organicMatterPct: 3.8,
+      notes: 'Đã bón lót phân chuồng ủ hoai mục, điều chỉnh pH bằng vôi', isActive: true,
     }})
-
     await db.landPreparation.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id, createdBy: adminUser.id,
-      preparationDate: new Date('2024-03-25'),
-      preparationType: 'Bổ sung dinh dưỡng',
-      method: 'Bón hữu cơ + che phủ',
-      equipmentUsed: 'Xe cút kút, cuốc',
-      laborCount: 3, laborCost: 1800000,
-      materialsUsed: 'Phân gà ủ 1.5 tấn, mùn cọ 500kg, nấm đối kháng 3kg',
-      materialCost: 2800000, totalCost: 4600000,
-      soilPhBefore: 5.5, soilPhAfter: 6.0,
-      organicMatterPct: 4.2,
-      notes: 'Bổ sung hữu cơ theo tiêu chuẩn UTZ, che phủ bằng mùn cọ giữ ẩm',
-      isActive: true,
+      preparationDate: new Date('2024-03-25'), preparationType: 'Bổ sung dinh dưỡng',
+      method: 'Bón hữu cơ + che phủ', equipmentUsed: 'Xe cút kút, cuốc',
+      laborCount: 3, laborCost: 1800000, materialsUsed: 'Phân gà ủ 1.5 tấn, mùn cọ 500kg, nấm đối kháng 3kg',
+      materialCost: 2800000, totalCost: 4600000, soilPhBefore: 5.5, soilPhAfter: 6.0, organicMatterPct: 4.2,
+      notes: 'Bổ sung hữu cơ theo tiêu chuẩn UTZ, che phủ bằng mùn cọ giữ ẩm', isActive: true,
     }})
 
-    // 15. Crop Monitoring Records
     await db.cropMonitoring.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
       cultivationId: cultivation1.id, createdBy: adminUser.id,
-      monitoringDate: new Date('2024-09-15'),
-      monitoringType: 'Kiểm tra định kỳ',
-      growthStage: 'Phát triển trái',
-      plantHeight: 2.1, canopyDiameter: 1.5,
-      leafColor: 'Xanh đậm', healthScore: 88.0,
-      pestPressure: 'Thấp',
-      diseaseSymptoms: 'Không phát hiện',
-      weatherCondition: 'Nắng xen mưa', temperature: 26.5,
-      rainfall: 180, humidity: 78.0, soilMoisture: 42.0,
-      alertTriggered: false,
-      notes: 'Cây phát triển tốt, trái đang chuyển màu, dự kiến thu hoạch đầu tháng 11',
-      isActive: true,
+      monitoringDate: new Date('2024-09-15'), monitoringType: 'Kiểm tra định kỳ',
+      growthStage: 'Phát triển trái', plantHeight: 2.1, canopyDiameter: 1.5,
+      leafColor: 'Xanh đậm', healthScore: 88.0, pestPressure: 'Thấp', diseaseSymptoms: 'Không phát hiện',
+      weatherCondition: 'Nắng xen mưa', temperature: 26.5, rainfall: 180, humidity: 78.0, soilMoisture: 42.0,
+      alertTriggered: false, notes: 'Cây phát triển tốt, trái đang chuyển màu, dự kiến thu hoạch đầu tháng 11', isActive: true,
     }})
-
     await db.cropMonitoring.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
       cultivationId: cultivation2.id, createdBy: adminUser.id,
-      monitoringDate: new Date('2024-09-20'),
-      monitoringType: 'Kiểm tra sau mưa',
-      growthStage: 'Chín trái',
-      plantHeight: 1.8, canopyDiameter: 1.3,
-      leafColor: 'Xanh vàng nhẹ', healthScore: 72.0,
-      pestPressure: 'Trung bình',
-      diseaseSymptoms: 'Gỉ sắt nhẹ trên lá già',
-      weatherCondition: 'Mưa liên tục', temperature: 23.0,
-      rainfall: 350, humidity: 88.0, soilMoisture: 65.0,
+      monitoringDate: new Date('2024-09-20'), monitoringType: 'Kiểm tra sau mưa',
+      growthStage: 'Chín trái', plantHeight: 1.8, canopyDiameter: 1.3,
+      leafColor: 'Xanh vàng nhẹ', healthScore: 72.0, pestPressure: 'Trung bình', diseaseSymptoms: 'Gỉ sắt nhẹ trên lá già',
+      weatherCondition: 'Mưa liên tục', temperature: 23.0, rainfall: 350, humidity: 88.0, soilMoisture: 65.0,
       alertTriggered: true, alertType: 'Bệnh nấm', alertSeverity: 'Trung bình',
       remedialAction: 'Phun thuốc BIO-FOX (nấm đối kháng), cắt tỉa lá bệnh',
-      notes: 'Gỉ sắt phát triển do ẩm độ cao sau mưa dài, cần theo dõi thêm',
-      isActive: true,
+      notes: 'Gỉ sắt phát triển do ẩm độ cao sau mưa dài, cần theo dõi thêm', isActive: true,
     }})
 
-    // 16. Fertilizer Application Records
     await db.fertilizerApplication.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
       cultivationId: cultivation1.id, createdBy: adminUser.id,
-      applicationDate: new Date('2024-08-05'),
-      fertilizerType: 'Hữu cơ', fertilizerName: 'Phân chuồng ủ hoai',
-      nutrientContent: 'NPK 2-1-2 + vi sinh vật',
-      applicationRate: 2.0, unit: 'tấn/ha', totalQuantity: 4.0,
-      applicationMethod: 'Bón gốc - rải vòng tán cây',
-      costPerUnit: 800000, totalCost: 3200000,
-      weatherAtApplication: 'Nắng nhẹ, đất ẩm vừa',
-      appliedBy: 'Nguyễn Văn Thanh',
+      applicationDate: new Date('2024-08-05'), fertilizerType: 'Hữu cơ', fertilizerName: 'Phân chuồng ủ hoai',
+      nutrientContent: 'NPK 2-1-2 + vi sinh vật', applicationRate: 2.0, unit: 'tấn/ha', totalQuantity: 4.0,
+      applicationMethod: 'Bón gốc - rải vòng tán cây', costPerUnit: 800000, totalCost: 3200000,
+      weatherAtApplication: 'Nắng nhẹ, đất ẩm vừa', appliedBy: 'Nguyễn Văn Thanh',
       isOrganic: true, certificationNumber: 'ORG-DL-2024-0456',
-      notes: 'Bón thúc trái giai đoạn phát triển, kết hợp tưới nhỏ giọt',
-      isActive: true,
+      notes: 'Bón thúc trái giai đoạn phát triển, kết hợp tưới nhỏ giọt', isActive: true,
     }})
-
     await db.fertilizerApplication.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
       cultivationId: cultivation2.id, createdBy: adminUser.id,
-      applicationDate: new Date('2024-07-20'),
-      fertilizerType: 'Hữu cơ sinh học', fertilizerName: 'Nấm Trichoderma + Phân gà ủ',
-      nutrientContent: 'NPK 3-2-3 + nấm đối kháng',
-      applicationRate: 1.5, unit: 'tấn/ha', totalQuantity: 2.25,
-      applicationMethod: 'Bón gốc + xịt lá',
-      costPerUnit: 1200000, totalCost: 2700000,
-      weatherAtApplication: 'Trời mát, sau mưa',
-      appliedBy: 'Trần Thị Hoa',
+      applicationDate: new Date('2024-07-20'), fertilizerType: 'Hữu cơ sinh học', fertilizerName: 'Nấm Trichoderma + Phân gà ủ',
+      nutrientContent: 'NPK 3-2-3 + nấm đối kháng', applicationRate: 1.5, unit: 'tấn/ha', totalQuantity: 2.25,
+      applicationMethod: 'Bón gốc + xịt lá', costPerUnit: 1200000, totalCost: 2700000,
+      weatherAtApplication: 'Trời mát, sau mưa', appliedBy: 'Trần Thị Hoa',
       isOrganic: true, certificationNumber: 'ORG-DL-2024-0457',
-      notes: 'Phun Trichoderma phòng bệnh gỉ sắt, bón gốc phân gà ủ kết hợp mùn cọ',
-      isActive: true,
+      notes: 'Phun Trichoderma phòng bệnh gỉ sắt, bón gốc phân gà ủ kết hợp mùn cọ', isActive: true,
     }})
 
-    // 17. Pest & Disease Management Records
     await db.pestDiseaseManagement.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
       cultivationId: cultivation2.id, createdBy: adminUser.id,
-      detectionDate: new Date('2024-09-22'),
-      pestOrDisease: 'Gỉ sắt (Coffee Leaf Rust)',
-      type: 'Bệnh nấm', severity: 'Trung bình',
-      affectedArea: 0.6, affectedTrees: 180,
+      detectionDate: new Date('2024-09-22'), pestOrDisease: 'Gỉ sắt (Coffee Leaf Rust)',
+      type: 'Bệnh nấm', severity: 'Trung bình', affectedArea: 0.6, affectedTrees: 180,
       symptoms: 'Đốm vàng cam dưới lá, lá rụng sớm, trái nhỏ',
-      treatmentMethod: 'Sinh học + cơ học',
-      treatmentProduct: 'BIO-FOX (Trichoderma harzianum)',
-      dosage: '5g/lít nước, phun ướt đều 2 mặt lá',
-      applicationDate: new Date('2024-09-24'),
-      followUpDate: new Date('2024-10-08'),
-      outcome: 'Đang theo dõi - giảm 40% triệu chứng sau 2 tuần',
-      cost: 850000,
-      preventionMeasures: 'Tỉa cành thông thoáng, bón Kali tăng sức kháng, che phủ giữ ẩm ổn định',
-      notes: 'Phun lần 1 ngày 24/9, lịch phun lại sau 14 ngày. Tránh phun khi mưa',
-      isActive: true,
+      treatmentMethod: 'Sinh học + cơ học', treatmentProduct: 'BIO-FOX (Trichoderma harzianum)',
+      dosage: '5g/lít nước, phun ướt đều 2 mặt lá', applicationDate: new Date('2024-09-24'),
+      followUpDate: new Date('2024-10-08'), outcome: 'Đang theo dõi - giảm 40% triệu chứng sau 2 tuần',
+      cost: 850000, preventionMeasures: 'Tỉa cành thông thoáng, bón Kali tăng sức kháng, che phủ giữ ẩm ổn định',
+      notes: 'Phun lần 1 ngày 24/9, lịch phun lại sau 14 ngày. Tránh phun khi mưa', isActive: true,
     }})
-
     await db.pestDiseaseManagement.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
       cultivationId: cultivation1.id, createdBy: adminUser.id,
-      detectionDate: new Date('2024-08-15'),
-      pestOrDisease: 'Rệp sáp bột hồng (Pink Mealybug)',
-      type: 'Sâu bệnh', severity: 'Thấp',
-      affectedArea: 0.2, affectedTrees: 35,
+      detectionDate: new Date('2024-08-15'), pestOrDisease: 'Rệp sáp bột hồng (Pink Mealybug)',
+      type: 'Sâu bệnh', severity: 'Thấp', affectedArea: 0.2, affectedTrees: 35,
       symptoms: 'Túi sáp trắng ở kẽ cành, chồi non cong queo',
-      treatmentMethod: 'Sinh học',
-      treatmentProduct: 'Rệp đối kháng Cryptolaemus montrouzieri + rửa bằng áp lực nước',
-      dosage: '50 bọ rệp/100 cây, xịt nước áp lực 1 lần/tuần',
-      applicationDate: new Date('2024-08-18'),
-      followUpDate: new Date('2024-09-01'),
-      outcome: 'Kiểm soát tốt - giảm 85% quần thể rệp sau 2 tuần',
-      cost: 450000,
-      preventionMeasures: 'Bảo tồn kiến vàng tự nhiên, cắt tỉa cành rụng, kiểm tra định kỳ',
-      notes: 'Bọ rệp đối kháng phát huy hiệu quả tốt trong điều kiện Tây Nguyên',
-      isActive: true,
+      treatmentMethod: 'Sinh học', treatmentProduct: 'Rệp đối kháng Cryptolaemus montrouzieri + rửa bằng áp lực nước',
+      dosage: '50 bọ rệp/100 cây, xịt nước áp lực 1 lần/tuần', applicationDate: new Date('2024-08-18'),
+      followUpDate: new Date('2024-09-01'), outcome: 'Kiểm soát tốt - giảm 85% quần thể rệp sau 2 tuần',
+      cost: 450000, preventionMeasures: 'Bảo tồn kiến vàng tự nhiên, cắt tỉa cành rụng, kiểm tra định kỳ',
+      notes: 'Bọ rệp đối kháng phát huy hiệu quả tốt trong điều kiện Tây Nguyên', isActive: true,
     }})
 
-    // 18. Certification Assessment Records
     await db.certAssessment.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id, createdBy: adminUser.id,
-      assessmentId: 'CERT-2024-ORG-001',
-      assessmentDate: new Date('2024-06-15'),
-      certificationStandard: 'Organic (Hữu cơ)',
-      certifyingBody: 'Control Union Certifications Việt Nam',
-      assessmentType: 'Đánh giá tái chứng nhận',
-      scope: 'Sản xuất cà phê hữu cơ - 2.5 ha tại Ea Tam',
-      status: 'Đạt',
-      score: 92.0, maxScore: 100.0,
+      assessmentId: 'CERT-2024-ORG-001', assessmentDate: new Date('2024-06-15'),
+      certificationStandard: 'Organic (Hữu cơ)', certifyingBody: 'Control Union Certifications Việt Nam',
+      assessmentType: 'Đánh giá tái chứng nhận', scope: 'Sản xuất cà phê hữu cơ - 2.5 ha tại Ea Tam',
+      status: 'Đạt', score: 92.0, maxScore: 100.0,
       findings: 'Tuân thủ tốt quy chuẩn hữu cơ. Tài liệu ghi chép đầy đủ. Khoảng cách an toàn với vùng lân cận đạt yêu cầu.',
       nonConformities: 'Nhà kho phụ tùng cần tách riêng khu vực hóa sinh',
       correctiveActions: 'Xây vách ngăn nhà kho trước 30/07/2024',
       validFrom: new Date('2024-07-01'), validUntil: new Date('2025-06-30'),
-      certificateNumber: 'ORG-VN-2024-CU0583',
-      notes: 'Chứng nhận hữu cơ năm thứ 3 liên tục, chất lượng duy trì ổn định',
-      isActive: true,
+      certificateNumber: 'ORG-VN-2024-CU0583', notes: 'Chứng nhận hữu cơ năm thứ 3 liên tục', isActive: true,
     }})
-
     await db.certAssessment.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id, createdBy: adminUser.id,
-      assessmentId: 'CERT-2024-FT-002',
-      assessmentDate: new Date('2024-05-20'),
-      certificationStandard: 'Fair Trade (Thương mại Công bằng)',
-      certifyingBody: 'FLO-CERT GmbH',
-      assessmentType: 'Đánh giá chứng nhận mới',
-      scope: 'Thương mại công bằng - 1.8 ha tại Ea Drăng',
-      status: 'Đạt',
-      score: 87.5, maxScore: 100.0,
-      findings: 'Đáp ứng tiêu chuẩn thương mại công bằng. Quy trình giao dịch minh bạch. Chế độ lao động tuân thủ.',
+      assessmentId: 'CERT-2024-FT-002', assessmentDate: new Date('2024-05-20'),
+      certificationStandard: 'Fair Trade (Thương mại Công bằng)', certifyingBody: 'FLO-CERT GmbH',
+      assessmentType: 'Đánh giá chứng nhận mới', scope: 'Thương mại công bằng - 1.8 ha tại Ea Drăng',
+      status: 'Đạt', score: 87.5, maxScore: 100.0,
+      findings: 'Đáp ứng tiêu chuẩn thương mại công bằng. Quy trình giao dịch minh bạch.',
       nonConformities: 'Cần bổ sung bảng tuyên truyền quyền lao động bằng tiếng dân tộc',
       correctiveActions: 'In ấn và treo bảng tuyên truyền trước 15/06/2024',
       validFrom: new Date('2024-06-01'), validUntil: new Date('2025-05-31'),
-      certificateNumber: 'FT-VN-2024-ED0217',
-      notes: 'Chứng nhận Fair Trade lần đầu, kết hợp với chứng nhận hữu cơ',
-      isActive: true,
+      certificateNumber: 'FT-VN-2024-ED0217', notes: 'Chứng nhận Fair Trade lần đầu', isActive: true,
     }})
 
-    // 19. Coffee Inspection Records
     await db.coffeeInspection.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
       batchId: batchId1, createdBy: adminUser.id,
-      inspectionId: 'INSP-2024-RB-001',
-      inspectionDate: new Date('2024-11-15'),
+      inspectionId: 'INSP-2024-RB-001', inspectionDate: new Date('2024-11-15'),
       inspectorName: 'Nguyễn Thị Lan', inspectorCertNo: 'QC-VN-2024-0142',
-      inspectionType: 'Kiểm định chất lượng đầu vào',
-      inspectionStandard: 'TCVN 4193:2014 - Cà phê nhân xanh',
-      sampleSize: 0.3,
-      moistureContent: 10.8, defectCount: 8.0, foreignMatter: 0.05,
-      screenSize: 'Screen 16+',
-      color: 'Xanh lam tinh khiết', aroma: 'Thơm nhẹ, sô cô la', taste: 'Đắng nhẹ, body trung bình',
-      body: 'Trung bình', acidity: 'Thấp', aftertaste: 'Hạt dẻ, caramel',
-      cupScore: 82.5, overallGrade: 'Grade 1 - Xuất khẩu',
-      passFail: 'Pass',
-      remarks: 'Chất lượng Robusta tốt, phù hợp tiêu chuẩn xuất khẩu. Độ ẩm đạt chuẩn.',
-      isActive: true,
+      inspectionType: 'Kiểm định chất lượng đầu vào', inspectionStandard: 'TCVN 4193:2014',
+      sampleSize: 0.3, moistureContent: 10.8, defectCount: 8.0, foreignMatter: 0.05,
+      screenSize: 'Screen 16+', color: 'Xanh lam tinh khiết', aroma: 'Thơm nhẹ, sô cô la',
+      taste: 'Đắng nhẹ, body trung bình', body: 'Trung bình', acidity: 'Thấp', aftertaste: 'Hạt dẻ, caramel',
+      cupScore: 82.5, overallGrade: 'Grade 1 - Xuất khẩu', passFail: 'Pass', isActive: true,
     }})
-
     await db.coffeeInspection.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
       batchId: batchId2, createdBy: adminUser.id,
-      inspectionId: 'INSP-2024-AR-001',
-      inspectionDate: new Date('2024-10-25'),
+      inspectionId: 'INSP-2024-AR-001', inspectionDate: new Date('2024-10-25'),
       inspectorName: 'Nguyễn Thị Lan', inspectorCertNo: 'QC-VN-2024-0142',
-      inspectionType: 'Kiểm định chất lượng đặc sản',
-      inspectionStandard: 'SCA Protocol - Specialty Coffee',
-      sampleSize: 0.35,
-      moistureContent: 11.2, defectCount: 3.0, foreignMatter: 0.02,
-      screenSize: 'Screen 15+',
-      color: 'Xanh lục đều', aroma: 'Hoa nhài, trái cây nhiệt đới', taste: 'Chua thanh, ngọt hậu',
-      body: 'Nhẹ đến trung bình', acidity: 'Cao, tinh tế', aftertaste: 'Trái cây, mật ong',
-      cupScore: 85.0, overallGrade: 'Specialty Grade',
-      passFail: 'Pass',
-      remarks: 'Arabica Catimor chế biến tự nhiên đạt chuẩn đặc sản. Hương vị phức tạp, tiềm năng cao.',
-      isActive: true,
+      inspectionType: 'Kiểm định chất lượng đặc sản', inspectionStandard: 'SCA Protocol',
+      sampleSize: 0.35, moistureContent: 11.2, defectCount: 3.0, foreignMatter: 0.02,
+      screenSize: 'Screen 15+', color: 'Xanh lục đều', aroma: 'Hoa nhài, trái cây nhiệt đới',
+      taste: 'Chua thanh, ngọt hậu', body: 'Nhẹ đến trung bình', acidity: 'Cao, tinh tế', aftertaste: 'Trái cây, mật ong',
+      cupScore: 85.0, overallGrade: 'Specialty Grade', passFail: 'Pass', isActive: true,
     }})
 
-    // 20. Smart Contract Records
     await db.smartContract.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id,
-      buyerId: 'BUYER-INT-001',
-      createdBy: adminUser.id,
-      contractId: 'SC-2024-VN-RB-001',
-      contractType: 'Hợp đồng mua bán',
+      tenantId: tenant.id, farmerId: farmer1.id, buyerId: 'BUYER-INT-001', createdBy: adminUser.id,
+      contractId: 'SC-2024-VN-RB-001', contractType: 'Hợp đồng mua bán',
       title: 'Hợp đồng cung ứng cà phê Robusta xanh 2024-2025',
       description: 'Hợp đồng mua bán cà phê Robusta Chari xanh Grade 1 cho thị trường Nhật Bản',
-      partyA: 'Hợp tác xã Cà phê Ea Tam',
-      partyB: 'Tokyo Coffee Trading Co., Ltd.',
-      quantityKg: 5000, pricePerKg: 55000, totalValue: 275000000,
-      currency: 'VND',
-      deliveryDate: new Date('2025-01-15'),
-      deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
-      qualityGrade: 'Grade 1 - Xuất khẩu, ẩm < 12.5%',
-      terms: 'Thanh toán 30% trước, 70% sau khi nhận hàng và kiểm định đạt. Giao FOB Cát Lái.',
-      status: 'Đang thực hiện',
-      signedByA: true, signedByB: true,
+      partyA: 'Hợp tác xã Cà phê Ea Tam', partyB: 'Tokyo Coffee Trading Co., Ltd.',
+      quantityKg: 5000, pricePerKg: 55000, totalValue: 275000000, currency: 'VND',
+      deliveryDate: new Date('2025-01-15'), deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
+      qualityGrade: 'Grade 1 - Xuất khẩu', terms: 'Thanh toán 30% trước, 70% sau khi nhận hàng. Giao FOB Cát Lái.',
+      status: 'Đang thực hiện', signedByA: true, signedByB: true,
       signedDateA: new Date('2024-10-01'), signedDateB: new Date('2024-10-05'),
       effectiveDate: new Date('2024-10-10'), expiryDate: new Date('2025-03-31'),
-      notes: 'Hợp đồng có điều khoản bảo vệ giá - giá sàn 48,000 VND/kg. Chứng nhận hữu cơ đính kèm.',
-      isActive: true,
+      notes: 'Hợp đồng có điều khoản bảo vệ giá - giá sàn 48,000 VND/kg.', isActive: true,
     }})
-
     await db.smartContract.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id,
-      buyerId: 'BUYER-INT-002',
-      createdBy: adminUser.id,
-      contractId: 'SC-2024-VN-AR-002',
-      contractType: 'Hợp đồng đặc sản',
+      tenantId: tenant.id, farmerId: farmer2.id, buyerId: 'BUYER-INT-002', createdBy: adminUser.id,
+      contractId: 'SC-2024-VN-AR-002', contractType: 'Hợp đồng đặc sản',
       title: 'Hợp đồng cung ứng cà phê Arabica đặc sản 2024',
-      description: 'Hợp đồng mua bán cà phê Arabica Catimor đặc sản chế biến tự nhiên cho thị trường Hàn Quốc',
-      partyA: 'Nông trại Hữu cơ Ea Drăng',
-      partyB: 'Seoul Specialty Roasters Inc.',
-      quantityKg: 2000, pricePerKg: 120000, totalValue: 240000000,
-      currency: 'VND',
-      deliveryDate: new Date('2024-12-20'),
-      deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
-      qualityGrade: 'Specialty Grade, cup score ≥ 84',
-      terms: 'Thanh toán 100% bằng LC không hủy ngang. Giao FOB Cát Lái. Kiểm định SCA.',
-      status: 'Chờ ký bên A',
-      signedByA: false, signedByB: true,
-      signedDateB: new Date('2024-11-01'),
+      description: 'Hợp đồng mua bán cà phê Arabica Catimor đặc sản cho thị trường Hàn Quốc',
+      partyA: 'Nông trại Hữu cơ Ea Drăng', partyB: 'Seoul Specialty Roasters Inc.',
+      quantityKg: 2000, pricePerKg: 120000, totalValue: 240000000, currency: 'VND',
+      deliveryDate: new Date('2024-12-20'), deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
+      qualityGrade: 'Specialty Grade, cup score >= 84', terms: 'Thanh toán 100% bằng LC không hủy ngang.',
+      status: 'Chờ ký bên A', signedByA: false, signedByB: true, signedDateB: new Date('2024-11-01'),
       effectiveDate: new Date('2024-11-15'), expiryDate: new Date('2025-02-28'),
-      notes: 'Hợp đồng đặc sản giá cao, yêu cầu cup score tối thiểu 84. Đang chờ nông dân xác nhận.',
-      isActive: true,
+      notes: 'Hợp đồng đặc sản giá cao, yêu cầu cup score tối thiểu 84.', isActive: true,
     }})
 
-    // 21. Marketplace Listing Records
     await db.marketplaceListing.create({ data: {
       tenantId: tenant.id, farmerId: farmer1.id, createdBy: adminUser.id,
-      listingId: 'MKT-2024-RB-001',
-      title: 'Cà phê Robusta Chari xanh Grade 1 - Hữu cơ',
-      description: 'Cà phê Robusta Chari xanh Grade 1 chứng nhận hữu cơ, thu hoạch vụ 2024. Xử lý ướt, sấy African bed, độ ẩm 10.8%.',
-      coffeeType: 'Robusta', coffeeVariety: 'Chari',
-      grade: 'Grade 1', quantityKg: 3000, pricePerKg: 55000, totalValue: 165000000,
-      currency: 'VND', origin: 'Ea Tam, Cư Mgar, Đắk Lắk',
-      processingMethod: 'Rửa (Washed)', cupScore: 82.5,
-      certifications: 'Organic, UTZ',
-      harvestYear: '2024', availability: 'Có sẵn',
-      listingStatus: 'Đang bán',
-      listingDate: new Date('2024-11-20'), expiryDate: new Date('2025-05-31'),
-      isActive: true,
+      listingId: 'MKT-2024-RB-001', title: 'Cà phê Robusta Chari xanh Grade 1 - Hữu cơ',
+      description: 'Cà phê Robusta Chari xanh Grade 1 chứng nhận hữu cơ, vụ 2024.',
+      coffeeType: 'Robusta', coffeeVariety: 'Chari', grade: 'Grade 1',
+      quantityKg: 3000, pricePerKg: 55000, totalValue: 165000000, currency: 'VND',
+      origin: 'Ea Tam, Cư Mgar, Đắk Lắk', processingMethod: 'Rửa (Washed)', cupScore: 82.5,
+      certifications: 'Organic, UTZ', harvestYear: '2024', availability: 'Có sẵn',
+      listingStatus: 'Đang bán', listingDate: new Date('2024-11-20'), expiryDate: new Date('2025-05-31'), isActive: true,
     }})
-
     await db.marketplaceListing.create({ data: {
       tenantId: tenant.id, farmerId: farmer2.id, createdBy: adminUser.id,
-      listingId: 'MKT-2024-AR-001',
-      title: 'Cà phê Arabica Catimor Natural Specialty',
-      description: 'Cà phê Arabica Catimor chế biến tự nhiên đặc sản, cup score 85. Thu hoạch chọn hái vụ 2024. Hương hoa nhài, trái cây nhiệt đới.',
-      coffeeType: 'Arabica', coffeeVariety: 'Catimor',
-      grade: 'Specialty', quantityKg: 1500, pricePerKg: 120000, totalValue: 180000000,
-      currency: 'VND', origin: 'Ea Drăng, Cư Mgar, Đắk Lắk',
-      processingMethod: 'Tự nhiên (Natural)', cupScore: 85.0,
-      certifications: 'Organic, Fair Trade',
-      harvestYear: '2024', availability: 'Đặt trước',
-      listingStatus: 'Đang bán',
-      listingDate: new Date('2024-10-28'), expiryDate: new Date('2025-04-30'),
-      isActive: true,
+      listingId: 'MKT-2024-AR-001', title: 'Cà phê Arabica Catimor Natural Specialty',
+      description: 'Cà phê Arabica Catimor chế biến tự nhiên đặc sản, cup score 85.',
+      coffeeType: 'Arabica', coffeeVariety: 'Catimor', grade: 'Specialty',
+      quantityKg: 1500, pricePerKg: 120000, totalValue: 180000000, currency: 'VND',
+      origin: 'Ea Drăng, Cư Mgar, Đắk Lắk', processingMethod: 'Tự nhiên (Natural)', cupScore: 85.0,
+      certifications: 'Organic, Fair Trade', harvestYear: '2024', availability: 'Đặt trước',
+      listingStatus: 'Đang bán', listingDate: new Date('2024-10-28'), expiryDate: new Date('2025-04-30'), isActive: true,
     }})
 
-    // 22. Processing Stage Records
+    // Processing Stage Records
     await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id,
-      stageType: 'Phân loại & Làm sạch',
-      stageDate: new Date('2024-11-13'),
-      inputWeight: 3200, outputWeight: 3185,
+      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Phân loại & Làm sạch',
+      stageDate: new Date('2024-11-13'), inputWeight: 3200, outputWeight: 3185,
       durationMinutes: 120, temperature: 25.0, humidity: 72.0,
-      machineUsed: 'Máy phân loại quang học + sàng rung',
-      operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true,
-      notes: 'Loại bỏ quả đen, quả xanh, cành lá. Tỷ lệ hao hụt 0.47%.',
-      isActive: true,
+      machineUsed: 'Máy phân loại quang học + sàng rung', operatorName: 'Võ Minh Trí',
+      qualityCheckPassed: true, notes: 'Loại bỏ quả đen, quả xanh, cành lá.', isActive: true,
     }})
-
     await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id,
-      stageType: 'Bóc vỏ & Lên men',
-      stageDate: new Date('2024-11-14'),
-      inputWeight: 3185, outputWeight: 850,
+      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Bóc vỏ & Lên men',
+      stageDate: new Date('2024-11-14'), inputWeight: 3185, outputWeight: 850,
       durationMinutes: 1440, temperature: 28.0, humidity: 80.0,
-      machineUsed: 'Máy bóc vỏ cà phê Penagos 2500 + bể lên men',
-      operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true,
-      notes: 'Lên men ướt 24 giờ, rửa sạch nhớt. Tỷ lệ bóc vỏ 73.3% (cherry → parchment).',
-      isActive: true,
+      machineUsed: 'Máy bóc vỏ cà phê Penagos 2500 + bể lên men', operatorName: 'Võ Minh Trí',
+      qualityCheckPassed: true, notes: 'Lên men ướt 24 giờ, rửa sạch nhớt.', isActive: true,
     }})
-
     await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id,
-      stageType: 'Sấy',
-      stageDate: new Date('2024-11-15'),
-      inputWeight: 850, outputWeight: 660,
+      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Sấy',
+      stageDate: new Date('2024-11-15'), inputWeight: 850, outputWeight: 660,
       durationMinutes: 20160, temperature: 35.0, humidity: 45.0,
-      machineUsed: 'Giường nâng African bed + nhà kính',
-      operatorName: 'Lê Văn Hùng',
-      qualityCheckPassed: true,
-      notes: 'Sấy tự nhiên 14 ngày, đạt độ ẩm mục tiêu 10.8%. Hao hụt sấy 22.4% (parchment → green bean sau bóc lụa).',
-      isActive: true,
+      machineUsed: 'Giường nâng African bed + nhà kính', operatorName: 'Lê Văn Hùng',
+      qualityCheckPassed: true, notes: 'Sấy tự nhiên 14 ngày, đạt độ ẩm mục tiêu 10.8%.', isActive: true,
     }})
-
     await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id,
-      stageType: 'Bóc lụa & Phân loại cuối',
-      stageDate: new Date('2024-11-29'),
-      inputWeight: 660, outputWeight: 640,
+      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Bóc lụa & Phân loại cuối',
+      stageDate: new Date('2024-11-29'), inputWeight: 660, outputWeight: 640,
       durationMinutes: 240, temperature: 22.0, humidity: 55.0,
-      machineUsed: 'Máy bóc lụa CCI + máy phân loại kích thước',
-      operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true,
-      notes: 'Green bean Grade 1, Screen 16+. Hao hụt bóc lụa 3.0%. Kết quả QC: cup score 82.5, độ ẩm 10.8%.',
-      isActive: true,
+      machineUsed: 'Máy bóc lụa CCI + máy phân loại kích thước', operatorName: 'Võ Minh Trí',
+      qualityCheckPassed: true, notes: 'Green bean Grade 1, Screen 16+.', isActive: true,
     }})
 
-    // 23. Audit log
+    // Audit log
     await db.auditLog.create({ data: {
       tenantId: tenant.id, userId: adminUser.id, action: 'CREATE',
       entity: 'Tenant', entityId: tenant.id,

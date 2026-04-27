@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, UserCog, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
@@ -238,7 +237,7 @@ export default function UsersPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -419,8 +418,7 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {users.length === 0 ? (
+                {users.length === 0 ? (
                     <tr>
                       <td colSpan={isTenantAdmin ? 8 : 7} className="px-4 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-coffee-400">
@@ -431,13 +429,8 @@ export default function UsersPage() {
                     </tr>
                   ) : (
                     users.map((item, i) => (
-                      <motion.tr
-                        key={item.id}
-                        className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                      >
+                      <tr key={item.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-coffee-400 to-coffee-700 flex items-center justify-center text-white text-[10px] font-bold">
@@ -491,11 +484,10 @@ export default function UsersPage() {
                             </div>
                           </td>
                         )}
-                      </motion.tr>
+                      </tr>
                     ))
                   )}
-                </AnimatePresence>
-              </tbody>
+</tbody>
             </table>
           </div>
 
@@ -543,7 +535,7 @@ export default function UsersPage() {
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, GitBranch, Search, Loader2, CheckCircle2, Clock,
   MinusCircle, Shield, ChevronDown, ChevronUp, FileText,
@@ -201,16 +200,12 @@ function SupplyChainPipeline({
                   className="group flex flex-col items-center gap-1 focus:outline-none"
                   aria-label={`${t(stage.nameVi, stage.nameEn)} - ${stage.status}`}
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`
-                      w-[80px] h-[80px] rounded-xl border-2 flex flex-col items-center justify-center gap-0.5
-                      transition-colors duration-200 cursor-pointer
-                      ${style.nodeBorder} ${style.nodeBg} ${style.nodeShadow}
-                      shadow-sm hover:shadow-md
-                    `}
-                  >
+                  <div className={`
+ w-[80px] h-[80px] rounded-xl border-2 flex flex-col items-center justify-center gap-0.5
+ transition-colors duration-200 cursor-pointer
+ ${style.nodeBorder} ${style.nodeBg} ${style.nodeShadow}
+ shadow-sm hover:shadow-md
+ `}>
                     <span className="text-xl leading-none">{stage.icon}</span>
                     <span className="text-[9px] font-semibold text-coffee-700 leading-tight text-center px-1 line-clamp-2">
                       {t(stage.nameVi, stage.nameEn).length > 14
@@ -218,7 +213,7 @@ function SupplyChainPipeline({
                         : t(stage.nameVi, stage.nameEn)}
                     </span>
                     <div className="mt-0.5">{style.indicator}</div>
-                  </motion.div>
+                  </div>
                 </button>
 
                 {/* Arrow connector */}
@@ -313,13 +308,8 @@ function TimelineCard({
   const config = statusConfig[stage.status]
 
   return (
-    <motion.div
-      id={`timeline-stage-${index}`}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.4, ease: 'easeOut' }}
-      className="relative flex items-start gap-4 md:gap-0"
-    >
+    <div id={`timeline-stage-${index}`}
+ className="relative flex items-start gap-4 md:gap-0">
       {/* Desktop: alternating layout */}
       <div className="hidden md:grid md:grid-cols-[1fr_48px_1fr] gap-0 w-full items-start">
         {/* Left side */}
@@ -360,22 +350,14 @@ function TimelineCard({
                     )}
                   </div>
                 )}
-                <AnimatePresence>
-                  {expanded && stage.data && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
+                {expanded && stage.data && (
+                    <div className="overflow-hidden">
                       <div className="border-t border-coffee-100 mt-2 pt-2">
                         <StageDetail data={stage.data} />
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-                {stage.data && (
+{stage.data && (
                   <div className="flex justify-end mt-1">
                     {expanded ? (
                       <ChevronUp className="w-3 h-3 text-coffee-400" />
@@ -435,22 +417,14 @@ function TimelineCard({
                     )}
                   </div>
                 )}
-                <AnimatePresence>
-                  {expanded && stage.data && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
+                {expanded && stage.data && (
+                    <div className="overflow-hidden">
                       <div className="border-t border-coffee-100 mt-2 pt-2">
                         <StageDetail data={stage.data} />
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-                {stage.data && (
+{stage.data && (
                   <div className="flex justify-end mt-1">
                     {expanded ? (
                       <ChevronUp className="w-3 h-3 text-coffee-400" />
@@ -510,22 +484,14 @@ function TimelineCard({
                 )}
               </div>
             )}
-            <AnimatePresence>
-              {expanded && stage.data && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden"
-                >
+            {expanded && stage.data && (
+                <div className="overflow-hidden">
                   <div className="border-t border-coffee-100 mt-2 pt-2">
                     <StageDetail data={stage.data} />
                   </div>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
-            {stage.data && (
+{stage.data && (
               <div className="flex justify-end mt-1">
                 {expanded ? (
                   <ChevronUp className="w-3 h-3 text-coffee-400" />
@@ -537,7 +503,7 @@ function TimelineCard({
           </Card>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -704,7 +670,7 @@ export default function TraceabilityPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -757,15 +723,9 @@ export default function TraceabilityPage() {
         </Card>
 
         {/* Results */}
-        <AnimatePresence mode="wait">
-          {loading && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center py-20"
-            >
+        {loading && (
+            <div key="loading"
+ className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
                   <Coffee className="w-6 h-6 text-white animate-pulse" />
@@ -775,16 +735,11 @@ export default function TraceabilityPage() {
                   <span className="text-sm">{t('Đang truy xuất...', 'Tracing...')}</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {!loading && traceData && !traceData.found && (
-            <motion.div
-              key="not-found"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
+            <div key="not-found">
               <Card className="rounded-2xl border-0 shadow-sm p-12 text-center">
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-14 h-14 rounded-2xl bg-coffee-100 flex items-center justify-center">
@@ -798,16 +753,11 @@ export default function TraceabilityPage() {
                   </p>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           )}
 
           {!loading && traceData && traceData.found && (
-            <motion.div
-              key="timeline"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+            <div key="timeline">
               {/* Summary Card */}
               <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
                 <div className="flex flex-wrap items-center gap-4">
@@ -867,12 +817,7 @@ export default function TraceabilityPage() {
 
               {/* Hash Chain Integrity Badge */}
               {traceData.chainVerification && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 }}
-                  className="mt-8"
-                >
+                <div className="mt-8">
                   <Card className={`rounded-2xl border-0 shadow-sm p-5 ${
                     traceData.chainVerification.valid
                       ? 'bg-gradient-to-r from-green-50 to-emerald-50/50'
@@ -915,18 +860,13 @@ export default function TraceabilityPage() {
                       </div>
                     </div>
                   </Card>
-                </motion.div>
+                </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {!loading && !traceData && (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
+            <div key="empty">
               <Card className="rounded-2xl border-0 shadow-sm p-16 text-center">
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center">
@@ -950,10 +890,9 @@ export default function TraceabilityPage() {
                   </div>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </motion.div>
+</div>
     </DashboardShell>
   )
 }

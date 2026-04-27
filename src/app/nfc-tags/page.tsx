@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Nfc, Search, Plus, ChevronLeft, ChevronRight, Loader2,
   Shield, CheckCircle2, XCircle, AlertTriangle, Eye, Hash,
@@ -349,7 +348,7 @@ export default function NFCTagsPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* ─── Header ─── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -470,12 +469,7 @@ export default function NFCTagsPage() {
         {/* ─── Main Grid: Table + Verify Panel ─── */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* ─── NFC Tag List Table ─── */}
-          <motion.div
-            className="xl:col-span-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <div className="xl:col-span-2">
             {/* Filter Row */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
               <div className="relative flex-1 max-w-xs">
@@ -531,8 +525,7 @@ export default function NFCTagsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    <AnimatePresence>
-                      {records.length === 0 ? (
+                    {records.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="text-center py-12 text-coffee-400 text-sm">
                             <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -549,13 +542,8 @@ export default function NFCTagsPage() {
                             : rawEntityType
 
                           return (
-                            <motion.tr
-                              key={record.id}
-                              className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.03 }}
-                            >
+                            <tr key={record.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                               <td className="px-4 py-3">
                                 <Badge className="bg-coffee-100 text-coffee-800 text-[10px] border border-coffee-200 font-mono font-bold">
                                   {tagId}
@@ -589,12 +577,11 @@ export default function NFCTagsPage() {
                                   <Shield className="w-3.5 h-3.5" />
                                 </Button>
                               </td>
-                            </motion.tr>
+                            </tr>
                           )
                         })
                       )}
-                    </AnimatePresence>
-                  </tbody>
+</tbody>
                 </table>
               </div>
 
@@ -642,14 +629,10 @@ export default function NFCTagsPage() {
                 </div>
               )}
             </Card>
-          </motion.div>
+          </div>
 
           {/* ─── NFC Verification Panel ─── */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div>
             <Card className="rounded-2xl border-0 shadow-sm p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center">
@@ -693,26 +676,15 @@ export default function NFCTagsPage() {
                 </div>
 
                 {/* Verification Result */}
-                <AnimatePresence mode="wait">
-                  {verifyResult && (
-                    <motion.div
-                      key={verifyResult.status}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    >
+                {verifyResult && (
+                    <div key={verifyResult.status}>
                       {/* ─── Valid ─── */}
                       {verifyResult.status === 'valid' && (
                         <div className="rounded-xl border-2 border-green-200 bg-green-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <CheckCircle2 className="w-6 h-6 text-green-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-green-800">
                               {t('Hợp lệ — Tag toàn vẹn', 'Valid — Tag Intact')}
                             </span>
@@ -768,13 +740,9 @@ export default function NFCTagsPage() {
                       {verifyResult.status === 'invalid' && (
                         <div className="rounded-xl border-2 border-red-200 bg-red-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <XCircle className="w-6 h-6 text-red-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-red-800">
                               {t('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
                             </span>
@@ -801,13 +769,9 @@ export default function NFCTagsPage() {
                       {verifyResult.status === 'not_found' && (
                         <div className="rounded-xl border-2 border-yellow-200 bg-yellow-50/80 p-4 space-y-3">
                           <div className="flex items-center gap-2">
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', delay: 0.1 }}
-                            >
+                            <div>
                               <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                            </motion.div>
+                            </div>
                             <span className="text-sm font-bold text-yellow-800">
                               {t('Không tìm thấy', 'Not Found')}
                             </span>
@@ -820,19 +784,13 @@ export default function NFCTagsPage() {
                           </p>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-              </div>
+</div>
             </Card>
 
             {/* ─── Info Card ─── */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-4"
-            >
+            <div className="mt-4">
               <Card className="rounded-2xl border-0 shadow-sm p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center">
@@ -857,10 +815,10 @@ export default function NFCTagsPage() {
                   </div>
                 </div>
               </Card>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Coffee, ClipboardCheck, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
@@ -311,7 +310,7 @@ export default function CoffeeInspectionsPage() {
 
   return (
     <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -715,8 +714,7 @@ export default function CoffeeInspectionsPage() {
                 </tr>
               </thead>
               <tbody>
-                <AnimatePresence>
-                  {inspections.length === 0 ? (
+                {inspections.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-coffee-400">
@@ -727,13 +725,8 @@ export default function CoffeeInspectionsPage() {
                     </tr>
                   ) : (
                     inspections.map((item, i) => (
-                      <motion.tr
-                        key={item.id}
-                        className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                      >
+                      <tr key={item.id}
+ className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                         <td className="px-4 py-3 text-xs text-coffee-500 font-mono">{item.inspectionId || '-'}</td>
                         <td className="px-4 py-3 text-xs text-coffee-600 font-mono">{item.batchId || '-'}</td>
                         <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.inspectorName || '-'}</td>
@@ -777,11 +770,10 @@ export default function CoffeeInspectionsPage() {
                             )}
                           </div>
                         </td>
-                      </motion.tr>
+                      </tr>
                     ))
                   )}
-                </AnimatePresence>
-              </tbody>
+</tbody>
             </table>
           </div>
 
@@ -829,7 +821,7 @@ export default function CoffeeInspectionsPage() {
             </div>
           )}
         </Card>
-      </motion.div>
+      </div>
     </DashboardShell>
   )
 }
