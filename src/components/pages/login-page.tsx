@@ -267,24 +267,6 @@ export default function LoginPage() {
       </div>
 
       {/* CSS Keyframes — injected once, no DOM manipulation */}
-      <style jsx global>{`
-        @keyframes loginFloat {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.1; }
-          50% { transform: translateY(-40px) translateX(${seededRandom(42) * 20 - 10}px); opacity: 0.3; }
-        }
-        @keyframes loginPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.2); }
-        }
-        @keyframes loginFadeUp {
-          from { opacity: 0; transform: translateY(30px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes loginScaleIn {
-          from { transform: scale(0); }
-          to { transform: scale(1); }
-        }
-      `}</style>
     </div>
   )
 }

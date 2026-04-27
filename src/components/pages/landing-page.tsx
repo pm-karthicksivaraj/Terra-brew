@@ -187,30 +187,6 @@ export default function LandingPage() {
       </div>
 
       {/* CSS Keyframes */}
-      <style jsx global>{`
-        @keyframes beanFloat {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          25% { transform: translateY(-30px) translateX(15px); }
-          50% { transform: translateY(0) translateX(-10px); }
-          75% { transform: translateY(20px) translateX(5px); }
-        }
-        @keyframes beanRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes orbPulse {
-          0%, 100% { transform: scale(1); opacity: 0.15; }
-          50% { transform: scale(1.2); opacity: 0.25; }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scaleIn {
-          from { transform: scale(0); }
-          to { transform: scale(1); }
-        }
-      `}</style>
     </div>
   )
 }

@@ -633,44 +633,6 @@ export default function PublicVerifyPage() {
       </footer>
 
       {/* CSS Keyframes */}
-      <style jsx global>{`
-        @keyframes verifyFloat {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.08; }
-          50% { transform: translateY(-30px) translateX(8px); opacity: 0.25; }
-        }
-        @keyframes verifyPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.25); }
-        }
-        @keyframes verifySpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes verifyPulseText {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
-        }
-        @keyframes verifyScaleIn {
-          from { transform: scale(0); }
-          to { transform: scale(1); }
-        }
-        @keyframes verifyFadeUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes verifySlideIn {
-          from { opacity: 0; transform: translateX(-15px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes verifySlideLeft {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes verifySlideRight {
-          from { opacity: 0; transform: translateX(20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      `}</style>
     </div>
   )
 }

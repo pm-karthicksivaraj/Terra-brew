@@ -54,3 +54,37 @@ Stage Summary:
 - New routes: /nfc-tags, /verify/[qrCode]
 - Mobile app: 10 screens, auth, offline-first, coffee-themed
 - PWA: service worker, offline mutation queue, cache strategies
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix all issues - files reverted to broken state, server error, invalid credentials
+
+Work Log:
+- Discovered ALL previous fixes were LOST - files reverted to original broken state
+- client-app.tsx was deleted, providers.tsx had ThemeProvider, sonner.tsx had useTheme()
+- layout.tsx had duplicate <head> tag and PWA <Script> causing hydration errors
+- 4 files still had <style jsx global> blocks causing module-not-found errors
+- .env had wrong DATABASE_URL path (custom.db vs dev.db)
+- next.config.ts resolveAlias with path.join produced invalid path for Turbopack
+- Platform admin password hash didn't match (corrupted from earlier sessions)
+
+- Rewrote sonner.tsx: removed useTheme(), hardcoded theme="light"
+- Rewrote providers.tsx: removed ThemeProvider, Toaster uses dynamic(ssr:false)
+- Created client-app.tsx: mounted guard + wraps Providers
+- Rewrote layout.tsx: removed duplicate <head>, PWA <Script>, uses ClientApp
+- Removed <style jsx global> from 4 files
+- Removed resolveAlias from next.config.ts (Turbopack path issue)
+- Fixed .env DATABASE_URL to file:./prisma/dev.db
+- Added NEXTAUTH_SECRET null checks to both login routes
+- Re-seeded platform admin password with correct bcrypt hash
+
+- Verified: Login page returns 200, SSR has only loading spinner
+- Verified: Tenant login API returns success
+- Verified: Platform admin login API returns success
+- No Sonner portal in SSR, no styled-jsx, no framer-motion
+
+Stage Summary:
+- 8 files fixed in this round
+- Root causes of ALL errors: ThemeProvider/useTheme crash, Sonner portal hydration, styled-jsx module not found, duplicate <head> tag, PWA Script DOM manipulation, corrupted password hash, wrong DATABASE_URL
+- Both login APIs confirmed working

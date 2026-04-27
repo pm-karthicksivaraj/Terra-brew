@@ -11,6 +11,15 @@ import { verifyPassword } from '@/lib/crypto'
  */
 export async function POST(req: NextRequest) {
   try {
+    // Guard: NEXTAUTH_SECRET must be set
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error('[Login API] NEXTAUTH_SECRET is not set')
+      return NextResponse.json(
+        { success: false, error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
     const { email, password, tenantSlug } = body
 
@@ -84,7 +93,7 @@ export async function POST(req: NextRequest) {
         iat: now,
         exp: now + maxAge,
       },
-      secret: process.env.NEXTAUTH_SECRET!,
+      secret: process.env.NEXTAUTH_SECRET || '',
     })
 
     const userData = {

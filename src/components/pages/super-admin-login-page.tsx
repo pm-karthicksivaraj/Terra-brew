@@ -158,20 +158,6 @@ export default function SuperAdminLoginPage() {
       </div>
 
       {/* CSS Keyframes — no DOM manipulation */}
-      <style jsx global>{`
-        @keyframes saFloat {
-          0%, 100% { transform: translateY(0); opacity: 0.05; }
-          50% { transform: translateY(-30px); opacity: 0.2; }
-        }
-        @keyframes saFadeUp {
-          from { opacity: 0; transform: translateY(30px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes saScaleIn {
-          from { transform: scale(0); }
-          to { transform: scale(1); }
-        }
-      `}</style>
     </div>
   )
 }
