@@ -110,8 +110,10 @@ export default function FarmersPage() {
       const res = await fetch(`/api/farmers?${params}`)
       const data = await res.json()
       if (data.success) {
-        setFarmers(data.data.farmers)
-        setTotal(data.data.total)
+        // API returns: { success: true, data: { data: [...farmers], total, page, ... } }
+        const farmersList = data.data?.data ?? data.data?.farmers ?? []
+        setFarmers(Array.isArray(farmersList) ? farmersList : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch farmers', err)
@@ -459,7 +461,7 @@ export default function FarmersPage() {
                 </tr>
               </thead>
               <tbody>
-                {farmers.map((farmer, i) => (
+                {(farmers || []).map((farmer, i) => (
                     <tr key={farmer.id}
  className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
                       <td className="px-4 py-3 text-xs text-coffee-500 font-mono">{farmer.farmerCode || '-'}</td>

@@ -122,7 +122,7 @@ export default function FarmLandsPage() {
       const res = await fetch('/api/farmers?pageSize=500&sortBy=fullName&sortOrder=asc')
       const data = await res.json()
       if (data.success) {
-        setFarmers(data.data.farmers.map((f: any) => ({ id: f.id, fullName: f.fullName, farmerCode: f.farmerCode })))
+        setFarmers((data.data?.data ?? data.data?.farmers ?? []).map((f: any) => ({ id: f.id, fullName: f.fullName, farmerCode: f.farmerCode })))
       }
     } catch (err) {
       console.error('Failed to fetch farmers', err)

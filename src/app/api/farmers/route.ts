@@ -8,8 +8,24 @@ export async function GET(req: Request) {
   if (authError) return authError
 
   try {
-    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
     const tenantId = user!.tenantId!
+    const url = new URL(req.url)
+    const idParam = url.searchParams.get('id')
+
+    // Single-item fetch by ID
+    if (idParam) {
+      const farmer = await db.farmer.findFirst({
+        where: { id: idParam, tenantId, isActive: true },
+        include: {
+          _count: { select: { farmLands: true, cultivations: true, harvestTraceabilities: true } },
+          farmLands: { where: { isActive: true }, select: { id: true, farmName: true, plotBlockId: true, totalLandHolding: true } },
+        },
+      })
+      if (!farmer) return apiError('Farmer not found', 404)
+      return apiResponse({ data: farmer })
+    }
+
+    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
 
     const where: any = { tenantId, isActive: true }
     if (search) {

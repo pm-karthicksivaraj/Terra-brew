@@ -148,7 +148,7 @@ export default function ProcurementPage() {
     try {
       const res = await fetch('/api/farmers?pageSize=1000')
       const data = await res.json()
-      if (data.success) setFarmers(data.data.farmers || data.data.data || [])
+      if (data.success) setFarmers(data.data?.data ?? data.data?.farmers ?? [])
     } catch { /* ignore */ }
   }, [])
 
@@ -156,7 +156,7 @@ export default function ProcurementPage() {
     try {
       const res = await fetch('/api/collection-centres?pageSize=1000')
       const data = await res.json()
-      if (data.success) setCentres(data.data.centres || data.data.data || [])
+      if (data.success) setCentres(data.data?.data ?? data.data?.centres ?? [])
     } catch { /* ignore */ }
   }, [])
 

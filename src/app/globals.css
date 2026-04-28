@@ -143,3 +143,43 @@
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.5 0.02 63.4);
 }
+
+/* ═══ Login Page Keyframes ═══ */
+@keyframes loginFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-8px) translateX(4px); }
+  50% { transform: translateY(-4px) translateX(-4px); }
+  75% { transform: translateY(-12px) translateX(2px); }
+}
+
+@keyframes loginPulse {
+  0%, 100% { opacity: 0.1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.05); }
+}
+
+@keyframes loginFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes loginScaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ═══ Super Admin Login Keyframes ═══ */
+@keyframes saFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  33% { transform: translateY(-6px) translateX(3px); }
+  66% { transform: translateY(-10px) translateX(-2px); }
+}
+
+@keyframes saFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes saScaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}

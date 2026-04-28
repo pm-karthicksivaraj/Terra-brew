@@ -148,7 +148,7 @@ export default function CoffeeInspectionsPage() {
       const res = await fetch('/api/farmers?pageSize=100')
       const data = await res.json()
       if (data.success) {
-        setFarmerOptions(data.data.farmers)
+        setFarmerOptions(data.data?.data ?? data.data?.farmers ?? [])
       }
     } catch {
       // ignore
@@ -162,7 +162,7 @@ export default function CoffeeInspectionsPage() {
       const res = await fetch(`/api/farmlands?${params}`)
       const data = await res.json()
       if (data.success) {
-        setFarmLandOptions(data.data.data)
+        setFarmLandOptions(data.data?.data ?? [])
       }
     } catch {
       // ignore

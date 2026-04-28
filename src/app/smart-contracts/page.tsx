@@ -144,7 +144,7 @@ export default function SmartContractsPage() {
       const res = await fetch('/api/farmers?pageSize=100')
       const data = await res.json()
       if (data.success) {
-        setFarmerOptions(data.data.farmers)
+        setFarmerOptions(data.data?.data ?? data.data?.farmers ?? [])
       }
     } catch {
       // ignore

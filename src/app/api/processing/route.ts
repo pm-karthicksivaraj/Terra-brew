@@ -8,10 +8,27 @@ export async function GET(req: Request) {
   if (authError) return authError
 
   try {
-    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
     const tenantId = user!.tenantId!
-
     const url = new URL(req.url)
+    const idParam = url.searchParams.get('id')
+
+    // Single-item fetch by ID
+    if (idParam) {
+      const item = await db.processingJobOrder.findFirst({
+        where: { id: idParam, tenantId, isActive: true },
+        include: {
+          processingStages: {
+            where: { isActive: true },
+            orderBy: { stageDate: 'asc' },
+          },
+        },
+      })
+      if (!item) return apiError('Processing job order not found', 404)
+      return apiResponse({ data: item })
+    }
+
+    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
+
     const batchIdInputFilter = url.searchParams.get('batchIdInput')
 
     const where: any = { tenantId, isActive: true }
@@ -60,11 +77,30 @@ export async function POST(req: Request) {
     const body = await req.json()
     const tenantId = user!.tenantId!
 
+    // Extract processingStages if present (for wizard flow)
+    const { processingStages, stages, ...restBody } = body
+    const stagesData = processingStages || (stages ? { create: stages } : null)
+
+    const data: any = {
+      ...restBody,
+      tenantId,
+      createdBy: user!.id,
+    }
+
+    // If stages are provided, add them as nested create with tenantId
+    if (stagesData?.create && Array.isArray(stagesData.create)) {
+      data.processingStages = {
+        create: stagesData.create.map((stage: any) => ({
+          ...stage,
+          tenantId,
+        })),
+      }
+    }
+
     const item = await db.processingJobOrder.create({
-      data: {
-        ...body,
-        tenantId,
-        createdBy: user!.id,
+      data,
+      include: {
+        processingStages: true,
       },
     })
 

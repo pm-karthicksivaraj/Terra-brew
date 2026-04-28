@@ -65,6 +65,8 @@ const NAVIGATION: NavGroup[] = [
       { label: 'Harvest', labelVi: 'Thu hoạch', href: '/harvest', icon: Wheat },
       { label: 'Procurement', labelVi: 'Thu mua', href: '/procurement', icon: Truck },
       { label: 'Processing', labelVi: 'Chế biến', href: '/processing', icon: Factory },
+      { label: 'Processing Wizard', labelVi: 'Tạo lệnh CB 7 bước', href: '/processing/wizard', icon: Factory },
+      { label: 'Track Journey', labelVi: 'Truy xuất hành trình', href: '/traceability', icon: GitBranch },
     ],
   },
   {
@@ -85,7 +87,7 @@ const NAVIGATION: NavGroup[] = [
       { label: 'Blockchain', labelVi: 'Blockchain', href: '/blockchain', icon: Link2 },
       { label: 'QR Verify', labelVi: 'Xác minh QR', href: '/qr-verify', icon: QrCode },
       { label: 'NFC Tags', labelVi: 'NFC Tags', href: '/nfc-tags', icon: Nfc },
-      { label: 'Traceability', labelVi: 'Truy xuất', href: '/traceability', icon: GitBranch },
+
     ],
   },
 ]

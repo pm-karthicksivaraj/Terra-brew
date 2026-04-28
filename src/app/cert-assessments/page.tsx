@@ -130,7 +130,7 @@ export default function CertAssessmentsPage() {
     try {
       const res = await fetch('/api/farmers?pageSize=1000')
       const data = await res.json()
-      if (data.success) setFarmers(data.data.farmers || data.data.data || [])
+      if (data.success) setFarmers(data.data?.data ?? data.data?.farmers ?? [])
     } catch { /* ignore */ }
   }, [])
 
@@ -140,7 +140,7 @@ export default function CertAssessmentsPage() {
       if (farmerId) params.set('farmerId', farmerId)
       const res = await fetch(`/api/farmlands?${params}`)
       const data = await res.json()
-      if (data.success) setFarmLands(data.data.farmLands || data.data.data || [])
+      if (data.success) setFarmLands(data.data?.data ?? data.data?.farmLands ?? [])
     } catch { /* ignore */ }
   }, [])
 

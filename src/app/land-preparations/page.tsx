@@ -134,7 +134,7 @@ export default function LandPreparationsPage() {
       const res = await fetch('/api/farmers?pageSize=500&sortBy=fullName&sortOrder=asc')
       const data = await res.json()
       if (data.success) {
-        setFarmers(data.data.farmers.map((f: any) => ({ id: f.id, fullName: f.fullName, farmerCode: f.farmerCode })))
+        setFarmers((data.data?.data ?? data.data?.farmers ?? []).map((f: any) => ({ id: f.id, fullName: f.fullName, farmerCode: f.farmerCode })))
       }
     } catch (err) {
       console.error('Failed to fetch farmers', err)
@@ -146,7 +146,7 @@ export default function LandPreparationsPage() {
       const res = await fetch('/api/farmlands?pageSize=500&sortBy=farmName&sortOrder=asc')
       const data = await res.json()
       if (data.success) {
-        setFarmLands(data.data.data.map((fl: any) => ({ id: fl.id, farmName: fl.farmName, farmerId: fl.farmerId })))
+        setFarmLands((data.data?.data ?? []).map((fl: any) => ({ id: fl.id, farmName: fl.farmName, farmerId: fl.farmerId })))
       }
     } catch (err) {
       console.error('Failed to fetch farmlands', err)

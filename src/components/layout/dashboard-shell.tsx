@@ -40,6 +40,7 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   harvest: { en: 'Harvest', vi: 'Thu hoạch' },
   procurement: { en: 'Procurement', vi: 'Thu mua' },
   processing: { en: 'Processing', vi: 'Chế biến' },
+  wizard: { en: 'Wizard', vi: 'Tạo lệnh' },
   'cert-assessments': { en: 'Certifications', vi: 'Chứng nhận' },
   'coffee-inspections': { en: 'Inspections', vi: 'Kiểm tra' },
   'smart-contracts': { en: 'Smart Contracts', vi: 'HĐ thông minh' },
