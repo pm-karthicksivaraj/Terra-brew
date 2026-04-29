@@ -260,7 +260,7 @@ export default function QRVerifyPage() {
                     <Button
                       onClick={handleVerify}
                       disabled={loading}
-                      className="bg-gradient-to-r   hover: hover: text-white rounded-xl gap-2 shrink-0"
+                      className="btn-primary-gradient rounded-xl gap-2 shrink-0"
                     >
                       {loading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -441,7 +441,7 @@ export default function QRVerifyPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={generating || !entityType || !entityId}
-                  className="w-full bg-gradient-to-r   hover: hover: text-white rounded-xl gap-2"
+                  className="w-full btn-primary-gradient rounded-xl gap-2"
                 >
                   {generating ? (
                     <>

@@ -170,7 +170,7 @@ export default function FarmersPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
             <div className="flex items-center gap-2 text-foreground">
@@ -199,7 +199,7 @@ export default function FarmersPage() {
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r   hover: hover: text-white gap-2 rounded-xl shadow-sm"
+                className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -412,7 +412,7 @@ export default function FarmersPage() {
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="bg-gradient-to-r   text-white rounded-xl"
+                    className="btn-primary-gradient rounded-xl"
                   >
                     {submitting ? (
                       <>
@@ -488,7 +488,7 @@ export default function FarmersPage() {
                           <div className="flex items-center gap-1.5">
                             <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r  "
+                                className="h-full rounded-full bg-primary"
                                 style={{ width: `${farmer.creditScore}%` }}
                               />
                             </div>

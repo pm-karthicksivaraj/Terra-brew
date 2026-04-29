@@ -54,6 +54,26 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   traceability: { en: 'Traceability', vi: 'Truy xuất' },
 }
 
+// ─── Animation variants ───────────────────────────────────────────
+// Using only ENTER animations — no exit animations to avoid React 19 removeChild errors.
+// AnimatePresence with mode="wait" + exit animations causes removeChild because
+// React 19 unmounts DOM nodes before framer-motion's exit animation completes.
+
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
+  },
+}
+
+const iconVariants = {
+  initial: { rotate: -90, opacity: 0, scale: 0.8 },
+  animate: { rotate: 0, opacity: 1, scale: 1 },
+  exit: { rotate: 90, opacity: 0, scale: 0.8 },
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
@@ -226,21 +246,22 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
 
             {/* Right: theme toggle + language toggle + user menu */}
             <div className="flex items-center gap-2">
-              {/* Theme toggle */}
+              {/* Theme toggle — animated Sun/Moon icon swap */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="gap-1.5 text-muted-foreground hover:text-foreground text-xs rounded-xl"
+                className="gap-1.5 text-muted-foreground hover:text-foreground text-xs rounded-xl relative w-9 h-9 p-0 flex items-center justify-center"
                 aria-label="Toggle theme"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {theme === 'dark' ? (
                     <motion.div
                       key="sun"
-                      initial={{ rotate: -90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: 90, opacity: 0 }}
+                      variants={iconVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
                       transition={{ duration: 0.2 }}
                     >
                       <Sun className="w-4 h-4" />
@@ -248,9 +269,10 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
                   ) : (
                     <motion.div
                       key="moon"
-                      initial={{ rotate: 90, opacity: 0 }}
-                      animate={{ rotate: 0, opacity: 1 }}
-                      exit={{ rotate: -90, opacity: 0 }}
+                      variants={iconVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
                       transition={{ duration: 0.2 }}
                     >
                       <Moon className="w-4 h-4" />
@@ -305,21 +327,21 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
           </div>
         </header>
 
-        {/* Main content area with page transition animation */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="flex-1"
-          >
-            <main className="px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
-              {children}
-            </main>
-          </motion.div>
-        </AnimatePresence>
+        {/* Main content area with page enter animation */}
+        {/* NOTE: We use only ENTER animations (no exit) to prevent React 19 removeChild errors.
+            AnimatePresence exit animations cause removeChild because React 19 unmounts DOM
+            nodes before framer-motion's exit animation can complete. */}
+        <motion.div
+          key={pathname}
+          variants={pageVariants}
+          initial="initial"
+          animate="animate"
+          className="flex-1"
+        >
+          <main className="px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
+            {children}
+          </main>
+        </motion.div>
 
         {/* Footer */}
         <footer className="mt-auto border-t border-border bg-card/60">

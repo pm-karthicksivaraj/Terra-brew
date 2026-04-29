@@ -578,7 +578,7 @@ export default function ProcessingPage() {
                                           </tr>
                                         </thead>
                                         <tbody>
-                                          {record.processingStages.map((stage) => (
+                                          {(record.processingStages || []).map((stage) => (
                                             <tr key={stage.id} className="border-t border-border">
                                               <td className="px-3 py-2">
                                                 <Badge className={`${stageTypeColor(stage.stageType)} text-[9px] border-0`}>{stage.stageType || '-'}</Badge>

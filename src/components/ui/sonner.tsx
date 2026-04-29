@@ -1,14 +1,16 @@
 "use client"
 
+import { useTheme } from "next-themes"
 import { Toaster as Sonner, ToasterProps } from "sonner"
 
-// No useTheme() — we removed ThemeProvider to prevent hydration errors.
-// Theme is hardcoded to "light". Toaster is loaded via dynamic(ssr:false)
-// in providers.tsx so it won't cause removeChild errors.
+// Sonner Toaster that respects the current theme (dark/light).
+// Loaded via dynamic(ssr:false) in providers.tsx to avoid removeChild errors.
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { resolvedTheme = "light" } = useTheme()
+
   return (
     <Sonner
-      theme="light"
+      theme={resolvedTheme as ToasterProps["theme"]}
       className="toaster group"
       style={
         {

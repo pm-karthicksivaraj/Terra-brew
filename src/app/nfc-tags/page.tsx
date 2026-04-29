@@ -367,7 +367,7 @@ export default function NFCTagsPage() {
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetBindForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r   hover: hover: text-white gap-2 rounded-xl shadow-sm"
+                className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetBindForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -454,7 +454,7 @@ export default function NFCTagsPage() {
                   <Button
                     type="submit"
                     disabled={submitting || !bindForm.entityType || !bindForm.entityId || !bindForm.nfcTagId.trim()}
-                    className="bg-gradient-to-r   text-white rounded-xl"
+                    className="btn-primary-gradient rounded-xl"
                   >
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang gắn...', 'Binding...')}</>
@@ -663,7 +663,7 @@ export default function NFCTagsPage() {
                     <Button
                       onClick={handleVerify}
                       disabled={verifying}
-                      className="bg-gradient-to-r   hover: hover: text-white rounded-xl gap-2 shrink-0"
+                      className="btn-primary-gradient rounded-xl gap-2 shrink-0"
                     >
                       {verifying ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

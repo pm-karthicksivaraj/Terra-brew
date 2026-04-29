@@ -1187,7 +1187,7 @@ export default function ProcessingWizardPage() {
           {currentStep < 6 ? (
             <Button
               onClick={goNext}
-              className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white gap-2 rounded-xl shadow-sm"
+              className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
             >
               {t('Tiếp theo', 'Next')}
               <ChevronRight className="w-4 h-4" />
@@ -1198,7 +1198,7 @@ export default function ProcessingWizardPage() {
                 setDirection('forward')
                 setCurrentStep(7) // Go to summary
               }}
-              className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white gap-2 rounded-xl shadow-sm"
+              className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
             >
               {t('Xem lại', 'Review')}
               <ClipboardCheck className="w-4 h-4" />

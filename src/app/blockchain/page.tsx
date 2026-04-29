@@ -83,7 +83,7 @@ export default function BlockchainPage() {
       const res = await fetch(`/api/on-chain/anchor?batchId=${encodeURIComponent(batch)}`)
       const data = await res.json()
       if (data.success) {
-        setAnchorStatus(data.data)
+        setAnchorStatus(data.data ?? null)
       }
     } catch {
       // ignore
@@ -102,8 +102,8 @@ export default function BlockchainPage() {
       const res = await fetch(`/api/hash-chain?batchId=${encodeURIComponent(batchId.trim())}`)
       const data = await res.json()
       if (data.success) {
-        setBlocks(data.data.blocks)
-        setVerification(data.data.verification)
+        setBlocks(Array.isArray(data.data?.blocks) ? data.data.blocks : [])
+        setVerification(data.data?.verification ?? null)
         // Check anchor status after blocks are loaded
         checkAnchorStatus(batchId.trim())
       } else {

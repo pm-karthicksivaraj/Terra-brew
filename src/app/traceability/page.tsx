@@ -542,8 +542,8 @@ export default function TraceabilityPage() {
       const res = await fetch(`/api/traceability?batchId=${encodeURIComponent(batchId.trim())}`)
       const data = await res.json()
       if (data.success) {
-        setTraceData(data.data)
-        if (!data.data.found) {
+        setTraceData(data.data ?? null)
+        if (!data.data?.found) {
           toast.warning(t('Không tìm thấy dữ liệu cho mã lô này', 'No data found for this batch ID'))
         }
       } else {
@@ -612,7 +612,7 @@ export default function TraceabilityPage() {
             </tr>
           </thead>
           <tbody>
-            ${traceData.stages.map((s, i) => {
+            ${(traceData.stages || []).map((s: any, i: number) => {
               const statusClass = s.status === 'completed' ? 'completed' : s.status === 'pending' ? 'pending' : 'na'
               const badgeClass = s.status === 'completed' ? 'badge-completed' : s.status === 'pending' ? 'badge-pending' : 'badge-na'
               const statusLabel = s.status === 'completed' ? t('Hoàn thành', 'Completed') : s.status === 'pending' ? t('Đang chờ', 'Pending') : t('Không có', 'N/A')
@@ -710,7 +710,7 @@ export default function TraceabilityPage() {
             <Button
               onClick={handleSearch}
               disabled={loading}
-              className="bg-gradient-to-r   hover: hover: text-white rounded-xl gap-2 shrink-0"
+              className="btn-primary-gradient rounded-xl gap-2 shrink-0"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -784,7 +784,7 @@ export default function TraceabilityPage() {
                   <div className="ml-auto flex items-center gap-2">
                     <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r  "
+                        className="h-full rounded-full bg-primary"
                         style={{ width: `${(completedStages / totalStages) * 100}%` }}
                       />
                     </div>
@@ -804,7 +804,7 @@ export default function TraceabilityPage() {
 
               {/* Timeline */}
               <div className="relative">
-                {traceData.stages.map((stage, index) => (
+                {(traceData.stages || []).map((stage: any, index: number) => (
                   <TimelineCard
                     key={stage.key}
                     stage={stage}
