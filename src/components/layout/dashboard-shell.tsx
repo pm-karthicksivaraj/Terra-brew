@@ -3,7 +3,9 @@
 import { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
-import { Menu, LogOut, Coffee, Globe } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, LogOut, Coffee, Globe, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -89,14 +91,12 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const { data: session } = useSession()
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
+  const { theme, setTheme } = useTheme()
 
   // Hydration guard: only render dynamic layout after client mount.
-  // This prevents removeChild errors from margin-left / collapsed state
-  // differing between server and client.
   const [mounted, setMounted] = useState(false)
 
   // Sidebar collapse state persisted to localStorage
-  // Initialize with false (server-safe), then read from localStorage in effect
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -123,9 +123,6 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
     })
   }, [])
 
-  // Mobile drawer is closed via onNavClick callback in AppSidebar when user clicks a nav item
-  // No pathname-based effect to avoid lint violation with setState-in-effect
-
   // Build breadcrumbs from pathname
   const breadcrumbs = useMemo(() => {
     const segments = pathname.split('/').filter(Boolean)
@@ -145,22 +142,20 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const userRole = session?.user?.role || ''
 
   // Compute margin-left: only on desktop, matches sidebar width
-  // Before mount, always use 0 to match SSR output and prevent hydration mismatch
   const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 256) : 0
 
   // Before client mount, render a minimal shell that matches the server output.
-  // After mount, render the full dynamic layout.
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen bg-background" style={{ fontFamily: '"Space Mono", monospace' }}>
         <div className="flex flex-col min-h-screen">
-          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-coffee-200/50">
+          <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border">
             <div className="flex items-center justify-between px-4 md:px-6 py-2.5">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-coffee-500">...</span>
+                <span className="text-xs text-muted-foreground">...</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-coffee-500">...</span>
+                <span className="text-xs text-muted-foreground">...</span>
               </div>
             </div>
           </header>
@@ -173,7 +168,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   }
 
   return (
-    <div className="min-h-screen bg-coffee-50/50" style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>
+    <div className="min-h-screen bg-background" style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>
       {/* Sidebar */}
       <AppSidebar
         collapsed={collapsed}
@@ -193,7 +188,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
         suppressHydrationWarning
       >
         {/* Top header bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-coffee-200/50">
+        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border">
           <div className="flex items-center justify-between px-4 md:px-6 py-2.5">
             {/* Left: hamburger (mobile) + breadcrumb */}
             <div className="flex items-center gap-3">
@@ -201,7 +196,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden text-coffee-600 hover:text-coffee-900 -ml-1"
+                className="lg:hidden text-foreground hover:text-foreground -ml-1"
                 onClick={() => setMobileOpen(true)}
               >
                 <Menu className="w-5 h-5" />
@@ -215,11 +210,11 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
                     <BreadcrumbItem key={crumb.href}>
                       {idx > 0 && <BreadcrumbSeparator />}
                       {crumb.isLast ? (
-                        <BreadcrumbPage className="text-xs text-coffee-800 font-medium">
+                        <BreadcrumbPage className="text-xs text-foreground font-medium">
                           {crumb.label}
                         </BreadcrumbPage>
                       ) : (
-                        <BreadcrumbLink href={crumb.href} className="text-xs text-coffee-500 hover:text-coffee-800">
+                        <BreadcrumbLink href={crumb.href} className="text-xs text-muted-foreground hover:text-foreground">
                           {crumb.label}
                         </BreadcrumbLink>
                       )}
@@ -229,14 +224,47 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
               </Breadcrumb>
             </div>
 
-            {/* Right: language toggle + user menu */}
+            {/* Right: theme toggle + language toggle + user menu */}
             <div className="flex items-center gap-2">
+              {/* Theme toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="gap-1.5 text-muted-foreground hover:text-foreground text-xs rounded-xl"
+                aria-label="Toggle theme"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {theme === 'dark' ? (
+                    <motion.div
+                      key="sun"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sun className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="moon"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Moon className="w-4 h-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+
               {/* Language toggle (compact, in header) */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLangToggle}
-                className="gap-1 text-coffee-500 hover:text-coffee-800 text-xs rounded-xl"
+                className="gap-1 text-muted-foreground hover:text-foreground text-xs rounded-xl"
               >
                 <Globe className="w-3.5 h-3.5" />
                 {lang === 'vi' ? 'EN' : 'VI'}
@@ -245,20 +273,20 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
               {/* User dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2 rounded-xl px-2 hover:bg-coffee-50">
+                  <Button variant="ghost" size="sm" className="gap-2 rounded-xl px-2 hover:bg-accent">
                     <Avatar className="w-7 h-7">
-                      <AvatarFallback className="bg-gradient-to-br from-coffee-500 to-coffee-800 text-white text-[10px] font-bold">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
                         {getInitials(userName)}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden md:inline text-xs font-medium text-coffee-700">{userName}</span>
+                    <span className="hidden md:inline text-xs font-medium text-foreground">{userName}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 rounded-xl">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col gap-1">
-                      <p className="text-xs font-medium text-coffee-800">{userName}</p>
-                      <Badge variant="outline" className="w-fit text-[10px] border-coffee-300 capitalize">
+                      <p className="text-xs font-medium text-foreground">{userName}</p>
+                      <Badge variant="outline" className="w-fit text-[10px] capitalize">
                         {userRole.replace('_', ' ')}
                       </Badge>
                     </div>
@@ -266,7 +294,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="text-red-600 focus:text-red-600 focus:bg-red-50 text-xs cursor-pointer"
+                    className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 text-xs cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5 mr-2" />
                     {lang === 'vi' ? 'Đăng xuất' : 'Sign out'}
@@ -277,14 +305,25 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
           </div>
         </header>
 
-        {/* Main content area */}
-        <main className="flex-1 px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
-          {children}
-        </main>
+        {/* Main content area with page transition animation */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1"
+          >
+            <main className="px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
+              {children}
+            </main>
+          </motion.div>
+        </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-auto border-t border-coffee-100 bg-white/60">
-          <div className="px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between text-[10px] text-coffee-400">
+        <footer className="mt-auto border-t border-border bg-card/60">
+          <div className="px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between text-[10px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Coffee className="w-3 h-3" />
               <span>Terra Brew Coffee Platform</span>

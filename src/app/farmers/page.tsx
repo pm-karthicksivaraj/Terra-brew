@@ -170,10 +170,10 @@ export default function FarmersPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -189,17 +189,17 @@ export default function FarmersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <Users className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Users className="w-5 h-5 text-foreground" />
               {t('Quản lý Nông dân', 'Farmer Management')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} nông dân`, `Total: ${total} farmers`)}</p>
+            <p className="text-sm text-foreground">{t(`Tổng số: ${total} nông dân`, `Total: ${total} farmers`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-gradient-to-r   hover: hover: text-white gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -208,7 +208,7 @@ export default function FarmersPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5" />
                   {editingFarmer ? t('Sửa thông tin nông dân', 'Edit Farmer') : t('Thêm nông dân mới', 'Add New Farmer')}
                 </DialogTitle>
@@ -217,45 +217,45 @@ export default function FarmersPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* FullName */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Họ và tên', 'Full Name')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Họ và tên', 'Full Name')} *</Label>
                     <Input
                       value={form.fullName}
                       onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                       placeholder={t('Nhập họ và tên', 'Enter full name')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                       required
                     />
                   </div>
 
                   {/* Contact Number */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số điện thoại', 'Contact Number')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Số điện thoại', 'Contact Number')} *</Label>
                     <Input
                       value={form.contactNumber}
                       onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
                       placeholder="0912345678"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                       required
                     />
                   </div>
 
                   {/* Email */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">Email</Label>
+                    <Label className="text-xs text-foreground">Email</Label>
                     <Input
                       type="email"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="email@example.com"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Gender */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Giới tính', 'Gender')}</Label>
+                    <Label className="text-xs text-foreground">{t('Giới tính', 'Gender')}</Label>
                     <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -268,102 +268,102 @@ export default function FarmersPage() {
 
                   {/* Age */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tuổi', 'Age')}</Label>
+                    <Label className="text-xs text-foreground">{t('Tuổi', 'Age')}</Label>
                     <Input
                       type="number"
                       value={form.age}
                       onChange={(e) => setForm({ ...form, age: e.target.value })}
                       placeholder="35"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Province */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tỉnh/Thành phố', 'Province')}</Label>
+                    <Label className="text-xs text-foreground">{t('Tỉnh/Thành phố', 'Province')}</Label>
                     <Input
                       value={form.province}
                       onChange={(e) => setForm({ ...form, province: e.target.value })}
                       placeholder={t('Lâm Đồng', 'Lam Dong')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* District */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Quận/Huyện', 'District')}</Label>
+                    <Label className="text-xs text-foreground">{t('Quận/Huyện', 'District')}</Label>
                     <Input
                       value={form.district}
                       onChange={(e) => setForm({ ...form, district: e.target.value })}
                       placeholder={t('Đà Lạt', 'Da Lat')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Commune */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Xã/Phường', 'Commune')}</Label>
+                    <Label className="text-xs text-foreground">{t('Xã/Phường', 'Commune')}</Label>
                     <Input
                       value={form.commune}
                       onChange={(e) => setForm({ ...form, commune: e.target.value })}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Village */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Thôn/Bản', 'Village')}</Label>
+                    <Label className="text-xs text-foreground">{t('Thôn/Bản', 'Village')}</Label>
                     <Input
                       value={form.village}
                       onChange={(e) => setForm({ ...form, village: e.target.value })}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* National ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số CMND/CCCD', 'National ID')}</Label>
+                    <Label className="text-xs text-foreground">{t('Số CMND/CCCD', 'National ID')}</Label>
                     <Input
                       value={form.nationalIdNo}
                       onChange={(e) => setForm({ ...form, nationalIdNo: e.target.value })}
                       placeholder="079201012345"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Years of Experience */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Kinh nghiệm (năm)', 'Experience (years)')}</Label>
+                    <Label className="text-xs text-foreground">{t('Kinh nghiệm (năm)', 'Experience (years)')}</Label>
                     <Input
                       type="number"
                       value={form.yearsOfFarmingExperience}
                       onChange={(e) => setForm({ ...form, yearsOfFarmingExperience: e.target.value })}
                       placeholder="10"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Credit Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Điểm tín dụng', 'Credit Score')}</Label>
+                    <Label className="text-xs text-foreground">{t('Điểm tín dụng', 'Credit Score')}</Label>
                     <Input
                       type="number"
                       value={form.creditScore}
                       onChange={(e) => setForm({ ...form, creditScore: e.target.value })}
                       placeholder="80"
                       min="0" max="100"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Cooperative */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Hợp tác xã', 'Cooperative')}</Label>
+                    <Label className="text-xs text-foreground">{t('Hợp tác xã', 'Cooperative')}</Label>
                     <Input
                       value={form.cooperative}
                       onChange={(e) => setForm({ ...form, cooperative: e.target.value })}
                       placeholder={t('HTX Cà phê Metrang', 'Metrang Coffee Co-op')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-border focus:border-border"
                     />
                   </div>
                 </div>
@@ -376,7 +376,7 @@ export default function FarmersPage() {
                       checked={form.isCertified}
                       onCheckedChange={(v) => setForm({ ...form, isCertified: !!v })}
                     />
-                    <Label htmlFor="isCertified" className="text-xs text-coffee-700">{t('Đã chứng nhận', 'Certified')}</Label>
+                    <Label htmlFor="isCertified" className="text-xs text-foreground">{t('Đã chứng nhận', 'Certified')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -384,7 +384,7 @@ export default function FarmersPage() {
                       checked={form.loanTaken}
                       onCheckedChange={(v) => setForm({ ...form, loanTaken: !!v })}
                     />
-                    <Label htmlFor="loanTaken" className="text-xs text-coffee-700">{t('Có vay vốn', 'Has Loan')}</Label>
+                    <Label htmlFor="loanTaken" className="text-xs text-foreground">{t('Có vay vốn', 'Has Loan')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -392,7 +392,7 @@ export default function FarmersPage() {
                       checked={form.smartphoneOwnership}
                       onCheckedChange={(v) => setForm({ ...form, smartphoneOwnership: !!v })}
                     />
-                    <Label htmlFor="smartphone" className="text-xs text-coffee-700">{t('Có điện thoại', 'Has Smartphone')}</Label>
+                    <Label htmlFor="smartphone" className="text-xs text-foreground">{t('Có điện thoại', 'Has Smartphone')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -400,19 +400,19 @@ export default function FarmersPage() {
                       checked={form.gapTrainingAttended}
                       onCheckedChange={(v) => setForm({ ...form, gapTrainingAttended: !!v })}
                     />
-                    <Label htmlFor="gapTraining" className="text-xs text-coffee-700">{t('Đào tạo GAP', 'GAP Training')}</Label>
+                    <Label htmlFor="gapTraining" className="text-xs text-foreground">{t('Đào tạo GAP', 'GAP Training')}</Label>
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl"
+                    className="bg-gradient-to-r   text-white rounded-xl"
                   >
                     {submitting ? (
                       <>
@@ -432,15 +432,15 @@ export default function FarmersPage() {
         {/* Search */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm nông dân...', 'Search farmers...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-border focus:border-border bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -450,45 +450,45 @@ export default function FarmersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Mã', 'Code')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Họ và tên', 'Full Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Số ĐT', 'Contact')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Tỉnh', 'Province')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('CC', 'Cert')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Điểm TD', 'Credit')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                <tr className="bg-muted border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Mã', 'Code')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Họ và tên', 'Full Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t('Số ĐT', 'Contact')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tỉnh', 'Province')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t('CC', 'Cert')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t('Điểm TD', 'Credit')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {(farmers || []).map((farmer, i) => (
                     <tr key={farmer.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
-                      <td className="px-4 py-3 text-xs text-coffee-500 font-mono">{farmer.farmerCode || '-'}</td>
+ className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-xs text-foreground font-mono">{farmer.farmerCode || '-'}</td>
                       <td className="px-4 py-3">
                         <div>
-                          <p className="text-xs font-medium text-coffee-800">{farmer.fullName}</p>
-                          <p className="text-[10px] text-coffee-400">{farmer.gender} {farmer.age ? `• ${farmer.age}` + t(' tuổi', ' yrs') : ''}</p>
+                          <p className="text-xs font-medium text-foreground">{farmer.fullName}</p>
+                          <p className="text-[10px] text-foreground">{farmer.gender} {farmer.age ? `• ${farmer.age}` + t(' tuổi', ' yrs') : ''}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{farmer.contactNumber}</td>
-                      <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">
+                      <td className="px-4 py-3 text-xs text-foreground hidden md:table-cell">{farmer.contactNumber}</td>
+                      <td className="px-4 py-3 text-xs text-foreground hidden lg:table-cell">
                         {farmer.province || '-'}
-                        {farmer.district ? <span className="text-coffee-400"> • {farmer.district}</span> : null}
+                        {farmer.district ? <span className="text-foreground"> • {farmer.district}</span> : null}
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         {farmer.isCertified ? (
                           <Badge className="bg-green-100 text-green-700 text-[10px] border-0">{t('Đã CC', 'Certified')}</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] border-coffee-200 text-coffee-400">{t('Chưa', 'No')}</Badge>
+                          <Badge variant="outline" className="text-[10px] border-border text-foreground">{t('Chưa', 'No')}</Badge>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">
+                      <td className="px-4 py-3 text-xs text-foreground hidden lg:table-cell">
                         {farmer.creditScore !== null && farmer.creditScore !== undefined ? (
                           <div className="flex items-center gap-1.5">
-                            <div className="w-12 h-1.5 bg-coffee-100 rounded-full overflow-hidden">
+                            <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-coffee-500 to-coffee-700"
+                                className="h-full rounded-full bg-gradient-to-r  "
                                 style={{ width: `${farmer.creditScore}%` }}
                               />
                             </div>
@@ -509,8 +509,8 @@ export default function FarmersPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
@@ -519,7 +519,7 @@ export default function FarmersPage() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-border"
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
@@ -532,7 +532,7 @@ export default function FarmersPage() {
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-muted text-white' : 'border-border text-foreground'}`}
                     >
                       {p}
                     </Button>
@@ -543,7 +543,7 @@ export default function FarmersPage() {
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-border"
                 >
                   <ChevronRight className="w-3 h-3" />
                 </Button>

@@ -37,13 +37,13 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col overflow-hidden relative" style={{ fontFamily: '"Space Mono", monospace' }}>
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-coffee-50 via-amber-50 to-stone-100" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-amber-50 to-stone-100" />
 
       {/* Floating coffee beans — pure CSS */}
       {floatingBeans.map((bean) => (
         <div
           key={bean.id}
-          className="absolute text-coffee-200/30 pointer-events-none select-none"
+          className="absolute text-muted/30 pointer-events-none select-none"
           style={{
             left: `${bean.x}%`,
             top: `${bean.y}%`,
@@ -69,10 +69,10 @@ export default function LandingPage() {
         {/* Header */}
         <header className="flex items-center justify-between px-6 md:px-12 py-6" style={{ animation: 'fadeIn 0.6s ease-out both' }}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-coffee-600 to-coffee-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Coffee className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-coffee-800 tracking-tight">Terra Brew</span>
+            <span className="text-xl font-bold text-foreground tracking-tight">Terra Brew</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export default function LandingPage() {
               variant="ghost"
               size="sm"
               onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
-              className="gap-2 text-coffee-700 hover:text-coffee-900 hover:bg-coffee-100"
+              className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               <Globe className="w-4 h-4" />
               {lang === 'vi' ? 'EN' : 'VI'}
@@ -99,28 +99,28 @@ export default function LandingPage() {
               className="mb-8 flex justify-center"
               style={{ animation: 'scaleIn 0.5s ease-out 0.3s both' }}
             >
-              <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-coffee-500 via-coffee-600 to-coffee-800 flex items-center justify-center shadow-2xl shadow-coffee-400/30">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-primary via-primary to-primary flex items-center justify-center shadow-2xl shadow-primary/20">
                 <Coffee className="w-14 h-14 md:w-20 md:h-20 text-white" />
               </div>
             </div>
 
             {/* Title */}
             <h1
-              className="text-4xl md:text-6xl lg:text-7xl font-bold text-coffee-900 mb-4 leading-tight"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 leading-tight"
               style={{ animation: 'fadeIn 0.6s ease-out 0.5s both' }}
             >
               Terra Brew
             </h1>
 
             <p
-              className="text-lg md:text-2xl text-coffee-600 mb-3 font-medium"
+              className="text-lg md:text-2xl text-muted-foreground mb-3 font-medium"
               style={{ animation: 'fadeIn 0.6s ease-out 0.7s both' }}
             >
               {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
             </p>
 
             <p
-              className="text-sm md:text-base text-coffee-400 mb-10 max-w-2xl mx-auto leading-relaxed"
+              className="text-sm md:text-base text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
               style={{ animation: 'fadeIn 0.6s ease-out 0.8s both' }}
             >
               {t(
@@ -136,7 +136,7 @@ export default function LandingPage() {
             >
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white px-8 py-6 text-base rounded-xl shadow-lg shadow-coffee-400/25 transition-all duration-300 hover:shadow-xl hover:shadow-coffee-400/40"
+                className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white px-8 py-6 text-base rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/20"
                 onClick={() => router.push('/login')}
               >
                 {t('Vào Nền tảng', 'Enter Platform')}
@@ -146,7 +146,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="border-coffee-300 text-coffee-700 hover:bg-coffee-50 px-8 py-6 text-base rounded-xl"
+                className="border-border text-foreground hover:bg-muted px-8 py-6 text-base rounded-xl"
                 onClick={() => router.push('/super-admin')}
               >
                 {t('Quản trị Nền tảng', 'Platform Admin')}
@@ -162,15 +162,15 @@ export default function LandingPage() {
             {features.map((feature, i) => (
               <div
                 key={i}
-                className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-coffee-200/50 hover:border-coffee-300/80 hover:shadow-lg transition-all duration-300 group"
+                className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-border/50 hover:border-border/80 hover:shadow-lg transition-all duration-300 group"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center mb-4 group-hover:from-coffee-200 group-hover:to-coffee-300 transition-colors">
-                  <feature.icon className="w-6 h-6 text-coffee-700" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center mb-4 group-hover:from-primary group-hover:to-primary transition-colors">
+                  <feature.icon className="w-6 h-6 text-foreground" />
                 </div>
-                <h3 className="font-bold text-coffee-800 mb-1 text-sm">
+                <h3 className="font-bold text-foreground mb-1 text-sm">
                   {t(feature.title, feature.titleEn)}
                 </h3>
-                <p className="text-coffee-500 text-xs leading-relaxed">
+                <p className="text-muted-foreground text-xs leading-relaxed">
                   {t(feature.desc, feature.descEn)}
                 </p>
               </div>
@@ -180,7 +180,7 @@ export default function LandingPage() {
 
         {/* Footer */}
         <footer className="text-center py-6 px-4">
-          <p className="text-xs text-coffee-400">
+          <p className="text-xs text-muted-foreground">
             © 2024 Terra Brew — {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
           </p>
         </footer>

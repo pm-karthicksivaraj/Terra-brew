@@ -54,8 +54,8 @@ const STAGE_META: Record<string, { icon: React.ElementType; labelVi: string; lab
   COFFEE_INSPECTION: { icon: Award, labelVi: 'Kiểm tra Cà phê', labelEn: 'Coffee Inspection', color: 'text-yellow-600' },
   HARVEST: { icon: Coffee, labelVi: 'Thu hoạch', labelEn: 'Harvest', color: 'text-amber-700' },
   PROCUREMENT: { icon: Truck, labelVi: 'Thu mua', labelEn: 'Procurement', color: 'text-orange-600' },
-  PROCESSING: { icon: Package, labelVi: 'Chế biến', labelEn: 'Processing', color: 'text-coffee-700' },
-  PACKAGING: { icon: Package, labelVi: 'Đóng gói', labelEn: 'Packaging', color: 'text-coffee-800' },
+  PROCESSING: { icon: Package, labelVi: 'Chế biến', labelEn: 'Processing', color: 'text-foreground' },
+  PACKAGING: { icon: Package, labelVi: 'Đóng gói', labelEn: 'Packaging', color: 'text-foreground' },
 }
 
 const ENTITY_LABELS: Record<string, { labelVi: string; labelEn: string }> = {
@@ -176,7 +176,7 @@ export default function PublicVerifyPage() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ fontFamily: '"Space Mono", monospace' }}>
       {/* ─── Background ─── */}
-      <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/80 to-stone-900" />
 
       {/* Floating coffee particles — pure CSS */}
       {particles.map((p, i) => (
@@ -208,7 +208,7 @@ export default function PublicVerifyPage() {
       <header className="relative z-10 w-full">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5" style={{ animation: 'verifySlideLeft 0.5s ease-out 0.2s both' }}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-700 flex items-center justify-center shadow-lg shadow-coffee-400/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Coffee className="w-5 h-5 text-white" />
             </div>
             <span className="text-white font-bold text-sm">Terra Brew</span>
@@ -266,7 +266,7 @@ export default function PublicVerifyPage() {
                   {/* Entity Type & Blockchain Badge */}
                   <div className="flex flex-wrap items-center gap-2">
                     {data.entityType && (
-                      <Badge className="bg-coffee-100 text-coffee-800 text-[10px] border-0 font-medium px-2.5 py-1 rounded-lg">
+                      <Badge className="bg-muted text-foreground text-[10px] border-0 font-medium px-2.5 py-1 rounded-lg">
                         {ENTITY_LABELS[data.entityType]?.[lang === 'vi' ? 'labelVi' : 'labelEn'] || data.entityType}
                       </Badge>
                     )}
@@ -282,39 +282,39 @@ export default function PublicVerifyPage() {
 
                   {/* Coffee Details */}
                   {(getVariety() || getOrigin() || getCertifications().length > 0) && (
-                    <div className="bg-gradient-to-br from-coffee-50 to-amber-50/50 rounded-xl p-4 space-y-3">
+                    <div className="bg-gradient-to-br from-primary to-amber-50/50 rounded-xl p-4 space-y-3">
                       {getVariety() && (
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-coffee-200/60 flex items-center justify-center">
-                            <Coffee className="w-3.5 h-3.5 text-coffee-700" />
+                          <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                            <Coffee className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-coffee-500 uppercase tracking-wider">{t('Giống cà phê', 'Coffee Variety')}</p>
-                            <p className="text-xs font-bold text-coffee-900">{getVariety()}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Giống cà phê', 'Coffee Variety')}</p>
+                            <p className="text-xs font-bold text-foreground">{getVariety()}</p>
                           </div>
                         </div>
                       )}
                       {getOrigin() && (
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-coffee-200/60 flex items-center justify-center">
-                            <MapPin className="w-3.5 h-3.5 text-coffee-700" />
+                          <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                            <MapPin className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-coffee-500 uppercase tracking-wider">{t('Xuất xứ', 'Origin')}</p>
-                            <p className="text-xs font-bold text-coffee-900">{getOrigin()}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Xuất xứ', 'Origin')}</p>
+                            <p className="text-xs font-bold text-foreground">{getOrigin()}</p>
                           </div>
                         </div>
                       )}
                       {getCertifications().length > 0 && (
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-coffee-200/60 flex items-center justify-center">
-                            <Award className="w-3.5 h-3.5 text-coffee-700" />
+                          <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                            <Award className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-coffee-500 uppercase tracking-wider">{t('Chứng nhận', 'Certifications')}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Chứng nhận', 'Certifications')}</p>
                             <div className="flex flex-wrap gap-1.5 mt-1">
                               {getCertifications().map((cert, i) => (
-                                <span key={i} className="inline-flex items-center bg-white/80 text-coffee-700 text-[10px] font-medium px-2 py-0.5 rounded-md border border-coffee-200/50">
+                                <span key={i} className="inline-flex items-center bg-card/80 text-foreground text-[10px] font-medium px-2 py-0.5 rounded-md border border-border">
                                   {cert}
                                 </span>
                               ))}
@@ -327,16 +327,16 @@ export default function PublicVerifyPage() {
 
                   {/* Entity Details Table */}
                   {getEntityFields().length > 0 && (
-                    <div className="bg-white/60 rounded-xl p-3.5 space-y-1.5">
-                      <p className="text-[10px] text-coffee-500 uppercase tracking-wider font-medium mb-2">
+                    <div className="bg-card/60 rounded-xl p-3.5 space-y-1.5">
+                      <p className="text-[10px] text-foreground uppercase tracking-wider font-medium mb-2">
                         {t('Thông tin chi tiết', 'Detailed Information')}
                       </p>
                       {getEntityFields().map(([key, value]) => (
                         <div key={key} className="flex justify-between items-start text-[11px]">
-                          <span className="text-coffee-500 capitalize shrink-0">
+                          <span className="text-foreground capitalize shrink-0">
                             {key.replace(/([A-Z])/g, ' $1').trim()}
                           </span>
-                          <span className="text-coffee-800 font-medium text-right ml-3 max-w-[60%] break-all">
+                          <span className="text-foreground font-medium text-right ml-3 max-w-[60%] break-all">
                             {String(value)}
                           </span>
                         </div>
@@ -349,12 +349,12 @@ export default function PublicVerifyPage() {
               {/* ─── Product Journey Timeline ─── */}
               {data.traceSteps.length > 0 && (
                 <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/20 overflow-hidden" style={{ animation: 'verifyFadeUp 0.5s ease-out 0.3s both' }}>
-                  <div className="px-6 py-4 border-b border-coffee-100">
-                    <h2 className="text-sm font-bold text-coffee-900 flex items-center gap-2">
-                      <Fingerprint className="w-4 h-4 text-coffee-600" />
+                  <div className="px-6 py-4 border-b border-border">
+                    <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <Fingerprint className="w-4 h-4 text-foreground" />
                       {t('Hành trình Sản phẩm', 'Product Journey')}
                     </h2>
-                    <p className="text-[10px] text-coffee-500 mt-0.5">
+                    <p className="text-[10px] text-foreground mt-0.5">
                       {t('Mỗi bước được ghi nhận trên blockchain không thể thay đổi', 'Each step is immutably recorded on blockchain')}
                     </p>
                   </div>
@@ -362,7 +362,7 @@ export default function PublicVerifyPage() {
                   <div className="px-6 py-4">
                     <div className="relative">
                       {/* Timeline line */}
-                      <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-emerald-300 via-amber-300 to-coffee-300 rounded-full" />
+                      <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-emerald-300 via-amber-300 to-primary rounded-full" />
 
                       <div className="space-y-0">
                         {data.traceSteps.map((step, idx) => {
@@ -370,7 +370,7 @@ export default function PublicVerifyPage() {
                             icon: Hash,
                             labelVi: step.stage,
                             labelEn: step.stage,
-                            color: 'text-coffee-600',
+                            color: 'text-foreground',
                           }
                           const Icon = meta.icon
                           const isFirst = idx === 0
@@ -383,7 +383,7 @@ export default function PublicVerifyPage() {
                                 isFirst
                                   ? 'bg-emerald-100 ring-2 ring-emerald-400'
                                   : isLast
-                                    ? 'bg-coffee-100 ring-2 ring-coffee-400'
+                                    ? 'bg-muted ring-2 ring-primary'
                                     : 'bg-amber-50 ring-2 ring-amber-300'
                               }`}>
                                 <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
@@ -392,22 +392,22 @@ export default function PublicVerifyPage() {
                               {/* Content */}
                               <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-5'}`}>
                                 <div className="flex items-center justify-between">
-                                  <p className="text-xs font-bold text-coffee-900">
+                                  <p className="text-xs font-bold text-foreground">
                                     {t(meta.labelVi, meta.labelEn)}
                                   </p>
-                                  <span className="text-[9px] text-coffee-400 font-mono">
+                                  <span className="text-[9px] text-foreground font-mono">
                                     #{step.blockIndex}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <Clock className="w-3 h-3 text-coffee-400" />
-                                  <span className="text-[10px] text-coffee-500">
+                                  <Clock className="w-3 h-3 text-foreground" />
+                                  <span className="text-[10px] text-foreground">
                                     {formatTime(step.timestamp)}
                                   </span>
                                 </div>
                                 <div className="mt-1.5 flex items-center gap-1">
                                   <div className="h-1 w-1 rounded-full bg-emerald-400" />
-                                  <span className="text-[9px] font-mono text-coffee-400 truncate max-w-[220px]">
+                                  <span className="text-[9px] font-mono text-foreground truncate max-w-[220px]">
                                     {step.dataHash.substring(0, 16)}...
                                   </span>
                                 </div>
@@ -429,10 +429,10 @@ export default function PublicVerifyPage() {
                       <Shield className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-coffee-900">
+                      <p className="text-xs font-bold text-foreground">
                         {t('Xác minh Blockchain', 'Blockchain Verified')}
                       </p>
-                      <p className="text-[10px] text-coffee-500 mt-0.5">
+                      <p className="text-[10px] text-foreground mt-0.5">
                         {t(
                           `${data.chainIntegrity.totalBlocks} khối dữ liệu đã được xác minh toàn vẹn`,
                           `${data.chainIntegrity.totalBlocks} data blocks verified with full integrity`
@@ -448,24 +448,24 @@ export default function PublicVerifyPage() {
 
                   {/* Verification details */}
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-coffee-50/80 rounded-xl p-3">
+                    <div className="bg-muted rounded-xl p-3">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Fingerprint className="w-3 h-3 text-coffee-600" />
-                        <span className="text-[9px] font-bold text-coffee-700 uppercase tracking-wider">HMAC</span>
+                        <Fingerprint className="w-3 h-3 text-foreground" />
+                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">HMAC</span>
                       </div>
-                      <p className="text-[10px] text-coffee-600">
+                      <p className="text-[10px] text-foreground">
                         {data.signatureValid
                           ? t('Chữ ký hợp lệ ✓', 'Signature valid ✓')
                           : t('Chữ ký không hợp lệ ✗', 'Signature invalid ✗')
                         }
                       </p>
                     </div>
-                    <div className="bg-coffee-50/80 rounded-xl p-3">
+                    <div className="bg-muted rounded-xl p-3">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <Link2 className="w-3 h-3 text-coffee-600" />
-                        <span className="text-[9px] font-bold text-coffee-700 uppercase tracking-wider">Hash Chain</span>
+                        <Link2 className="w-3 h-3 text-foreground" />
+                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">Hash Chain</span>
                       </div>
-                      <p className="text-[10px] text-coffee-600">
+                      <p className="text-[10px] text-foreground">
                         {data.chainIntegrity.valid
                           ? t('Toàn vẹn ✓', 'Intact ✓')
                           : t('Đứt chuỗi ✗', 'Broken ✗')
@@ -475,7 +475,7 @@ export default function PublicVerifyPage() {
                   </div>
 
                   {/* Scan count */}
-                  <div className="mt-3 flex items-center justify-between text-[10px] text-coffee-400 pt-3 border-t border-coffee-100">
+                  <div className="mt-3 flex items-center justify-between text-[10px] text-foreground pt-3 border-t border-border">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3" />
                       {t(`Lượt quét: ${data.scanCount}`, `Scans: ${data.scanCount}`)}
@@ -534,9 +534,9 @@ export default function PublicVerifyPage() {
                   )}
                 </div>
 
-                <div className="bg-coffee-50/80 rounded-xl p-3 space-y-1">
-                  <p className="text-[10px] text-coffee-500 uppercase tracking-wider font-medium">{t('Mã QR', 'QR Code')}</p>
-                  <p className="text-[11px] font-mono text-coffee-700 break-all">{data.qrCode}</p>
+                <div className="bg-muted rounded-xl p-3 space-y-1">
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Mã QR', 'QR Code')}</p>
+                  <p className="text-[11px] font-mono text-foreground break-all">{data.qrCode}</p>
                 </div>
               </div>
             </div>
@@ -564,24 +564,24 @@ export default function PublicVerifyPage() {
                   </p>
                 </div>
 
-                <div className="bg-coffee-50/80 rounded-xl p-3 space-y-1">
-                  <p className="text-[10px] text-coffee-500 uppercase tracking-wider font-medium">{t('Mã đã quét', 'Scanned Code')}</p>
-                  <p className="text-[11px] font-mono text-coffee-700 break-all">{qrCode}</p>
+                <div className="bg-muted rounded-xl p-3 space-y-1">
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Mã đã quét', 'Scanned Code')}</p>
+                  <p className="text-[11px] font-mono text-foreground break-all">{qrCode}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[10px] text-coffee-500 uppercase tracking-wider font-medium">{t('Gợi ý', 'Suggestions')}</p>
-                  <ul className="text-[11px] text-coffee-600 space-y-1.5">
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Gợi ý', 'Suggestions')}</p>
+                  <ul className="text-[11px] text-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
-                      <ArrowRight className="w-3 h-3 text-coffee-400 shrink-0 mt-0.5" />
+                      <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
                       {t('Kiểm tra lại mã QR trên bao bì sản phẩm', 'Double-check the QR code on the product packaging')}
                     </li>
                     <li className="flex items-start gap-2">
-                      <ArrowRight className="w-3 h-3 text-coffee-400 shrink-0 mt-0.5" />
+                      <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
                       {t('Đảm bảo quét mã chính xác, không bị mờ hoặc rách', 'Ensure you scan the correct code without blur or damage')}
                     </li>
                     <li className="flex items-start gap-2">
-                      <ArrowRight className="w-3 h-3 text-coffee-400 shrink-0 mt-0.5" />
+                      <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
                       {t('Liên hệ nhà sản xuất nếu vấn đề vẫn tiếp tục', 'Contact the manufacturer if the problem persists')}
                     </li>
                   </ul>
@@ -612,8 +612,8 @@ export default function PublicVerifyPage() {
                 </div>
 
                 {errorMsg && (
-                  <div className="bg-coffee-50/80 rounded-xl p-3">
-                    <p className="text-[10px] text-coffee-500 uppercase tracking-wider font-medium mb-1">{t('Chi tiết lỗi', 'Error Details')}</p>
+                  <div className="bg-muted rounded-xl p-3">
+                    <p className="text-[10px] text-foreground uppercase tracking-wider font-medium mb-1">{t('Chi tiết lỗi', 'Error Details')}</p>
                     <p className="text-[11px] font-mono text-red-600 break-all">{errorMsg}</p>
                   </div>
                 )}

@@ -139,8 +139,8 @@ export default function CropMonitoringsPage() {
       const res = await fetch(`/api/crop-monitorings?${params}`)
       const data = await res.json()
       if (data.success) {
-        setItems(data.data.data)
-        setTotal(data.data.total)
+        const _items = data.data?.data ?? data.data?.items ?? []; setItems(Array.isArray(_items) ? _items : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch crop monitorings', err)
@@ -295,7 +295,7 @@ export default function CropMonitoringsPage() {
       'low': 'bg-blue-100 text-blue-700 border-blue-200',
     }
     return (
-      <Badge className={`${colors[severity] || 'bg-coffee-100 text-coffee-700'} text-[10px] border`}>
+      <Badge className={`${colors[severity] || 'bg-muted text-foreground'} text-[10px] border`}>
         <AlertTriangle className="w-3 h-3 mr-1" />
         {severity}
       </Badge>
@@ -303,7 +303,7 @@ export default function CropMonitoringsPage() {
   }
 
   const getHealthScoreColor = (score: number | null) => {
-    if (score === null) return 'bg-coffee-100'
+    if (score === null) return 'bg-muted'
     if (score >= 80) return 'bg-green-500'
     if (score >= 60) return 'bg-yellow-500'
     if (score >= 40) return 'bg-orange-500'
@@ -317,10 +317,10 @@ export default function CropMonitoringsPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Coffee className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Coffee className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -336,17 +336,17 @@ export default function CropMonitoringsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <Eye className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Eye className="w-5 h-5 text-muted-foreground" />
               {t('Quản lý Giám sát cây trồng', 'Crop Monitoring Management')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -355,7 +355,7 @@ export default function CropMonitoringsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <Eye className="w-5 h-5" />
                   {editingItem ? t('Sửa giám sát', 'Edit Monitoring') : t('Thêm giám sát mới', 'Add New Monitoring')}
                 </DialogTitle>
@@ -364,9 +364,9 @@ export default function CropMonitoringsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -379,9 +379,9 @@ export default function CropMonitoringsPage() {
 
                   {/* Farm Land */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })} disabled={!form.farmerId}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,15 +394,15 @@ export default function CropMonitoringsPage() {
 
                   {/* Monitoring Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày giám sát', 'Monitoring Date')}</Label>
-                    <Input type="date" value={form.monitoringDate} onChange={(e) => setForm({ ...form, monitoringDate: e.target.value })} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ngày giám sát', 'Monitoring Date')}</Label>
+                    <Input type="date" value={form.monitoringDate} onChange={(e) => setForm({ ...form, monitoringDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Monitoring Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Loại giám sát', 'Monitoring Type')}</Label>
+                    <Label className="text-xs text-foreground">{t('Loại giám sát', 'Monitoring Type')}</Label>
                     <Select value={form.monitoringType} onValueChange={(v) => setForm({ ...form, monitoringType: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -417,9 +417,9 @@ export default function CropMonitoringsPage() {
 
                   {/* Growth Stage */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Giai đoạn sinh trưởng', 'Growth Stage')}</Label>
+                    <Label className="text-xs text-foreground">{t('Giai đoạn sinh trưởng', 'Growth Stage')}</Label>
                     <Select value={form.growthStage} onValueChange={(v) => setForm({ ...form, growthStage: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn giai đoạn', 'Select stage')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -435,21 +435,21 @@ export default function CropMonitoringsPage() {
 
                   {/* Plant Height */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Chiều cao cây (cm)', 'Plant Height (cm)')}</Label>
-                    <Input type="number" value={form.plantHeight} onChange={(e) => setForm({ ...form, plantHeight: e.target.value })} placeholder="150" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Chiều cao cây (cm)', 'Plant Height (cm)')}</Label>
+                    <Input type="number" value={form.plantHeight} onChange={(e) => setForm({ ...form, plantHeight: e.target.value })} placeholder="150" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Canopy Diameter */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đường kính tán (cm)', 'Canopy Diameter (cm)')}</Label>
-                    <Input type="number" value={form.canopyDiameter} onChange={(e) => setForm({ ...form, canopyDiameter: e.target.value })} placeholder="120" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Đường kính tán (cm)', 'Canopy Diameter (cm)')}</Label>
+                    <Input type="number" value={form.canopyDiameter} onChange={(e) => setForm({ ...form, canopyDiameter: e.target.value })} placeholder="120" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Leaf Color */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Màu lá', 'Leaf Color')}</Label>
+                    <Label className="text-xs text-foreground">{t('Màu lá', 'Leaf Color')}</Label>
                     <Select value={form.leafColor} onValueChange={(v) => setForm({ ...form, leafColor: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn màu', 'Select color')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -464,15 +464,15 @@ export default function CropMonitoringsPage() {
 
                   {/* Health Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Điểm sức khỏe', 'Health Score')}</Label>
-                    <Input type="number" value={form.healthScore} onChange={(e) => setForm({ ...form, healthScore: e.target.value })} placeholder="85" min="0" max="100" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Điểm sức khỏe', 'Health Score')}</Label>
+                    <Input type="number" value={form.healthScore} onChange={(e) => setForm({ ...form, healthScore: e.target.value })} placeholder="85" min="0" max="100" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Pest Pressure */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Áp lực sâu bệnh', 'Pest Pressure')}</Label>
+                    <Label className="text-xs text-foreground">{t('Áp lực sâu bệnh', 'Pest Pressure')}</Label>
                     <Select value={form.pestPressure} onValueChange={(v) => setForm({ ...form, pestPressure: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn mức', 'Select level')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -487,15 +487,15 @@ export default function CropMonitoringsPage() {
 
                   {/* Disease Symptoms */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Triệu chứng bệnh', 'Disease Symptoms')}</Label>
-                    <Input value={form.diseaseSymptoms} onChange={(e) => setForm({ ...form, diseaseSymptoms: e.target.value })} placeholder={t('Mô tả triệu chứng', 'Describe symptoms')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Triệu chứng bệnh', 'Disease Symptoms')}</Label>
+                    <Input value={form.diseaseSymptoms} onChange={(e) => setForm({ ...form, diseaseSymptoms: e.target.value })} placeholder={t('Mô tả triệu chứng', 'Describe symptoms')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Weather Condition */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Thời tiết', 'Weather Condition')}</Label>
+                    <Label className="text-xs text-foreground">{t('Thời tiết', 'Weather Condition')}</Label>
                     <Select value={form.weatherCondition} onValueChange={(v) => setForm({ ...form, weatherCondition: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn thời tiết', 'Select weather')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -510,33 +510,33 @@ export default function CropMonitoringsPage() {
 
                   {/* Temperature */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
-                    <Input type="number" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} placeholder="25" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
+                    <Input type="number" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} placeholder="25" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Rainfall */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Lượng mưa (mm)', 'Rainfall (mm)')}</Label>
-                    <Input type="number" value={form.rainfall} onChange={(e) => setForm({ ...form, rainfall: e.target.value })} placeholder="120" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Lượng mưa (mm)', 'Rainfall (mm)')}</Label>
+                    <Input type="number" value={form.rainfall} onChange={(e) => setForm({ ...form, rainfall: e.target.value })} placeholder="120" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Humidity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Độ ẩm (%)', 'Humidity (%)')}</Label>
-                    <Input type="number" value={form.humidity} onChange={(e) => setForm({ ...form, humidity: e.target.value })} placeholder="75" step="0.1" min="0" max="100" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Độ ẩm (%)', 'Humidity (%)')}</Label>
+                    <Input type="number" value={form.humidity} onChange={(e) => setForm({ ...form, humidity: e.target.value })} placeholder="75" step="0.1" min="0" max="100" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Soil Moisture */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Độ ẩm đất (%)', 'Soil Moisture (%)')}</Label>
-                    <Input type="number" value={form.soilMoisture} onChange={(e) => setForm({ ...form, soilMoisture: e.target.value })} placeholder="45" step="0.1" min="0" max="100" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Độ ẩm đất (%)', 'Soil Moisture (%)')}</Label>
+                    <Input type="number" value={form.soilMoisture} onChange={(e) => setForm({ ...form, soilMoisture: e.target.value })} placeholder="45" step="0.1" min="0" max="100" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Alert section */}
-                  <div className="md:col-span-2 border-t border-coffee-100 pt-3 mt-2">
+                  <div className="md:col-span-2 border-t border-border pt-3 mt-2">
                     <div className="flex items-center gap-2 mb-3">
                       <Bell className="w-4 h-4 text-orange-500" />
-                      <Label className="text-xs font-semibold text-coffee-800">{t('Cảnh báo', 'Alert Configuration')}</Label>
+                      <Label className="text-xs font-semibold text-foreground">{t('Cảnh báo', 'Alert Configuration')}</Label>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Alert Triggered */}
@@ -546,15 +546,15 @@ export default function CropMonitoringsPage() {
                           checked={form.alertTriggered}
                           onCheckedChange={(v) => setForm({ ...form, alertTriggered: !!v })}
                         />
-                        <Label htmlFor="alertTriggered" className="text-xs text-coffee-700">{t('Kích hoạt cảnh báo', 'Alert Triggered')}</Label>
+                        <Label htmlFor="alertTriggered" className="text-xs text-foreground">{t('Kích hoạt cảnh báo', 'Alert Triggered')}</Label>
                       </div>
                       <div /> {/* spacer */}
 
                       {/* Alert Type */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-coffee-700">{t('Loại cảnh báo', 'Alert Type')}</Label>
+                        <Label className="text-xs text-foreground">{t('Loại cảnh báo', 'Alert Type')}</Label>
                         <Select value={form.alertType} onValueChange={(v) => setForm({ ...form, alertType: v })} disabled={!form.alertTriggered}>
-                          <SelectTrigger className="rounded-xl border-coffee-200">
+                          <SelectTrigger className="rounded-xl border-input">
                             <SelectValue placeholder={t('Chọn loại', 'Select type')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -569,9 +569,9 @@ export default function CropMonitoringsPage() {
 
                       {/* Alert Severity */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-coffee-700">{t('Mức độ', 'Severity')}</Label>
+                        <Label className="text-xs text-foreground">{t('Mức độ', 'Severity')}</Label>
                         <Select value={form.alertSeverity} onValueChange={(v) => setForm({ ...form, alertSeverity: v })} disabled={!form.alertTriggered}>
-                          <SelectTrigger className="rounded-xl border-coffee-200">
+                          <SelectTrigger className="rounded-xl border-input">
                             <SelectValue placeholder={t('Chọn mức', 'Select severity')} />
                           </SelectTrigger>
                           <SelectContent>
@@ -584,25 +584,25 @@ export default function CropMonitoringsPage() {
 
                       {/* Remedial Action */}
                       <div className="space-y-1.5 md:col-span-2">
-                        <Label className="text-xs text-coffee-700">{t('Hành động khắc phục', 'Remedial Action')}</Label>
-                        <Input value={form.remedialAction} onChange={(e) => setForm({ ...form, remedialAction: e.target.value })} placeholder={t('Mô tả hành động', 'Describe action taken')} className="rounded-xl border-coffee-200 focus:border-coffee-500" disabled={!form.alertTriggered} />
+                        <Label className="text-xs text-foreground">{t('Hành động khắc phục', 'Remedial Action')}</Label>
+                        <Input value={form.remedialAction} onChange={(e) => setForm({ ...form, remedialAction: e.target.value })} placeholder={t('Mô tả hành động', 'Describe action taken')} className="rounded-xl border-input focus:border-primary" disabled={!form.alertTriggered} />
                       </div>
                     </div>
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Notes')}</Label>
-                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-input focus:border-primary" />
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
-                  <Button type="submit" disabled={submitting} className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl">
+                  <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</>
                     ) : (
@@ -618,22 +618,22 @@ export default function CropMonitoringsPage() {
         {/* Search + Alert Filter Tabs */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm giám sát...', 'Search crop monitorings...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
 
           {/* Alert filter tabs */}
-          <div className="flex items-center gap-1 bg-coffee-100 rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setAlertFilter('all')}
-              className={`h-7 px-3 text-[10px] rounded-lg ${alertFilter === 'all' ? 'bg-white text-coffee-800 shadow-sm' : 'text-coffee-500 hover:text-coffee-700'}`}
+              className={`h-7 px-3 text-[10px] rounded-lg ${alertFilter === 'all' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             >
               {t('Tất cả', 'All')}
             </Button>
@@ -641,14 +641,14 @@ export default function CropMonitoringsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setAlertFilter('alerts')}
-              className={`h-7 px-3 text-[10px] rounded-lg gap-1 ${alertFilter === 'alerts' ? 'bg-white text-orange-700 shadow-sm' : 'text-coffee-500 hover:text-orange-600'}`}
+              className={`h-7 px-3 text-[10px] rounded-lg gap-1 ${alertFilter === 'alerts' ? 'bg-background text-orange-700 shadow-sm' : 'text-muted-foreground hover:text-orange-600'}`}
             >
               <AlertTriangle className="w-3 h-3" />
               {t('Cảnh báo', 'Alerts')}
             </Button>
           </div>
 
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -658,44 +658,44 @@ export default function CropMonitoringsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Giai đoạn', 'Growth Stage')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Điểm SK', 'Health')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Cảnh báo', 'Alert')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden xl:table-cell">{t('Mức độ', 'Severity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Giai đoạn', 'Growth Stage')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Điểm SK', 'Health')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Cảnh báo', 'Alert')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Mức độ', 'Severity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-coffee-400 text-sm">
+                      <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground text-sm">
                         {alertFilter === 'alerts' ? t('Không có cảnh báo nào', 'No alerts found') : t('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
                     items.map((item, i) => (
                       <tr key={item.id}
- className={`border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors ${item.alertTriggered ? 'bg-orange-50/30' : ''}`}>
+ className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${item.alertTriggered ? 'bg-orange-50/30' : ''}`}>
                         <td className="px-4 py-3">
-                          <p className="text-xs font-medium text-coffee-800">{item.farmer.fullName}</p>
+                          <p className="text-xs font-medium text-foreground">{item.farmer.fullName}</p>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.farmLand.farmName}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.monitoringDate ? new Date(item.monitoringDate).toLocaleDateString() : '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.monitoringType || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.growthStage || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.farmLand.farmName}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.monitoringDate ? new Date(item.monitoringDate).toLocaleDateString() : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.monitoringType || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.growthStage || '-'}</td>
                         <td className="px-4 py-3 hidden lg:table-cell">
                           {item.healthScore !== null ? (
                             <div className="flex items-center gap-1.5">
-                              <div className="w-10 h-1.5 bg-coffee-100 rounded-full overflow-hidden">
+                              <div className="w-10 h-1.5 bg-muted rounded-full overflow-hidden">
                                 <div className={`h-full rounded-full ${getHealthScoreColor(item.healthScore)}`} style={{ width: `${item.healthScore}%` }} />
                               </div>
-                              <span className="text-[10px] text-coffee-600">{item.healthScore}</span>
+                              <span className="text-[10px] text-muted-foreground">{item.healthScore}</span>
                             </div>
                           ) : '-'}
                         </td>
@@ -706,20 +706,20 @@ export default function CropMonitoringsPage() {
                               {item.alertType || t('Có', 'Yes')}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] border-coffee-200 text-coffee-400">{t('Không', 'No')}</Badge>
+                            <Badge variant="outline" className="text-[10px] text-border text-muted-foreground">{t('Không', 'No')}</Badge>
                           )}
                         </td>
                         <td className="px-4 py-3 hidden xl:table-cell">
                           {getAlertBadge(item.alertSeverity)}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
+                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
                             {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-500 hover:text-coffee-800" onClick={() => handleEdit(item)}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
@@ -727,12 +727,12 @@ export default function CropMonitoringsPage() {
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
                                   {t('Xóa', 'Del')}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-coffee-400 text-[10px]" onClick={() => setDeleteConfirm(null)}>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
                                   {t('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-400 hover:text-red-600" onClick={() => setDeleteConfirm(item.id)}>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirm(item.id)}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -747,12 +747,12 @@ export default function CropMonitoringsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -760,12 +760,12 @@ export default function CropMonitoringsPage() {
                   if (p > totalPages) return null
                   return (
                     <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}>
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}>
                       {p}
                     </Button>
                   )
                 })}
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronRight className="w-3 h-3" />
                 </Button>
               </div>

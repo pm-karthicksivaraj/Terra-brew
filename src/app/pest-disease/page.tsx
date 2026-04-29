@@ -119,8 +119,8 @@ export default function PestDiseasePage() {
       const res = await fetch(`/api/pest-disease-mgmts?${params}`)
       const data = await res.json()
       if (data.success) {
-        setRecords(data.data.data)
-        setTotal(data.data.total)
+        const _records = data.data?.data ?? data.data?.items ?? []; setRecords(Array.isArray(_records) ? _records : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch records', err)
@@ -250,11 +250,11 @@ export default function PestDiseasePage() {
 
   const severityColor = (sev: string | null) => {
     switch (sev?.toLowerCase()) {
-      case 'low': return 'bg-green-100 text-green-700'
+      case 'low': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
       case 'medium': return 'bg-yellow-100 text-yellow-700'
       case 'high': return 'bg-orange-100 text-orange-700'
-      case 'critical': return 'bg-red-100 text-red-700'
-      default: return 'bg-coffee-100 text-coffee-700'
+      case 'critical': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+      default: return 'bg-muted text-foreground'
     }
   }
 
@@ -269,10 +269,10 @@ export default function PestDiseasePage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Bug className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Bug className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -288,17 +288,17 @@ export default function PestDiseasePage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <Bug className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Bug className="w-5 h-5 text-muted-foreground" />
               {t('Quản lý Sâu Bệnh', 'Pest & Disease Management')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -307,7 +307,7 @@ export default function PestDiseasePage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <Bug className="w-5 h-5" />
                   {editingRecord ? t('Sửa bản ghi', 'Edit Record') : t('Thêm bản ghi mới', 'Add New Record')}
                 </DialogTitle>
@@ -316,9 +316,9 @@ export default function PestDiseasePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -331,9 +331,9 @@ export default function PestDiseasePage() {
 
                   {/* Farm Land */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -346,21 +346,21 @@ export default function PestDiseasePage() {
 
                   {/* Detection Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày phát hiện', 'Detection Date')}</Label>
-                    <Input type="date" value={form.detectionDate} onChange={(e) => setForm({ ...form, detectionDate: e.target.value })} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ngày phát hiện', 'Detection Date')}</Label>
+                    <Input type="date" value={form.detectionDate} onChange={(e) => setForm({ ...form, detectionDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Pest or Disease */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tên sâu/bệnh', 'Pest/Disease Name')} *</Label>
-                    <Input value={form.pestOrDisease} onChange={(e) => setForm({ ...form, pestOrDisease: e.target.value })} placeholder={t('VD: Rỉ sét lá', 'e.g. Leaf rust')} className="rounded-xl border-coffee-200 focus:border-coffee-500" required />
+                    <Label className="text-xs text-foreground">{t('Tên sâu/bệnh', 'Pest/Disease Name')} *</Label>
+                    <Input value={form.pestOrDisease} onChange={(e) => setForm({ ...form, pestOrDisease: e.target.value })} placeholder={t('VD: Rỉ sét lá', 'e.g. Leaf rust')} className="rounded-xl border-input focus:border-primary" required />
                   </div>
 
                   {/* Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Loại', 'Type')}</Label>
+                    <Label className="text-xs text-foreground">{t('Loại', 'Type')}</Label>
                     <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -372,9 +372,9 @@ export default function PestDiseasePage() {
 
                   {/* Severity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Mức độ', 'Severity')}</Label>
+                    <Label className="text-xs text-foreground">{t('Mức độ', 'Severity')}</Label>
                     <Select value={form.severity} onValueChange={(v) => setForm({ ...form, severity: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -388,57 +388,57 @@ export default function PestDiseasePage() {
 
                   {/* Affected Area */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Diện tích ảnh hưởng (ha)', 'Affected Area (ha)')}</Label>
-                    <Input type="number" step="0.01" value={form.affectedArea} onChange={(e) => setForm({ ...form, affectedArea: e.target.value })} placeholder="0.5" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Diện tích ảnh hưởng (ha)', 'Affected Area (ha)')}</Label>
+                    <Input type="number" step="0.01" value={form.affectedArea} onChange={(e) => setForm({ ...form, affectedArea: e.target.value })} placeholder="0.5" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Affected Trees */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số cây ảnh hưởng', 'Affected Trees')}</Label>
-                    <Input type="number" value={form.affectedTrees} onChange={(e) => setForm({ ...form, affectedTrees: e.target.value })} placeholder="10" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Số cây ảnh hưởng', 'Affected Trees')}</Label>
+                    <Input type="number" value={form.affectedTrees} onChange={(e) => setForm({ ...form, affectedTrees: e.target.value })} placeholder="10" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Symptoms */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Triệu chứng', 'Symptoms')}</Label>
-                    <Textarea value={form.symptoms} onChange={(e) => setForm({ ...form, symptoms: e.target.value })} placeholder={t('Mô tả triệu chứng...', 'Describe symptoms...')} className="rounded-xl border-coffee-200 focus:border-coffee-500" rows={2} />
+                    <Label className="text-xs text-foreground">{t('Triệu chứng', 'Symptoms')}</Label>
+                    <Textarea value={form.symptoms} onChange={(e) => setForm({ ...form, symptoms: e.target.value })} placeholder={t('Mô tả triệu chứng...', 'Describe symptoms...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* Treatment Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Phương pháp xử lý', 'Treatment Method')}</Label>
-                    <Input value={form.treatmentMethod} onChange={(e) => setForm({ ...form, treatmentMethod: e.target.value })} placeholder={t('Phun thuốc', 'Spray')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Phương pháp xử lý', 'Treatment Method')}</Label>
+                    <Input value={form.treatmentMethod} onChange={(e) => setForm({ ...form, treatmentMethod: e.target.value })} placeholder={t('Phun thuốc', 'Spray')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Treatment Product */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Sản phẩm xử lý', 'Treatment Product')}</Label>
-                    <Input value={form.treatmentProduct} onChange={(e) => setForm({ ...form, treatmentProduct: e.target.value })} placeholder={t('Tên thuốc', 'Product name')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Sản phẩm xử lý', 'Treatment Product')}</Label>
+                    <Input value={form.treatmentProduct} onChange={(e) => setForm({ ...form, treatmentProduct: e.target.value })} placeholder={t('Tên thuốc', 'Product name')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Dosage */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Liều lượng', 'Dosage')}</Label>
-                    <Input value={form.dosage} onChange={(e) => setForm({ ...form, dosage: e.target.value })} placeholder="2ml/l" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Liều lượng', 'Dosage')}</Label>
+                    <Input value={form.dosage} onChange={(e) => setForm({ ...form, dosage: e.target.value })} placeholder="2ml/l" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Application Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày xử lý', 'Application Date')}</Label>
-                    <Input type="date" value={form.applicationDate} onChange={(e) => setForm({ ...form, applicationDate: e.target.value })} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ngày xử lý', 'Application Date')}</Label>
+                    <Input type="date" value={form.applicationDate} onChange={(e) => setForm({ ...form, applicationDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Follow Up Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày theo dõi', 'Follow-up Date')}</Label>
-                    <Input type="date" value={form.followUpDate} onChange={(e) => setForm({ ...form, followUpDate: e.target.value })} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ngày theo dõi', 'Follow-up Date')}</Label>
+                    <Input type="date" value={form.followUpDate} onChange={(e) => setForm({ ...form, followUpDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Outcome */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Kết quả', 'Outcome')}</Label>
+                    <Label className="text-xs text-foreground">{t('Kết quả', 'Outcome')}</Label>
                     <Select value={form.outcome} onValueChange={(v) => setForm({ ...form, outcome: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn kết quả', 'Select outcome')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -452,29 +452,29 @@ export default function PestDiseasePage() {
 
                   {/* Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Chi phí (VND)', 'Cost (VND)')}</Label>
-                    <Input type="number" step="1000" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} placeholder="500000" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Chi phí (VND)', 'Cost (VND)')}</Label>
+                    <Input type="number" step="1000" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} placeholder="500000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Prevention Measures */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Biện pháp phòng ngừa', 'Prevention Measures')}</Label>
-                    <Textarea value={form.preventionMeasures} onChange={(e) => setForm({ ...form, preventionMeasures: e.target.value })} placeholder={t('Mô tả biện pháp phòng ngừa...', 'Describe prevention measures...')} className="rounded-xl border-coffee-200 focus:border-coffee-500" rows={2} />
+                    <Label className="text-xs text-foreground">{t('Biện pháp phòng ngừa', 'Prevention Measures')}</Label>
+                    <Textarea value={form.preventionMeasures} onChange={(e) => setForm({ ...form, preventionMeasures: e.target.value })} placeholder={t('Mô tả biện pháp phòng ngừa...', 'Describe prevention measures...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Notes')}</Label>
-                    <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm...', 'Additional notes...')} className="rounded-xl border-coffee-200 focus:border-coffee-500" rows={2} />
+                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+                    <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm...', 'Additional notes...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
-                  <Button type="submit" disabled={submitting} className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl">
+                  <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</>
                     ) : editingRecord ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')}
@@ -488,15 +488,15 @@ export default function PestDiseasePage() {
         {/* Search */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm sâu bệnh...', 'Search pest/disease...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -506,22 +506,22 @@ export default function PestDiseasePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Đất', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Ngày phát hiện', 'Detected')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Sâu/Bệnh', 'Pest/Disease')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Mức độ', 'Severity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Xử lý', 'Treatment')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Kết quả', 'Outcome')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Thao tác', 'Actions')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Đất', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Ngày phát hiện', 'Detected')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Sâu/Bệnh', 'Pest/Disease')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mức độ', 'Severity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Xử lý', 'Treatment')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Kết quả', 'Outcome')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {records.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-12 text-coffee-400 text-sm">
+                      <td colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
                         <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         {t('Không có bản ghi nào', 'No records found')}
                       </td>
@@ -529,14 +529,14 @@ export default function PestDiseasePage() {
                   ) : (
                     records.map((record, i) => (
                       <tr key={record.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
+ className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
-                          <p className="text-xs font-medium text-coffee-800">{record.farmer?.fullName}</p>
-                          <p className="text-[10px] text-coffee-400">{record.farmer?.farmerCode}</p>
+                          <p className="text-xs font-medium text-foreground">{record.farmer?.fullName}</p>
+                          <p className="text-[10px] text-muted-foreground">{record.farmer?.farmerCode}</p>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{record.farmLand?.farmName || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600">{record.detectionDate ? new Date(record.detectionDate).toLocaleDateString() : '-'}</td>
-                        <td className="px-4 py-3 text-xs font-medium text-coffee-800">{record.pestOrDisease || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{record.farmLand?.farmName || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{record.detectionDate ? new Date(record.detectionDate).toLocaleDateString() : '-'}</td>
+                        <td className="px-4 py-3 text-xs font-medium text-foreground">{record.pestOrDisease || '-'}</td>
                         <td className="px-4 py-3 hidden md:table-cell">
                           <Badge className={`${typeColor(record.type)} text-[10px] border-0`}>
                             {record.type === 'disease' ? t('Bệnh', 'Disease') : t('Sâu', 'Pest')}
@@ -550,14 +550,14 @@ export default function PestDiseasePage() {
                              record.severity === 'critical' ? t('NG', 'Crit') : record.severity}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell max-w-[120px] truncate">{record.treatmentMethod || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{record.outcome || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell max-w-[120px] truncate">{record.treatmentMethod || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{record.outcome || '-'}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-500 hover:text-coffee-800" onClick={() => openEditDialog(record)}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEditDialog(record)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-400 hover:text-red-600" onClick={() => { setDeletingRecord(record); setDeleteDialogOpen(true) }}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => { setDeletingRecord(record); setDeleteDialogOpen(true) }}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -571,12 +571,12 @@ export default function PestDiseasePage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -584,13 +584,13 @@ export default function PestDiseasePage() {
                   if (p > totalPages) return null
                   return (
                     <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}
                     >
                       {p}
                     </Button>
                   )
                 })}
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronRight className="w-3 h-3" />
                 </Button>
               </div>
@@ -603,12 +603,12 @@ export default function PestDiseasePage() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-coffee-800 flex items-center gap-2">
+            <DialogTitle className="text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
               {t('Xác nhận xóa', 'Confirm Delete')}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-coffee-600">
+          <p className="text-sm text-muted-foreground">
             {t(
               `Bạn có chắc muốn xóa bản ghi "${deletingRecord?.pestOrDisease || ''}"?`,
               `Are you sure you want to delete "${deletingRecord?.pestOrDisease || ''}"?`

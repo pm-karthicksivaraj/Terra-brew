@@ -114,8 +114,8 @@ function StageDetail({ data }: { data: StageData }) {
         const displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())
         return (
           <div key={key} className="flex justify-between text-[11px]">
-            <span className="text-coffee-500">{displayKey}</span>
-            <span className="text-coffee-800 font-medium truncate ml-2 max-w-[180px]">
+            <span className="text-foreground">{displayKey}</span>
+            <span className="text-foreground font-medium truncate ml-2 max-w-[180px]">
               {typeof value === 'boolean' ? (value ? '✓' : '✗') : String(value)}
             </span>
           </div>
@@ -169,14 +169,14 @@ function SupplyChainPipeline({
   return (
     <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br   flex items-center justify-center">
           <GitBranch className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-coffee-800">
+          <h3 className="text-sm font-bold text-foreground">
             {t('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
           </h3>
-          <p className="text-[10px] text-coffee-400">
+          <p className="text-[10px] text-foreground">
             {t('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
           </p>
         </div>
@@ -185,7 +185,7 @@ function SupplyChainPipeline({
       {/* Horizontal scrollable pipeline */}
       <div
         ref={scrollRef}
-        className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-coffee-200 scrollbar-track-transparent"
+        className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
       >
         <div className="flex items-center gap-0 min-w-max px-1">
           {stages.map((stage, index) => {
@@ -207,7 +207,7 @@ function SupplyChainPipeline({
  shadow-sm hover:shadow-md
  `}>
                     <span className="text-xl leading-none">{stage.icon}</span>
-                    <span className="text-[9px] font-semibold text-coffee-700 leading-tight text-center px-1 line-clamp-2">
+                    <span className="text-[9px] font-semibold text-foreground leading-tight text-center px-1 line-clamp-2">
                       {t(stage.nameVi, stage.nameEn).length > 14
                         ? t(stage.nameVi, stage.nameEn).substring(0, 13) + '…'
                         : t(stage.nameVi, stage.nameEn)}
@@ -238,22 +238,22 @@ function SupplyChainPipeline({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-coffee-100">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
         <div className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-          <span className="text-[10px] text-coffee-600">
+          <span className="text-[10px] text-foreground">
             {t('Hoàn thành', 'Completed')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-[10px] text-coffee-600">
+          <span className="text-[10px] text-foreground">
             {t('Đang chờ', 'Pending')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <MinusCircle className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-[10px] text-coffee-600">
+          <span className="text-[10px] text-foreground">
             {t('Không có', 'N/A')}
           </span>
         </div>
@@ -280,17 +280,17 @@ function TimelineCard({
 
   const statusConfig = {
     completed: {
-      dotColor: 'bg-coffee-700',
-      lineColor: 'bg-coffee-700',
-      borderColor: 'border-coffee-300',
+      dotColor: 'bg-muted',
+      lineColor: 'bg-muted',
+      borderColor: 'border-border',
       badgeBg: 'bg-green-100 text-green-700',
       badgeIcon: <CheckCircle2 className="w-3 h-3" />,
       badgeText: t('Hoàn thành', 'Completed'),
     },
     pending: {
-      dotColor: 'bg-coffee-300',
-      lineColor: 'bg-coffee-200',
-      borderColor: 'border-coffee-200',
+      dotColor: 'bg-muted',
+      lineColor: 'bg-muted',
+      borderColor: 'border-border',
       badgeBg: 'bg-yellow-100 text-yellow-700',
       badgeIcon: <Clock className="w-3 h-3" />,
       badgeText: t('Đang chờ', 'Pending'),
@@ -323,7 +323,7 @@ function TimelineCard({
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{stage.icon}</span>
-                    <span className="text-xs font-bold text-coffee-800">
+                    <span className="text-xs font-bold text-foreground">
                       {t(stage.nameVi, stage.nameEn)}
                     </span>
                   </div>
@@ -333,17 +333,17 @@ function TimelineCard({
                   </Badge>
                 </div>
                 {stage.date && (
-                  <p className="text-[10px] text-coffee-400 mb-1">
+                  <p className="text-[10px] text-foreground mb-1">
                     {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
                   </p>
                 )}
                 {stage.data && (
-                  <div className="text-[11px] text-coffee-600">
+                  <div className="text-[11px] text-foreground">
                     {stage.data.name && <span>{stage.data.name}</span>}
                     {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
                     {stage.data.farmName && <span>{stage.data.farmName}</span>}
                     {stage.data.cupScore != null && (
-                      <span className="ml-2 text-coffee-700 font-medium">☕ {stage.data.cupScore}</span>
+                      <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
                     )}
                     {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
                       <span>{stage.data.crop}</span>
@@ -352,7 +352,7 @@ function TimelineCard({
                 )}
                 {expanded && stage.data && (
                     <div className="overflow-hidden">
-                      <div className="border-t border-coffee-100 mt-2 pt-2">
+                      <div className="border-t border-border mt-2 pt-2">
                         <StageDetail data={stage.data} />
                       </div>
                     </div>
@@ -360,9 +360,9 @@ function TimelineCard({
 {stage.data && (
                   <div className="flex justify-end mt-1">
                     {expanded ? (
-                      <ChevronUp className="w-3 h-3 text-coffee-400" />
+                      <ChevronUp className="w-3 h-3 text-foreground" />
                     ) : (
-                      <ChevronDown className="w-3 h-3 text-coffee-400" />
+                      <ChevronDown className="w-3 h-3 text-foreground" />
                     )}
                   </div>
                 )}
@@ -390,7 +390,7 @@ function TimelineCard({
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{stage.icon}</span>
-                    <span className="text-xs font-bold text-coffee-800">
+                    <span className="text-xs font-bold text-foreground">
                       {t(stage.nameVi, stage.nameEn)}
                     </span>
                   </div>
@@ -400,17 +400,17 @@ function TimelineCard({
                   </Badge>
                 </div>
                 {stage.date && (
-                  <p className="text-[10px] text-coffee-400 mb-1">
+                  <p className="text-[10px] text-foreground mb-1">
                     {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
                   </p>
                 )}
                 {stage.data && (
-                  <div className="text-[11px] text-coffee-600">
+                  <div className="text-[11px] text-foreground">
                     {stage.data.name && <span>{stage.data.name}</span>}
                     {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
                     {stage.data.farmName && <span>{stage.data.farmName}</span>}
                     {stage.data.cupScore != null && (
-                      <span className="ml-2 text-coffee-700 font-medium">☕ {stage.data.cupScore}</span>
+                      <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
                     )}
                     {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
                       <span>{stage.data.crop}</span>
@@ -419,7 +419,7 @@ function TimelineCard({
                 )}
                 {expanded && stage.data && (
                     <div className="overflow-hidden">
-                      <div className="border-t border-coffee-100 mt-2 pt-2">
+                      <div className="border-t border-border mt-2 pt-2">
                         <StageDetail data={stage.data} />
                       </div>
                     </div>
@@ -427,9 +427,9 @@ function TimelineCard({
 {stage.data && (
                   <div className="flex justify-end mt-1">
                     {expanded ? (
-                      <ChevronUp className="w-3 h-3 text-coffee-400" />
+                      <ChevronUp className="w-3 h-3 text-foreground" />
                     ) : (
-                      <ChevronDown className="w-3 h-3 text-coffee-400" />
+                      <ChevronDown className="w-3 h-3 text-foreground" />
                     )}
                   </div>
                 )}
@@ -457,7 +457,7 @@ function TimelineCard({
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
                 <span className="text-base">{stage.icon}</span>
-                <span className="text-xs font-bold text-coffee-800">
+                <span className="text-xs font-bold text-foreground">
                   {t(stage.nameVi, stage.nameEn)}
                 </span>
               </div>
@@ -467,17 +467,17 @@ function TimelineCard({
               </Badge>
             </div>
             {stage.date && (
-              <p className="text-[10px] text-coffee-400 mb-1">
+              <p className="text-[10px] text-foreground mb-1">
                 {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
               </p>
             )}
             {stage.data && (
-              <div className="text-[11px] text-coffee-600">
+              <div className="text-[11px] text-foreground">
                 {stage.data.name && <span>{stage.data.name}</span>}
                 {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
                 {stage.data.farmName && <span>{stage.data.farmName}</span>}
                 {stage.data.cupScore != null && (
-                  <span className="ml-2 text-coffee-700 font-medium">☕ {stage.data.cupScore}</span>
+                  <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
                 )}
                 {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
                   <span>{stage.data.crop}</span>
@@ -486,7 +486,7 @@ function TimelineCard({
             )}
             {expanded && stage.data && (
                 <div className="overflow-hidden">
-                  <div className="border-t border-coffee-100 mt-2 pt-2">
+                  <div className="border-t border-border mt-2 pt-2">
                     <StageDetail data={stage.data} />
                   </div>
                 </div>
@@ -494,9 +494,9 @@ function TimelineCard({
 {stage.data && (
               <div className="flex justify-end mt-1">
                 {expanded ? (
-                  <ChevronUp className="w-3 h-3 text-coffee-400" />
+                  <ChevronUp className="w-3 h-3 text-foreground" />
                 ) : (
-                  <ChevronDown className="w-3 h-3 text-coffee-400" />
+                  <ChevronDown className="w-3 h-3 text-foreground" />
                 )}
               </div>
             )}
@@ -524,9 +524,9 @@ export default function TraceabilityPage() {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       // Flash highlight effect
-      el.classList.add('ring-2', 'ring-coffee-400', 'ring-offset-2', 'rounded-xl')
+      el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'rounded-xl')
       setTimeout(() => {
-        el.classList.remove('ring-2', 'ring-coffee-400', 'ring-offset-2', 'rounded-xl')
+        el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'rounded-xl')
       }, 1500)
     }
   }, [])
@@ -652,10 +652,10 @@ export default function TraceabilityPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -674,11 +674,11 @@ export default function TraceabilityPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <GitBranch className="w-5 h-5 text-foreground" />
               {t('Truy xuất Nguồn gốc E2E', 'E2E Traceability Timeline')}
             </h2>
-            <p className="text-sm text-coffee-500">
+            <p className="text-sm text-foreground">
               {t('Truy xuất từ nông trại đến ly cà phê', 'Trace from farm to cup')}
             </p>
           </div>
@@ -686,7 +686,7 @@ export default function TraceabilityPage() {
             <Button
               onClick={handleExportReport}
               variant="outline"
-              className="rounded-xl border-coffee-300 text-coffee-700 hover:bg-coffee-50 gap-2"
+              className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
             >
               <FileText className="w-4 h-4" />
               {t('Xuất báo cáo', 'Export Report')}
@@ -698,19 +698,19 @@ export default function TraceabilityPage() {
         <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
               <Input
                 value={batchId}
                 onChange={(e) => setBatchId(e.target.value)}
                 placeholder={t('Nhập Mã lô (Batch ID)...', 'Enter Batch ID...')}
-                className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 font-mono text-sm"
+                className="pl-9 rounded-xl border-border focus:border-border font-mono text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
             <Button
               onClick={handleSearch}
               disabled={loading}
-              className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white rounded-xl gap-2 shrink-0"
+              className="bg-gradient-to-r   hover: hover: text-white rounded-xl gap-2 shrink-0"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -727,10 +727,10 @@ export default function TraceabilityPage() {
             <div key="loading"
  className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br   flex items-center justify-center">
                   <Coffee className="w-6 h-6 text-white animate-pulse" />
                 </div>
-                <div className="flex items-center gap-2 text-coffee-600">
+                <div className="flex items-center gap-2 text-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">{t('Đang truy xuất...', 'Tracing...')}</span>
                 </div>
@@ -742,13 +742,13 @@ export default function TraceabilityPage() {
             <div key="not-found">
               <Card className="rounded-2xl border-0 shadow-sm p-12 text-center">
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-coffee-100 flex items-center justify-center">
-                    <GitBranch className="w-7 h-7 text-coffee-400" />
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                    <GitBranch className="w-7 h-7 text-foreground" />
                   </div>
-                  <p className="text-sm font-medium text-coffee-700">
+                  <p className="text-sm font-medium text-foreground">
                     {t('Không tìm thấy dữ liệu', 'No traceability data found')}
                   </p>
-                  <p className="text-xs text-coffee-400">
+                  <p className="text-xs text-foreground">
                     {t('Vui lòng kiểm tra lại Mã lô và thử lại', 'Please check the Batch ID and try again')}
                   </p>
                 </div>
@@ -762,33 +762,33 @@ export default function TraceabilityPage() {
               <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-coffee-800 font-mono">
+                    <span className="text-sm font-bold text-foreground font-mono">
                       {t('Lô:', 'Batch:')} {traceData.batchId}
                     </span>
                   </div>
                   {traceData.farmerName && (
-                    <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-[10px]">
+                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
                       🌱 {traceData.farmerName}
                     </Badge>
                   )}
                   {traceData.farmName && (
-                    <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-[10px]">
+                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
                       🏞️ {traceData.farmName}
                     </Badge>
                   )}
                   {traceData.coffeeVariety && (
-                    <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-[10px]">
+                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
                       ☕ {traceData.coffeeVariety}
                     </Badge>
                   )}
                   <div className="ml-auto flex items-center gap-2">
-                    <div className="w-24 h-2 bg-coffee-100 rounded-full overflow-hidden">
+                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-coffee-500 to-coffee-700"
+                        className="h-full rounded-full bg-gradient-to-r  "
                         style={{ width: `${(completedStages / totalStages) * 100}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-coffee-600">
+                    <span className="text-[10px] text-foreground">
                       {completedStages}/{totalStages}
                     </span>
                   </div>
@@ -835,7 +835,7 @@ export default function TraceabilityPage() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-coffee-800">
+                          <span className="text-sm font-bold text-foreground">
                             {t('Chuỗi Hash Blockchain', 'Blockchain Hash Chain')}
                           </span>
                           <Badge className={`text-[10px] border-0 ${
@@ -849,7 +849,7 @@ export default function TraceabilityPage() {
                             }
                           </Badge>
                         </div>
-                        <p className="text-[11px] text-coffee-600 mt-0.5">
+                        <p className="text-[11px] text-foreground mt-0.5">
                           {traceData.chainVerification.message}
                           {' — '}
                           {t(
@@ -869,14 +869,14 @@ export default function TraceabilityPage() {
             <div key="empty">
               <Card className="rounded-2xl border-0 shadow-sm p-16 text-center">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-coffee-100 to-coffee-200 flex items-center justify-center">
-                    <GitBranch className="w-10 h-10 text-coffee-400" />
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
+                    <GitBranch className="w-10 h-10 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-coffee-700 mb-1">
+                    <p className="text-sm font-bold text-foreground mb-1">
                       {t('Nhập Mã lô để bắt đầu', 'Enter a Batch ID to get started')}
                     </p>
-                    <p className="text-xs text-coffee-400 max-w-sm mx-auto">
+                    <p className="text-xs text-foreground max-w-sm mx-auto">
                       {t(
                         'Nhập mã lô thu hoạch để xem toàn bộ hành trình từ nông trại đến ly cà phê của bạn',
                         'Enter a harvest batch ID to view the complete journey from farm to cup'

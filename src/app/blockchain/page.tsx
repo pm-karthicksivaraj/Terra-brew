@@ -182,10 +182,10 @@ export default function BlockchainPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-primaryflex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -205,29 +205,29 @@ export default function BlockchainPage() {
       <div>
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-            <Link2 className="w-5 h-5 text-coffee-600" />
+          <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+            <Link2 className="w-5 h-5 text-foreground" />
             {t('Xem Chuỗi Blockchain', 'Blockchain Hash Chain Viewer')}
           </h2>
-          <p className="text-sm text-coffee-500">{t('Truy xuất nguồn gốc bằng chuỗi băm', 'Trace origin with hash chain verification')}</p>
+          <p className="text-sm text-foreground">{t('Truy xuất nguồn gốc bằng chuỗi băm', 'Trace origin with hash chain verification')}</p>
         </div>
 
         {/* Search */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-lg min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
             <Input
               value={batchId}
               onChange={(e) => setBatchId(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t('Nhập mã lô (Batch ID)...', 'Enter Batch ID...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-border focus:border-border bg-background"
             />
           </div>
           <Button
             onClick={fetchChain}
             disabled={loading}
-            className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             {t('Tìm kiếm', 'Search')}
@@ -237,7 +237,7 @@ export default function BlockchainPage() {
               onClick={verifyChain}
               disabled={verifying}
               variant="outline"
-              className="gap-2 rounded-xl border-coffee-300 text-coffee-700 hover:bg-coffee-50"
+              className="gap-2 rounded-xl border-border text-foreground hover:bg-muted"
             >
               {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
               {t('Xác minh chuỗi', 'Verify Chain')}
@@ -404,23 +404,23 @@ export default function BlockchainPage() {
         <AlertDialog open={showAnchorDialog} onOpenChange={setShowAnchorDialog}>
           <AlertDialogContent className="rounded-2xl">
             <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2 text-coffee-900">
+              <AlertDialogTitle className="flex items-center gap-2 text-foreground">
                 <Anchor className="w-5 h-5 text-amber-600" />
                 {t('Xác nhận neo trên chuỗi', 'Confirm On-Chain Anchoring')}
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-coffee-600">
+              <AlertDialogDescription className="text-foreground">
                 {t(
                   `Bạn có chắc chắn muốn neo dữ liệu của lô "${batchId}" lên blockchain? Hành động này không thể hoàn tác và sẽ ghi dữ liệu Merkle root lên mạng blockchain.`,
                   `Are you sure you want to anchor the data for batch "${batchId}" on the blockchain? This action cannot be undone and will record the Merkle root on the blockchain network.`
                 )}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="my-2 p-3 rounded-xl bg-coffee-50 border border-coffee-100">
-              <p className="text-[10px] font-bold text-coffee-500 uppercase mb-1">{t('Mã lô', 'Batch ID')}</p>
-              <p className="text-sm text-coffee-800 font-mono font-bold">{batchId}</p>
+            <div className="my-2 p-3 rounded-xl bg-muted border border-border">
+              <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t('Mã lô', 'Batch ID')}</p>
+              <p className="text-sm text-foreground font-mono font-bold">{batchId}</p>
             </div>
             <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-xl border-coffee-200 text-coffee-600 hover:bg-coffee-50">
+              <AlertDialogCancel className="rounded-xl border-border text-foreground hover:bg-muted">
                 {t('Hủy', 'Cancel')}
               </AlertDialogCancel>
               <AlertDialogAction
@@ -447,8 +447,8 @@ export default function BlockchainPage() {
         {/* Empty State */}
         {!searched && blocks.length === 0 && (
           <Card className="rounded-2xl border-0 shadow-sm p-12">
-            <div className="flex flex-col items-center gap-4 text-coffee-400">
-              <div className="w-20 h-20 rounded-2xl bg-coffee-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4 text-foreground">
+              <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center">
                 <Link2 className="w-10 h-10" />
               </div>
               <p className="text-sm text-center max-w-md">
@@ -461,7 +461,7 @@ export default function BlockchainPage() {
         {/* No results */}
         {searched && blocks.length === 0 && !loading && (
           <Card className="rounded-2xl border-0 shadow-sm p-12">
-            <div className="flex flex-col items-center gap-4 text-coffee-400">
+            <div className="flex flex-col items-center gap-4 text-foreground">
               <Link2 className="w-10 h-10" />
               <p className="text-sm text-center">
                 {t(`Không tìm thấy khối nào cho mã lô "${batchId}"`, `No blocks found for batch "${batchId}"`)}
@@ -473,7 +473,7 @@ export default function BlockchainPage() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <div className="flex items-center gap-3 text-coffee-600">
+            <div className="flex items-center gap-3 text-foreground">
               <Loader2 className="w-5 h-5 animate-spin" />
               <span className="text-sm">{t('Đang tải chuỗi...', 'Loading chain...')}</span>
             </div>
@@ -493,21 +493,21 @@ export default function BlockchainPage() {
                     {i > 0 && (
                       <div className="flex justify-center py-1">
                         <div className="flex flex-col items-center">
-                          <div className="w-0.5 h-4 bg-coffee-200" />
-                          <ArrowDown className="w-3 h-3 text-coffee-300 -mt-1" />
+                          <div className="w-0.5 h-4 bg-muted" />
+                          <ArrowDown className="w-3 h-3 text-foreground -mt-1" />
                         </div>
                       </div>
                     )}
 
                     {/* Block Card */}
                     <Card className={`rounded-2xl border-0 shadow-sm overflow-hidden transition-all ${
-                      isBroken ? 'ring-2 ring-red-300 bg-red-50/30' : 'bg-white'
+                      isBroken ? 'ring-2 ring-red-300 bg-red-50/30' : 'bg-background'
                     }`}>
                       {/* Block Header */}
                       <div className={`px-4 py-2.5 flex items-center justify-between ${
                         isBroken
                           ? 'bg-red-100 border-b border-red-200'
-                          : 'bg-gradient-to-r from-coffee-50 to-coffee-100/50 border-b border-coffee-100'
+                          : 'border-b border-border border-b border-border'
                       }`}>
                         <div className="flex items-center gap-2">
                           {isVerified ? (
@@ -515,15 +515,15 @@ export default function BlockchainPage() {
                           ) : (
                             <ShieldX className="w-4 h-4 text-red-500" />
                           )}
-                          <span className="text-xs font-bold text-coffee-800">
+                          <span className="text-xs font-bold text-foreground">
                             {t(`Khối #${block.blockIndex}`, `Block #${block.blockIndex}`)}
                           </span>
-                          <Badge variant="outline" className="text-[10px] border-coffee-200 text-coffee-600">
+                          <Badge variant="outline" className="text-[10px] border-border text-foreground">
                             {block.stage}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-coffee-400">
+                          <span className="text-[10px] text-foreground">
                             {new Date(block.timestamp).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', {
                               year: 'numeric',
                               month: 'short',
@@ -545,17 +545,17 @@ export default function BlockchainPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                           {/* Data Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-coffee-500 uppercase">{t('Băm dữ liệu', 'Data Hash')}</p>
-                            <p className="text-[10px] text-coffee-700 font-mono bg-coffee-50 rounded-lg px-2 py-1 truncate">
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm dữ liệu', 'Data Hash')}</p>
+                            <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate">
                               {truncateHash(block.dataHash, 12)}
                             </p>
                           </div>
 
                           {/* Previous Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-coffee-500 uppercase">{t('Băm trước', 'Previous Hash')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm trước', 'Previous Hash')}</p>
                             <p className={`text-[10px] font-mono rounded-lg px-2 py-1 truncate ${
-                              block.blockIndex === 0 ? 'text-coffee-300 bg-coffee-50' : 'text-coffee-700 bg-coffee-50'
+                              block.blockIndex === 0 ? 'text-foreground bg-muted' : 'text-foreground bg-muted'
                             }`}>
                               {block.blockIndex === 0 ? '0'.repeat(16) + '...' : truncateHash(block.previousHash, 12)}
                             </p>
@@ -563,16 +563,16 @@ export default function BlockchainPage() {
 
                           {/* Block Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-coffee-500 uppercase">{t('Băm khối', 'Block Hash')}</p>
-                            <p className="text-[10px] text-coffee-800 font-mono bg-coffee-50 rounded-lg px-2 py-1 truncate font-bold">
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm khối', 'Block Hash')}</p>
+                            <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate font-bold">
                               {truncateHash(block.blockHash, 12)}
                             </p>
                           </div>
 
                           {/* Recorded By */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-coffee-500 uppercase">{t('Ghi bởi', 'Recorded By')}</p>
-                            <p className="text-[10px] text-coffee-600 font-mono bg-coffee-50 rounded-lg px-2 py-1 truncate">
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Ghi bởi', 'Recorded By')}</p>
+                            <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate">
                               {block.recordedBy ? truncateHash(block.recordedBy, 6) : '-'}
                             </p>
                           </div>
@@ -580,9 +580,9 @@ export default function BlockchainPage() {
 
                         {/* Data content (collapsible) */}
                         {block.data && (
-                          <div className="mt-3 pt-2 border-t border-coffee-100">
-                            <p className="text-[10px] font-bold text-coffee-500 uppercase mb-1">{t('Dữ liệu', 'Data')}</p>
-                            <p className="text-[10px] text-coffee-600 font-mono bg-coffee-50/50 rounded-lg px-2 py-1.5 break-all max-h-20 overflow-y-auto">
+                          <div className="mt-3 pt-2 border-t border-border">
+                            <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t('Dữ liệu', 'Data')}</p>
+                            <p className="text-[10px] text-foreground font-mono bg-muted/50 rounded-lg px-2 py-1.5 break-all max-h-20 overflow-y-auto">
                               {block.data.length > 500 ? block.data.slice(0, 500) + '...' : block.data}
                             </p>
                           </div>
@@ -595,7 +595,7 @@ export default function BlockchainPage() {
 {/* Chain Summary */}
             {verification && (
               <div className="mt-6">
-                <Card className="rounded-2xl border-0 shadow-sm p-4 bg-coffee-50/50">
+                <Card className="rounded-2xl border-0 shadow-sm p-4 bg-muted/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {verification.valid ? (
@@ -613,14 +613,14 @@ export default function BlockchainPage() {
                             ? t('Toàn bộ chuỗi đã được xác minh', 'Entire chain verified successfully')
                             : t('Chuỗi có lỗi tại block #' + verification.brokenAt, 'Chain broken at block #' + verification.brokenAt)}
                         </p>
-                        <p className="text-xs text-coffee-500">
+                        <p className="text-xs text-foreground">
                           {t(`Tổng ${verification.totalBlocks} khối trong chuỗi`, `Total ${verification.totalBlocks} blocks in chain`)}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-coffee-400">{t('Mã lô', 'Batch ID')}</p>
-                      <p className="text-xs text-coffee-700 font-mono font-bold">{batchId}</p>
+                      <p className="text-[10px] text-foreground">{t('Mã lô', 'Batch ID')}</p>
+                      <p className="text-xs text-foreground font-mono font-bold">{batchId}</p>
                     </div>
                   </div>
                 </Card>

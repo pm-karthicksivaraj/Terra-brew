@@ -7,7 +7,7 @@ import { Providers } from '@/components/providers'
  * ClientApp — Nuclear fix for React 19 removeChild hydration errors.
  *
  * Renders a loading spinner during SSR and initial hydration,
- * then wraps children in Providers (SessionProvider + Toaster)
+ * then wraps children in Providers (ThemeProvider + SessionProvider + Toaster)
  * only after the component is mounted in the browser.
  *
  * This eliminates ALL server/client DOM mismatches because
@@ -24,6 +24,7 @@ export function ClientApp({ children }: { children: React.ReactNode }) {
   if (!mounted) {
     return (
       <div
+        suppressHydrationWarning
         style={{
           display: 'flex',
           alignItems: 'center',

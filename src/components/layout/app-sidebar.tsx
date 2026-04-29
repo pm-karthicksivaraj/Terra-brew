@@ -172,8 +172,8 @@ function SidebarContent({
       {/* Tenant header */}
       <div className={cn('px-3 pt-4 pb-2', collapsed && 'px-2')}>
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center shrink-0 shadow-sm">
-            <Coffee className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm">
+            <Coffee className="w-5 h-5 text-primary-foreground" />
           </div>
           {!collapsed && (
               <div className="overflow-hidden">

@@ -326,10 +326,10 @@ export default function ProcessingWizardPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary flex items-center justify-center">
               <Cog className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -350,34 +350,34 @@ export default function ProcessingWizardPage() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {/* Job-level fields */}
       <div className="space-y-1.5 md:col-span-2">
-        <Label className="text-xs font-bold text-coffee-800 uppercase tracking-wider">
+        <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
           {t('Thông tin lệnh chế biến', 'Job Order Information')}
         </Label>
-        <div className="h-px bg-coffee-200" />
+        <div className="h-px bg-muted" />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Mã lệnh (Job Order ID)', 'Job Order ID')} *</Label>
+        <Label className="text-xs text-foreground">{t('Mã lệnh (Job Order ID)', 'Job Order ID')} *</Label>
         <Input
           value={formData.jobOrderId}
           onChange={e => updateField('jobOrderId', e.target.value)}
           placeholder="JOB-TB-001"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Ngày chế biến', 'Processing Date')} *</Label>
+        <Label className="text-xs text-foreground">{t('Ngày chế biến', 'Processing Date')} *</Label>
         <Input
           type="date"
           value={formData.processingDate}
           onChange={e => updateField('processingDate', e.target.value)}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp chế biến', 'Processing Method')} *</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp chế biến', 'Processing Method')} *</Label>
         <Select value={formData.processingMethod} onValueChange={v => updateField('processingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -389,46 +389,46 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Nhà máy', 'Plant Facility')}</Label>
+        <Label className="text-xs text-foreground">{t('Nhà máy', 'Plant Facility')}</Label>
         <Input
           value={formData.plantFacilityName}
           onChange={e => updateField('plantFacilityName', e.target.value)}
           placeholder={t('Nhà máy ABC', 'Factory ABC')}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
 
       {/* Step 1 fields */}
       <div className="space-y-1.5 md:col-span-2 mt-3">
-        <Label className="text-xs font-bold text-coffee-800 uppercase tracking-wider">
+        <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
           {t('Phân loại & Làm sạch', 'Reception & Sorting')}
         </Label>
-        <div className="h-px bg-coffee-200" />
+        <div className="h-px bg-muted" />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Mã lô (Batch ID)', 'Batch ID')} *</Label>
+        <Label className="text-xs text-foreground">{t('Mã lô (Batch ID)', 'Batch ID')} *</Label>
         <Input
           value={formData.batchId}
           onChange={e => updateField('batchId', e.target.value)}
           placeholder="BATCH-2024-001"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Trọng lượng đầu vào (kg)', 'Input Weight (kg)')} *</Label>
+        <Label className="text-xs text-foreground">{t('Trọng lượng đầu vào (kg)', 'Input Weight (kg)')} *</Label>
         <Input
           type="number" step="0.1"
           value={formData.inputWeight}
           onChange={e => updateField('inputWeight', e.target.value)}
           placeholder="3200"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Cấp độ chín', 'Cherry Ripeness Grade')}</Label>
+        <Label className="text-xs text-foreground">{t('Cấp độ chín', 'Cherry Ripeness Grade')}</Label>
         <Select value={formData.cherryRipenessGrade} onValueChange={v => updateField('cherryRipenessGrade', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn cấp độ', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
@@ -440,19 +440,19 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Tỷ lệ lỗi (%)', 'Defects (%)')}</Label>
+        <Label className="text-xs text-foreground">{t('Tỷ lệ lỗi (%)', 'Defects (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.defects}
           onChange={e => updateField('defects', e.target.value)}
           placeholder="2.5"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp phân loại', 'Sorting Method')}</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp phân loại', 'Sorting Method')}</Label>
         <Select value={formData.sortingMethod} onValueChange={v => updateField('sortingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -464,12 +464,12 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Người vận hành', 'Operator Name')}</Label>
+        <Label className="text-xs text-foreground">{t('Người vận hành', 'Operator Name')}</Label>
         <Input
           value={formData.operatorName}
           onChange={e => updateField('operatorName', e.target.value)}
           placeholder={t('Nguyễn Văn A', 'Nguyen Van A')}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
     </div>
@@ -478,9 +478,9 @@ export default function ProcessingWizardPage() {
   const renderStep2 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp bóc vỏ', 'Pulping Method')}</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp bóc vỏ', 'Pulping Method')}</Label>
         <Select value={formData.pulpingMethod} onValueChange={v => updateField('pulpingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -492,9 +492,9 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Loại lên men', 'Fermentation Type')}</Label>
+        <Label className="text-xs text-foreground">{t('Loại lên men', 'Fermentation Type')}</Label>
         <Select value={formData.fermentationType} onValueChange={v => updateField('fermentationType', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn loại', 'Select type')} />
           </SelectTrigger>
           <SelectContent>
@@ -506,43 +506,43 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Thời gian lên men (giờ)', 'Fermentation Duration (hrs)')}</Label>
+        <Label className="text-xs text-foreground">{t('Thời gian lên men (giờ)', 'Fermentation Duration (hrs)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.fermentationDurationHrs}
           onChange={e => updateField('fermentationDurationHrs', e.target.value)}
           placeholder="24"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Lượng nước sử dụng (L)', 'Water Usage (L)')}</Label>
+        <Label className="text-xs text-foreground">{t('Lượng nước sử dụng (L)', 'Water Usage (L)')}</Label>
         <Input
           type="number" step="1"
           value={formData.waterUsage}
           onChange={e => updateField('waterUsage', e.target.value)}
           placeholder="500"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Mức pH', 'pH Level')}</Label>
+        <Label className="text-xs text-foreground">{t('Mức pH', 'pH Level')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.phLevel}
           onChange={e => updateField('phLevel', e.target.value)}
           placeholder="4.5"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
+        <Label className="text-xs text-foreground">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.temperature2}
           onChange={e => updateField('temperature2', e.target.value)}
           placeholder="25"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
     </div>
@@ -551,9 +551,9 @@ export default function ProcessingWizardPage() {
   const renderStep3 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp rửa', 'Washing Method')}</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp rửa', 'Washing Method')}</Label>
         <Select value={formData.washingMethod} onValueChange={v => updateField('washingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -565,9 +565,9 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Nguồn nước', 'Water Source')}</Label>
+        <Label className="text-xs text-foreground">{t('Nguồn nước', 'Water Source')}</Label>
         <Select value={formData.waterSource} onValueChange={v => updateField('waterSource', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn nguồn', 'Select source')} />
           </SelectTrigger>
           <SelectContent>
@@ -579,23 +579,23 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Số lần rửa', 'Wash Cycles')}</Label>
+        <Label className="text-xs text-foreground">{t('Số lần rửa', 'Wash Cycles')}</Label>
         <Input
           type="number" step="1"
           value={formData.washCycles}
           onChange={e => updateField('washCycles', e.target.value)}
           placeholder="3"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Nước sạch sử dụng (L)', 'Clean Water Used (L)')}</Label>
+        <Label className="text-xs text-foreground">{t('Nước sạch sử dụng (L)', 'Clean Water Used (L)')}</Label>
         <Input
           type="number" step="1"
           value={formData.cleanWaterUsed}
           onChange={e => updateField('cleanWaterUsed', e.target.value)}
           placeholder="800"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
     </div>
@@ -604,9 +604,9 @@ export default function ProcessingWizardPage() {
   const renderStep4 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp sấy', 'Drying Method')}</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp sấy', 'Drying Method')}</Label>
         <Select value={formData.dryingMethod} onValueChange={v => updateField('dryingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -618,62 +618,62 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Thời gian sấy (ngày)', 'Drying Duration (days)')}</Label>
+        <Label className="text-xs text-foreground">{t('Thời gian sấy (ngày)', 'Drying Duration (days)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.dryingDurationDays}
           onChange={e => updateField('dryingDurationDays', e.target.value)}
           placeholder="7"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Độ ẩm mục tiêu (%)', 'Target Moisture (%)')}</Label>
+        <Label className="text-xs text-foreground">{t('Độ ẩm mục tiêu (%)', 'Target Moisture (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.targetMoisture}
           onChange={e => updateField('targetMoisture', e.target.value)}
           placeholder="12.0"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Độ ẩm thực tế (%)', 'Actual Moisture (%)')}</Label>
+        <Label className="text-xs text-foreground">{t('Độ ẩm thực tế (%)', 'Actual Moisture (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.actualMoisture}
           onChange={e => updateField('actualMoisture', e.target.value)}
           placeholder="11.5"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
+        <Label className="text-xs text-foreground">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.temperature4}
           onChange={e => updateField('temperature4', e.target.value)}
           placeholder="35"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Độ ẩm không khí (%)', 'Humidity (%)')}</Label>
+        <Label className="text-xs text-foreground">{t('Độ ẩm không khí (%)', 'Humidity (%)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.humidity}
           onChange={e => updateField('humidity', e.target.value)}
           placeholder="65"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5 md:col-span-2">
-        <Label className="text-xs text-coffee-700">{t('Máy sấy sử dụng', 'Machine Used')}</Label>
+        <Label className="text-xs text-foreground">{t('Máy sấy sử dụng', 'Machine Used')}</Label>
         <Input
           value={formData.machineUsed}
           onChange={e => updateField('machineUsed', e.target.value)}
           placeholder={t('Máy sấy ABC-2000', 'Dryer ABC-2000')}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
     </div>
@@ -682,9 +682,9 @@ export default function ProcessingWizardPage() {
   const renderStep5 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Phương pháp bóc lụa', 'Hulling Method')}</Label>
+        <Label className="text-xs text-foreground">{t('Phương pháp bóc lụa', 'Hulling Method')}</Label>
         <Select value={formData.hullingMethod} onValueChange={v => updateField('hullingMethod', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
@@ -695,19 +695,19 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Trọng lượng đầu ra (kg)', 'Output Weight (kg)')}</Label>
+        <Label className="text-xs text-foreground">{t('Trọng lượng đầu ra (kg)', 'Output Weight (kg)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.outputWeight}
           onChange={e => updateField('outputWeight', e.target.value)}
           placeholder="580"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
+        <Label className="text-xs text-foreground">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
         <Select value={formData.screenSize5} onValueChange={v => updateField('screenSize5', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn size', 'Select size')} />
           </SelectTrigger>
           <SelectContent>
@@ -726,9 +726,9 @@ export default function ProcessingWizardPage() {
           id="polishingDone"
           checked={formData.polishingDone}
           onCheckedChange={checked => updateField('polishingDone', checked as boolean)}
-          className="border-coffee-300 data-[state=checked]:bg-coffee-600 data-[state=checked]:border-coffee-600"
+          className="border-border data-[state=checked]:bg-muted data-[state=checked]:border-border"
         />
-        <Label htmlFor="polishingDone" className="text-xs text-coffee-700 cursor-pointer">
+        <Label htmlFor="polishingDone" className="text-xs text-foreground cursor-pointer">
           {t('Đã đánh bóng', 'Polishing Done')}
         </Label>
       </div>
@@ -738,9 +738,9 @@ export default function ProcessingWizardPage() {
   const renderStep6 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Hạng (Grade)', 'Grade')}</Label>
+        <Label className="text-xs text-foreground">{t('Hạng (Grade)', 'Grade')}</Label>
         <Select value={formData.grade} onValueChange={v => updateField('grade', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
@@ -752,9 +752,9 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
+        <Label className="text-xs text-foreground">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
         <Select value={formData.screenSize6} onValueChange={v => updateField('screenSize6', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn size', 'Select size')} />
           </SelectTrigger>
           <SelectContent>
@@ -769,39 +769,39 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Số lỗi', 'Defect Count')}</Label>
+        <Label className="text-xs text-foreground">{t('Số lỗi', 'Defect Count')}</Label>
         <Input
           type="number" step="1"
           value={formData.defectCount}
           onChange={e => updateField('defectCount', e.target.value)}
           placeholder="5"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
+        <Label className="text-xs text-foreground">{t('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
         <Input
           type="number" step="0.01"
           value={formData.foreignMatter}
           onChange={e => updateField('foreignMatter', e.target.value)}
           placeholder="0.5"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Điểm cupping', 'Cup Score')}</Label>
+        <Label className="text-xs text-foreground">{t('Điểm cupping', 'Cup Score')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.cupScore}
           onChange={e => updateField('cupScore', e.target.value)}
           placeholder="82"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Hạng tổng thể', 'Overall Grade')}</Label>
+        <Label className="text-xs text-foreground">{t('Hạng tổng thể', 'Overall Grade')}</Label>
         <Select value={formData.overallGrade} onValueChange={v => updateField('overallGrade', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
@@ -817,27 +817,27 @@ export default function ProcessingWizardPage() {
   const renderStep7 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('QC duyệt bởi', 'QC Approved By')} *</Label>
+        <Label className="text-xs text-foreground">{t('QC duyệt bởi', 'QC Approved By')} *</Label>
         <Input
           value={formData.qcApprovedBy}
           onChange={e => updateField('qcApprovedBy', e.target.value)}
           placeholder={t('Trần Văn B', 'Tran Van B')}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Ngày QC duyệt', 'QC Approval Date')}</Label>
+        <Label className="text-xs text-foreground">{t('Ngày QC duyệt', 'QC Approval Date')}</Label>
         <Input
           type="date"
           value={formData.qcApprovalDate}
           onChange={e => updateField('qcApprovalDate', e.target.value)}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Loại đóng gói', 'Packaging Type')}</Label>
+        <Label className="text-xs text-foreground">{t('Loại đóng gói', 'Packaging Type')}</Label>
         <Select value={formData.packagingType} onValueChange={v => updateField('packagingType', v)}>
-          <SelectTrigger className="rounded-xl border-coffee-200 w-full">
+          <SelectTrigger className="rounded-xl border-border w-full">
             <SelectValue placeholder={t('Chọn loại', 'Select type')} />
           </SelectTrigger>
           <SelectContent>
@@ -849,31 +849,31 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Trọng lượng đóng gói (kg)', 'Package Weight (kg)')}</Label>
+        <Label className="text-xs text-foreground">{t('Trọng lượng đóng gói (kg)', 'Package Weight (kg)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.packageWeight}
           onChange={e => updateField('packageWeight', e.target.value)}
           placeholder="60"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Số lô', 'Lot Number')}</Label>
+        <Label className="text-xs text-foreground">{t('Số lô', 'Lot Number')}</Label>
         <Input
           value={formData.lotNumber}
           onChange={e => updateField('lotNumber', e.target.value)}
           placeholder="LOT-2024-001"
-          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+          className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Notes')}</Label>
+        <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
         <Textarea
           value={formData.notes}
           onChange={e => updateField('notes', e.target.value)}
           placeholder={t('Ghi chú thêm...', 'Additional notes...')}
-          className="rounded-xl border-coffee-200 focus:border-coffee-500 min-h-[80px]"
+          className="rounded-xl border-border focus:border-border min-h-[80px]"
           rows={3}
         />
       </div>
@@ -967,10 +967,10 @@ export default function ProcessingWizardPage() {
     return (
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
         {summarySections.map((section, idx) => (
-          <Card key={idx} className="rounded-xl border border-coffee-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-coffee-50 to-coffee-100/50 px-4 py-2.5 flex items-center gap-2 border-b border-coffee-200">
-              <section.title.icon className="w-4 h-4 text-coffee-600" />
-              <span className="text-xs font-bold text-coffee-800">
+          <Card key={idx} className="rounded-xl border border-border overflow-hidden">
+            <div className="bg-gradient-to-r from-primary to-primary/50 px-4 py-2.5 flex items-center gap-2 border-b border-border">
+              <section.title.icon className="w-4 h-4 text-foreground" />
+              <span className="text-xs font-bold text-foreground">
                 {idx + 1}. {lang === 'vi' ? section.title.vi : section.title.en}
               </span>
             </div>
@@ -978,9 +978,9 @@ export default function ProcessingWizardPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
                 {section.items.map((item, iIdx) => (
                   <div key={iIdx} className="flex flex-col">
-                    <span className="text-[10px] text-coffee-400 uppercase tracking-wide">{item.label}</span>
-                    <span className="text-xs text-coffee-800 font-medium truncate">
-                      {item.value || <span className="text-coffee-300 italic">—</span>}
+                    <span className="text-[10px] text-foreground uppercase tracking-wide">{item.label}</span>
+                    <span className="text-xs text-foreground font-medium truncate">
+                      {item.value || <span className="text-foreground italic">—</span>}
                     </span>
                   </div>
                 ))}
@@ -1006,21 +1006,21 @@ export default function ProcessingWizardPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.push('/processing')}
-              className="text-coffee-500 hover:text-coffee-800 -ml-2"
+              className="text-foreground hover:text-foreground -ml-2"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-                <Cog className="w-5 h-5 text-coffee-600" />
+              <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                <Cog className="w-5 h-5 text-foreground" />
                 {t('Tạo lệnh chế biến', 'Processing Wizard')}
               </h2>
-              <p className="text-xs text-coffee-500 mt-0.5">
+              <p className="text-xs text-foreground mt-0.5">
                 {t('Điền thông tin từng bước trong quy trình chế biến', 'Fill in each step of the processing pipeline')}
               </p>
             </div>
           </div>
-          <Badge className="bg-coffee-100 text-coffee-700 border border-coffee-200 text-[10px]">
+          <Badge className="bg-muted text-foreground border border-border text-[10px]">
             {t(`Bước ${currentStep + 1}/7`, `Step ${currentStep + 1}/7`)}
           </Badge>
         </div>
@@ -1047,8 +1047,8 @@ export default function ProcessingWizardPage() {
                           isCompleted
                             ? 'bg-green-500 text-white shadow-md shadow-green-200'
                             : isActive
-                            ? 'bg-gradient-to-br from-coffee-500 to-coffee-800 text-white shadow-lg shadow-coffee-300/50 ring-4 ring-coffee-100'
-                            : 'bg-coffee-100 text-coffee-400'
+                            ? 'bg-gradient-to-br from-primary to-primary text-white shadow-lg shadow-primary/20 ring-4 ring-primary'
+                            : 'bg-muted text-foreground'
                         }`}
                       >
                         {isCompleted ? (
@@ -1061,7 +1061,7 @@ export default function ProcessingWizardPage() {
                       </div>
                       <span
                         className={`text-[10px] font-medium text-center max-w-[80px] leading-tight transition-colors ${
-                          isActive ? 'text-coffee-800' : isCompleted ? 'text-green-700' : 'text-coffee-400'
+                          isActive ? 'text-foreground' : isCompleted ? 'text-green-700' : 'text-foreground'
                         }`}
                       >
                         {lang === 'vi' ? step.vi : step.en}
@@ -1071,7 +1071,7 @@ export default function ProcessingWizardPage() {
                       <div className="flex-1 mx-2 mt-[-20px]">
                         <div
                           className={`h-0.5 rounded-full transition-all duration-500 ${
-                            idx < currentStep ? 'bg-green-400' : 'bg-coffee-200'
+                            idx < currentStep ? 'bg-green-400' : 'bg-muted'
                           }`}
                         />
                       </div>
@@ -1095,8 +1095,8 @@ export default function ProcessingWizardPage() {
                           isCompleted
                             ? 'bg-green-500'
                             : isActive
-                            ? 'bg-gradient-to-r from-coffee-500 to-coffee-800'
-                            : 'bg-coffee-200'
+                            ? 'bg-gradient-to-r from-primary to-primary'
+                            : 'bg-muted'
                         }`}
                       />
                     </div>
@@ -1106,16 +1106,16 @@ export default function ProcessingWizardPage() {
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                   currentStep < currentStep + 1
-                    ? 'bg-gradient-to-br from-coffee-500 to-coffee-800 text-white'
-                    : 'bg-coffee-100 text-coffee-400'
+                    ? 'bg-gradient-to-br from-primary to-primary text-white'
+                    : 'bg-muted text-foreground'
                 }`}>
                   {currentStep + 1}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-coffee-800">
+                  <p className="text-sm font-bold text-foreground">
                     {lang === 'vi' ? STEPS[currentStep].vi : STEPS[currentStep].en}
                   </p>
-                  <p className="text-[10px] text-coffee-500">
+                  <p className="text-[10px] text-foreground">
                     {t(`Bước ${currentStep + 1} của 7`, `Step ${currentStep + 1} of 7`)}
                   </p>
                 </div>
@@ -1126,9 +1126,9 @@ export default function ProcessingWizardPage() {
 
         {/* Progress bar */}
         <div className="mb-6">
-          <div className="h-1.5 bg-coffee-100 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-coffee-500 to-coffee-800 rounded-full transition-all duration-700 ease-out"
+              className="h-full bg-gradient-to-r from-primary to-primary rounded-full transition-all duration-700 ease-out"
               style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             />
           </div>
@@ -1136,11 +1136,11 @@ export default function ProcessingWizardPage() {
 
         {/* Step content card */}
         <Card className="rounded-2xl border-0 shadow-sm overflow-hidden mb-6">
-          <CardHeader className="bg-gradient-to-r from-coffee-50 to-coffee-100/50 border-b border-coffee-200 pb-4">
-            <CardTitle className="text-coffee-800 flex items-center gap-2 text-base">
+          <CardHeader className="bg-gradient-to-r from-primary to-primary/50 border-b border-border pb-4">
+            <CardTitle className="text-foreground flex items-center gap-2 text-base">
               {(() => {
                 const StepIcon = STEPS[currentStep].icon
-                return <StepIcon className="w-5 h-5 text-coffee-600" />
+                return <StepIcon className="w-5 h-5 text-foreground" />
               })()}
               {currentStep + 1}. {lang === 'vi' ? STEPS[currentStep].vi : STEPS[currentStep].en}
             </CardTitle>
@@ -1164,7 +1164,7 @@ export default function ProcessingWizardPage() {
             variant="outline"
             onClick={goBack}
             disabled={currentStep === 0}
-            className="rounded-xl border-coffee-200 text-coffee-600 hover:bg-coffee-50 gap-2"
+            className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
           >
             <ChevronLeft className="w-4 h-4" />
             {t('Quay lại', 'Back')}
@@ -1177,7 +1177,7 @@ export default function ProcessingWizardPage() {
                 <div
                   key={idx}
                   className={`w-2 h-2 rounded-full transition-all ${
-                    idx === currentStep ? 'bg-coffee-600 w-4' : idx < currentStep ? 'bg-green-400' : 'bg-coffee-200'
+                    idx === currentStep ? 'bg-muted w-4' : idx < currentStep ? 'bg-green-400' : 'bg-muted'
                   }`}
                 />
               ))}
@@ -1187,7 +1187,7 @@ export default function ProcessingWizardPage() {
           {currentStep < 6 ? (
             <Button
               onClick={goNext}
-              className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+              className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white gap-2 rounded-xl shadow-sm"
             >
               {t('Tiếp theo', 'Next')}
               <ChevronRight className="w-4 h-4" />
@@ -1198,7 +1198,7 @@ export default function ProcessingWizardPage() {
                 setDirection('forward')
                 setCurrentStep(7) // Go to summary
               }}
-              className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+              className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white gap-2 rounded-xl shadow-sm"
             >
               {t('Xem lại', 'Review')}
               <ClipboardCheck className="w-4 h-4" />
@@ -1233,7 +1233,7 @@ export default function ProcessingWizardPage() {
                 setDirection('backward')
                 setCurrentStep(6)
               }}
-              className="text-coffee-500 hover:text-coffee-800 text-xs gap-1"
+              className="text-foreground hover:text-foreground text-xs gap-1"
             >
               <ChevronLeft className="w-3 h-3" />
               {t('Quay lại chỉnh sửa', 'Go back to edit')}

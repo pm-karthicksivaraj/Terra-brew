@@ -6,34 +6,50 @@
 
 :root {
   --font-space-mono: 'Space Mono', monospace;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.554 0.135 63.4);
-  --primary-foreground: oklch(0.985 0.002 63.4);
-  --secondary: oklch(0.97 0.001 63.4);
-  --secondary-foreground: oklch(0.554 0.135 63.4);
-  --muted: oklch(0.97 0.001 63.4);
-  --muted-foreground: oklch(0.554 0.02 63.4);
-  --accent: oklch(0.97 0.001 63.4);
-  --accent-foreground: oklch(0.554 0.135 63.4);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.004 63.4);
-  --input: oklch(0.922 0.004 63.4);
-  --ring: oklch(0.554 0.135 63.4);
+
+  /* ── Premium Coffee Light Theme ── */
+  /* Warm cream backgrounds, rich brown text, vibrant amber accent */
+  --background: oklch(0.98 0.005 75);
+  --foreground: oklch(0.25 0.04 50);
+
+  --card: oklch(0.995 0.002 75);
+  --card-foreground: oklch(0.25 0.04 50);
+
+  --popover: oklch(0.995 0.002 75);
+  --popover-foreground: oklch(0.25 0.04 50);
+
+  /* Vibrant amber/copper accent — HIGHLY visible */
+  --primary: oklch(0.55 0.15 50);
+  --primary-foreground: oklch(0.98 0.005 75);
+
+  --secondary: oklch(0.95 0.01 75);
+  --secondary-foreground: oklch(0.40 0.06 50);
+
+  --muted: oklch(0.95 0.008 75);
+  --muted-foreground: oklch(0.50 0.03 50);
+
+  --accent: oklch(0.93 0.015 75);
+  --accent-foreground: oklch(0.40 0.06 50);
+
+  --destructive: oklch(0.55 0.24 25);
+  --destructive-foreground: oklch(0.98 0.005 75);
+
+  --border: oklch(0.90 0.01 75);
+  --input: oklch(0.90 0.01 75);
+  --ring: oklch(0.55 0.15 50);
+
   --radius: 0.75rem;
-  --sidebar-background: oklch(0.985 0.002 63.4);
-  --sidebar-foreground: oklch(0.554 0.135 63.4);
-  --sidebar-primary: oklch(0.554 0.135 63.4);
-  --sidebar-primary-foreground: oklch(0.985 0.002 63.4);
-  --sidebar-accent: oklch(0.97 0.01 63.4);
-  --sidebar-accent-foreground: oklch(0.554 0.135 63.4);
-  --sidebar-border: oklch(0.922 0.004 63.4);
-  --sidebar-ring: oklch(0.554 0.135 63.4);
+
+  /* Sidebar — warm latte tones */
+  --sidebar-background: oklch(0.97 0.008 75);
+  --sidebar-foreground: oklch(0.35 0.05 50);
+  --sidebar-primary: oklch(0.55 0.15 50);
+  --sidebar-primary-foreground: oklch(0.98 0.005 75);
+  --sidebar-accent: oklch(0.93 0.015 75);
+  --sidebar-accent-foreground: oklch(0.35 0.05 50);
+  --sidebar-border: oklch(0.90 0.01 75);
+  --sidebar-ring: oklch(0.55 0.15 50);
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -42,33 +58,47 @@
 }
 
 .dark {
-  --background: oklch(0.145 0.02 63.4);
-  --foreground: oklch(0.985 0.002 63.4);
-  --card: oklch(0.205 0.02 63.4);
-  --card-foreground: oklch(0.985 0.002 63.4);
-  --popover: oklch(0.205 0.02 63.4);
-  --popover-foreground: oklch(0.985 0.002 63.4);
-  --primary: oklch(0.754 0.135 63.4);
-  --primary-foreground: oklch(0.145 0.02 63.4);
-  --secondary: oklch(0.269 0.02 63.4);
-  --secondary-foreground: oklch(0.985 0.002 63.4);
-  --muted: oklch(0.269 0.02 63.4);
-  --muted-foreground: oklch(0.708 0.02 63.4);
-  --accent: oklch(0.269 0.02 63.4);
-  --accent-foreground: oklch(0.985 0.002 63.4);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0.002 63.4);
-  --border: oklch(0.3 0.02 63.4);
-  --input: oklch(0.3 0.02 63.4);
-  --ring: oklch(0.754 0.135 63.4);
-  --sidebar-background: oklch(0.175 0.02 63.4);
-  --sidebar-foreground: oklch(0.985 0.002 63.4);
-  --sidebar-primary: oklch(0.754 0.135 63.4);
-  --sidebar-primary-foreground: oklch(0.175 0.02 63.4);
-  --sidebar-accent: oklch(0.269 0.02 63.4);
-  --sidebar-accent-foreground: oklch(0.985 0.002 63.4);
-  --sidebar-border: oklch(0.3 0.02 63.4);
-  --sidebar-ring: oklch(0.754 0.135 63.4);
+  /* ── Premium Espresso Dark Theme ── */
+  /* Deep espresso backgrounds, warm latte text, golden accent */
+  --background: oklch(0.16 0.025 50);
+  --foreground: oklch(0.92 0.01 75);
+
+  --card: oklch(0.20 0.025 50);
+  --card-foreground: oklch(0.92 0.01 75);
+
+  --popover: oklch(0.20 0.025 50);
+  --popover-foreground: oklch(0.92 0.01 75);
+
+  /* Golden amber accent — stands out beautifully on dark */
+  --primary: oklch(0.72 0.15 55);
+  --primary-foreground: oklch(0.16 0.025 50);
+
+  --secondary: oklch(0.25 0.025 50);
+  --secondary-foreground: oklch(0.90 0.01 75);
+
+  --muted: oklch(0.25 0.02 50);
+  --muted-foreground: oklch(0.65 0.02 75);
+
+  --accent: oklch(0.27 0.025 50);
+  --accent-foreground: oklch(0.90 0.01 75);
+
+  --destructive: oklch(0.65 0.22 20);
+  --destructive-foreground: oklch(0.95 0.01 75);
+
+  --border: oklch(0.30 0.02 50);
+  --input: oklch(0.30 0.02 50);
+  --ring: oklch(0.72 0.15 55);
+
+  /* Sidebar — deep roasted espresso */
+  --sidebar-background: oklch(0.14 0.03 50);
+  --sidebar-foreground: oklch(0.88 0.01 75);
+  --sidebar-primary: oklch(0.72 0.15 55);
+  --sidebar-primary-foreground: oklch(0.14 0.03 50);
+  --sidebar-accent: oklch(0.24 0.025 50);
+  --sidebar-accent-foreground: oklch(0.88 0.01 75);
+  --sidebar-border: oklch(0.28 0.02 50);
+  --sidebar-ring: oklch(0.72 0.15 55);
+
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -125,6 +155,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-space-mono), monospace;
+    transition: background-color 0.3s, color 0.3s;
   }
 }
 
@@ -142,6 +173,12 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.5 0.02 63.4);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.02 50);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.02 50);
 }
 
 /* ═══ Login Page Keyframes ═══ */

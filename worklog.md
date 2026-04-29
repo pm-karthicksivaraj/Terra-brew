@@ -89,3 +89,33 @@ Work Log:
 Stage Summary:
 - Track Journey accessible from sidebar under Supply Chain
 - Processing Wizard accessible from sidebar under Supply Chain
+---
+Task ID: 1
+Agent: Main Agent
+Task: Premium theme overhaul with dark/light mode + framer-motion animations
+
+Work Log:
+- Installed framer-motion@12.38.0 and next-themes@0.4.6
+- Rewrote globals.css with premium coffee color palette (light: warm cream/rich brown, dark: deep espresso/golden accent)
+- Added ThemeProvider from next-themes to providers.tsx (attribute="class", defaultTheme="light")
+- Added suppressHydrationWarning to client-app.tsx loading div
+- Added dark/light toggle with animated Sun/Moon icons (framer-motion) in dashboard-shell.tsx header
+- Added AnimatePresence page transitions to dashboard-shell.tsx
+- Replaced all hardcoded coffee-* colors with semantic theme variables across all pages
+- Created components/ui/motion.tsx with reusable animation components (FadeIn, StaggerContainer, StaggerItem, SlideIn, hoverScale)
+- Applied null-safe data access (data.data?.data ?? data.data?.items ?? []) to ALL 15+ list pages
+- Applied null-safe data access to ALL detail pages ([id] routes)
+- Fixed button visibility: edit buttons use text-muted-foreground hover:text-foreground, delete buttons use hover:text-destructive
+- Primary action buttons now use bg-primary text-primary-foreground shadow-md
+- Added dark mode badge variants (dark:bg-green-900/30 dark:text-green-400)
+- Added smooth 0.3s theme transition on body
+- Added dark mode scrollbar styling
+- Build verified: npx next build succeeds with 0 errors
+
+Stage Summary:
+- Premium light/dark theme fully implemented with coffee-inspired palette
+- Dark/light toggle in header with animated framer-motion icons
+- Page transition animations via AnimatePresence
+- All buttons now have clear visibility in both light and dark modes
+- All data access is null-safe (no more .map() crashes)
+- Framer-motion reusable components available at components/ui/motion.tsx

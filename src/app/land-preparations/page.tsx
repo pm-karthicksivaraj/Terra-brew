@@ -119,8 +119,8 @@ export default function LandPreparationsPage() {
       const res = await fetch(`/api/land-preparations?${params}`)
       const data = await res.json()
       if (data.success) {
-        setItems(data.data.data)
-        setTotal(data.data.total)
+        const _items = data.data?.data ?? data.data?.items ?? []; setItems(Array.isArray(_items) ? _items : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch land preparations', err)
@@ -262,10 +262,10 @@ export default function LandPreparationsPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Coffee className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Coffee className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -281,17 +281,17 @@ export default function LandPreparationsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <Shovel className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Shovel className="w-5 h-5 text-muted-foreground" />
               {t('Quản lý Chuẩn bị đất', 'Land Preparation Management')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -300,7 +300,7 @@ export default function LandPreparationsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <Shovel className="w-5 h-5" />
                   {editingItem ? t('Sửa chuẩn bị đất', 'Edit Land Preparation') : t('Thêm chuẩn bị đất mới', 'Add New Land Preparation')}
                 </DialogTitle>
@@ -309,9 +309,9 @@ export default function LandPreparationsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer Select */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -326,9 +326,9 @@ export default function LandPreparationsPage() {
 
                   {/* Farm Land Select */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })} disabled={!form.farmerId}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -343,20 +343,20 @@ export default function LandPreparationsPage() {
 
                   {/* Preparation Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày chuẩn bị', 'Preparation Date')}</Label>
+                    <Label className="text-xs text-foreground">{t('Ngày chuẩn bị', 'Preparation Date')}</Label>
                     <Input
                       type="date"
                       value={form.preparationDate}
                       onChange={(e) => setForm({ ...form, preparationDate: e.target.value })}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Preparation Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Loại chuẩn bị', 'Preparation Type')}</Label>
+                    <Label className="text-xs text-foreground">{t('Loại chuẩn bị', 'Preparation Type')}</Label>
                     <Select value={form.preparationType} onValueChange={(v) => setForm({ ...form, preparationType: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -370,9 +370,9 @@ export default function LandPreparationsPage() {
 
                   {/* Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Phương pháp', 'Method')}</Label>
+                    <Label className="text-xs text-foreground">{t('Phương pháp', 'Method')}</Label>
                     <Select value={form.method} onValueChange={(v) => setForm({ ...form, method: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn phương pháp', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -388,77 +388,77 @@ export default function LandPreparationsPage() {
 
                   {/* Equipment Used */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Thiết bị sử dụng', 'Equipment Used')}</Label>
+                    <Label className="text-xs text-foreground">{t('Thiết bị sử dụng', 'Equipment Used')}</Label>
                     <Input
                       value={form.equipmentUsed}
                       onChange={(e) => setForm({ ...form, equipmentUsed: e.target.value })}
                       placeholder={t('Máy cày, Cuốc...', 'Tractor, Hoe...')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Labor Count */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số nhân công', 'Labor Count')}</Label>
+                    <Label className="text-xs text-foreground">{t('Số nhân công', 'Labor Count')}</Label>
                     <Input
                       type="number"
                       value={form.laborCount}
                       onChange={(e) => setForm({ ...form, laborCount: e.target.value })}
                       placeholder="5"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Labor Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Chi phí nhân công', 'Labor Cost')}</Label>
+                    <Label className="text-xs text-foreground">{t('Chi phí nhân công', 'Labor Cost')}</Label>
                     <Input
                       type="number"
                       value={form.laborCost}
                       onChange={(e) => setForm({ ...form, laborCost: e.target.value })}
                       placeholder="2000000"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Materials Used */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Vật liệu sử dụng', 'Materials Used')}</Label>
+                    <Label className="text-xs text-foreground">{t('Vật liệu sử dụng', 'Materials Used')}</Label>
                     <Input
                       value={form.materialsUsed}
                       onChange={(e) => setForm({ ...form, materialsUsed: e.target.value })}
                       placeholder={t('Phân chuồng, Vôi...', 'Manure, Lime...')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Material Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Chi phí vật liệu', 'Material Cost')}</Label>
+                    <Label className="text-xs text-foreground">{t('Chi phí vật liệu', 'Material Cost')}</Label>
                     <Input
                       type="number"
                       value={form.materialCost}
                       onChange={(e) => setForm({ ...form, materialCost: e.target.value })}
                       placeholder="1500000"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Total Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tổng chi phí', 'Total Cost')}</Label>
+                    <Label className="text-xs text-foreground">{t('Tổng chi phí', 'Total Cost')}</Label>
                     <Input
                       type="number"
                       value={form.totalCost}
                       onChange={(e) => setForm({ ...form, totalCost: e.target.value })}
                       placeholder="3500000"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Soil pH Before */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('pH đất trước', 'Soil pH Before')}</Label>
+                    <Label className="text-xs text-foreground">{t('pH đất trước', 'Soil pH Before')}</Label>
                     <Input
                       type="number"
                       value={form.soilPhBefore}
@@ -466,13 +466,13 @@ export default function LandPreparationsPage() {
                       placeholder="5.2"
                       step="0.1"
                       min="0" max="14"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Soil pH After */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('pH đất sau', 'Soil pH After')}</Label>
+                    <Label className="text-xs text-foreground">{t('pH đất sau', 'Soil pH After')}</Label>
                     <Input
                       type="number"
                       value={form.soilPhAfter}
@@ -480,13 +480,13 @@ export default function LandPreparationsPage() {
                       placeholder="6.0"
                       step="0.1"
                       min="0" max="14"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Organic Matter % */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Hữu cơ (%)', 'Organic Matter (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t('Hữu cơ (%)', 'Organic Matter (%)')}</Label>
                     <Input
                       type="number"
                       value={form.organicMatterPct}
@@ -494,31 +494,31 @@ export default function LandPreparationsPage() {
                       placeholder="3.5"
                       step="0.1"
                       min="0" max="100"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Notes')}</Label>
+                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
                     <Input
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       placeholder={t('Ghi chú thêm', 'Additional notes')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
                   >
                     {submitting ? (
                       <>
@@ -538,15 +538,15 @@ export default function LandPreparationsPage() {
         {/* Search */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm chuẩn bị đất...', 'Search land preparations...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -556,48 +556,48 @@ export default function LandPreparationsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Nông trại', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('PP', 'Method')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Thiết bị', 'Equipment')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden xl:table-cell">{t('CP nhân công', 'Labor Cost')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden xl:table-cell">{t('Tổng CP', 'Total Cost')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông trại', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('PP', 'Method')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Thiết bị', 'Equipment')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('CP nhân công', 'Labor Cost')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Tổng CP', 'Total Cost')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="px-4 py-12 text-center text-coffee-400 text-sm">
+                      <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground text-sm">
                         {t('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
                     items.map((item, i) => (
                       <tr key={item.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
+ className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
-                          <p className="text-xs font-medium text-coffee-800">{item.farmer.fullName}</p>
+                          <p className="text-xs font-medium text-foreground">{item.farmer.fullName}</p>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600">{item.farmLand.farmName}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.preparationDate ? new Date(item.preparationDate).toLocaleDateString() : '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.preparationType || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.method || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.equipmentUsed || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden xl:table-cell">{item.laborCost ? formatCurrency(item.laborCost, 'VND') : '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden xl:table-cell">{item.totalCost ? formatCurrency(item.totalCost, 'VND') : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{item.farmLand.farmName}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.preparationDate ? new Date(item.preparationDate).toLocaleDateString() : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.preparationType || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.method || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.equipmentUsed || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">{item.laborCost ? formatCurrency(item.laborCost, 'VND') : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">{item.totalCost ? formatCurrency(item.totalCost, 'VND') : '-'}</td>
                         <td className="px-4 py-3">
-                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
+                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
                             {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-500 hover:text-coffee-800" onClick={() => handleEdit(item)}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
@@ -605,12 +605,12 @@ export default function LandPreparationsPage() {
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
                                   {t('Xóa', 'Del')}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-coffee-400 text-[10px]" onClick={() => setDeleteConfirm(null)}>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
                                   {t('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-400 hover:text-red-600" onClick={() => setDeleteConfirm(item.id)}>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirm(item.id)}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -625,12 +625,12 @@ export default function LandPreparationsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -638,12 +638,12 @@ export default function LandPreparationsPage() {
                   if (p > totalPages) return null
                   return (
                     <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}>
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}>
                       {p}
                     </Button>
                   )
                 })}
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronRight className="w-3 h-3" />
                 </Button>
               </div>

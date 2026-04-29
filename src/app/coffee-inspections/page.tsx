@@ -133,8 +133,8 @@ export default function CoffeeInspectionsPage() {
       const res = await fetch(`/api/coffee-inspections?${params}`)
       const data = await res.json()
       if (data.success) {
-        setInspections(data.data.data)
-        setTotal(data.data.total)
+        const _items = data.data?.data ?? data.data?.items ?? []; setInspections(Array.isArray(_items) ? _items : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch inspections', err)
@@ -282,7 +282,7 @@ export default function CoffeeInspectionsPage() {
   const totalPages = Math.ceil(total / pageSize)
 
   const cupScoreColor = (score: number | null) => {
-    if (score === null) return 'text-coffee-400'
+    if (score === null) return 'text-muted-foreground'
     if (score >= 85) return 'text-green-600'
     if (score >= 80) return 'text-emerald-500'
     if (score >= 75) return 'text-yellow-600'
@@ -295,10 +295,10 @@ export default function CoffeeInspectionsPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Coffee className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Coffee className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -314,17 +314,17 @@ export default function CoffeeInspectionsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <ClipboardCheck className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-muted-foreground" />
               {t('Kiểm tra Cà phê', 'Coffee Inspections')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} kiểm tra`, `Total: ${total} inspections`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} kiểm tra`, `Total: ${total} inspections`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -333,7 +333,7 @@ export default function CoffeeInspectionsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <ClipboardCheck className="w-5 h-5" />
                   {editingItem ? t('Sửa kiểm tra', 'Edit Inspection') : t('Thêm kiểm tra mới', 'Add New Inspection')}
                 </DialogTitle>
@@ -342,9 +342,9 @@ export default function CoffeeInspectionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nông dân', 'Farmer')}</Label>
+                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')}</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -357,9 +357,9 @@ export default function CoffeeInspectionsPage() {
 
                   {/* FarmLand */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đất nông trại', 'Farm Land')}</Label>
+                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')}</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đất', 'Select land')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -372,64 +372,64 @@ export default function CoffeeInspectionsPage() {
 
                   {/* Batch ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Mã lô', 'Batch ID')}</Label>
+                    <Label className="text-xs text-foreground">{t('Mã lô', 'Batch ID')}</Label>
                     <Input
                       value={form.batchId}
                       onChange={(e) => setForm({ ...form, batchId: e.target.value })}
                       placeholder="BATCH-001"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Inspection ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Mã kiểm tra', 'Inspection ID')}</Label>
+                    <Label className="text-xs text-foreground">{t('Mã kiểm tra', 'Inspection ID')}</Label>
                     <Input
                       value={form.inspectionId}
                       onChange={(e) => setForm({ ...form, inspectionId: e.target.value })}
                       placeholder="INS-001"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Inspection Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày kiểm tra', 'Inspection Date')}</Label>
+                    <Label className="text-xs text-foreground">{t('Ngày kiểm tra', 'Inspection Date')}</Label>
                     <Input
                       type="date"
                       value={form.inspectionDate}
                       onChange={(e) => setForm({ ...form, inspectionDate: e.target.value })}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Inspector Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Người kiểm tra', 'Inspector Name')}</Label>
+                    <Label className="text-xs text-foreground">{t('Người kiểm tra', 'Inspector Name')}</Label>
                     <Input
                       value={form.inspectorName}
                       onChange={(e) => setForm({ ...form, inspectorName: e.target.value })}
                       placeholder={t('Nguyễn Văn A', 'John Doe')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Inspector Cert No */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số chứng chỉ', 'Cert No')}</Label>
+                    <Label className="text-xs text-foreground">{t('Số chứng chỉ', 'Cert No')}</Label>
                     <Input
                       value={form.inspectorCertNo}
                       onChange={(e) => setForm({ ...form, inspectorCertNo: e.target.value })}
                       placeholder="CERT-2024-001"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Inspection Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Loại kiểm tra', 'Inspection Type')}</Label>
+                    <Label className="text-xs text-foreground">{t('Loại kiểm tra', 'Inspection Type')}</Label>
                     <Select value={form.inspectionType} onValueChange={(v) => setForm({ ...form, inspectionType: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -444,9 +444,9 @@ export default function CoffeeInspectionsPage() {
 
                   {/* Inspection Standard */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tiêu chuẩn', 'Standard')}</Label>
+                    <Label className="text-xs text-foreground">{t('Tiêu chuẩn', 'Standard')}</Label>
                     <Select value={form.inspectionStandard} onValueChange={(v) => setForm({ ...form, inspectionStandard: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -460,79 +460,79 @@ export default function CoffeeInspectionsPage() {
 
                   {/* Sample Size */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Kích thước mẫu (g)', 'Sample Size (g)')}</Label>
+                    <Label className="text-xs text-foreground">{t('Kích thước mẫu (g)', 'Sample Size (g)')}</Label>
                     <Input
                       type="number"
                       value={form.sampleSize}
                       onChange={(e) => setForm({ ...form, sampleSize: e.target.value })}
                       placeholder="300"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Moisture Content */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Độ ẩm (%)', 'Moisture (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t('Độ ẩm (%)', 'Moisture (%)')}</Label>
                     <Input
                       type="number"
                       step="0.1"
                       value={form.moistureContent}
                       onChange={(e) => setForm({ ...form, moistureContent: e.target.value })}
                       placeholder="12.5"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Defect Count */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Số lỗi', 'Defect Count')}</Label>
+                    <Label className="text-xs text-foreground">{t('Số lỗi', 'Defect Count')}</Label>
                     <Input
                       type="number"
                       value={form.defectCount}
                       onChange={(e) => setForm({ ...form, defectCount: e.target.value })}
                       placeholder="5"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Foreign Matter */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
                     <Input
                       type="number"
                       step="0.01"
                       value={form.foreignMatter}
                       onChange={(e) => setForm({ ...form, foreignMatter: e.target.value })}
                       placeholder="0.5"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Screen Size */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Kích thước rây', 'Screen Size')}</Label>
+                    <Label className="text-xs text-foreground">{t('Kích thước rây', 'Screen Size')}</Label>
                     <Input
                       value={form.screenSize}
                       onChange={(e) => setForm({ ...form, screenSize: e.target.value })}
                       placeholder="16+"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Color */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Màu sắc', 'Color')}</Label>
+                    <Label className="text-xs text-foreground">{t('Màu sắc', 'Color')}</Label>
                     <Input
                       value={form.color}
                       onChange={(e) => setForm({ ...form, color: e.target.value })}
                       placeholder={t('Xanh bluish', 'Bluish green')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Cup Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Điểm cupping', 'Cup Score')}</Label>
+                    <Label className="text-xs text-foreground">{t('Điểm cupping', 'Cup Score')}</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -540,15 +540,15 @@ export default function CoffeeInspectionsPage() {
                       onChange={(e) => setForm({ ...form, cupScore: e.target.value })}
                       placeholder="82.5"
                       min="0" max="100"
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Overall Grade */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Xếp hạng', 'Grade')}</Label>
+                    <Label className="text-xs text-foreground">{t('Xếp hạng', 'Grade')}</Label>
                     <Select value={form.overallGrade} onValueChange={(v) => setForm({ ...form, overallGrade: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -563,9 +563,9 @@ export default function CoffeeInspectionsPage() {
 
                   {/* Pass/Fail */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đạt/Không đạt', 'Pass/Fail')}</Label>
+                    <Label className="text-xs text-foreground">{t('Đạt/Không đạt', 'Pass/Fail')}</Label>
                     <Select value={form.passFail} onValueChange={(v) => setForm({ ...form, passFail: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -577,80 +577,80 @@ export default function CoffeeInspectionsPage() {
 
                   {/* Aroma */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Hương thơm', 'Aroma')}</Label>
+                    <Label className="text-xs text-foreground">{t('Hương thơm', 'Aroma')}</Label>
                     <Input
                       value={form.aroma}
                       onChange={(e) => setForm({ ...form, aroma: e.target.value })}
                       placeholder={t('Chocolate, hoa quả', 'Chocolate, fruity')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Taste */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Vị', 'Taste')}</Label>
+                    <Label className="text-xs text-foreground">{t('Vị', 'Taste')}</Label>
                     <Input
                       value={form.taste}
                       onChange={(e) => setForm({ ...form, taste: e.target.value })}
                       placeholder={t('Ngọt, cân bằng', 'Sweet, balanced')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Body */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Body', 'Body')}</Label>
+                    <Label className="text-xs text-foreground">{t('Body', 'Body')}</Label>
                     <Input
                       value={form.body}
                       onChange={(e) => setForm({ ...form, body: e.target.value })}
                       placeholder={t('Đầy đặn', 'Full')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Acidity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Độ axit', 'Acidity')}</Label>
+                    <Label className="text-xs text-foreground">{t('Độ axit', 'Acidity')}</Label>
                     <Input
                       value={form.acidity}
                       onChange={(e) => setForm({ ...form, acidity: e.target.value })}
                       placeholder={t('Sáng, tinh khiết', 'Bright, clean')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Aftertaste */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Hậu vị', 'Aftertaste')}</Label>
+                    <Label className="text-xs text-foreground">{t('Hậu vị', 'Aftertaste')}</Label>
                     <Input
                       value={form.aftertaste}
                       onChange={(e) => setForm({ ...form, aftertaste: e.target.value })}
                       placeholder={t('Dài, dễ chịu', 'Long, pleasant')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Remarks */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Remarks')}</Label>
+                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Remarks')}</Label>
                     <Input
                       value={form.remarks}
                       onChange={(e) => setForm({ ...form, remarks: e.target.value })}
                       placeholder={t('Ghi chú thêm...', 'Additional remarks...')}
-                      className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                      className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
                   >
                     {submitting ? (
                       <>
@@ -670,8 +670,8 @@ export default function CoffeeInspectionsPage() {
         {/* Filter Tabs + Search */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
           <Tabs value={passFailFilter} onValueChange={(v) => { setPassFailFilter(v); setPage(1) }}>
-            <TabsList className="bg-coffee-50 rounded-xl">
-              <TabsTrigger value="all" className="text-xs data-[state=active]:bg-coffee-700 data-[state=active]:text-white rounded-lg">
+            <TabsList className="bg-muted rounded-xl">
+              <TabsTrigger value="all" className="text-xs data-[state=active]:bg-muted data-[state=active]:text-white rounded-lg">
                 {t('Tất cả', 'All')}
               </TabsTrigger>
               <TabsTrigger value="Pass" className="text-xs data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg">
@@ -683,15 +683,15 @@ export default function CoffeeInspectionsPage() {
             </TabsList>
           </Tabs>
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm kiểm tra...', 'Search inspections...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -701,23 +701,23 @@ export default function CoffeeInspectionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Mã KT', 'Insp ID')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Mã lô', 'Batch')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Người KT', 'Inspector')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Cup Score', 'Cup Score')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Hạng', 'Grade')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Đạt/Không', 'Pass/Fail')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã KT', 'Insp ID')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã lô', 'Batch')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Người KT', 'Inspector')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Cup Score', 'Cup Score')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Hạng', 'Grade')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Đạt/Không', 'Pass/Fail')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {inspections.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center gap-2 text-coffee-400">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <ClipboardCheck className="w-10 h-10" />
                           <p className="text-sm">{t('Chưa có kiểm tra nào', 'No inspections found')}</p>
                         </div>
@@ -726,15 +726,15 @@ export default function CoffeeInspectionsPage() {
                   ) : (
                     inspections.map((item, i) => (
                       <tr key={item.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
-                        <td className="px-4 py-3 text-xs text-coffee-500 font-mono">{item.inspectionId || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 font-mono">{item.batchId || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.inspectorName || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-500 hidden lg:table-cell">
+ className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{item.inspectionId || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{item.batchId || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.inspectorName || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                           {item.inspectionDate ? new Date(item.inspectionDate).toLocaleDateString() : '-'}
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
-                          <Badge variant="outline" className="text-[10px] border-coffee-200 text-coffee-600">
+                          <Badge variant="outline" className="text-[10px] text-border text-muted-foreground">
                             {item.inspectionType || '-'}
                           </Badge>
                         </td>
@@ -743,29 +743,29 @@ export default function CoffeeInspectionsPage() {
                             {item.cupScore !== null && item.cupScore !== undefined ? item.cupScore.toFixed(1) : '-'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.overallGrade || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.overallGrade || '-'}</td>
                         <td className="px-4 py-3">
-                          <Badge className={`${item.passFail === 'Pass' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
+                          <Badge className={`${item.passFail === 'Pass' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
                             {item.passFail === 'Pass' ? t('Đạt', 'Pass') : t('Không đạt', 'Fail')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-coffee-100" onClick={() => handleEdit(item)}>
-                              <Pencil className="w-3 h-3 text-coffee-600" />
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
+                              <Pencil className="w-3 h-3 text-muted-foreground" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-red-100" onClick={() => handleDelete(item.id)}>
                                   <Trash2 className="w-3 h-3 text-red-600" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-coffee-100" onClick={() => setDeleteConfirm(null)}>
-                                  <X className="w-3 h-3 text-coffee-400" />
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => setDeleteConfirm(null)}>
+                                  <X className="w-3 h-3 text-muted-foreground" />
                                 </Button>
                               </div>
                             ) : (
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-red-50" onClick={() => setDeleteConfirm(item.id)}>
-                                <Trash2 className="w-3 h-3 text-coffee-300" />
+                                <Trash2 className="w-3 h-3 text-muted-foreground" />
                               </Button>
                             )}
                           </div>
@@ -779,8 +779,8 @@ export default function CoffeeInspectionsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
@@ -789,7 +789,7 @@ export default function CoffeeInspectionsPage() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-input"
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
@@ -802,7 +802,7 @@ export default function CoffeeInspectionsPage() {
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}
                     >
                       {p}
                     </Button>
@@ -813,7 +813,7 @@ export default function CoffeeInspectionsPage() {
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-input"
                 >
                   <ChevronRight className="w-3 h-3" />
                 </Button>

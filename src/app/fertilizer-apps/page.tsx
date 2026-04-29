@@ -125,8 +125,8 @@ export default function FertilizerAppsPage() {
       const res = await fetch(`/api/fertilizer-apps?${params}`)
       const data = await res.json()
       if (data.success) {
-        setItems(data.data.data)
-        setTotal(data.data.total)
+        const _items = data.data?.data ?? data.data?.items ?? []; setItems(Array.isArray(_items) ? _items : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch fertilizer applications', err)
@@ -267,10 +267,10 @@ export default function FertilizerAppsPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Coffee className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Coffee className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -286,17 +286,17 @@ export default function FertilizerAppsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Droplets className="w-5 h-5 text-muted-foreground" />
               {t('Quản lý Phân bón', 'Fertilizer Application Management')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
             <DialogTrigger asChild>
               <Button
-                className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
@@ -305,7 +305,7 @@ export default function FertilizerAppsPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                <DialogTitle className="text-foreground flex items-center gap-2">
                   <Droplets className="w-5 h-5" />
                   {editingItem ? t('Sửa phân bón', 'Edit Fertilizer App') : t('Thêm phân bón mới', 'Add New Fertilizer App')}
                 </DialogTitle>
@@ -314,9 +314,9 @@ export default function FertilizerAppsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -329,9 +329,9 @@ export default function FertilizerAppsPage() {
 
                   {/* Farm Land */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })} disabled={!form.farmerId}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -344,15 +344,15 @@ export default function FertilizerAppsPage() {
 
                   {/* Application Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Ngày bón', 'Application Date')}</Label>
-                    <Input type="date" value={form.applicationDate} onChange={(e) => setForm({ ...form, applicationDate: e.target.value })} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ngày bón', 'Application Date')}</Label>
+                    <Input type="date" value={form.applicationDate} onChange={(e) => setForm({ ...form, applicationDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Fertilizer Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Loại phân bón', 'Fertilizer Type')}</Label>
+                    <Label className="text-xs text-foreground">{t('Loại phân bón', 'Fertilizer Type')}</Label>
                     <Select value={form.fertilizerType} onValueChange={(v) => setForm({ ...form, fertilizerType: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -367,27 +367,27 @@ export default function FertilizerAppsPage() {
 
                   {/* Fertilizer Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tên phân bón', 'Fertilizer Name')}</Label>
-                    <Input value={form.fertilizerName} onChange={(e) => setForm({ ...form, fertilizerName: e.target.value })} placeholder={t('VD: NPK 16-16-8', 'e.g. NPK 16-16-8')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Tên phân bón', 'Fertilizer Name')}</Label>
+                    <Input value={form.fertilizerName} onChange={(e) => setForm({ ...form, fertilizerName: e.target.value })} placeholder={t('VD: NPK 16-16-8', 'e.g. NPK 16-16-8')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Nutrient Content */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Thành phần DD', 'Nutrient Content')}</Label>
-                    <Input value={form.nutrientContent} onChange={(e) => setForm({ ...form, nutrientContent: e.target.value })} placeholder="N-P-K: 16-16-8" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Thành phần DD', 'Nutrient Content')}</Label>
+                    <Input value={form.nutrientContent} onChange={(e) => setForm({ ...form, nutrientContent: e.target.value })} placeholder="N-P-K: 16-16-8" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Application Rate */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Liều lượng', 'Application Rate')}</Label>
-                    <Input type="number" value={form.applicationRate} onChange={(e) => setForm({ ...form, applicationRate: e.target.value })} placeholder="250" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Liều lượng', 'Application Rate')}</Label>
+                    <Input type="number" value={form.applicationRate} onChange={(e) => setForm({ ...form, applicationRate: e.target.value })} placeholder="250" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Unit */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đơn vị', 'Unit')}</Label>
+                    <Label className="text-xs text-foreground">{t('Đơn vị', 'Unit')}</Label>
                     <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn đơn vị', 'Select unit')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -402,15 +402,15 @@ export default function FertilizerAppsPage() {
 
                   {/* Total Quantity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tổng số lượng', 'Total Quantity')}</Label>
-                    <Input type="number" value={form.totalQuantity} onChange={(e) => setForm({ ...form, totalQuantity: e.target.value })} placeholder="500" step="0.1" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Tổng số lượng', 'Total Quantity')}</Label>
+                    <Input type="number" value={form.totalQuantity} onChange={(e) => setForm({ ...form, totalQuantity: e.target.value })} placeholder="500" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Application Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('PP bón', 'Application Method')}</Label>
+                    <Label className="text-xs text-foreground">{t('PP bón', 'Application Method')}</Label>
                     <Select value={form.applicationMethod} onValueChange={(v) => setForm({ ...form, applicationMethod: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn PP', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -426,21 +426,21 @@ export default function FertilizerAppsPage() {
 
                   {/* Cost Per Unit */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Đơn giá', 'Cost Per Unit')}</Label>
-                    <Input type="number" value={form.costPerUnit} onChange={(e) => setForm({ ...form, costPerUnit: e.target.value })} placeholder="25000" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Đơn giá', 'Cost Per Unit')}</Label>
+                    <Input type="number" value={form.costPerUnit} onChange={(e) => setForm({ ...form, costPerUnit: e.target.value })} placeholder="25000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Total Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Tổng chi phí', 'Total Cost')}</Label>
-                    <Input type="number" value={form.totalCost} onChange={(e) => setForm({ ...form, totalCost: e.target.value })} placeholder="12500000" className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Tổng chi phí', 'Total Cost')}</Label>
+                    <Input type="number" value={form.totalCost} onChange={(e) => setForm({ ...form, totalCost: e.target.value })} placeholder="12500000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Weather at Application */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Thời tiết khi bón', 'Weather at Application')}</Label>
+                    <Label className="text-xs text-foreground">{t('Thời tiết khi bón', 'Weather at Application')}</Label>
                     <Select value={form.weatherAtApplication} onValueChange={(v) => setForm({ ...form, weatherAtApplication: v })}>
-                      <SelectTrigger className="rounded-xl border-coffee-200">
+                      <SelectTrigger className="rounded-xl border-input">
                         <SelectValue placeholder={t('Chọn thời tiết', 'Select weather')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -454,15 +454,15 @@ export default function FertilizerAppsPage() {
 
                   {/* Applied By */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-coffee-700">{t('Người bón', 'Applied By')}</Label>
-                    <Input value={form.appliedBy} onChange={(e) => setForm({ ...form, appliedBy: e.target.value })} placeholder={t('Tên người thực hiện', 'Name of applicator')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Người bón', 'Applied By')}</Label>
+                    <Input value={form.appliedBy} onChange={(e) => setForm({ ...form, appliedBy: e.target.value })} placeholder={t('Tên người thực hiện', 'Name of applicator')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Organic + Certification */}
-                  <div className="space-y-3 md:col-span-2 border-t border-coffee-100 pt-3">
+                  <div className="space-y-3 md:col-span-2 border-t border-border pt-3">
                     <div className="flex items-center gap-2">
                       <Leaf className="w-4 h-4 text-green-600" />
-                      <Label className="text-xs font-semibold text-coffee-800">{t('Chứng nhận hữu cơ', 'Organic Certification')}</Label>
+                      <Label className="text-xs font-semibold text-foreground">{t('Chứng nhận hữu cơ', 'Organic Certification')}</Label>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
@@ -471,15 +471,15 @@ export default function FertilizerAppsPage() {
                           checked={form.isOrganic}
                           onCheckedChange={(v) => setForm({ ...form, isOrganic: !!v })}
                         />
-                        <Label htmlFor="isOrganic" className="text-xs text-coffee-700">{t('Phân bón hữu cơ', 'Organic Fertilizer')}</Label>
+                        <Label htmlFor="isOrganic" className="text-xs text-foreground">{t('Phân bón hữu cơ', 'Organic Fertilizer')}</Label>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-coffee-700">{t('Số chứng nhận', 'Certification Number')}</Label>
+                        <Label className="text-xs text-foreground">{t('Số chứng nhận', 'Certification Number')}</Label>
                         <Input
                           value={form.certificationNumber}
                           onChange={(e) => setForm({ ...form, certificationNumber: e.target.value })}
                           placeholder="CERT-2024-001"
-                          className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                          className="rounded-xl border-input focus:border-primary"
                           disabled={!form.isOrganic}
                         />
                       </div>
@@ -488,17 +488,17 @@ export default function FertilizerAppsPage() {
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-coffee-700">{t('Ghi chú', 'Notes')}</Label>
-                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-coffee-200 focus:border-coffee-500" />
+                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-input focus:border-primary" />
                   </div>
                 </div>
 
                 {/* Submit */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                     {t('Hủy', 'Cancel')}
                   </Button>
-                  <Button type="submit" disabled={submitting} className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl">
+                  <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
                     {submitting ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</>
                     ) : (
@@ -514,15 +514,15 @@ export default function FertilizerAppsPage() {
         {/* Search */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm phân bón...', 'Search fertilizer apps...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -532,45 +532,45 @@ export default function FertilizerAppsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Tên PB', 'Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Liều lượng', 'Rate')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden xl:table-cell">{t('SL', 'Quantity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden xl:table-cell">{t('Tổng CP', 'Cost')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Hữu cơ', 'Organic')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tên PB', 'Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Liều lượng', 'Rate')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('SL', 'Quantity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Tổng CP', 'Cost')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hữu cơ', 'Organic')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="px-4 py-12 text-center text-coffee-400 text-sm">
+                      <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground text-sm">
                         {t('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
                     items.map((item, i) => (
                       <tr key={item.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
+ className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
-                          <p className="text-xs font-medium text-coffee-800">{item.farmer.fullName}</p>
+                          <p className="text-xs font-medium text-foreground">{item.farmer.fullName}</p>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.farmLand.farmName}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.applicationDate ? new Date(item.applicationDate).toLocaleDateString() : '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.fertilizerType || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.fertilizerName || '-'}</td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.farmLand.farmName}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.applicationDate ? new Date(item.applicationDate).toLocaleDateString() : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.fertilizerType || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.fertilizerName || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                           {item.applicationRate ? `${item.applicationRate} ${item.unit || ''}` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden xl:table-cell">
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">
                           {item.totalQuantity ? `${item.totalQuantity} ${item.unit || ''}` : '-'}
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden xl:table-cell">{item.totalCost ? formatCurrency(item.totalCost, 'VND') : '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">{item.totalCost ? formatCurrency(item.totalCost, 'VND') : '-'}</td>
                         <td className="px-4 py-3">
                           {item.isOrganic ? (
                             <Badge className="bg-green-100 text-green-700 text-[10px] border-0">
@@ -578,17 +578,17 @@ export default function FertilizerAppsPage() {
                               {t('Hữu cơ', 'Organic')}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] border-coffee-200 text-coffee-400">{t('Không', 'No')}</Badge>
+                            <Badge variant="outline" className="text-[10px] text-border text-muted-foreground">{t('Không', 'No')}</Badge>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
+                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
                             {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-500 hover:text-coffee-800" onClick={() => handleEdit(item)}>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
@@ -596,12 +596,12 @@ export default function FertilizerAppsPage() {
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
                                   {t('Xóa', 'Del')}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-coffee-400 text-[10px]" onClick={() => setDeleteConfirm(null)}>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
                                   {t('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-coffee-400 hover:text-red-600" onClick={() => setDeleteConfirm(item.id)}>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => setDeleteConfirm(item.id)}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -616,12 +616,12 @@ export default function FertilizerAppsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -629,12 +629,12 @@ export default function FertilizerAppsPage() {
                   if (p > totalPages) return null
                   return (
                     <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}>
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}>
                       {p}
                     </Button>
                   )
                 })}
-                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-coffee-200">
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-input">
                   <ChevronRight className="w-3 h-3" />
                 </Button>
               </div>

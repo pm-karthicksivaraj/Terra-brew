@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
+import { ThemeProvider } from 'next-themes'
 import dynamic from 'next/dynamic'
 
 // Load Toaster client-only — Sonner creates a portal on document.body
@@ -23,13 +24,13 @@ function DelayedToaster() {
   return <ClientToaster richColors position="top-right" />
 }
 
-// NO ThemeProvider — removed to prevent next-themes hydration mismatch.
-// The app uses a single light theme via CSS variables.
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      {children}
-      <DelayedToaster />
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange={false}>
+      <SessionProvider>
+        {children}
+        <DelayedToaster />
+      </SessionProvider>
+    </ThemeProvider>
   )
 }

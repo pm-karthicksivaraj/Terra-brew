@@ -80,10 +80,10 @@ export default function DashboardPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -98,8 +98,8 @@ export default function DashboardPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-6 h-6 animate-spin text-coffee-500" />
-            <span className="text-sm text-coffee-500">{t('Đang chuyển hướng...', 'Redirecting...')}</span>
+            <Loader2 className="w-6 h-6 animate-spin text-foreground" />
+            <span className="text-sm text-foreground">{t('Đang chuyển hướng...', 'Redirecting...')}</span>
           </div>
         </div>
       </DashboardShell>
@@ -110,7 +110,7 @@ export default function DashboardPage() {
 
   const primaryKPIs = [
     { title: t('Tổng doanh thu', 'Total Revenue'), value: stats?.totalPurchaseAmount || 2850000000, icon: DollarSign, format: 'currency', gradient: 'from-amber-600 to-amber-800' },
-    { title: t('Tổng nông dân', 'Total Farmers'), value: stats?.totalFarmers || 0, icon: Users, format: 'number', gradient: 'from-coffee-600 to-coffee-800' },
+    { title: t('Tổng nông dân', 'Total Farmers'), value: stats?.totalFarmers || 0, icon: Users, format: 'number', gradient: ' ' },
     { title: t('Diện tích (ha)', 'Farm Area (ha)'), value: stats?.totalLandArea || 0, icon: MapPin, format: 'decimal', gradient: 'from-emerald-600 to-emerald-800' },
     { title: t('Sản lượng (kg)', 'Harvest Volume (kg)'), value: stats?.totalCherryWeight || 0, icon: Wheat, format: 'number', gradient: 'from-yellow-600 to-yellow-800' },
     { title: t('Giá TB/kg', 'Avg Price/kg'), value: stats?.avgPricePerKg || 0, icon: TrendingUp, format: 'currency', gradient: 'from-orange-600 to-orange-800' },
@@ -131,10 +131,10 @@ export default function DashboardPage() {
       <div>
         {/* Title */}
         <div className="mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-coffee-900">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
             {t('Bảng điều khiển', 'Dashboard')}
           </h2>
-          <p className="text-sm text-coffee-500">{t('Phân tích theo thời gian thực', 'Real-time analytics')}</p>
+          <p className="text-sm text-foreground">{t('Phân tích theo thời gian thực', 'Real-time analytics')}</p>
         </div>
 
         {/* Primary KPI Cards */}
@@ -146,8 +146,8 @@ export default function DashboardPage() {
                   <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${kpi.gradient} flex items-center justify-center mb-3 shadow-sm`}>
                     <kpi.icon className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <p className="text-[10px] text-coffee-500 mb-1 leading-tight">{kpi.title}</p>
-                  <p className="text-base font-bold text-coffee-900">
+                  <p className="text-[10px] text-foreground mb-1 leading-tight">{kpi.title}</p>
+                  <p className="text-base font-bold text-foreground">
                     {kpi.format === 'currency' ? (
                       <AnimatedCounter value={kpi.value} prefix="" suffix=" ₫" />
                     ) : kpi.format === 'score' ? (
@@ -168,13 +168,13 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
           {secondaryKPIs.map((kpi, i) => (
             <div key={i} >
-              <Card className="rounded-xl border border-coffee-200/50 bg-white/60 backdrop-blur-sm">
+              <Card className="rounded-xl border border-border bg-card/60 backdrop-blur-sm">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
-                    <span className="text-[10px] text-coffee-500 leading-tight">{kpi.title}</span>
+                    <span className="text-[10px] text-foreground leading-tight">{kpi.title}</span>
                   </div>
-                  <p className="text-lg font-bold text-coffee-800">
+                  <p className="text-lg font-bold text-foreground">
                     <AnimatedCounter value={kpi.value} />
                   </p>
                 </CardContent>
@@ -189,8 +189,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-foreground" />
                   {t('Xu hướng chuỗi cung ứng', 'Supply Chain Trends')}
                 </CardTitle>
               </CardHeader>
@@ -223,8 +223,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <PieChartIcon className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <PieChartIcon className="w-4 h-4 text-foreground" />
                   {t('Phân bố cây trồng', 'Crop Distribution')}
                 </CardTitle>
               </CardHeader>
@@ -262,8 +262,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-foreground" />
                   {t('Quy trình chế biến', 'Processing Pipeline')}
                 </CardTitle>
               </CardHeader>
@@ -289,8 +289,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Award className="w-4 h-4 text-foreground" />
                   {t('Phân bố chất lượng', 'Quality Distribution')}
                 </CardTitle>
               </CardHeader>
@@ -326,8 +326,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-foreground" />
                   {t('Hoạt động gần đây', 'Recent Activity')}
                 </CardTitle>
               </CardHeader>
@@ -338,7 +338,7 @@ export default function DashboardPage() {
                       const typeColors: Record<string, string> = {
                         procurement: 'bg-blue-100 text-blue-700',
                         inspection: 'bg-green-100 text-green-700',
-                        farmer: 'bg-coffee-100 text-coffee-700',
+                        farmer: 'bg-muted text-foreground',
                         contract: 'bg-purple-100 text-purple-700',
                         alert: 'bg-red-100 text-red-700',
                       }
@@ -352,14 +352,14 @@ export default function DashboardPage() {
                       const Icon = typeIcons[activity.type] || Activity
                       return (
                         <div key={activity.id}
- className="flex items-start gap-3 p-2 rounded-lg hover:bg-coffee-50 transition-colors">
+ className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted transition-colors">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[activity.type] || 'bg-gray-100 text-gray-700'}`}>
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-coffee-800">{activity.action}</p>
-                            <p className="text-[10px] text-coffee-500 truncate">{activity.entity}</p>
-                            <p className="text-[10px] text-coffee-400 mt-0.5">{activity.time}</p>
+                            <p className="text-xs font-medium text-foreground">{activity.action}</p>
+                            <p className="text-[10px] text-foreground truncate">{activity.entity}</p>
+                            <p className="text-[10px] text-foreground mt-0.5">{activity.time}</p>
                           </div>
                         </div>
                       )
@@ -374,8 +374,8 @@ export default function DashboardPage() {
           <div>
             <Card className="rounded-2xl border-0 shadow-sm">
               <CardHeader className="pb-2 pt-5 px-5">
-                <CardTitle className="text-sm font-bold text-coffee-800 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-coffee-600" />
+                <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-foreground" />
                   {t('Nông dân theo tỉnh', 'Farmers per Province')}
                 </CardTitle>
               </CardHeader>

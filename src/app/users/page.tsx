@@ -32,9 +32,9 @@ interface UserItem {
 
 const roleColors: Record<string, string> = {
   tenant_admin: 'bg-purple-100 text-purple-700',
-  manager: 'bg-coffee-100 text-coffee-700',
+  manager: 'bg-muted text-foreground',
   inspector: 'bg-blue-100 text-blue-700',
-  field_officer: 'bg-green-100 text-green-700',
+  field_officer: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   farmer: 'bg-amber-100 text-amber-700',
   viewer: 'bg-gray-100 text-gray-600',
 }
@@ -96,8 +96,8 @@ export default function UsersPage() {
       const res = await fetch(`/api/users?${params}`)
       const data = await res.json()
       if (data.success) {
-        setUsers(data.data.data)
-        setTotal(data.data.total)
+        const _items = data.data?.data ?? data.data?.items ?? []; setUsers(Array.isArray(_items) ? _items : [])
+        setTotal(data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch users', err)
@@ -222,10 +222,10 @@ export default function UsersPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Coffee className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Coffee className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -241,18 +241,18 @@ export default function UsersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-coffee-900 flex items-center gap-2">
-              <UserCog className="w-5 h-5 text-coffee-600" />
+            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+              <UserCog className="w-5 h-5 text-muted-foreground" />
               {t('Người dùng & Vai trò', 'Users & Roles')}
             </h2>
-            <p className="text-sm text-coffee-500">{t(`Tổng số: ${total} người dùng`, `Total: ${total} users`)}</p>
+            <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} người dùng`, `Total: ${total} users`)}</p>
           </div>
 
           {isTenantAdmin && (
             <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
               <DialogTrigger asChild>
                 <Button
-                  className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
                   onClick={() => { resetForm(); setDialogOpen(true) }}
                 >
                   <Plus className="w-4 h-4" />
@@ -261,7 +261,7 @@ export default function UsersPage() {
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-coffee-800 flex items-center gap-2">
+                  <DialogTitle className="text-foreground flex items-center gap-2">
                     <UserCog className="w-5 h-5" />
                     {editingItem ? t('Sửa người dùng', 'Edit User') : t('Thêm người dùng mới', 'Add New User')}
                   </DialogTitle>
@@ -270,32 +270,32 @@ export default function UsersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Name */}
                     <div className="space-y-1.5 md:col-span-2">
-                      <Label className="text-xs text-coffee-700">{t('Họ và tên', 'Full Name')} *</Label>
+                      <Label className="text-xs text-foreground">{t('Họ và tên', 'Full Name')} *</Label>
                       <Input
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         placeholder={t('Nguyễn Văn A', 'John Doe')}
-                        className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                        className="rounded-xl border-input focus:border-primary"
                         required
                       />
                     </div>
 
                     {/* Email */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-coffee-700">Email *</Label>
+                      <Label className="text-xs text-foreground">Email *</Label>
                       <Input
                         type="email"
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
                         placeholder="user@example.com"
-                        className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                        className="rounded-xl border-input focus:border-primary"
                         required
                       />
                     </div>
 
                     {/* Password */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-coffee-700">
+                      <Label className="text-xs text-foreground">
                         {t('Mật khẩu', 'Password')} {!editingItem && '*'}
                       </Label>
                       <Input
@@ -303,20 +303,20 @@ export default function UsersPage() {
                         value={form.password}
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
                         placeholder={editingItem ? t('Để trống nếu không đổi', 'Leave blank to keep') : t('Mật khẩu', 'Password')}
-                        className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                        className="rounded-xl border-input focus:border-primary"
                         required={!editingItem}
                       />
                     </div>
 
                     {/* Role */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-coffee-700">{t('Vai trò', 'Role')} *</Label>
+                      <Label className="text-xs text-foreground">{t('Vai trò', 'Role')} *</Label>
                       <Select
                         value={form.role}
                         onValueChange={(v) => setForm({ ...form, role: v })}
                         disabled={editingItem?.id === session?.user?.id}
                       >
-                        <SelectTrigger className="rounded-xl border-coffee-200">
+                        <SelectTrigger className="rounded-xl border-input">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -329,18 +329,18 @@ export default function UsersPage() {
                         </SelectContent>
                       </Select>
                       {editingItem?.id === session?.user?.id && (
-                        <p className="text-[10px] text-coffee-400">{t('Không thể thay đổi vai trò của chính mình', 'Cannot change own role')}</p>
+                        <p className="text-[10px] text-muted-foreground">{t('Không thể thay đổi vai trò của chính mình', 'Cannot change own role')}</p>
                       )}
                     </div>
 
                     {/* Phone */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-coffee-700">{t('Số điện thoại', 'Phone')}</Label>
+                      <Label className="text-xs text-foreground">{t('Số điện thoại', 'Phone')}</Label>
                       <Input
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
                         placeholder="0912345678"
-                        className="rounded-xl border-coffee-200 focus:border-coffee-500"
+                        className="rounded-xl border-input focus:border-primary"
                       />
                     </div>
 
@@ -352,20 +352,20 @@ export default function UsersPage() {
                           checked={form.isActive}
                           onCheckedChange={(v) => setForm({ ...form, isActive: !!v })}
                         />
-                        <Label htmlFor="isActive" className="text-xs text-coffee-700">{t('Đang hoạt động', 'Active')}</Label>
+                        <Label htmlFor="isActive" className="text-xs text-foreground">{t('Đang hoạt động', 'Active')}</Label>
                       </div>
                     </div>
                   </div>
 
                   {/* Submit */}
-                  <div className="flex justify-end gap-3 pt-4 border-t border-coffee-100">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-border">
                     <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
                       {t('Hủy', 'Cancel')}
                     </Button>
                     <Button
                       type="submit"
                       disabled={submitting}
-                      className="bg-gradient-to-r from-coffee-600 to-coffee-800 text-white rounded-xl"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
                     >
                       {submitting ? (
                         <>
@@ -386,15 +386,15 @@ export default function UsersPage() {
         {/* Search */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               placeholder={t('Tìm kiếm người dùng...', 'Search users...')}
-              className="pl-9 rounded-xl border-coffee-200 focus:border-coffee-500 bg-white"
+              className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
-          <Badge variant="outline" className="border-coffee-300 text-coffee-600 text-xs">
+          <Badge variant="outline" className="border-border text-muted-foreground text-xs">
             {t(`${total} bản ghi`, `${total} records`)}
           </Badge>
         </div>
@@ -404,16 +404,16 @@ export default function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-coffee-50 border-b border-coffee-100">
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Họ và tên', 'Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">Email</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider">{t('Vai trò', 'Role')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Điện thoại', 'Phone')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden md:table-cell">{t('Hoạt động', 'Active')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Đăng nhập cuối', 'Last Login')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider hidden lg:table-cell">{t('Tạo lúc', 'Created')}</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Họ và tên', 'Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Email</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Vai trò', 'Role')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Điện thoại', 'Phone')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Hoạt động', 'Active')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Đăng nhập cuối', 'Last Login')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tạo lúc', 'Created')}</th>
                   {isTenantAdmin && (
-                    <th className="px-4 py-3 text-[10px] font-bold text-coffee-600 uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
                   )}
                 </tr>
               </thead>
@@ -421,7 +421,7 @@ export default function UsersPage() {
                 {users.length === 0 ? (
                     <tr>
                       <td colSpan={isTenantAdmin ? 8 : 7} className="px-4 py-12 text-center">
-                        <div className="flex flex-col items-center gap-2 text-coffee-400">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <UserCog className="w-10 h-10" />
                           <p className="text-sm">{t('Chưa có người dùng nào', 'No users found')}</p>
                         </div>
@@ -430,55 +430,55 @@ export default function UsersPage() {
                   ) : (
                     users.map((item, i) => (
                       <tr key={item.id}
- className="border-b border-coffee-50 hover:bg-coffee-50/50 transition-colors">
+ className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-coffee-400 to-coffee-700 flex items-center justify-center text-white text-[10px] font-bold">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br   flex items-center justify-center text-white text-[10px] font-bold">
                               {item.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-coffee-800">{item.name}</p>
-                              <p className="text-[10px] text-coffee-400 md:hidden">{item.email}</p>
+                              <p className="text-xs font-medium text-foreground">{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground md:hidden">{item.email}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden md:table-cell">{item.email}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{item.email}</td>
                         <td className="px-4 py-3">
                           <Badge className={`${roleColors[item.role] || 'bg-gray-100 text-gray-600'} text-[10px] border-0`}>
                             <Shield className="w-2.5 h-2.5 mr-1" />
                             {roleLabels[item.role] ? (lang === 'vi' ? roleLabels[item.role].vi : roleLabels[item.role].en) : item.role}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-xs text-coffee-600 hidden lg:table-cell">{item.phone || '-'}</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{item.phone || '-'}</td>
                         <td className="px-4 py-3 hidden md:table-cell">
-                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
+                          <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
                             {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-[10px] text-coffee-500 hidden lg:table-cell">{formatDate(item.lastLoginAt)}</td>
-                        <td className="px-4 py-3 text-[10px] text-coffee-400 hidden lg:table-cell">{formatDate(item.createdAt)}</td>
+                        <td className="px-4 py-3 text-[10px] text-muted-foreground hidden lg:table-cell">{formatDate(item.lastLoginAt)}</td>
+                        <td className="px-4 py-3 text-[10px] text-muted-foreground hidden lg:table-cell">{formatDate(item.createdAt)}</td>
                         {isTenantAdmin && (
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-coffee-100" onClick={() => handleEdit(item)}>
-                                <Pencil className="w-3 h-3 text-coffee-600" />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
+                                <Pencil className="w-3 h-3 text-muted-foreground" />
                               </Button>
                               {item.id === session?.user?.id ? (
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg" disabled title={t('Không thể xóa chính mình', 'Cannot delete yourself')}>
-                                  <Trash2 className="w-3 h-3 text-coffee-200" />
+                                  <Trash2 className="w-3 h-3 text-foreground" />
                                 </Button>
                               ) : deleteConfirm === item.id ? (
                                 <div className="flex items-center gap-1">
                                   <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-red-100" onClick={() => handleDelete(item.id)}>
                                     <Trash2 className="w-3 h-3 text-red-600" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-coffee-100" onClick={() => setDeleteConfirm(null)}>
-                                    <X className="w-3 h-3 text-coffee-400" />
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => setDeleteConfirm(null)}>
+                                    <X className="w-3 h-3 text-muted-foreground" />
                                   </Button>
                                 </div>
                               ) : (
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-red-50" onClick={() => setDeleteConfirm(item.id)}>
-                                  <Trash2 className="w-3 h-3 text-coffee-300" />
+                                  <Trash2 className="w-3 h-3 text-muted-foreground" />
                                 </Button>
                               )}
                             </div>
@@ -493,8 +493,8 @@ export default function UsersPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-coffee-100">
-              <p className="text-[10px] text-coffee-500">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
                 {t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}
               </p>
               <div className="flex items-center gap-1">
@@ -503,7 +503,7 @@ export default function UsersPage() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage(page - 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-input"
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </Button>
@@ -516,7 +516,7 @@ export default function UsersPage() {
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPage(p)}
-                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-coffee-700 text-white' : 'border-coffee-200 text-coffee-600'}`}
+                      className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-border text-muted-foreground'}`}
                     >
                       {p}
                     </Button>
@@ -527,7 +527,7 @@ export default function UsersPage() {
                   size="sm"
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
-                  className="h-7 w-7 p-0 rounded-lg border-coffee-200"
+                  className="h-7 w-7 p-0 rounded-lg border-input"
                 >
                   <ChevronRight className="w-3 h-3" />
                 </Button>

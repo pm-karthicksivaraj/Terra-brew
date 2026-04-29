@@ -88,7 +88,7 @@ export default function HarvestDetailPage() {
       const res = await fetch(`/api/harvest-traceabilities?id=${id}`)
       const data = await res.json()
       if (data.success && data.data?.data) {
-        setHarvest(data.data.data)
+        setHarvest(data.data?.data ?? null)
       } else {
         toast.error(data.error || t('Không tìm thấy bản ghi', 'Record not found'))
         router.push('/harvest')
@@ -109,11 +109,11 @@ export default function HarvestDetailPage() {
   }, [status, router, fetchHarvest])
 
   const cupScoreColor = (score: number | null) => {
-    if (score === null || score === undefined) return 'bg-coffee-100 text-coffee-600'
-    if (score >= 85) return 'bg-green-100 text-green-700'
+    if (score === null || score === undefined) return 'bg-muted text-muted-foreground'
+    if (score >= 85) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
     if (score >= 75) return 'bg-blue-100 text-blue-700'
     if (score >= 60) return 'bg-yellow-100 text-yellow-700'
-    return 'bg-red-100 text-red-700'
+    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   }
 
   const stageColor = (stage: string | null) => {
@@ -123,7 +123,7 @@ export default function HarvestDetailPage() {
       case 'drying': return 'bg-amber-100 text-amber-700'
       case 'hulled': return 'bg-purple-100 text-purple-700'
       case 'sorted': return 'bg-cyan-100 text-cyan-700'
-      case 'stored': return 'bg-coffee-100 text-coffee-700'
+      case 'stored': return 'bg-muted text-foreground'
       default: return 'bg-gray-100 text-gray-600'
     }
   }
@@ -133,10 +133,10 @@ export default function HarvestDetailPage() {
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center">
-              <Wheat className="w-9 h-9 text-white animate-pulse" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+              <Wheat className="w-9 h-9 text-primary-foreground animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-coffee-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
@@ -150,7 +150,7 @@ export default function HarvestDetailPage() {
     return (
       <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
         <div className="flex items-center justify-center py-32">
-          <p className="text-coffee-500">{t('Không tìm thấy dữ liệu', 'Data not found')}</p>
+          <p className="text-muted-foreground">{t('Không tìm thấy dữ liệu', 'Data not found')}</p>
         </div>
       </DashboardShell>
     )
@@ -158,10 +158,10 @@ export default function HarvestDetailPage() {
 
   const InfoRow = ({ label, value, icon }: { label: string; value: string | number | null | undefined; icon?: React.ReactNode }) => (
     <div className="flex items-start gap-2 py-2">
-      {icon && <span className="text-coffee-400 mt-0.5 shrink-0">{icon}</span>}
+      {icon && <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>}
       <div className="min-w-0">
-        <p className="text-[10px] text-coffee-400 uppercase tracking-wider">{label}</p>
-        <p className="text-sm text-coffee-800 font-medium truncate">{value ?? '-'}</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-sm text-foreground font-medium truncate">{value ?? '-'}</p>
       </div>
     </div>
   )
@@ -176,20 +176,20 @@ export default function HarvestDetailPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.push('/harvest')}
-              className="text-coffee-600 hover:text-coffee-900 gap-1 -ml-2"
+              className="text-muted-foreground hover:text-foreground gap-1 -ml-2"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline text-xs">{t('Quay lại', 'Back')}</span>
             </Button>
-            <Separator orientation="vertical" className="h-8 bg-coffee-200" />
+            <Separator orientation="vertical" className="h-8 bg-muted" />
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center">
               <Wheat className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-bold text-coffee-900">
+              <h1 className="text-lg md:text-xl font-bold text-foreground">
                 {harvest.batchId || t('Bản ghi thu hoạch', 'Harvest Record')}
               </h1>
-              <p className="text-xs text-coffee-500">
+              <p className="text-xs text-muted-foreground">
                 {harvest.farmer.fullName} · {harvest.farmLand.farmName}
               </p>
             </div>
@@ -206,7 +206,7 @@ export default function HarvestDetailPage() {
               </Badge>
             )}
             <Button
-              className="bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white gap-2 rounded-xl shadow-sm text-xs"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm text-xs"
               onClick={() => router.push('/harvest')}
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -221,15 +221,15 @@ export default function HarvestDetailPage() {
             { label: t('Giống CP', 'Variety'), value: harvest.coffeeVariety || '-', icon: Coffee, color: 'from-amber-500 to-amber-700' },
             { label: t('Độ chín', 'Ripeness'), value: harvest.cherryRipeness !== null ? `${harvest.cherryRipeness}%` : '-', icon: Scale, color: 'from-green-500 to-green-700' },
             { label: t('Độ ẩm', 'Moisture'), value: harvest.moistureContent !== null ? `${harvest.moistureContent}%` : '-', icon: Droplets, color: 'from-blue-500 to-blue-700' },
-            { label: t('Cup Score', 'Cup Score'), value: harvest.cupScore ?? '-', icon: BarChart3, color: 'from-coffee-500 to-coffee-700' },
+            { label: t('Cup Score', 'Cup Score'), value: harvest.cupScore ?? '-', icon: BarChart3, color: ' ' },
           ].map((stat, i) => (
             <Card key={i} className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4">
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2`}>
                   <stat.icon className="w-4 h-4 text-white" />
                 </div>
-                <p className="text-[10px] text-coffee-400 uppercase">{stat.label}</p>
-                <p className="text-lg font-bold text-coffee-800">{stat.value}</p>
+                <p className="text-[10px] text-muted-foreground uppercase">{stat.label}</p>
+                <p className="text-lg font-bold text-foreground">{stat.value}</p>
               </CardContent>
             </Card>
           ))}
@@ -240,8 +240,8 @@ export default function HarvestDetailPage() {
           {/* Harvest Info */}
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-coffee-700 flex items-center gap-2">
-                <Wheat className="w-4 h-4 text-coffee-500" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <Wheat className="w-4 h-4 text-muted-foreground" />
                 {t('Thông tin thu hoạch', 'Harvest Info')}
               </CardTitle>
             </CardHeader>
@@ -254,7 +254,7 @@ export default function HarvestDetailPage() {
               <InfoRow label={t('Phương pháp thu hoạch', 'Harvest Method')} value={harvest.harvestMethod} />
               <InfoRow label={t('Sản lượng dự kiến', 'Estimated Yield')} value={harvest.estimatedYield} />
               <InfoRow label={t('Chi phí nhân công (VND)', 'Harvest Labour Cost (VND)')} value={harvest.harvestLabourCost?.toLocaleString()} />
-              <Separator className="my-2 bg-coffee-100" />
+              <Separator className="my-2 bg-muted" />
               <InfoRow label={t('Nông dân', 'Farmer')} value={harvest.farmer.fullName} />
               <InfoRow label={t('Đất nông trại', 'Farm Land')} value={harvest.farmLand.farmName} />
               {harvest.farmLand.altitude && (
@@ -266,8 +266,8 @@ export default function HarvestDetailPage() {
           {/* Quality Metrics */}
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-coffee-700 flex items-center gap-2">
-                <Beaker className="w-4 h-4 text-coffee-500" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <Beaker className="w-4 h-4 text-muted-foreground" />
                 {t('Chỉ số chất lượng', 'Quality Metrics')}
               </CardTitle>
             </CardHeader>
@@ -275,50 +275,50 @@ export default function HarvestDetailPage() {
               {/* Cherry Ripeness */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-coffee-400 uppercase">{t('Độ chín (%)', 'Cherry Ripeness (%)')}</p>
-                  <span className="text-sm font-bold text-coffee-800">{harvest.cherryRipeness !== null ? `${harvest.cherryRipeness}%` : '-'}</span>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t('Độ chín (%)', 'Cherry Ripeness (%)')}</p>
+                  <span className="text-sm font-bold text-foreground">{harvest.cherryRipeness !== null ? `${harvest.cherryRipeness}%` : '-'}</span>
                 </div>
                 {harvest.cherryRipeness !== null && (
-                  <Progress value={harvest.cherryRipeness} className="h-2 bg-coffee-100" />
+                  <Progress value={harvest.cherryRipeness} className="h-2 bg-muted" />
                 )}
               </div>
 
               {/* Cup Score */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-coffee-400 uppercase">{t('Điểm cupping', 'Cup Score')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t('Điểm cupping', 'Cup Score')}</p>
                   <Badge className={`${cupScoreColor(harvest.cupScore)} text-[10px] border-0 font-bold`}>
                     {harvest.cupScore ?? '-'}
                   </Badge>
                 </div>
                 {harvest.cupScore !== null && (
-                  <Progress value={harvest.cupScore} className="h-2 bg-coffee-100" />
+                  <Progress value={harvest.cupScore} className="h-2 bg-muted" />
                 )}
               </div>
 
               {/* Moisture Content */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-coffee-400 uppercase">{t('Độ ẩm (%)', 'Moisture Content (%)')}</p>
-                  <span className="text-sm font-bold text-coffee-800">{harvest.moistureContent !== null ? `${harvest.moistureContent}%` : '-'}</span>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t('Độ ẩm (%)', 'Moisture Content (%)')}</p>
+                  <span className="text-sm font-bold text-foreground">{harvest.moistureContent !== null ? `${harvest.moistureContent}%` : '-'}</span>
                 </div>
                 {harvest.moistureContent !== null && (
                   <div className="flex items-center gap-2">
-                    <Progress value={harvest.moistureContent} className="h-2 bg-coffee-100" />
+                    <Progress value={harvest.moistureContent} className="h-2 bg-muted" />
                     {harvest.targetMoisture && (
-                      <span className="text-[10px] text-coffee-400">{t('Mục tiêu', 'Target')}: {harvest.targetMoisture}%</span>
+                      <span className="text-[10px] text-muted-foreground">{t('Mục tiêu', 'Target')}: {harvest.targetMoisture}%</span>
                     )}
                   </div>
                 )}
               </div>
 
-              <Separator className="my-2 bg-coffee-100" />
+              <Separator className="my-2 bg-muted" />
 
               {/* Defective & Foreign */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-coffee-50">
-                  <p className="text-[9px] text-coffee-400 uppercase">{t('Hạt lỗi (%)', 'Defective Beans (%)')}</p>
-                  <p className="text-lg font-bold text-coffee-800">{harvest.defectiveBeans !== null ? `${harvest.defectiveBeans}%` : '-'}</p>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-[9px] text-muted-foreground uppercase">{t('Hạt lỗi (%)', 'Defective Beans (%)')}</p>
+                  <p className="text-lg font-bold text-foreground">{harvest.defectiveBeans !== null ? `${harvest.defectiveBeans}%` : '-'}</p>
                   {harvest.defectiveBeans !== null && harvest.defectiveBeans > 5 && (
                     <div className="flex items-center gap-1 text-amber-600">
                       <AlertTriangle className="w-3 h-3" />
@@ -326,28 +326,28 @@ export default function HarvestDetailPage() {
                     </div>
                   )}
                 </div>
-                <div className="p-3 rounded-lg bg-coffee-50">
-                  <p className="text-[9px] text-coffee-400 uppercase">{t('Tạp chất (%)', 'Foreign Matter (%)')}</p>
-                  <p className="text-lg font-bold text-coffee-800">{harvest.foreignMatter !== null ? `${harvest.foreignMatter}%` : '-'}</p>
+                <div className="p-3 rounded-lg bg-muted">
+                  <p className="text-[9px] text-muted-foreground uppercase">{t('Tạp chất (%)', 'Foreign Matter (%)')}</p>
+                  <p className="text-lg font-bold text-foreground">{harvest.foreignMatter !== null ? `${harvest.foreignMatter}%` : '-'}</p>
                 </div>
               </div>
 
-              <Separator className="my-2 bg-coffee-100" />
+              <Separator className="my-2 bg-muted" />
 
               {/* Sample Data */}
-              <p className="text-[10px] text-coffee-400 uppercase tracking-wider">{t('Dữ liệu mẫu', 'Sample Data')}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('Dữ liệu mẫu', 'Sample Data')}</p>
               <div className="grid grid-cols-3 gap-2">
-                <div className="p-2 rounded-lg bg-coffee-50 text-center">
-                  <p className="text-[9px] text-coffee-400">{t('TL mẫu (kg)', 'Sample Wt')}</p>
-                  <p className="text-sm font-bold text-coffee-800">{harvest.sampleWeight ?? '-'}</p>
+                <div className="p-2 rounded-lg bg-muted text-center">
+                  <p className="text-[9px] text-muted-foreground">{t('TL mẫu (kg)', 'Sample Wt')}</p>
+                  <p className="text-sm font-bold text-foreground">{harvest.sampleWeight ?? '-'}</p>
                 </div>
-                <div className="p-2 rounded-lg bg-coffee-50 text-center">
-                  <p className="text-[9px] text-coffee-400">{t('DT mẫu (m²)', 'Sample Area')}</p>
-                  <p className="text-sm font-bold text-coffee-800">{harvest.sampleArea ?? '-'}</p>
+                <div className="p-2 rounded-lg bg-muted text-center">
+                  <p className="text-[9px] text-muted-foreground">{t('DT mẫu (m²)', 'Sample Area')}</p>
+                  <p className="text-sm font-bold text-foreground">{harvest.sampleArea ?? '-'}</p>
                 </div>
-                <div className="p-2 rounded-lg bg-coffee-50 text-center">
-                  <p className="text-[9px] text-coffee-400">{t('SL mẫu', 'Sample Yield')}</p>
-                  <p className="text-sm font-bold text-coffee-800">{harvest.sampleYield ?? '-'}</p>
+                <div className="p-2 rounded-lg bg-muted text-center">
+                  <p className="text-[9px] text-muted-foreground">{t('SL mẫu', 'Sample Yield')}</p>
+                  <p className="text-sm font-bold text-foreground">{harvest.sampleYield ?? '-'}</p>
                 </div>
               </div>
               <InfoRow label={t('SL ước/ha', 'Est. Yield/Ha')} value={harvest.estimatedYieldPerHa} />
@@ -357,8 +357,8 @@ export default function HarvestDetailPage() {
           {/* Processing & Drying */}
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-coffee-700 flex items-center gap-2">
-                <ThermometerSun className="w-4 h-4 text-coffee-500" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <ThermometerSun className="w-4 h-4 text-muted-foreground" />
                 {t('Chế biến & Sấy', 'Processing & Drying')}
               </CardTitle>
             </CardHeader>
@@ -368,7 +368,7 @@ export default function HarvestDetailPage() {
               <InfoRow label={t('Thời gian sấy (ngày)', 'Drying Duration (days)')} value={harvest.dryingDurationDays} icon={<Timer className="w-3.5 h-3.5" />} />
               <InfoRow label={t('Độ ẩm mục tiêu (%)', 'Target Moisture (%)')} value={harvest.targetMoisture} />
               <InfoRow label={t('Độ ẩm thực tế (%)', 'Moisture Content (%)')} value={harvest.moistureContent} />
-              <Separator className="my-2 bg-coffee-100" />
+              <Separator className="my-2 bg-muted" />
               <InfoRow label={t('Giai đoạn chế biến', 'Processing Stage')} value={harvest.processingStage} />
             </CardContent>
           </Card>
@@ -376,8 +376,8 @@ export default function HarvestDetailPage() {
           {/* Batch Details */}
           <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-coffee-700 flex items-center gap-2">
-                <Hash className="w-4 h-4 text-coffee-500" />
+              <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                <Hash className="w-4 h-4 text-muted-foreground" />
                 {t('Chi tiết lô', 'Batch Details')}
               </CardTitle>
             </CardHeader>
@@ -389,22 +389,22 @@ export default function HarvestDetailPage() {
               <InfoRow label={t('Người thực hiện', 'Actor')} value={harvest.actor} />
               {harvest.batchNotes && (
                 <>
-                  <Separator className="my-2 bg-coffee-100" />
-                  <p className="text-[10px] text-coffee-400 uppercase tracking-wider">{t('Ghi chú lô', 'Batch Notes')}</p>
-                  <div className="p-3 rounded-lg bg-coffee-50 mt-1">
-                    <p className="text-sm text-coffee-700">{harvest.batchNotes}</p>
+                  <Separator className="my-2 bg-muted" />
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('Ghi chú lô', 'Batch Notes')}</p>
+                  <div className="p-3 rounded-lg bg-muted mt-1">
+                    <p className="text-sm text-foreground">{harvest.batchNotes}</p>
                   </div>
                 </>
               )}
-              <Separator className="my-2 bg-coffee-100" />
-              <div className="grid grid-cols-2 gap-2 text-[10px] text-coffee-400">
+              <Separator className="my-2 bg-muted" />
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
                 <div>
                   <span className="uppercase">{t('Ngày tạo', 'Created')}</span>
-                  <p className="text-coffee-600 font-medium text-xs">{new Date(harvest.createdAt).toLocaleDateString()}</p>
+                  <p className="text-muted-foreground font-medium text-xs">{new Date(harvest.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <span className="uppercase">{t('Cập nhật', 'Updated')}</span>
-                  <p className="text-coffee-600 font-medium text-xs">{new Date(harvest.updatedAt).toLocaleDateString()}</p>
+                  <p className="text-muted-foreground font-medium text-xs">{new Date(harvest.updatedAt).toLocaleDateString()}</p>
                 </div>
               </div>
             </CardContent>
