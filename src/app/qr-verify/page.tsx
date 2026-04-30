@@ -98,7 +98,8 @@ export default function QRVerifyPage() {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          const items = data.data?.farmers || data.data?.farmLands || data.data?.cultivations ||
+          // API returns: { success: true, data: { data: [...items], total, ... } }
+          const items = data.data?.data || data.data?.farmers || data.data?.farmLands || data.data?.cultivations ||
             data.data?.harvestTraceabilities || data.data?.procurementRecords || data.data?.processingJobOrders || []
           const labelKey: Record<string, string> = {
             Farmer: 'fullName',
@@ -109,7 +110,7 @@ export default function QRVerifyPage() {
             ProcessingJobOrder: 'jobOrderId',
           }
           const key = labelKey[entityType] || 'id'
-          const options = items.map((item: Record<string, unknown>) => ({
+          const options = (Array.isArray(items) ? items : []).map((item: Record<string, unknown>) => ({
             id: item.id as string,
             label: (item[key] as string) || (item.id as string).substring(0, 8),
           }))
@@ -207,6 +208,17 @@ export default function QRVerifyPage() {
               <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/login')
+    return (
+      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="w-6 h-6 animate-spin text-foreground" />
         </div>
       </DashboardShell>
     )

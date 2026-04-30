@@ -9,7 +9,7 @@ import { computeDataHash, computeBlockHash } from '@/lib/crypto'
  */
 
 export async function GET(req: Request) {
-  const user = await getAuthUser()
+  const user = await getAuthUser(req)
   const authError = requireTenantAccess(user, 'harvest-traceabilities', 'read')
   if (authError) return authError
 

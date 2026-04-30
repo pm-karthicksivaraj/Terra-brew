@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo, useEffect, type ReactNode } from 'react
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, LogOut, Coffee, Globe, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -55,24 +54,11 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
 }
 
 // ─── Animation variants ───────────────────────────────────────────
-// Using only ENTER animations — no exit animations to avoid React 19 removeChild errors.
-// AnimatePresence with mode="wait" + exit animations causes removeChild because
-// React 19 unmounts DOM nodes before framer-motion's exit animation completes.
+// All animations use CSS keyframes defined in globals.css.
+// No framer-motion exit animations — they cause React 19 removeChild errors.
 
-const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
-  },
-}
-
-const iconVariants = {
-  initial: { rotate: -90, opacity: 0, scale: 0.8 },
-  animate: { rotate: 0, opacity: 1, scale: 1 },
-  exit: { rotate: 90, opacity: 0, scale: 0.8 },
-}
+// Theme toggle icon — no exit animations to prevent React 19 removeChild errors.
+// We use simple CSS transitions instead of AnimatePresence.
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -246,39 +232,21 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
 
             {/* Right: theme toggle + language toggle + user menu */}
             <div className="flex items-center gap-2">
-              {/* Theme toggle — animated Sun/Moon icon swap */}
+              {/* Theme toggle — simple CSS transition to avoid React 19 removeChild errors */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="gap-1.5 text-muted-foreground hover:text-foreground text-xs rounded-xl relative w-9 h-9 p-0 flex items-center justify-center"
+                className="text-muted-foreground hover:text-foreground text-xs rounded-xl relative w-9 h-9 p-0 flex items-center justify-center"
                 aria-label="Toggle theme"
               >
-                <AnimatePresence mode="wait" initial={false}>
+                <div className="transition-transform duration-200 hover:rotate-12">
                   {theme === 'dark' ? (
-                    <motion.div
-                      key="sun"
-                      variants={iconVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Sun className="w-4 h-4" />
-                    </motion.div>
+                    <Sun className="w-4 h-4" />
                   ) : (
-                    <motion.div
-                      key="moon"
-                      variants={iconVariants}
-                      initial="initial"
-                      animate="animate"
-                      exit="exit"
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Moon className="w-4 h-4" />
-                    </motion.div>
+                    <Moon className="w-4 h-4" />
                   )}
-                </AnimatePresence>
+                </div>
               </Button>
 
               {/* Language toggle (compact, in header) */}
@@ -328,20 +296,16 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
         </header>
 
         {/* Main content area with page enter animation */}
-        {/* NOTE: We use only ENTER animations (no exit) to prevent React 19 removeChild errors.
-            AnimatePresence exit animations cause removeChild because React 19 unmounts DOM
-            nodes before framer-motion's exit animation can complete. */}
-        <motion.div
+        {/* Using CSS animation instead of framer-motion AnimatePresence to prevent
+            React 19 removeChild errors. The key forces re-mount on route change. */}
+        <div
           key={pathname}
-          variants={pageVariants}
-          initial="initial"
-          animate="animate"
-          className="flex-1"
+          className="flex-1 animate-slide-in-up"
         >
           <main className="px-4 md:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto w-full">
             {children}
           </main>
-        </motion.div>
+        </div>
 
         {/* Footer */}
         <footer className="mt-auto border-t border-border bg-card/60">

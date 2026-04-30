@@ -169,3 +169,36 @@ Stage Summary:
 - Auth flow works end-to-end
 - Zero build errors
 - Zero runtime CSS errors
+
+---
+Task ID: 2
+Agent: Main
+Task: Fix all incomplete tasks and bugs in Metrang Coffee Platform
+
+Work Log:
+- Fixed .env: Added NEXTAUTH_SECRET and NEXTAUTH_URL
+- Fixed removeChild hydration error: Removed AnimatePresence with exit animations from dashboard-shell.tsx, replaced with CSS transitions
+- Added missing CSS keyframes: beanFloat, beanRotate, scaleIn, orbPulse for landing page
+- Added missing coffee color scale: coffee-50 through coffee-900 in @theme inline block
+- Fixed traceability route: Added missing req param to getAuthUser() call
+- Fixed traceability page: Added unauthenticated redirect
+- Fixed qr-verify page: Added unauthenticated redirect, fixed data access pattern (data.data?.data first)
+- Fixed next.config.ts: Added .space-z.ai and localhost to allowedDevOrigins
+- Replaced framer-motion AnimatePresence in dashboard-shell with CSS-based animations
+- Removed framer-motion dependency from dashboard-shell (keeps framer-motion in project for other uses)
+- Build passes with zero errors: ✓ Compiled successfully, ✓ 61 static pages generated
+- All public pages return 200 (/, /login, /super-admin)
+- All authenticated pages return 307 redirect to login (correct behavior for unauthenticated users)
+
+Stage Summary:
+- Build: ✅ Zero errors
+- Landing page: ✅ 200
+- Login page: ✅ 200
+- Super admin login: ✅ 200
+- Dashboard (auth required): ✅ 307 redirect
+- All module pages (auth required): ✅ 307 redirect
+- API routes: ✅ Working
+- Theme toggle: ✅ CSS transitions instead of AnimatePresence
+- Dark/light mode: ✅ Working via next-themes
+- Coffee colors: ✅ Defined in @theme inline
+- CSS keyframes: ✅ All defined

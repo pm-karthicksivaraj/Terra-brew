@@ -145,6 +145,18 @@
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-space-mono);
   --font-mono: var(--font-space-mono);
+
+  /* Coffee color scale — warm brown palette for login/theme pages */
+  --color-coffee-50: #faf6f1;
+  --color-coffee-100: #f0e6d6;
+  --color-coffee-200: #e0ccb0;
+  --color-coffee-300: #c9a97e;
+  --color-coffee-400: #b08850;
+  --color-coffee-500: #8b5a1e;
+  --color-coffee-600: #6d4516;
+  --color-coffee-700: #4e3010;
+  --color-coffee-800: #3a240b;
+  --color-coffee-900: #2a1a08;
 }
 
 @layer base {
@@ -253,6 +265,30 @@
 }
 
 /* ── Premium micro-interactions ── */
+
+/* Landing Page Keyframes */
+@keyframes beanFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-15px) translateX(8px); }
+  50% { transform: translateY(-8px) translateX(-8px); }
+  75% { transform: translateY(-20px) translateX(4px); }
+}
+
+@keyframes beanRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.08); }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

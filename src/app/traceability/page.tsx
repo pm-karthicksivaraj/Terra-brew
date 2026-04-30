@@ -665,6 +665,17 @@ export default function TraceabilityPage() {
     )
   }
 
+  if (status === 'unauthenticated') {
+    router.push('/login')
+    return (
+      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="w-6 h-6 animate-spin text-foreground" />
+        </div>
+      </DashboardShell>
+    )
+  }
+
   const completedStages = traceData?.stages.filter((s) => s.status === 'completed').length || 0
   const totalStages = traceData?.stages.length || 14
 
