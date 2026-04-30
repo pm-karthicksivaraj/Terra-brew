@@ -140,6 +140,12 @@ export const authOptions: NextAuthOptions = {
     error: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  // Allow NextAuth to trust the host header from Caddy reverse proxy.
+  // Without this, behind a proxy the inferred NEXTAUTH_URL may be wrong
+  // (e.g. http://localhost:3000 instead of the external URL),
+  // which breaks cookie domain and CSRF checks.
+  // @ts-expect-error — trustHost exists at runtime but not in v4 types
+  trustHost: true,
 }
 
 // Type extensions for NextAuth

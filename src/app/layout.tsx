@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 import { ClientApp } from "@/components/client-app";
 
 const spaceMono = Space_Mono({

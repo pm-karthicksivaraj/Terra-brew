@@ -373,3 +373,33 @@
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
+
+/* ── Traceability map pulse animation ── */
+@keyframes tracePulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.trace-marker {
+  background: none !important;
+  border: none !important;
+}
+
+/* ── Leaflet overrides ── */
+.leaflet-container {
+  font-family: var(--font-space-mono), monospace;
+  border-radius: 16px;
+}
+
+.leaflet-tooltip {
+  font-family: var(--font-space-mono), monospace;
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.farm-land-tooltip {
+  font-family: var(--font-space-mono), monospace;
+  font-size: 10px;
+}

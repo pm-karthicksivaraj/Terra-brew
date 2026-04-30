@@ -124,6 +124,27 @@ const ACTION_COLORS: Record<string, string> = {
   LOGIN: 'bg-amber-100 text-amber-700',
 }
 
+// ─── Multi-Region/Country/Currency Constants ───────────────────
+
+const COUNTRIES = [
+  { code: 'VN', name: 'Vietnam', flag: '🇻🇳', currency: 'VND', symbol: '₫', language: 'vi', languageName: 'Tiếng Việt', timezone: 'Asia/Ho_Chi_Minh', region: 'Southeast Asia' },
+  { code: 'ET', name: 'Ethiopia', flag: '🇪🇹', currency: 'ETB', symbol: 'Br', language: 'am', languageName: 'አማርኛ', timezone: 'Africa/Addis_Ababa', region: 'Africa' },
+  { code: 'KE', name: 'Kenya', flag: '🇰🇪', currency: 'KES', symbol: 'KSh', language: 'sw', languageName: 'Swahili', timezone: 'Africa/Nairobi', region: 'Africa' },
+  { code: 'BR', name: 'Brazil', flag: '🇧🇷', currency: 'BRL', symbol: 'R$', language: 'pt', languageName: 'Português', timezone: 'America/Sao_Paulo', region: 'South America' },
+  { code: 'ID', name: 'Indonesia', flag: '🇮🇩', currency: 'IDR', symbol: 'Rp', language: 'id', languageName: 'Bahasa Indonesia', timezone: 'Asia/Jakarta', region: 'Southeast Asia' },
+  { code: 'CO', name: 'Colombia', flag: '🇨🇴', currency: 'COP', symbol: '$', language: 'es', languageName: 'Español', timezone: 'America/Bogota', region: 'South America' },
+  { code: 'UG', name: 'Uganda', flag: '🇺🇬', currency: 'UGX', symbol: 'USh', language: 'en', languageName: 'English', timezone: 'Africa/Kampala', region: 'Africa' },
+  { code: 'PG', name: 'Papua New Guinea', flag: '🇵🇬', currency: 'PGK', symbol: 'K', language: 'en', languageName: 'English', timezone: 'Pacific/Port_Moresby', region: 'Pacific' },
+  { code: 'IN', name: 'India', flag: '🇮🇳', currency: 'INR', symbol: '₹', language: 'hi', languageName: 'हिन्दी', timezone: 'Asia/Kolkata', region: 'South Asia' },
+  { code: 'US', name: 'United States', flag: '🇺🇸', currency: 'USD', symbol: '$', language: 'en', languageName: 'English', timezone: 'America/New_York', region: 'North America' },
+] as const
+
+const REGIONS = [...new Set(COUNTRIES.map(c => c.region))]
+
+const ALL_CURRENCIES = [...new Map(COUNTRIES.map(c => [c.currency, { code: c.currency, symbol: c.symbol }])).values()]
+
+const ALL_LANGUAGES = [...new Map(COUNTRIES.map(c => [c.language, { code: c.language, name: c.languageName }])).values()]
+
 // ════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════
@@ -155,8 +176,8 @@ export default function SuperAdminDashboard() {
   // Tenant form
   const [form, setForm] = useState({
     name: '', slug: '', legalName: '', currency: 'VND', currencySymbol: '₫',
-    language: 'vi', timezone: 'Asia/Ho_Chi_Minh', country: 'VN',
-    plan: 'starter', maxUsers: 10, maxFarmers: 500,
+    language: 'vi', timezone: 'Asia/Ho_Chi_Minh', country: 'VN', region: 'Southeast Asia',
+    plan: 'starter', maxUsers: 10, maxFarmers: 500, eudrCompliant: false,
     enabledModules: {} as Record<string, boolean>,
   })
 
@@ -170,8 +191,8 @@ export default function SuperAdminDashboard() {
   const resetForm = () => {
     setForm({
       name: '', slug: '', legalName: '', currency: 'VND', currencySymbol: '₫',
-      language: 'vi', timezone: 'Asia/Ho_Chi_Minh', country: 'VN',
-      plan: 'starter', maxUsers: 10, maxFarmers: 500,
+      language: 'vi', timezone: 'Asia/Ho_Chi_Minh', country: 'VN', region: 'Southeast Asia',
+      plan: 'starter', maxUsers: 10, maxFarmers: 500, eudrCompliant: false,
       enabledModules: {},
     })
     setEditingTenant(null)
@@ -318,9 +339,11 @@ export default function SuperAdminDashboard() {
       language: tenant.language,
       timezone: 'Asia/Ho_Chi_Minh',
       country: 'VN',
+      region: 'Southeast Asia',
       plan: tenant.plan,
       maxUsers: tenant.maxUsers,
       maxFarmers: tenant.maxFarmers,
+      eudrCompliant: false,
       enabledModules,
     })
     setEditingTenant(tenant)
@@ -549,6 +572,10 @@ export default function SuperAdminDashboard() {
               <Package className="w-3.5 h-3.5 mr-1.5" />
               Modules
             </TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
+              <Globe className="w-3.5 h-3.5 mr-1.5" />
+              {t('Cài đặt', 'Settings')}
+            </TabsTrigger>
           </TabsList>
 
           {/* ══════════════════════════════════════════════════════════
@@ -718,26 +745,62 @@ export default function SuperAdminDashboard() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t('Quốc gia', 'Country')}</Label>
+                          <Select value={form.country} onValueChange={(v) => {
+                            const c = COUNTRIES.find(x => x.code === v)
+                            if (c) setForm({ ...form, country: c.code, currency: c.currency, currencySymbol: c.symbol, language: c.language, timezone: c.timezone, region: c.region })
+                          }}>
+                            <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-stone-800 border-stone-700">
+                              {COUNTRIES.map(c => (
+                                <SelectItem key={c.code} value={c.code}>{c.flag} {c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
                           <Label className="text-xs text-stone-400">{t('Ngôn ngữ', 'Language')}</Label>
                           <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v })}>
                             <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-stone-800 border-stone-700">
-                              <SelectItem value="vi">Tiếng Việt</SelectItem>
-                              <SelectItem value="en">English</SelectItem>
+                              {ALL_LANGUAGES.map(l => (
+                                <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs text-stone-400">{t('Tiền tệ', 'Currency')}</Label>
-                          <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
+                          <Select value={form.currency} onValueChange={(v) => {
+                            const c = ALL_CURRENCIES.find(x => x.code === v)
+                            setForm({ ...form, currency: v, currencySymbol: c?.symbol || '$' })
+                          }}>
                             <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-stone-800 border-stone-700">
-                              <SelectItem value="VND">VND (₫)</SelectItem>
-                              <SelectItem value="USD">USD ($)</SelectItem>
-                              <SelectItem value="EUR">EUR (€)</SelectItem>
-                              <SelectItem value="JPY">JPY (¥)</SelectItem>
+                              {ALL_CURRENCIES.map(c => (
+                                <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t('Múi giờ', 'Timezone')}</Label>
+                          <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t('Khu vực', 'Region')}</Label>
+                          <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}>
+                            <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-stone-800 border-stone-700">
+                              {REGIONS.map(r => (
+                                <SelectItem key={r} value={r}>{r}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={form.eudrCompliant} onCheckedChange={(v) => setForm({ ...form, eudrCompliant: v })} />
+                          <Label className="text-xs text-stone-400">EUDR {t('Tuân thủ', 'Compliant')}</Label>
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs text-stone-400">{t('Tối đa người dùng', 'Max Users')}</Label>
@@ -1150,6 +1213,187 @@ export default function SuperAdminDashboard() {
                     </Card>
                   </div>
                 ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ══════════════════════════════════════════════════════════
+              SETTINGS TAB — Platform + Region Configuration
+              ══════════════════════════════════════════════════════════ */}
+          <TabsContent value="settings">
+            <div>
+              <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2 mb-6">
+                <Globe className="w-5 h-5 text-stone-500" />
+                {t('Cài đặt Nền tảng', 'Platform Settings')}
+              </h2>
+
+              {/* Region Overview */}
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t('Tổng quan Khu vực', 'Region Overview')}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {REGIONS.map(region => {
+                    const regionTenants = tenants.filter(t => {
+                      try { return JSON.parse(t.enabledModules || '{}').region === region || (t as any).region === region } catch { return false }
+                    })
+                    const regionCountries = COUNTRIES.filter(c => c.region === region)
+                    return (
+                      <Card key={region} className="rounded-2xl border border-stone-800 bg-stone-900/50 hover:border-stone-700 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Globe className="w-4 h-4 text-stone-500" />
+                            <p className="text-xs font-bold text-stone-200">{region}</p>
+                          </div>
+                          <div className="flex gap-1 mb-2 flex-wrap">
+                            {regionCountries.map(c => (
+                              <span key={c.code} className="text-sm" title={c.name}>{c.flag}</span>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-stone-500">
+                            {regionTenants.length} {t('tổ chức', 'tenants')}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Supported Countries Table */}
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t('Quốc gia được hỗ trợ', 'Supported Countries')}</h3>
+                <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-stone-800/30 border-b border-stone-800">
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Quốc gia', 'Country')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Tiền tệ', 'Currency')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Ngôn ngữ', 'Language')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Múi giờ', 'Timezone')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Khu vực', 'Region')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {COUNTRIES.map(c => (
+                          <tr key={c.code} className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
+                            <td className="px-4 py-3 text-xs text-stone-200">{c.flag} {c.name}</td>
+                            <td className="px-4 py-3 text-xs text-stone-400">{c.currency} ({c.symbol})</td>
+                            <td className="px-4 py-3 text-xs text-stone-400">{c.languageName}</td>
+                            <td className="px-4 py-3 text-xs text-stone-400 font-mono">{c.timezone}</td>
+                            <td className="px-4 py-3"><Badge className="text-[9px] border-0 bg-stone-800 text-stone-400">{c.region}</Badge></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Platform Settings Sections */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Platform Info */}
+                <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-stone-300">{t('Thông tin Nền tảng', 'Platform Info')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Tên nền tảng', 'Platform Name')}</Label>
+                      <Input defaultValue="Terra Brew" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Email hỗ trợ', 'Support Email')}</Label>
+                      <Input defaultValue="support@terrabrew.platform" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Ngôn ngữ mặc định', 'Default Language')}</Label>
+                      <Select defaultValue="vi">
+                        <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-stone-800 border-stone-700">
+                          {ALL_LANGUAGES.map(l => <SelectItem key={l.code} value={l.code}>{l.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Tiền tệ mặc định', 'Default Currency')}</Label>
+                      <Select defaultValue="VND">
+                        <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-stone-800 border-stone-700">
+                          {ALL_CURRENCIES.map(c => <SelectItem key={c.code} value={c.code}>{c.code} ({c.symbol})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* API Settings */}
+                <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-stone-300">API {t('Cài đặt', 'Settings')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Giới hạn API/phút', 'Rate Limit/min')}</Label>
+                      <Input type="number" defaultValue={100} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Kích thước lô tối đa', 'Max Batch Size')}</Label>
+                      <Input type="number" defaultValue={50} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">Webhook URL</Label>
+                      <Input placeholder="https://..." className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Security Settings */}
+                <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-stone-300">{t('Bảo mật', 'Security')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Thời gian phiên (giây)', 'Session Timeout (s)')}</Label>
+                      <Input type="number" defaultValue={86400} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Lần đăng nhập sai tối đa', 'Max Login Attempts')}</Label>
+                      <Input type="number" defaultValue={5} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Độ dài mật khẩu tối thiểu', 'Min Password Length')}</Label>
+                      <Input type="number" defaultValue={8} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Theme Settings */}
+                <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs text-stone-300">{t('Giao diện', 'Theme')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Màu chính', 'Primary Color')}</Label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" defaultValue="#8b5a1e" className="w-8 h-8 rounded-lg border border-stone-700 cursor-pointer" />
+                        <Input defaultValue="#8b5a1e" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs flex-1" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Logo URL', 'Logo URL')}</Label>
+                      <Input defaultValue="/logo.svg" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] text-stone-500">{t('Email thông báo', 'Email Notifications')}</Label>
+                      <div className="flex items-center gap-2">
+                        <Switch defaultChecked />
+                        <span className="text-[10px] text-stone-400">{t('Bật', 'Enabled')}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </TabsContent>

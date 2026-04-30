@@ -123,7 +123,11 @@ export async function POST(req: NextRequest) {
     })
 
     // Also set the callback URL cookie for NextAuth compatibility
-    response.cookies.set('next-auth.callback-url', `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`, {
+    // Use request origin instead of NEXTAUTH_URL — works behind proxies with trustHost
+    const origin = req.headers.get('x-forwarded-host')
+      ? `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host')}`
+      : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    response.cookies.set('next-auth.callback-url', `${origin}/dashboard`, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

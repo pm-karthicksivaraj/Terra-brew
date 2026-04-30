@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Globe, Eye, EyeOff, Loader2, AlertCircle, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,9 +23,18 @@ export default function SuperAdminPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
+  const { data: session, status } = useSession()
 
   useEffect(() => { setMounted(true) }, [])
+
+  // If already authenticated as platform admin, redirect to dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.isPlatformAdmin) {
+      const params = new URLSearchParams(window.location.search)
+      const callbackUrl = params.get('callbackUrl') || '/super-admin/dashboard'
+      window.location.href = callbackUrl
+    }
+  }, [status, session])
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
@@ -60,8 +69,11 @@ export default function SuperAdminPage() {
       }
 
       toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-      router.push('/super-admin/dashboard')
-      router.refresh()
+      // Full page reload to ensure SessionProvider picks up the new cookie.
+      // router.push() doesn't trigger SessionProvider refetch since it's a SPA navigation.
+      const params = new URLSearchParams(window.location.search)
+      const callbackUrl = params.get('callbackUrl') || '/super-admin/dashboard'
+      window.location.href = callbackUrl
     } catch {
       setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
       toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))
@@ -162,7 +174,7 @@ export default function SuperAdminPage() {
             </form>
 
             <div className="mt-4 text-center">
-              <button onClick={() => router.push('/login')} className="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors">
+              <button onClick={() => { window.location.href = '/login' }} className="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors">
                 {t('← Quay lại đăng nhập tổ chức', '← Back to tenant login')}
               </button>
             </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,9 +24,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
+  const { data: session, status } = useSession()
 
   useEffect(() => { setMounted(true) }, [])
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user && !session.user.isPlatformAdmin) {
+      const params = new URLSearchParams(window.location.search)
+      const callbackUrl = params.get('callbackUrl') || '/dashboard'
+      window.location.href = callbackUrl
+    }
+  }, [status, session])
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
@@ -62,8 +71,11 @@ export default function LoginPage() {
       }
 
       toast.success(t('Đăng nhập thành công!', 'Login successful!'))
-      router.push('/dashboard')
-      router.refresh()
+      // Full page reload to ensure SessionProvider picks up the new cookie.
+      // router.push() doesn't trigger SessionProvider refetch since it's a SPA navigation.
+      const params = new URLSearchParams(window.location.search)
+      const callbackUrl = params.get('callbackUrl') || '/dashboard'
+      window.location.href = callbackUrl
     } catch {
       setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
       toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))

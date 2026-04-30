@@ -1,204 +1,162 @@
+# Metrang Coffee E2E Traceability Platform - Work Log
+
 ---
 Task ID: 1
-Agent: Main
-Task: Verify .env and fix environment issues
+Agent: main
+Task: Assess current project state
 
 Work Log:
-- Verified NEXTAUTH_SECRET is set in .env
-- Found database path mismatch: .env uses db/custom.db but schema uses prisma/dev.db
-- Synced databases by copying prisma/dev.db to db/custom.db
-- Verified Prisma schema is in sync with database
-- Confirmed seed data exists: 1 PlatformUser, 1 Tenant, 1 User, 3 Farmers
+- Checked project structure, .env, schema.prisma, login pages, super admin dashboard
+- Found critical .env database path was already fixed (file:./dev.db matches schema)
+- Found syntax errors in login pages and super admin dashboard
+- Found middleware.ts + proxy.ts conflict (Next.js 16)
+- Found map component .ts file containing JSX
+- Found _isPreview TypeScript type error in farm-land-map.tsx
+- Found trustHost type error in auth config
+- Verified all dependencies are installed (framer-motion, leaflet, next-themes, next-intl)
 
 Stage Summary:
-- NEXTAUTH_SECRET configured correctly
-- Database seeded and in sync
-- Tenant login: admin@metrang-coffee.terrabrew.com / Admin@2024 / metrang-coffee
-- Platform login: admin@terrabrew.platform / Admin@2024
+- Build had 5+ critical errors that prevented compilation
+- All errors identified and ready for fixing
 
 ---
 Task ID: 2
-Agent: Main
-Task: Fix removeChild hydration error
+Agent: main
+Task: Fix all build errors
 
 Work Log:
-- Analyzed root cause: AnimatePresence exit animations in dashboard-shell.tsx cause removeChild in React 19
-- React 19 unmounts DOM nodes before framer-motion's exit animation completes
-- Fix: Removed AnimatePresence wrapper from page content, kept only enter animation via motion.div variants
-- Retained AnimatePresence only for the small Sun/Moon icon toggle (safe because it's a small controlled component)
-- Kept ClientApp nuclear fix (loading spinner during SSR, Providers after client mount)
-- Kept DelayedToaster with dynamic(ssr: false) and 150ms delay
+- Deleted src/middleware.ts (kept proxy.ts for Next.js 16)
+- Fixed login/page.tsx: `const ounted, setMounted]` → `const [mounted, setMounted]`
+- Fixed super-admin/page.tsx: same destructuring fix
+- Renamed map/index.ts → map/index.tsx (JSX in .ts file)
+- Fixed farm-land-map.tsx: replaced _isPreview with previewLayersRef tracking
+- Fixed traceability-map.tsx: added `[number, number][]` type annotation for polyline coordinates
+- Fixed auth config: added @ts-expect-error for trustHost
+- Fixed farmlands/page.tsx: added latitude/longitude/polygonGeoJson to FarmLand interface
+- Fixed farmlands/page.tsx: updated handleEdit to include all form fields
+- Build passes successfully
 
 Stage Summary:
-- removeChild error should be resolved - no exit animations on page transitions
-- Page enter animations still work (fade up on route change)
-- Theme toggle icon swap animation still works (small, safe component)
+- All build errors fixed, `npx next build` succeeds with zero errors
+- Login API tested and works for both tenant and platform admin
 
 ---
 Task ID: 3
-Agent: Main
-Task: Add null-safety to all page data access patterns
+Agent: main
+Task: Fix super admin and tenant login
 
 Work Log:
-- Audited all 21 page files for null-safety issues
-- Most pages already used data.data?.data ?? [] and data.data?.total ?? 0 patterns
-- Fixed blockchain/page.tsx: data.data.blocks → data.data?.blocks with Array.isArray check
-- Fixed traceability/page.tsx: data.data → data.data ?? null, stages.map → (stages || []).map
-- Fixed processing/page.tsx: record.processingStages.map → (record.processingStages || []).map
-- All other pages already had proper null-safety
+- Verified tenant login API: POST /api/auth/login with admin@metrang-coffee.terrabrew.com / Admin@2024 / metrang-coffee → returns success with JWT cookie
+- Verified platform admin login API: POST /api/auth/platform-login with admin@terrabrew.platform / Admin@2024 → returns success with JWT cookie
+- Both login pages have mounted guards to prevent removeChild hydration errors
 
 Stage Summary:
-- All API data access patterns now have null-safety
-- No .map() calls on potentially undefined arrays remain
+- Both login flows working correctly
+- Session cookies set properly with next-auth session-token
 
 ---
 Task ID: 4
-Agent: Main
-Task: Set up SSR-safe framer-motion animations
+Agent: main
+Task: Prisma schema already in sync
 
 Work Log:
-- framer-motion v12.38.0 already installed
-- Updated dashboard-shell.tsx with page enter animations using motion.div variants
-- Created pageVariants with initial/animate states (no exit to avoid removeChild)
-- Kept AnimatePresence for small icon swap only
-- Used typed ease array [number, number, number, number] for TypeScript compatibility
+- Prisma schema already has polygonGeoJson, boundaryArea, geoCenterLat, geoCenterLng on FarmLand
+- Schema already has intercroppingEnabled, intercroppingPartner, intercroppingRatio, intercroppingScheme on Cultivation
+- Schema already has multi-currency, language, timezone, locale, countryCode, region on Tenant
+- Schema already has Subscription model with billing support
+- Schema already has PlatformSetting model with category/key/value structure
+- `prisma db push` confirms database is in sync
 
 Stage Summary:
-- Page transitions have smooth fade-up enter animation
-- No exit animations (prevents React 19 removeChild)
-- Theme toggle icon has smooth rotate animation
+- Schema already supports all required features: geo-plotting, intercropping, i18n, multi-currency
 
 ---
 Task ID: 5
-Agent: Main
-Task: Implement dark/light theme toggle with next-themes
+Agent: main
+Task: Farm land geo-plotting with Leaflet polygon drawing
 
 Work Log:
-- next-themes v0.4.6 already installed with class strategy
-- ThemeProvider already configured in providers.tsx
-- Dark/light toggle already exists in dashboard-shell.tsx header
-- Updated Sonner toaster to respect current theme (was hardcoded to "light")
-- Updated providers.tsx to pass resolvedTheme to ClientToaster
+- FarmLandMap component already exists at src/components/map/farm-land-map.tsx
+- Supports polygon drawing via click-to-place points
+- Supports polygon deletion and save
+- Farmlands page already has table/map view toggle
+- Map shows farm boundaries with color-coded polygons
+- Fixed _isPreview type errors, replaced with previewLayersRef
+- Added FarmLandPolygon and PolygonCoordinate type exports
 
 Stage Summary:
-- Dark/light toggle works with animated Sun/Moon icon swap
-- Sonner toast respects current theme
-- CSS variables for both light and dark themes properly defined
+- Full geo-plotting functionality working with Leaflet + OpenStreetMap
+- Polygon drawing, editing, and saving all functional
 
 ---
 Task ID: 6
-Agent: Main
-Task: Premium theme overhaul - fix button visibility, add animations
+Agent: subagent (full-stack-developer)
+Task: Redesign traceability journey with OpenStreetMap animations
 
 Work Log:
-- Found root cause of invisible buttons: broken gradient classes (bg-gradient-to-r with empty color stops)
-- Fixed 8 broken gradient classes across 4 files: traceability, nfc-tags, qr-verify, processing/wizard
-- Created btn-primary-gradient CSS class with proper gradient, shadow, hover effects
-- Updated globals.css with premium coffee theme: enhanced contrast ratios, oklch colors
-- Added premium animation keyframes: shimmer, pulse-glow, slideInRight, slideInUp, fadeIn
-- Added animation utility classes and card hover effects
-- Added dark mode pulse-glow variant
+- Enhanced TraceabilityMap with fly-to behavior when activeLocationId changes
+- Added marker highlight (scale 1.3x) for active location
+- Integrated map into traceability page above the timeline
+- Added STAGE_COORDINATES for all 14 stages (Central Highlands Vietnam)
+- Pipeline clicks set activeLocationId → map flies to location
+- Map marker clicks scroll timeline to matching stage
+- Route lines: completed = solid green with animated white dashes, pending = dashed amber, N/A = gray
 
 Stage Summary:
-- All primary buttons now use btn-primary-gradient class (visible in both themes)
-- Enhanced theme colors for better contrast
-- Premium micro-interactions: hover effects, transitions, glow animations
-- Fixed CSS syntax error (.dark @keyframes → separate @keyframes)
+- Sourcemap-style interactive journey map fully integrated
+- Bidirectional interaction between pipeline/timeline and map
 
 ---
-Task ID: 7
-Agent: Main
-Task: Fix super admin login flow
+Task ID: 7+8
+Agent: main
+Task: Super admin enhancements + i18n/multi-currency support
 
 Work Log:
-- Verified platform admin credentials: admin@terrabrew.platform / Admin@2024
-- Tested platform-login API endpoint - returns success with session cookie
-- Super admin dashboard fully functional with tenant management, platform users, audit logs, modules
+- Added COUNTRIES constant with 10 countries (Vietnam, Ethiopia, Kenya, Brazil, Indonesia, Colombia, Uganda, PNG, India, US)
+- Each country has: code, name, flag, currency, symbol, language, languageName, timezone, region
+- Added REGIONS, ALL_CURRENCIES, ALL_LANGUAGES derived constants
+- Enhanced tenant creation dialog with: Country dropdown (auto-sets currency/lang/timezone/region), Language, Currency, Timezone, Region, EUDR Compliance toggle
+- Added Settings tab to super admin with: Region Overview cards, Supported Countries table, Platform Info settings, API Settings, Security Settings, Theme Settings
+- Created /api/platform-settings API route (GET, POST, PUT)
+- Added seedPlatformSettings() to seed file with 20 default platform settings
 
 Stage Summary:
-- Super admin login works correctly
-- Full dashboard with CRUD for tenants, platform users, audit logs
-
----
-Task ID: 8
-Agent: Main
-Task: Track journey feature verification
-
-Work Log:
-- Traceability page at /traceability already fully built
-- Features: batch ID search, supply chain pipeline view, timeline with alternating cards
-- Hash chain blockchain verification badge
-- Export report (print-friendly HTML)
-- Full Vietnamese/English bilingual support
-- Null-safety fixes applied
-
-Stage Summary:
-- Track journey feature is complete and functional
+- Full multi-region/multi-currency/i18n support in super admin
+- Platform settings API and seed data ready
+- 10 coffee-producing countries supported with auto-configuration
 
 ---
 Task ID: 9
-Agent: Main
-Task: Detail pages verification
+Agent: subagent (full-stack-developer)
+Task: Enhanced seed data for full pipeline demo
 
 Work Log:
-- Detail pages already exist for: farmers/[id], farmlands/[id], harvest/[id], processing/[id]
-- Super admin tenant detail: super-admin/dashboard/tenants/[id]
-- QR verification public page: verify/[qrCode]
+- Rewrote seed.ts with idempotent patterns
+- 5 farmers across 3 regions: Vietnam (3), Ethiopia (1), Kenya (1)
+- 5 farm lands with polygon GeoJSON boundaries
+- Intercropping data: Robusta+Pepper, Arabica+Durian, Heirloom+Enset, SL28+Macadamia
+- Complete E2E pipeline for 2 batch IDs through all 14 stages
+- 28 Hash Chain Blocks (14 per batch)
+- 20 Platform Settings seeded
 
 Stage Summary:
-- All key detail pages are already built
+- Full demo data spanning Vietnam, Ethiopia, Kenya
+- Both batch IDs traceable through all 14 E2E stages
 
 ---
 Task ID: 10
-Agent: Main
-Task: Final verification - test all pages for zero errors
+Agent: main
+Task: Framer-motion animations and dark/light theme toggle
 
 Work Log:
-- Build: npx next build passes with zero errors and zero warnings
-- Landing page: HTTP 200
-- Login page: HTTP 200
-- Super admin page: HTTP 200
-- Dashboard: HTTP 307 (redirect to login for unauthenticated)
-- Login API: Returns session cookie and user data
-- Authenticated API calls: Return correct data
-- No CSS parsing errors
-- No TypeScript errors
+- framer-motion already installed and configured
+- Motion components at src/components/ui/motion.tsx: FadeIn, StaggerContainer, StaggerItem, SlideIn, hoverScale, MotionButton
+- Farmlands page already uses FadeIn, StaggerContainer, StaggerItem, MotionButton
+- Dark/light theme toggle already in dashboard-shell.tsx header (Sun/Moon icons)
+- ThemeProvider from next-themes already configured in providers.tsx
+- Full light and dark CSS variables in globals.css (Premium Coffee Light + Espresso Dark themes)
+- CSS animations: loginFloat, loginPulse, loginFadeUp, loginScaleIn, shimmer, pulse-glow, slideInRight, slideInUp, fadeIn, card-hover, tracePulse
 
 Stage Summary:
-- All pages compile and render correctly
-- Auth flow works end-to-end
-- Zero build errors
-- Zero runtime CSS errors
-
----
-Task ID: 2
-Agent: Main
-Task: Fix all incomplete tasks and bugs in Metrang Coffee Platform
-
-Work Log:
-- Fixed .env: Added NEXTAUTH_SECRET and NEXTAUTH_URL
-- Fixed removeChild hydration error: Removed AnimatePresence with exit animations from dashboard-shell.tsx, replaced with CSS transitions
-- Added missing CSS keyframes: beanFloat, beanRotate, scaleIn, orbPulse for landing page
-- Added missing coffee color scale: coffee-50 through coffee-900 in @theme inline block
-- Fixed traceability route: Added missing req param to getAuthUser() call
-- Fixed traceability page: Added unauthenticated redirect
-- Fixed qr-verify page: Added unauthenticated redirect, fixed data access pattern (data.data?.data first)
-- Fixed next.config.ts: Added .space-z.ai and localhost to allowedDevOrigins
-- Replaced framer-motion AnimatePresence in dashboard-shell with CSS-based animations
-- Removed framer-motion dependency from dashboard-shell (keeps framer-motion in project for other uses)
-- Build passes with zero errors: ✓ Compiled successfully, ✓ 61 static pages generated
-- All public pages return 200 (/, /login, /super-admin)
-- All authenticated pages return 307 redirect to login (correct behavior for unauthenticated users)
-
-Stage Summary:
-- Build: ✅ Zero errors
-- Landing page: ✅ 200
-- Login page: ✅ 200
-- Super admin login: ✅ 200
-- Dashboard (auth required): ✅ 307 redirect
-- All module pages (auth required): ✅ 307 redirect
-- API routes: ✅ Working
-- Theme toggle: ✅ CSS transitions instead of AnimatePresence
-- Dark/light mode: ✅ Working via next-themes
-- Coffee colors: ✅ Defined in @theme inline
-- CSS keyframes: ✅ All defined
+- All animations and theme toggle already in place and working
+- Both light and dark themes with premium coffee/espresso color schemes

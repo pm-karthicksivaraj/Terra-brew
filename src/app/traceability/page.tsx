@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   Coffee, GitBranch, Search, Loader2, CheckCircle2, Clock,
   MinusCircle, Shield, ChevronDown, ChevronUp, FileText,
-  ArrowRight, ArrowLeft,
+  ArrowRight, ArrowLeft, MapPin,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,28 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
+import { TraceabilityMap } from '@/components/map'
+import type { TraceLocation } from '@/components/map'
+import { FadeIn } from '@/components/ui/motion'
+
+// ─── Stage Coordinates (Central Highlands, Vietnam) ────────────────
+
+const STAGE_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  farmer: { lat: 12.668, lng: 108.038 },
+  farmland: { lat: 12.672, lng: 108.042 },
+  cultivation: { lat: 12.675, lng: 108.040 },
+  nursery: { lat: 12.665, lng: 108.035 },
+  land_preparation: { lat: 12.670, lng: 108.045 },
+  crop_monitoring: { lat: 12.673, lng: 108.043 },
+  fertilizer: { lat: 12.671, lng: 108.041 },
+  pest_disease: { lat: 12.676, lng: 108.039 },
+  harvest: { lat: 12.669, lng: 108.044 },
+  procurement: { lat: 12.745, lng: 108.052 },
+  processing: { lat: 12.800, lng: 108.100 },
+  certification: { lat: 12.810, lng: 108.120 },
+  inspection: { lat: 12.815, lng: 108.125 },
+  marketplace: { lat: 12.900, lng: 108.200 },
+}
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -516,8 +538,38 @@ export default function TraceabilityPage() {
   const [batchId, setBatchId] = useState('')
   const [loading, setLoading] = useState(false)
   const [traceData, setTraceData] = useState<TraceabilityData | null>(null)
+  const [activeLocationId, setActiveLocationId] = useState<string | undefined>(undefined)
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
+  // Convert trace stages to map locations
+  const traceLocations: TraceLocation[] = useMemo(() => {
+    if (!traceData?.found) return []
+    return (traceData.stages || [])
+      .filter((stage) => STAGE_COORDINATES[stage.key])
+      .map((stage) => {
+        const coords = STAGE_COORDINATES[stage.key]
+        const name = lang === 'vi' ? stage.nameVi : stage.nameEn
+        let details = ''
+        if (stage.data) {
+          const entries = Object.entries(stage.data)
+            .filter(([, v]) => v != null && typeof v !== 'object')
+            .slice(0, 2)
+          details = entries.map(([k, v]) => `${k}: ${v}`).join(', ')
+        }
+        return {
+          id: stage.key,
+          name,
+          lat: coords.lat,
+          lng: coords.lng,
+          stage: lang === 'vi' ? stage.nameVi : stage.nameEn,
+          status: stage.status,
+          icon: stage.icon,
+          date: stage.date ?? undefined,
+          details: details || undefined,
+        }
+      })
+  }, [traceData, lang])
 
   const scrollToStage = useCallback((index: number) => {
     const el = document.getElementById(`timeline-stage-${index}`)
@@ -531,6 +583,24 @@ export default function TraceabilityPage() {
     }
   }, [])
 
+  // Handle stage click from pipeline — scroll timeline + focus map
+  const handleStageClick = useCallback((index: number) => {
+    const stage = traceData?.stages?.[index]
+    if (stage) {
+      setActiveLocationId(stage.key)
+    }
+    scrollToStage(index)
+  }, [traceData, scrollToStage])
+
+  // Handle map location click — scroll timeline to matching stage
+  const handleMapLocationClick = useCallback((locationId: string) => {
+    setActiveLocationId(locationId)
+    const stageIndex = traceData?.stages?.findIndex((s) => s.key === locationId)
+    if (stageIndex !== undefined && stageIndex >= 0) {
+      scrollToStage(stageIndex)
+    }
+  }, [traceData, scrollToStage])
+
   const handleSearch = useCallback(async () => {
     if (!batchId.trim()) {
       toast.error(t('Vui lòng nhập Mã lô', 'Please enter a Batch ID'))
@@ -538,6 +608,7 @@ export default function TraceabilityPage() {
     }
     setLoading(true)
     setTraceData(null)
+    setActiveLocationId(undefined)
     try {
       const res = await fetch(`/api/traceability?batchId=${encodeURIComponent(batchId.trim())}`)
       const data = await res.json()
@@ -810,8 +881,34 @@ export default function TraceabilityPage() {
               <SupplyChainPipeline
                 stages={traceData.stages}
                 lang={lang}
-                onStageClick={scrollToStage}
+                onStageClick={handleStageClick}
               />
+
+              {/* ── Journey Map ── */}
+              <FadeIn delay={0.1}>
+                <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        {t('Bản đồ Hành trình', 'Journey Map')}
+                      </h3>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t('Nhấn vào giai đoạn để xem vị trí trên bản đồ', 'Click a stage to see its location on the map')}
+                      </p>
+                    </div>
+                  </div>
+                  <TraceabilityMap
+                    locations={traceLocations}
+                    activeLocationId={activeLocationId}
+                    lang={lang}
+                    height="400px"
+                    onLocationClick={handleMapLocationClick}
+                  />
+                </Card>
+              </FadeIn>
 
               {/* Timeline */}
               <div className="relative">

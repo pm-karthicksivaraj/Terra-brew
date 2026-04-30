@@ -17,10 +17,13 @@ model PlatformUser {
   passwordHash String
   name         String
   role         String   @default("super_admin")
+  roleId       String?
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  platformRole PlatformRole? @relation(fields: [roleId], references: [id])
 }
 
 model Tenant {
@@ -32,12 +35,20 @@ model Tenant {
   logoUrl        String?
   currency       String   @default("VND")
   currencySymbol String   @default("₫")
-  language       String   @default("vi")
-  timezone       String   @default("Asia/Ho_Chi_Minh")
-  dateFormat     String   @default("DD/MM/YYYY")
-  enabledModules String   @default("{}")
-  country        String   @default("VN")
-  eudrCompliant  Boolean  @default(false)
+  language          String   @default("vi")
+  timezone          String   @default("Asia/Ho_Chi_Minh")
+  dateFormat        String   @default("DD/MM/YYYY")
+  locale            String   @default("vi-VN")
+  countryCode       String   @default("VN")
+  region            String?
+  supportedLanguages String   @default("[\"vi\",\"en\"]")
+  dateFormatShort   String   @default("DD/MM/YYYY")
+  dateFormatLong    String   @default("DD MMMM YYYY")
+  numberFormat      String   @default("vi-VN")
+  measurementUnit   String   @default("metric")
+  enabledModules    String   @default("{}")
+  country           String   @default("VN")
+  eudrCompliant     Boolean  @default(false)
   certifications String?
   plan           String   @default("starter")
   maxUsers       Int      @default(10)
@@ -70,6 +81,65 @@ model Tenant {
   qrVerifications        QRVerification[]
   soilAnalyses           SoilAnalysis[]
   lots                   Lot[]
+  subscription           Subscription?
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  category    String   // "business", "platform", "api", "theme", "mobile", "security", "email", "notification"
+  key         String
+  value       String
+  valueType   String   @default("string") // "string", "number", "boolean", "json"
+  description String?
+  isPublic    Boolean  @default(false) // Whether tenant can read this setting
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([category, key])
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  tenantId        String   @unique
+  planId          String   // Reference to plan definition
+  planName        String
+  status          String   @default("active") // "active", "suspended", "cancelled", "trial"
+  startDate       DateTime
+  endDate         DateTime?
+  trialEndDate    DateTime?
+  maxUsers        Int      @default(10)
+  maxFarmers      Int      @default(500)
+  maxFarmLands    Int      @default(1000)
+  storageLimitMb  Int      @default(500)
+  apiCallsLimit   Int      @default(10000)
+  features        String   @default("{}") // JSON object of feature flags
+  amount          Float?
+  currency        String?
+  billingCycle    String?  // "monthly", "yearly"
+  autoRenew       Boolean  @default(true)
+  lastPaymentDate DateTime?
+  nextPaymentDate DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+  @@index([status])
+}
+
+model PlatformRole {
+  id          String   @id @default(cuid())
+  name        String   @unique // "super_admin", "support_lead", "support_agent", "billing_admin", "readonly"
+  displayName String
+  description String?
+  permissions String   @default("{}") // JSON object of permission flags
+  isSystem    Boolean  @default(false) // Cannot be deleted if true
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  platformUsers PlatformUser[]
 }
 
 model Module {
@@ -228,6 +298,10 @@ model FarmLand {
   fertilizerApplications FertilizerApplication[]
   pestDiseaseManagements PestDiseaseManagement[]
   harvestTraceabilities HarvestTraceability[]
+  polygonGeoJson        String?
+  boundaryArea          Float?
+  geoCenterLat          Float?
+  geoCenterLng          Float?
   soilAnalyses          SoilAnalysis[]
   certAssessments       CertAssessment[]
   coffeeInspections     CoffeeInspection[]
@@ -266,6 +340,11 @@ model Cultivation {
   seedQuantity            Float?
   seedPrice               Float?
   seedCost                Float?
+  intercroppingEnabled    Boolean  @default(false)
+  intercroppingPartner    String?
+  intercroppingRatio      String?
+  intercroppingScheme     String?
+  isPrimaryCrop           Boolean  @default(true)
   isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt

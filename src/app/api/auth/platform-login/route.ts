@@ -92,7 +92,12 @@ export async function POST(req: NextRequest) {
       maxAge,
     })
 
-    response.cookies.set('next-auth.callback-url', `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/super-admin/dashboard`, {
+    // Also set the callback URL cookie for NextAuth compatibility
+    // Use request origin instead of NEXTAUTH_URL — works behind proxies with trustHost
+    const origin = req.headers.get('x-forwarded-host')
+      ? `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host')}`
+      : process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    response.cookies.set('next-auth.callback-url', `${origin}/super-admin/dashboard`, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

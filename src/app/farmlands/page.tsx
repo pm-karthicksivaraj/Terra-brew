@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { formatCurrency } from '@/types'
 import { FadeIn, StaggerContainer, StaggerItem, hoverScale, MotionButton } from '@/components/ui/motion'
+import { FarmLandMap, type FarmLandPolygon, type PolygonCoordinate } from '@/components/map'
 
 interface FarmerOption {
   id: string
@@ -33,6 +34,8 @@ interface FarmLand {
   plotBlockId: string | null
   totalLandHolding: number | null
   altitude: number | null
+  latitude: number | null
+  longitude: number | null
   soilType: string | null
   noOfTrees: number | null
   estYield: number | null
@@ -40,6 +43,10 @@ interface FarmLand {
   minimumWageCompliance: boolean
   ppeAvailable: boolean
   isActive: boolean
+  polygonGeoJson?: string | null
+  boundaryArea?: number | null
+  geoCenterLat?: number | null
+  geoCenterLng?: number | null
   createdAt: string
   farmer: { id: string; fullName: string; farmerCode: string | null }
 }
@@ -61,6 +68,8 @@ export default function FarmLandsPage() {
 
   // Dropdown options
   const [farmers, setFarmers] = useState<FarmerOption[]>([])
+  const [viewMode, setViewMode] = useState<'table' | 'map'>('table')
+  const [mapPolygons, setMapPolygons] = useState<FarmLandPolygon[]>([])
 
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
@@ -81,6 +90,7 @@ export default function FarmLandsPage() {
     childLabourPolicy: false,
     minimumWageCompliance: false,
     ppeAvailable: false,
+    polygonGeoJson: '',
   })
 
   const resetForm = () => {
@@ -90,7 +100,7 @@ export default function FarmLandsPage() {
       longitude: '', landOwnership: '', soilType: '',
       waterSource: '', noOfTrees: '', estYield: '',
       childLabourPolicy: false, minimumWageCompliance: false,
-      ppeAvailable: false,
+      ppeAvailable: false, polygonGeoJson: '',
     })
     setEditingItem(null)
   }
@@ -118,6 +128,40 @@ export default function FarmLandsPage() {
       setLoading(false)
     }
   }, [page, pageSize, search])
+
+  // Convert farmland items to map polygons for the map view
+  useEffect(() => {
+    const polys: FarmLandPolygon[] = items
+      .filter(item => item.latitude && item.longitude)
+      .map((item, i) => {
+        // Parse existing polygonGeoJson if available
+        let coords: PolygonCoordinate[] = []
+        if (item.polygonGeoJson) {
+          try {
+            const geojson = JSON.parse(item.polygonGeoJson)
+            coords = (geojson.coordinates?.[0] || []).map((c: number[]) => ({ lat: c[1], lng: c[0] }))
+          } catch {}
+        }
+        // Fallback: create a small polygon around the center point
+        if (coords.length < 3 && item.latitude && item.longitude) {
+          const d = 0.001 // ~100m offset
+          coords = [
+            { lat: item.latitude - d, lng: item.longitude - d },
+            { lat: item.latitude - d, lng: item.longitude + d },
+            { lat: item.latitude + d, lng: item.longitude + d },
+            { lat: item.latitude + d, lng: item.longitude - d },
+          ]
+        }
+        return {
+          id: item.id,
+          name: item.farmName,
+          coordinates: coords,
+          color: ['#059669', '#d97706', '#2563eb', '#7c3aed', '#0891b2'][i % 5],
+          cropType: item.soilType || undefined,
+        }
+      })
+    setMapPolygons(polys)
+  }, [items])
 
   const fetchFarmers = useCallback(async () => {
     try {
@@ -148,8 +192,8 @@ export default function FarmLandsPage() {
       plotBlockId: item.plotBlockId || '',
       totalLandHolding: item.totalLandHolding?.toString() || '',
       altitude: item.altitude?.toString() || '',
-      latitude: '',
-      longitude: '',
+      latitude: item.latitude?.toString() || '',
+      longitude: item.longitude?.toString() || '',
       landOwnership: '',
       soilType: item.soilType || '',
       waterSource: '',
@@ -158,6 +202,7 @@ export default function FarmLandsPage() {
       childLabourPolicy: item.childLabourPolicy,
       minimumWageCompliance: item.minimumWageCompliance,
       ppeAvailable: item.ppeAvailable,
+      polygonGeoJson: item.polygonGeoJson || '',
     })
     setDialogOpen(true)
   }
@@ -511,11 +556,57 @@ export default function FarmLandsPage() {
             <Badge variant="outline" className="border-border text-muted-foreground text-xs">
               {t(`${total} bản ghi`, `${total} records`)}
             </Badge>
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2.5 text-[10px] rounded-md"
+                onClick={() => setViewMode('table')}
+              >
+                {t('Bảng', 'Table')}
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2.5 text-[10px] rounded-md gap-1"
+                onClick={() => setViewMode('map')}
+              >
+                <MapPin className="w-3 h-3" />
+                {t('Bản đồ', 'Map')}
+              </Button>
+            </div>
           </div>
         </FadeIn>
 
-        {/* Table */}
+        {/* Table or Map View */}
         <FadeIn delay={0.2}>
+          {viewMode === 'map' ? (
+            <Card className="rounded-2xl border-0 shadow-sm p-4">
+              <FarmLandMap
+                center={[12.668, 108.038]}
+                zoom={13}
+                polygons={mapPolygons}
+                drawMode={true}
+                lang={lang}
+                height="500px"
+                onPolygonDrawn={(coords) => {
+                  // Store the polygon coordinates as GeoJSON for the form
+                  const geoJson = {
+                    type: 'Polygon',
+                    coordinates: [coords.map(c => [c.lng, c.lat]).concat([[coords[0].lng, coords[0].lat]])],
+                  }
+                  setForm(f => ({ ...f, polygonGeoJson: JSON.stringify(geoJson) }))
+                  toast.success(t('Đa giác đã được vẽ! Mở form để lưu.', 'Polygon drawn! Open form to save.'))
+                }}
+                onPolygonDelete={(id) => {
+                  setMapPolygons(prev => prev.filter(p => p.id !== id))
+                }}
+                onSave={(polys) => {
+                  toast.success(t('Tọa độ đã được cập nhật', 'Coordinates updated'))
+                }}
+              />
+            </Card>
+          ) : (
           <Card className="rounded-2xl border-0 shadow-sm overflow-hidden bg-card">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -637,6 +728,7 @@ export default function FarmLandsPage() {
             </div>
           )}
         </Card>
+          )}
         </FadeIn>
       </div>
     </DashboardShell>
