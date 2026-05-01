@@ -65,6 +65,19 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   warehouse: { en: 'Warehouse', vi: 'Kho bãi' },
   distribution: { en: 'Distribution', vi: 'Phân phối' },
   retail: { en: 'Retail', vi: 'Bán lẻ' },
+  'eudr-compliance': { en: 'EUDR Compliance', vi: 'Tuân thủ EUDR' },
+  'export-docs': { en: 'Export Documents', vi: 'Tài liệu Xuất khẩu' },
+  deforestation: { en: 'Deforestation', vi: 'Phá rừng' },
+  shipments: { en: 'Shipments', vi: 'Vận chuyển' },
+  buyers: { en: 'Buyers', vi: 'Người mua' },
+  'trading-desk': { en: 'Trading Desk', vi: 'Mặt bằng Giao dịch' },
+  'qc-verifications': { en: 'QC Verifications', vi: 'Xác minh QC' },
+  'iot-sensors': { en: 'IoT Sensors', vi: 'Cảm biến IoT' },
+  analytics: { en: 'Analytics', vi: 'Phân tích' },
+  logistics: { en: 'Logistics', vi: 'Logistics' },
+  'compliance-marketplace': { en: 'Compliance Marketplace', vi: 'Thị trường Tuân thủ' },
+  billing: { en: 'Billing', vi: 'Thanh toán' },
+  'api-settings': { en: 'API Settings', vi: 'Cài đặt API' },
 }
 
 // ─── Animation variants ───────────────────────────────────────────

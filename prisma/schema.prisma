@@ -53,6 +53,16 @@ model Tenant {
   plan           String   @default("starter")
   maxUsers       Int      @default(10)
   maxFarmers     Int      @default(500)
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  paypalSubscriptionId   String?
+  subscriptionPlanId     String?
+  subscriptionStatus     String?  @default("inactive") // inactive, active, past_due, cancelled, trialing
+  subscriptionProvider   String?  // stripe, paypal
+  billingEmail           String?
+  whiteLabelDomain       String?
+  whiteLabelConfig       String?  // JSON for white-label settings
+  commodityTypes         String   @default("[\"coffee\"]") // JSON array: coffee, cocoa, palm_oil, soy
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -82,6 +92,19 @@ model Tenant {
   soilAnalyses           SoilAnalysis[]
   lots                   Lot[]
   subscription           Subscription?
+  eudrCompliances        EudrCompliance[]
+  exportDocuments        ExportDocument[]
+  shipments              Shipment[]
+  buyers                 Buyer[]
+  tradingContracts       TradingContract[]
+  trackingUpdates        TrackingUpdate[]
+  deforestationAssessments DeforestationAssessment[]
+  apiKeys                ApiKey[]
+  webhookEndpoints       WebhookEndpoint[]
+  complianceBookings     ComplianceBooking[]
+  iotSensors             IoTSensor[]
+  qcVerifications        QcVerification[]
+  analyticsReports       AnalyticsReport[]
 }
 
 model PlatformSetting {
@@ -249,6 +272,7 @@ model Farmer {
   coffeeInspections         CoffeeInspection[]
   smartContracts            SmartContract[]
   marketplaceListings       MarketplaceListing[]
+  eudrCompliances          EudrCompliance[]
   @@unique([farmerCode, tenantId])
   @@index([tenantId])
   @@index([tenantId, province])
@@ -305,6 +329,8 @@ model FarmLand {
   soilAnalyses          SoilAnalysis[]
   certAssessments       CertAssessment[]
   coffeeInspections     CoffeeInspection[]
+  deforestationAssessments DeforestationAssessment[]
+  eudrCompliances          EudrCompliance[]
   @@index([tenantId])
   @@index([tenantId, farmerId])
 }
@@ -988,4 +1014,414 @@ model AuditLog {
   tenant      Tenant   @relation(fields: [tenantId], references: [id])
   @@index([tenantId])
   @@index([tenantId, entity])
+}
+
+// ════════════════════════════════════════════════════════════════
+// B2B EUDR COMPLIANCE MODELS
+// ════════════════════════════════════════════════════════════════
+
+model EudrCompliance {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  batchId               String?
+  farmerId              String?
+  farmLandId            String?
+  createdBy             String?
+  complianceId          String?
+  status                String   @default("pending") // pending, in_review, compliant, non_compliant, expired
+  riskLevel             String?  // low, medium, high, critical
+  deforestationRiskScore Float?
+  satelliteImageryRef   String?
+  geolocationLat        Float?
+  geolocationLng        Float?
+  landUseType           String?
+  landCoverChangeDate   DateTime?
+  verificationDate      DateTime?
+  verifiedBy            String?
+  dueDiligenceStatement String?  // DDS document URL
+  tracesCertificateRef  String?  // EU TRACES certificate reference
+  validFrom             DateTime?
+  validUntil            DateTime?
+  notes                 String?
+  metadata              String?  // JSON for additional data
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  tenant         Tenant                  @relation(fields: [tenantId], references: [id])
+  farmer         Farmer?                 @relation(fields: [farmerId], references: [id])
+  farmLand       FarmLand?               @relation(fields: [farmLandId], references: [id])
+  deforestationAssessments DeforestationAssessment[]
+  @@unique([tenantId, complianceId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, riskLevel])
+}
+
+model ExportDocument {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  shipmentId          String?
+  createdBy           String?
+  documentType        String   // eudr_dds, phytosanitary, certificate_of_origin, commercial_invoice, bill_of_lading, packing_list, customs_declaration
+  documentNumber      String?
+  issuingAuthority    String?
+  issueDate           DateTime?
+  expiryDate          DateTime?
+  status              String   @default("draft") // draft, pending_approval, approved, rejected, expired
+  fileUrl             String?
+  verifiedBy          String?
+  verifiedDate        DateTime?
+  notes               String?
+  metadata            String?  // JSON
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  shipment Shipment? @relation(fields: [shipmentId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, documentType])
+  @@index([tenantId, status])
+}
+
+model Shipment {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  buyerId             String?
+  createdBy           String?
+  shipmentId          String?
+  status              String   @default("planned") // planned, booked, in_transit, arrived, delivered, cancelled
+  originCountry       String?
+  destinationCountry  String?
+  portOfLoading       String?
+  portOfDischarge     String?
+  vesselName          String?
+  vesselImo           String?
+  containerNumber     String?
+  bookingNumber       String?
+  billOfLadingNumber  String?
+  estimatedDeparture  DateTime?
+  actualDeparture     DateTime?
+  estimatedArrival    DateTime?
+  actualArrival       DateTime?
+  totalWeightKg       Float?
+  totalBags           Int?
+  commodity           String   @default("coffee")
+  grade               String?
+  contractReference   String?
+  freightForwarder    String?
+  customsBroker       String?
+  shippingLine        String?
+  trackingUrl         String?
+  notes               String?
+  metadata            String?  // JSON
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  buyer            Buyer?            @relation(fields: [buyerId], references: [id])
+  exportDocuments  ExportDocument[]
+  trackingUpdates  TrackingUpdate[]
+  iotSensors       IoTSensor[]
+  @@unique([tenantId, shipmentId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model Buyer {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  createdBy           String?
+  buyerCode           String?
+  companyName         String
+  contactPerson       String?
+  email               String?
+  phone               String?
+  address             String?
+  city                String?
+  country             String?
+  taxId               String?
+  euRegistration      Boolean  @default(false)
+  eoriNumber          String?  // EU Economic Operator Registration
+  tracesRegistration  String?  // TRACES registration number
+  buyerType           String   @default("roaster") // roaster, importer, trader, distributor
+  preferredCurrency   String   @default("EUR")
+  paymentTerms        String?
+  qualityRequirements String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  shipments Shipment[]
+  contracts TradingContract[]
+  @@unique([tenantId, buyerCode])
+  @@index([tenantId])
+  @@index([tenantId, country])
+}
+
+model TradingContract {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  buyerId             String
+  createdBy           String?
+  contractNumber      String?
+  contractType        String   @default("spot") // spot, forward, term
+  commodity           String   @default("coffee")
+  grade               String?
+  quantityKg          Float?
+  pricePerKg          Float?
+  totalValue          Float?
+  currency            String   @default("EUR")
+  qualitySpecs        String?  // JSON
+  deliveryDate        DateTime?
+  deliveryPort        String?
+  paymentTerms        String?
+  status              String   @default("draft") // draft, pending, active, fulfilled, cancelled
+  counterpartyVerified Boolean @default(false)
+  qualityLinkedPricing Boolean @default(false)
+  premiumDiscount     String?  // JSON for quality-linked pricing rules
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  buyer  Buyer  @relation(fields: [buyerId], references: [id])
+  @@unique([tenantId, contractNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model TrackingUpdate {
+  id              String   @id @default(cuid())
+  tenantId        String
+  shipmentId      String
+  updateType      String   // departure, arrival, customs, transshipment, delivery, iot_reading
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  timestamp       DateTime @default(now())
+  carrier         String?
+  description     String?
+  sensorData      String?  // JSON for IoT sensor readings
+  reportedBy      String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, shipmentId])
+}
+
+model DeforestationAssessment {
+  id                      String   @id @default(cuid())
+  tenantId                String
+  farmLandId              String?
+  eudrComplianceId        String?
+  createdBy               String?
+  assessmentDate          DateTime @default(now())
+  dataSource              String   @default("satellite") // satellite, ground_survey, combined
+  provider                String?  // gfw, planet, sentinel
+  referencePeriodStart    DateTime?
+  referencePeriodEnd      DateTime?
+  forestCoverBaselinePct  Float?
+  currentForestCoverPct   Float?
+  forestLossPct           Float?
+  deforestationDetected   Boolean  @default(false)
+  riskScore               Float?   // 0-100
+  riskCategory            String?  // negligible, low, medium, high, critical
+  imageryUrl              String?
+  analysisReportUrl       String?
+  methodology             String?
+  confidenceLevel         Float?
+  validUntil              DateTime?
+  notes                   String?
+  metadata                String?  // JSON
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  farmLand       FarmLand?       @relation(fields: [farmLandId], references: [id])
+  eudrCompliance EudrCompliance? @relation(fields: [eudrComplianceId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, riskCategory])
+  @@index([tenantId, assessmentDate])
+}
+
+model ApiKey {
+  id              String   @id @default(cuid())
+  tenantId        String
+  createdBy       String?
+  name            String
+  keyHash         String   // SHA-256 hash of the API key
+  keyPrefix       String   // First 8 chars for identification
+  permissions     String   @default("[]") // JSON array of permission scopes
+  tier            String   @default("starter") // starter, professional, enterprise
+  rateLimitPerMin Int      @default(60)
+  lastUsedAt      DateTime?
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+  @@index([keyPrefix])
+}
+
+model WebhookEndpoint {
+  id          String   @id @default(cuid())
+  tenantId    String
+  createdBy   String?
+  url         String
+  events      String   // JSON array of event types
+  secret      String   // Webhook signing secret
+  isActive    Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  failureCount Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+}
+
+model ComplianceService {
+  id              String   @id @default(cuid())
+  providerName    String
+  serviceType     String   // certification, audit, lab_testing, legal, consulting, training
+  description     String?
+  priceFrom       Float?
+  currency        String   @default("EUR")
+  coverage        String?  // Regions/countries
+  rating          Float?
+  reviewCount     Int      @default(0)
+  isVerified      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bookings ComplianceBooking[]
+  @@index([serviceType])
+  @@index([isActive])
+}
+
+model ComplianceBooking {
+  id              String   @id @default(cuid())
+  tenantId        String
+  serviceId       String
+  bookedBy        String?
+  status          String   @default("requested") // requested, confirmed, in_progress, completed, cancelled
+  scheduledDate   DateTime?
+  completedDate   DateTime?
+  notes           String?
+  metadata        String?  // JSON
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id])
+  service  ComplianceService @relation(fields: [serviceId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model IoTSensor {
+  id              String   @id @default(cuid())
+  tenantId        String
+  shipmentId      String?
+  sensorType      String   // temperature, humidity, gps, shock, light, co2
+  deviceId        String
+  deviceName      String?
+  manufacturer    String?
+  lastReading     String?  // JSON
+  lastReadingAt   DateTime?
+  batteryLevel    Float?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  shipment  Shipment?       @relation(fields: [shipmentId], references: [id])
+  readings  IoTReading[]
+  @@unique([tenantId, deviceId])
+  @@index([tenantId])
+}
+
+model IoTReading {
+  id              String   @id @default(cuid())
+  sensorId        String
+  readingType     String
+  value           Float
+  unit            String
+  latitude        Float?
+  longitude       Float?
+  isAlert         Boolean  @default(false)
+  alertType       String?
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  sensor IoTSensor @relation(fields: [sensorId], references: [id])
+  @@index([sensorId])
+  @@index([sensorId, timestamp])
+  @@index([isAlert])
+}
+
+model QcVerification {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  certBodyId          String?  // External certification body
+  verificationType    String   // eudr, organic, fairtrade, rainforest, utz, 4c
+  entityType          String   // farmer, farmland, batch, shipment
+  entityId            String
+  status              String   @default("requested") // requested, scheduled, in_progress, passed, failed, expired
+  scheduledDate       DateTime?
+  completedDate       DateTime?
+  inspectorName       String?
+  inspectorCertNo     String?
+  findings            String?  // JSON
+  certificateUrl      String?
+  validUntil          DateTime?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, verificationType])
+  @@index([tenantId, status])
+}
+
+model AnalyticsReport {
+  id              String   @id @default(cuid())
+  tenantId        String
+  createdBy       String?
+  reportType      String   // eudr_compliance, supply_chain, financial, quality, sustainability, deforestation
+  title           String
+  description     String?
+  dateRangeStart  DateTime?
+  dateRangeEnd    DateTime?
+  parameters      String?  // JSON
+  data            String?  // JSON aggregated data
+  chartConfig     String?  // JSON chart configuration
+  fileUrl         String?  // Exported PDF/Excel URL
+  format          String   @default("json") // json, pdf, xlsx
+  status          String   @default("generating") // generating, ready, failed
+  isScheduled     Boolean  @default(false)
+  scheduleCron    String?
+  lastGeneratedAt DateTime?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@index([tenantId])
+  @@index([tenantId, reportType])
 }

@@ -45,6 +45,209 @@
     "no": "Không",
     "years": "tuổi"
   },
+  "b2b": {
+    "title": "B2B & Tuân thủ",
+    "eudrCompliance": {
+      "title": "Tuân thủ EUDR",
+      "description": "Quản lý đánh giá tuân thủ Quy định Chống phá rừng EU",
+      "newAssessment": "Đánh giá mới",
+      "status": {
+        "pending": "Đang chờ",
+        "in_review": "Đang xem xét",
+        "compliant": "Tuân thủ",
+        "non_compliant": "Không tuân thủ",
+        "expired": "Đã hết hạn"
+      },
+      "riskLevel": {
+        "low": "Thấp",
+        "medium": "Trung bình",
+        "high": "Cao",
+        "critical": "Nghiêm trọng"
+      },
+      "totalAssessments": "Tổng đánh giá",
+      "compliantCount": "Tuân thủ",
+      "pendingReview": "Đang xem xét",
+      "highRisk": "Rủi ro cao"
+    },
+    "exportDocs": {
+      "title": "Tài liệu xuất khẩu",
+      "description": "Quản lý tài liệu xuất khẩu cho thương mại quốc tế",
+      "newDocument": "Tài liệu mới",
+      "documentType": {
+        "eudr_dds": "Báo cáo Tuân thủ EUDR",
+        "phytosanitary": "Giấy chứng nhận Kiểm dịch thực vật",
+        "certificate_of_origin": "Giấy chứng nhận Xuất xứ",
+        "commercial_invoice": "Hóa đơn Thương mại",
+        "bill_of_lading": "Vận đơn",
+        "packing_list": "Danh sách Đóng gói",
+        "customs_declaration": "Tờ khai Hải quan"
+      },
+      "status": {
+        "draft": "Bản nháp",
+        "pending_approval": "Chờ phê duyệt",
+        "approved": "Đã phê duyệt",
+        "rejected": "Bị từ chối",
+        "expired": "Đã hết hạn"
+      }
+    },
+    "shipments": {
+      "title": "Lô hàng",
+      "description": "Theo dõi và quản lý lô hàng cà phê quốc tế",
+      "newShipment": "Tạo lô hàng mới",
+      "status": {
+        "planned": "Đã lên kế hoạch",
+        "booked": "Đã đặt",
+        "in_transit": "Đang vận chuyển",
+        "arrived": "Đã đến",
+        "delivered": "Đã giao",
+        "cancelled": "Đã hủy"
+      }
+    },
+    "buyers": {
+      "title": "Người mua",
+      "description": "Quản lý quan hệ người mua và đăng ký EU",
+      "newBuyer": "Thêm người mua",
+      "buyerType": {
+        "roaster": "Rang xay",
+        "importer": "Nhập khẩu",
+        "trader": "Thương mại",
+        "distributor": "Phân phối"
+      },
+      "euRegistration": "Đăng ký EU",
+      "eoriNumber": "Số EORI"
+    },
+    "tradingDesk": {
+      "title": "Sàn giao dịch",
+      "description": "Quản lý hợp đồng giao dịch với xác minh đối tác",
+      "newContract": "Hợp đồng mới",
+      "contractType": {
+        "spot": "Hợp đồng giao ngay",
+        "forward": "Hợp đồng kỳ hạn",
+        "term": "Hợp đồng dài hạn"
+      },
+      "counterpartyVerified": "Đối tác đã xác minh",
+      "qualityLinkedPricing": "Giá liên kết chất lượng"
+    },
+    "deforestation": {
+      "title": "Rủi ro phá rừng",
+      "description": "Đánh giá rủi ro phá rừng dựa trên dữ liệu vệ tinh",
+      "newAssessment": "Đánh giá mới",
+      "riskScore": "Điểm rủi ro",
+      "forestCoverBaseline": "Đường cơ sở độ phủ rừng",
+      "currentForestCover": "Độ phủ rừng hiện tại",
+      "forestLoss": "Mất rừng",
+      "deforestationDetected": "Phát hiện phá rừng"
+    },
+    "billing": {
+      "title": "Thanh toán & Đăng ký",
+      "description": "Quản lý gói đăng ký và thanh toán",
+      "currentPlan": "Gói hiện tại",
+      "upgradePlan": "Nâng cấp gói",
+      "downgradePlan": "Hạ cấp gói",
+      "cancelSubscription": "Hủy đăng ký",
+      "starter": "Khởi đầu",
+      "professional": "Chuyên nghiệp",
+      "enterprise": "Doanh nghiệp",
+      "perMonth": "/tháng",
+      "features": "Tính năng",
+      "choosePlan": "Chọn gói",
+      "paymentMethod": "Phương thức thanh toán",
+      "stripe": "Thẻ tín dụng (Stripe)",
+      "paypal": "PayPal",
+      "manageBilling": "Quản lý thanh toán",
+      "invoiceHistory": "Lịch sử hóa đơn"
+    },
+    "apiAccess": {
+      "title": "API & Webhooks",
+      "description": "Quản lý khóa API và điểm cuối webhook",
+      "generateKey": "Tạo khóa API",
+      "registerWebhook": "Đăng ký Webhook",
+      "apiKey": "Khóa API",
+      "webhookUrl": "URL Webhook",
+      "permissions": "Quyền",
+      "lastUsed": "Sử dụng lần cuối",
+      "copied": "Đã sao chép!",
+      "copyKey": "Sao chép khóa"
+    },
+    "iotSensors": {
+      "title": "Cảm biến IoT",
+      "description": "Giám sát cảm biến IoT để theo dõi lô hàng theo thời gian thực",
+      "registerSensor": "Đăng ký cảm biến",
+      "sensorType": {
+        "temperature": "Nhiệt độ",
+        "humidity": "Độ ẩm",
+        "gps": "GPS",
+        "shock": "Sốc",
+        "light": "Ánh sáng",
+        "co2": "CO2"
+      },
+      "batteryLevel": "Mức pin",
+      "lastReading": "Đọc gần nhất",
+      "alerts": "Cảnh báo"
+    },
+    "qcVerification": {
+      "title": "Kiểm định chất lượng",
+      "description": "Cổng xác minh chứng nhận chất lượng",
+      "newVerification": "Yêu cầu xác minh mới",
+      "verificationType": {
+        "eudr": "EUDR",
+        "organic": "Hữu cơ",
+        "fairtrade": "Fairtrade",
+        "rainforest": "Rainforest Alliance",
+        "utz": "UTZ",
+        "4c": "4C"
+      },
+      "status": {
+        "requested": "Đã yêu cầu",
+        "scheduled": "Đã lên lịch",
+        "in_progress": "Đang thực hiện",
+        "passed": "Đạt",
+        "failed": "Không đạt",
+        "expired": "Đã hết hạn"
+      }
+    },
+    "complianceMarketplace": {
+      "title": "Thị trường tuân thủ",
+      "description": "Tìm kiếm và đặt dịch vụ tuân thủ",
+      "bookService": "Đặt dịch vụ",
+      "serviceType": {
+        "certification": "Chứng nhận",
+        "audit": "Kiểm toán",
+        "lab_testing": "Xét nghiệm phòng lab",
+        "legal": "Pháp lý",
+        "consulting": "Tư vấn",
+        "training": "Đào tạo"
+      },
+      "verified": "Nhà cung cấp đã xác minh",
+      "priceFrom": "Từ"
+    },
+    "analytics": {
+      "title": "Phân tích",
+      "description": "Phân tích và báo cáo nâng cao",
+      "generateReport": "Tạo báo cáo",
+      "reportType": {
+        "eudr_compliance": "Tuân thủ EUDR",
+        "supply_chain": "Chuỗi cung ứng",
+        "financial": "Tài chính",
+        "quality": "Chất lượng",
+        "sustainability": "Phát triển bền vững",
+        "deforestation": "Phá rừng"
+      },
+      "downloadReport": "Tải báo cáo",
+      "deleteReport": "Xóa báo cáo"
+    },
+    "logistics": {
+      "title": "Vận tải & Hải quan",
+      "description": "Quản lý giao nhận vận tải và môi giới hải quan",
+      "newEntry": "Tạo mới vận tải",
+      "freightForwarder": "Giao nhận vận tải",
+      "customsBroker": "Môi giới hải quan",
+      "shippingLine": "Hãng tàu",
+      "portOfLoading": "Cảng xếp hàng",
+      "portOfDischarge": "Cảng dỡ hàng",
+      "trackingTimeline": "Lịch trình theo dõi"
+    }
+  },
   "auth": {
     "signIn": "Đăng nhập",
     "signOut": "Đăng xuất",
@@ -735,5 +938,213 @@
     "notFound": "Không tìm thấy",
     "serverError": "Lỗi máy chủ",
     "validationFailed": "Dữ liệu không hợp lệ"
+  },
+  "eudr": {
+    "title": "Trung tâm Tuân thủ EUDR",
+    "subtitle": "Quản lý tuân thủ Quy định Chống phá rừng EU",
+    "total": "Tổng đánh giá",
+    "compliant": "Tuân thủ",
+    "pending": "Đang chờ",
+    "nonCompliant": "Không tuân thủ",
+    "highRisk": "Rủi ro cao",
+    "createAssessment": "Đánh giá mới",
+    "complianceId": "Mã tuân thủ",
+    "batchId": "Mã lô",
+    "riskLevel": "Mức rủi ro",
+    "riskScore": "Điểm rủi ro",
+    "status": "Trạng thái",
+    "validUntil": "Hiệu lực đến",
+    "submitDds": "Gửi DDS",
+    "searchPlaceholder": "Tìm kiếm hồ sơ tuân thủ..."
+  },
+  "exportDocs": {
+    "title": "Tài liệu Xuất khẩu",
+    "subtitle": "Quản lý tài liệu xuất khẩu và nộp TRACES",
+    "createDocument": "Tài liệu mới",
+    "documentType": "Loại tài liệu",
+    "documentNumber": "Số tài liệu",
+    "issuingAuthority": "Cơ quan cấp",
+    "status": "Trạng thái",
+    "issueDate": "Ngày cấp",
+    "expiryDate": "Ngày hết hạn",
+    "eudrDds": "EUDR DDS",
+    "phytosanitary": "Kiểm dịch thực vật",
+    "certificateOfOrigin": "Giấy chứng nhận xuất xứ",
+    "commercialInvoice": "Hóa đơn thương mại",
+    "billOfLading": "Vận đơn",
+    "packingList": "Danh sách đóng gói",
+    "customsDeclaration": "Tờ khai hải quan",
+    "searchPlaceholder": "Tìm kiếm tài liệu..."
+  },
+  "shipments": {
+    "title": "Vận chuyển",
+    "subtitle": "Theo dõi và quản lý lô hàng xuất khẩu",
+    "createShipment": "Tạo lô hàng mới",
+    "shipmentId": "Mã lô hàng",
+    "status": "Trạng thái",
+    "route": "Tuyến đường",
+    "weight": "Trọng lượng",
+    "commodity": "Hàng hóa",
+    "etd": "Dự kiến đi",
+    "eta": "Dự kiến đến",
+    "planned": "Đã lên kế hoạch",
+    "booked": "Đã đặt",
+    "inTransit": "Đang vận chuyển",
+    "arrived": "Đã đến",
+    "delivered": "Đã giao",
+    "cancelled": "Đã hủy",
+    "searchPlaceholder": "Tìm kiếm lô hàng..."
+  },
+  "buyers": {
+    "title": "Quản lý Người mua",
+    "subtitle": "Quản lý người mua EU, nhà nhập khẩu và đối tác thương mại",
+    "addBuyer": "Thêm người mua",
+    "companyName": "Tên công ty",
+    "contactPerson": "Người liên hệ",
+    "email": "Email",
+    "buyerType": "Loại người mua",
+    "country": "Quốc gia",
+    "eoriNumber": "Số EORI",
+    "tracesRegistration": "Đăng ký TRACES",
+    "euRegistered": "Đã đăng ký EU",
+    "roaster": "Rang xay",
+    "importer": "Nhập khẩu",
+    "trader": "Thương mại",
+    "distributor": "Phân phối",
+    "searchPlaceholder": "Tìm kiếm người mua..."
+  },
+  "tradingDesk": {
+    "title": "Mặt bằng Giao dịch",
+    "subtitle": "Quản lý hợp đồng, xác minh đối tác và giá liên kết chất lượng",
+    "newContract": "Hợp đồng mới",
+    "contractNumber": "Số HĐ",
+    "contractType": "Loại HĐ",
+    "buyer": "Người mua",
+    "quantityKg": "Số lượng (kg)",
+    "pricePerKg": "Giá/kg",
+    "totalValue": "Tổng giá trị",
+    "status": "Trạng thái",
+    "verified": "Đã xác minh",
+    "spot": "Giao ngay",
+    "forward": "Kỳ hạn",
+    "term": "Dài hạn",
+    "qualityLinkedPricing": "Giá liên kết chất lượng",
+    "searchPlaceholder": "Tìm kiếm hợp đồng..."
+  },
+  "deforestation": {
+    "title": "Đánh giá Rủi ro Phá rừng",
+    "subtitle": "Phân tích hình ảnh vệ tinh và giám sát phá rừng",
+    "assessments": "Đánh giá",
+    "deforestationDetected": "Phát hiện phá rừng",
+    "lowRisk": "Rủi ro thấp",
+    "highRisk": "Rủi ro cao",
+    "riskScore": "Điểm rủi ro",
+    "riskCategory": "Phân loại rủi ro",
+    "forestLoss": "Mất rừng %",
+    "confidence": "Độ tin cậy",
+    "negligible": "Rất thấp",
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "critical": "Nghiêm trọng"
+  },
+  "billing": {
+    "title": "Thanh toán & Đăng ký",
+    "subtitle": "Quản lý gói đăng ký và thanh toán",
+    "currentPlan": "Gói hiện tại",
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động",
+    "subscribe": "Đăng ký",
+    "currentPlanLabel": "Gói hiện tại",
+    "cancelSubscription": "Hủy đăng ký",
+    "manageBilling": "Quản lý thanh toán",
+    "starter": "Khởi đầu",
+    "professional": "Chuyên nghiệp",
+    "enterprise": "Doanh nghiệp",
+    "perMonth": "/tháng"
+  },
+  "apiSettings": {
+    "title": "Cài đặt API & Webhook",
+    "subtitle": "Quản lý khóa API và điểm cuối webhook",
+    "apiKeys": "Khóa API",
+    "createKey": "Tạo khóa",
+    "webhookEndpoints": "Điểm cuối Webhook",
+    "addWebhook": "Thêm Webhook",
+    "name": "Tên",
+    "prefix": "Tiền tố",
+    "tier": "Cấp",
+    "rateLimit": "Giới hạn tốc độ",
+    "lastUsed": "Sử dụng lần cuối",
+    "url": "URL",
+    "events": "Sự kiện"
+  },
+  "iotSensors": {
+    "title": "Quản lý Cảm biến IoT",
+    "subtitle": "Theo dõi và quản lý cảm biến IoT và dữ liệu trực tiếp",
+    "registerSensor": "Đăng ký cảm biến",
+    "deviceId": "Mã thiết bị",
+    "deviceName": "Tên thiết bị",
+    "sensorType": "Loại cảm biến",
+    "lastReading": "Đọc gần nhất",
+    "battery": "Pin",
+    "temperature": "Nhiệt độ",
+    "humidity": "Độ ẩm",
+    "gps": "GPS",
+    "shock": "Sốc",
+    "light": "Ánh sáng",
+    "co2": "CO2",
+    "searchPlaceholder": "Tìm kiếm cảm biến..."
+  },
+  "qcVerifications": {
+    "title": "Xác minh QC",
+    "subtitle": "Cổng xác minh kiểm soát chất lượng cho tổ chức chứng nhận",
+    "requestVerification": "Yêu cầu xác minh",
+    "verificationType": "Loại xác minh",
+    "entityType": "Loại đối tượng",
+    "status": "Trạng thái",
+    "inspector": "Kiểm tra viên",
+    "scheduled": "Đã lên lịch",
+    "completed": "Hoàn thành"
+  },
+  "complianceMarketplace": {
+    "title": "Thị trường Tuân thủ",
+    "subtitle": "Tìm và đặt dịch vụ tuân thủ",
+    "bookService": "Đặt dịch vụ",
+    "verified": "Đã xác minh",
+    "myBookings": "Đặt chỗ của tôi",
+    "certification": "Chứng nhận",
+    "audit": "Kiểm toán",
+    "labTesting": "Xét nghiệm phòng lab",
+    "legal": "Pháp lý",
+    "consulting": "Tư vấn",
+    "training": "Đào tạo"
+  },
+  "analytics": {
+    "title": "Phân tích & Báo cáo",
+    "subtitle": "Bảng phân tích nâng cao và tạo báo cáo",
+    "generateReport": "Tạo báo cáo",
+    "reportType": "Loại báo cáo",
+    "title_field": "Tiêu đề",
+    "dateRange": "Phạm vi ngày",
+    "format": "Định dạng",
+    "status": "Trạng thái",
+    "eudrCompliance": "Tuân thủ EUDR",
+    "supplyChain": "Chuỗi cung ứng",
+    "financial": "Tài chính",
+    "quality": "Chất lượng",
+    "sustainability": "Phát triển bền vững",
+    "deforestation": "Phá rừng"
+  },
+  "logistics": {
+    "title": "Trung tâm Logistics",
+    "subtitle": "Giao nhận vận tải, hải quan và quản lý lô hàng",
+    "totalShipments": "Tổng lô hàng",
+    "inTransit": "Đang vận chuyển",
+    "delivered": "Đã giao",
+    "planned": "Đã lên kế hoạch",
+    "vessel": "Tàu",
+    "container": "Container",
+    "forwarder": "Giao nhận",
+    "customsBroker": "Môi giới hải quan"
   }
 }

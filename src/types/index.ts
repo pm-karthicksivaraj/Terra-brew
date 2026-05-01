@@ -8,7 +8,7 @@
 // ════════════════════════════════════════════════════════════════
 
 export type PlatformRole = 'super_admin' | 'support'
-export type TenantRole = 'tenant_admin' | 'manager' | 'inspector' | 'field_officer' | 'farmer' | 'viewer'
+export type TenantRole = 'tenant_admin' | 'manager' | 'inspector' | 'field_officer' | 'farmer' | 'viewer' | 'aggregator' | 'processor' | 'exporter'
 
 export interface AuthenticatedUser {
   id: string
@@ -68,6 +68,18 @@ export type ModuleSlug =
   | 'cert-assessments' | 'coffee-inspections'
   | 'smart-contracts' | 'marketplace'
   | 'dashboard' | 'reports' | 'settings' | 'users'
+  | 'eudr-compliance' | 'export-docs' | 'shipments' | 'buyers' | 'trading-desk' | 'api-access' | 'deforestation' | 'iot-tracking' | 'qc-verification' | 'compliance-marketplace' | 'analytics' | 'logistics'
+
+export type SubscriptionTier = 'starter' | 'professional' | 'enterprise'
+export type PaymentProvider = 'stripe' | 'paypal'
+export type EudrStatus = 'pending' | 'in_review' | 'compliant' | 'non_compliant' | 'expired'
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
+export type ShipmentStatus = 'planned' | 'booked' | 'in_transit' | 'arrived' | 'delivered' | 'cancelled'
+export type DocStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'expired'
+export type ContractType = 'spot' | 'forward' | 'term'
+export type BuyerType = 'roaster' | 'importer' | 'trader' | 'distributor'
+export type SensorType = 'temperature' | 'humidity' | 'gps' | 'shock' | 'light' | 'co2'
+export type VerificationType = 'eudr' | 'organic' | 'fairtrade' | 'rainforest' | 'utz' | '4c'
 
 export type PermissionMap = Record<ModuleSlug, Action[]>
 

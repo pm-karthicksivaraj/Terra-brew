@@ -32,6 +32,15 @@ const ALL_MODULES: ModuleSlug[] = [
   'harvest-traceabilities', 'procurement', 'processing',
   'cert-assessments', 'coffee-inspections', 'smart-contracts', 'marketplace',
   'dashboard', 'reports', 'settings', 'users',
+  'eudr-compliance', 'export-docs', 'shipments', 'buyers', 'trading-desk',
+  'api-access', 'deforestation', 'iot-tracking', 'qc-verification',
+  'compliance-marketplace', 'analytics', 'logistics',
+]
+
+const B2B_MODULES: ModuleSlug[] = [
+  'eudr-compliance', 'export-docs', 'shipments', 'buyers', 'trading-desk',
+  'api-access', 'deforestation', 'iot-tracking', 'qc-verification',
+  'compliance-marketplace', 'analytics', 'logistics',
 ]
 
 export const ROLE_PERMISSIONS: Record<string, PermissionMap> = {
@@ -74,6 +83,30 @@ export const ROLE_PERMISSIONS: Record<string, PermissionMap> = {
   viewer: Object.fromEntries(
     ALL_MODULES.map(m => [m, ['read'] as Action[]])
   ) as PermissionMap,
+  aggregator: {
+    ...Object.fromEntries(ALL_MODULES.map(m => [m, READ_ONLY as Action[]])) as PermissionMap,
+    'eudr-compliance': READ_WRITE,
+    'export-docs': READ_WRITE,
+    farmers: ['read', 'update'] as Action[],
+    farmlands: ['read', 'update'] as Action[],
+    shipments: ['read'] as Action[],
+    buyers: ['read'] as Action[],
+    'deforestation': ['read'] as Action[],
+  } as PermissionMap,
+  processor: {
+    ...Object.fromEntries(ALL_MODULES.map(m => [m, READ_ONLY as Action[]])) as PermissionMap,
+    'eudr-compliance': READ_WRITE,
+    'export-docs': READ_WRITE,
+    shipments: READ_WRITE,
+    processing: READ_WRITE,
+    buyers: ['read'] as Action[],
+    'trading-desk': ['read'] as Action[],
+    'deforestation': ['read'] as Action[],
+  } as PermissionMap,
+  exporter: {
+    ...Object.fromEntries(ALL_MODULES.map(m => [m, READ_ONLY as Action[]])) as PermissionMap,
+    ...Object.fromEntries(B2B_MODULES.map(m => [m, FULL_ACCESS])) as PermissionMap,
+  } as PermissionMap,
 }
 
 export function hasPermission(role: string, module: ModuleSlug, action: Action): boolean {

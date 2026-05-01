@@ -45,6 +45,209 @@
     "no": "No",
     "years": "yrs"
   },
+  "b2b": {
+    "title": "B2B & Compliance",
+    "eudrCompliance": {
+      "title": "EUDR Compliance",
+      "description": "Manage EU Deforestation Regulation compliance assessments",
+      "newAssessment": "New Assessment",
+      "status": {
+        "pending": "Pending",
+        "in_review": "In Review",
+        "compliant": "Compliant",
+        "non_compliant": "Non-Compliant",
+        "expired": "Expired"
+      },
+      "riskLevel": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "totalAssessments": "Total Assessments",
+      "compliantCount": "Compliant",
+      "pendingReview": "Pending Review",
+      "highRisk": "High Risk"
+    },
+    "exportDocs": {
+      "title": "Export Documents",
+      "description": "Manage export documentation for international trade",
+      "newDocument": "New Document",
+      "documentType": {
+        "eudr_dds": "EUDR Due Diligence",
+        "phytosanitary": "Phytosanitary Certificate",
+        "certificate_of_origin": "Certificate of Origin",
+        "commercial_invoice": "Commercial Invoice",
+        "bill_of_lading": "Bill of Lading",
+        "packing_list": "Packing List",
+        "customs_declaration": "Customs Declaration"
+      },
+      "status": {
+        "draft": "Draft",
+        "pending_approval": "Pending Approval",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      }
+    },
+    "shipments": {
+      "title": "Shipments",
+      "description": "Track and manage international coffee shipments",
+      "newShipment": "New Shipment",
+      "status": {
+        "planned": "Planned",
+        "booked": "Booked",
+        "in_transit": "In Transit",
+        "arrived": "Arrived",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    },
+    "buyers": {
+      "title": "Buyers",
+      "description": "Manage buyer relationships and EU registrations",
+      "newBuyer": "New Buyer",
+      "buyerType": {
+        "roaster": "Roaster",
+        "importer": "Importer",
+        "trader": "Trader",
+        "distributor": "Distributor"
+      },
+      "euRegistration": "EU Registration",
+      "eoriNumber": "EORI Number"
+    },
+    "tradingDesk": {
+      "title": "Trading Desk",
+      "description": "Manage trading contracts with counterparty verification",
+      "newContract": "New Contract",
+      "contractType": {
+        "spot": "Spot Contract",
+        "forward": "Forward Contract",
+        "term": "Term Contract"
+      },
+      "counterpartyVerified": "Counterparty Verified",
+      "qualityLinkedPricing": "Quality-Linked Pricing"
+    },
+    "deforestation": {
+      "title": "Deforestation Risk",
+      "description": "Satellite-based deforestation risk assessment",
+      "newAssessment": "New Assessment",
+      "riskScore": "Risk Score",
+      "forestCoverBaseline": "Forest Cover Baseline",
+      "currentForestCover": "Current Forest Cover",
+      "forestLoss": "Forest Loss",
+      "deforestationDetected": "Deforestation Detected"
+    },
+    "billing": {
+      "title": "Billing & Subscription",
+      "description": "Manage your subscription plan and billing",
+      "currentPlan": "Current Plan",
+      "upgradePlan": "Upgrade Plan",
+      "downgradePlan": "Downgrade Plan",
+      "cancelSubscription": "Cancel Subscription",
+      "starter": "Starter",
+      "professional": "Professional",
+      "enterprise": "Enterprise",
+      "perMonth": "/month",
+      "features": "Features",
+      "choosePlan": "Choose Plan",
+      "paymentMethod": "Payment Method",
+      "stripe": "Credit Card (Stripe)",
+      "paypal": "PayPal",
+      "manageBilling": "Manage Billing",
+      "invoiceHistory": "Invoice History"
+    },
+    "apiAccess": {
+      "title": "API & Webhooks",
+      "description": "Manage API keys and webhook endpoints",
+      "generateKey": "Generate API Key",
+      "registerWebhook": "Register Webhook",
+      "apiKey": "API Key",
+      "webhookUrl": "Webhook URL",
+      "permissions": "Permissions",
+      "lastUsed": "Last Used",
+      "copied": "Copied!",
+      "copyKey": "Copy Key"
+    },
+    "iotSensors": {
+      "title": "IoT Sensors",
+      "description": "Monitor IoT sensors for real-time shipment tracking",
+      "registerSensor": "Register Sensor",
+      "sensorType": {
+        "temperature": "Temperature",
+        "humidity": "Humidity",
+        "gps": "GPS",
+        "shock": "Shock",
+        "light": "Light",
+        "co2": "CO2"
+      },
+      "batteryLevel": "Battery Level",
+      "lastReading": "Last Reading",
+      "alerts": "Alerts"
+    },
+    "qcVerification": {
+      "title": "QC Verification",
+      "description": "Quality certification verification portal",
+      "newVerification": "New Verification",
+      "verificationType": {
+        "eudr": "EUDR",
+        "organic": "Organic",
+        "fairtrade": "Fairtrade",
+        "rainforest": "Rainforest Alliance",
+        "utz": "UTZ",
+        "4c": "4C"
+      },
+      "status": {
+        "requested": "Requested",
+        "scheduled": "Scheduled",
+        "in_progress": "In Progress",
+        "passed": "Passed",
+        "failed": "Failed",
+        "expired": "Expired"
+      }
+    },
+    "complianceMarketplace": {
+      "title": "Compliance Marketplace",
+      "description": "Browse and book compliance services",
+      "bookService": "Book Service",
+      "serviceType": {
+        "certification": "Certification",
+        "audit": "Audit",
+        "lab_testing": "Lab Testing",
+        "legal": "Legal",
+        "consulting": "Consulting",
+        "training": "Training"
+      },
+      "verified": "Verified Provider",
+      "priceFrom": "From"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Advanced analytics and reporting",
+      "generateReport": "Generate Report",
+      "reportType": {
+        "eudr_compliance": "EUDR Compliance",
+        "supply_chain": "Supply Chain",
+        "financial": "Financial",
+        "quality": "Quality",
+        "sustainability": "Sustainability",
+        "deforestation": "Deforestation"
+      },
+      "downloadReport": "Download Report",
+      "deleteReport": "Delete Report"
+    },
+    "logistics": {
+      "title": "Logistics",
+      "description": "Manage freight forwarding and customs brokerage",
+      "newEntry": "New Logistics Entry",
+      "freightForwarder": "Freight Forwarder",
+      "customsBroker": "Customs Broker",
+      "shippingLine": "Shipping Line",
+      "portOfLoading": "Port of Loading",
+      "portOfDischarge": "Port of Discharge",
+      "trackingTimeline": "Tracking Timeline"
+    }
+  },
   "auth": {
     "signIn": "Sign In",
     "signOut": "Sign out",
@@ -735,5 +938,213 @@
     "notFound": "Not found",
     "serverError": "Server error",
     "validationFailed": "Validation failed"
+  },
+  "eudr": {
+    "title": "EUDR Compliance Hub",
+    "subtitle": "EU Deforestation Regulation compliance management",
+    "total": "Total Assessments",
+    "compliant": "Compliant",
+    "pending": "Pending",
+    "nonCompliant": "Non-Compliant",
+    "highRisk": "High Risk",
+    "createAssessment": "New Assessment",
+    "complianceId": "Compliance ID",
+    "batchId": "Batch ID",
+    "riskLevel": "Risk Level",
+    "riskScore": "Risk Score",
+    "status": "Status",
+    "validUntil": "Valid Until",
+    "submitDds": "Submit DDS",
+    "searchPlaceholder": "Search compliance records..."
+  },
+  "exportDocs": {
+    "title": "Export Documentation",
+    "subtitle": "Manage export documents and TRACES submissions",
+    "createDocument": "New Document",
+    "documentType": "Document Type",
+    "documentNumber": "Document Number",
+    "issuingAuthority": "Issuing Authority",
+    "status": "Status",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "eudrDds": "EUDR DDS",
+    "phytosanitary": "Phytosanitary",
+    "certificateOfOrigin": "Certificate of Origin",
+    "commercialInvoice": "Commercial Invoice",
+    "billOfLading": "Bill of Lading",
+    "packingList": "Packing List",
+    "customsDeclaration": "Customs Declaration",
+    "searchPlaceholder": "Search documents..."
+  },
+  "shipments": {
+    "title": "Shipments",
+    "subtitle": "Track and manage export shipments",
+    "createShipment": "New Shipment",
+    "shipmentId": "Shipment ID",
+    "status": "Status",
+    "route": "Route",
+    "weight": "Weight",
+    "commodity": "Commodity",
+    "etd": "ETD",
+    "eta": "ETA",
+    "planned": "Planned",
+    "booked": "Booked",
+    "inTransit": "In Transit",
+    "arrived": "Arrived",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "searchPlaceholder": "Search shipments..."
+  },
+  "buyers": {
+    "title": "Buyer Management",
+    "subtitle": "Manage EU buyers, importers, and trading partners",
+    "addBuyer": "Add Buyer",
+    "companyName": "Company Name",
+    "contactPerson": "Contact Person",
+    "email": "Email",
+    "buyerType": "Buyer Type",
+    "country": "Country",
+    "eoriNumber": "EORI Number",
+    "tracesRegistration": "TRACES Registration",
+    "euRegistered": "EU Registered",
+    "roaster": "Roaster",
+    "importer": "Importer",
+    "trader": "Trader",
+    "distributor": "Distributor",
+    "searchPlaceholder": "Search buyers..."
+  },
+  "tradingDesk": {
+    "title": "Trading Desk",
+    "subtitle": "Manage contracts, counterparty verification, and quality-linked pricing",
+    "newContract": "New Contract",
+    "contractNumber": "Contract #",
+    "contractType": "Contract Type",
+    "buyer": "Buyer",
+    "quantityKg": "Quantity (kg)",
+    "pricePerKg": "Price/kg",
+    "totalValue": "Total Value",
+    "status": "Status",
+    "verified": "Verified",
+    "spot": "Spot",
+    "forward": "Forward",
+    "term": "Term",
+    "qualityLinkedPricing": "Quality-Linked Pricing",
+    "searchPlaceholder": "Search contracts..."
+  },
+  "deforestation": {
+    "title": "Deforestation Risk Assessment",
+    "subtitle": "Satellite imagery analysis and deforestation monitoring",
+    "assessments": "Assessments",
+    "deforestationDetected": "Deforestation Detected",
+    "lowRisk": "Low Risk",
+    "highRisk": "High Risk",
+    "riskScore": "Risk Score",
+    "riskCategory": "Risk Category",
+    "forestLoss": "Forest Loss %",
+    "confidence": "Confidence",
+    "negligible": "Negligible",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "subtitle": "Manage your subscription plan and billing",
+    "currentPlan": "Current Plan",
+    "active": "Active",
+    "inactive": "Inactive",
+    "subscribe": "Subscribe",
+    "currentPlanLabel": "Current Plan",
+    "cancelSubscription": "Cancel Subscription",
+    "manageBilling": "Manage Billing",
+    "starter": "Starter",
+    "professional": "Professional",
+    "enterprise": "Enterprise",
+    "perMonth": "/mo"
+  },
+  "apiSettings": {
+    "title": "API & Webhook Settings",
+    "subtitle": "Manage API keys and webhook endpoints",
+    "apiKeys": "API Keys",
+    "createKey": "Create Key",
+    "webhookEndpoints": "Webhook Endpoints",
+    "addWebhook": "Add Webhook",
+    "name": "Name",
+    "prefix": "Prefix",
+    "tier": "Tier",
+    "rateLimit": "Rate Limit",
+    "lastUsed": "Last Used",
+    "url": "URL",
+    "events": "Events"
+  },
+  "iotSensors": {
+    "title": "IoT Sensor Management",
+    "subtitle": "Monitor and manage IoT sensors and live readings",
+    "registerSensor": "Register Sensor",
+    "deviceId": "Device ID",
+    "deviceName": "Device Name",
+    "sensorType": "Sensor Type",
+    "lastReading": "Last Reading",
+    "battery": "Battery",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "gps": "GPS",
+    "shock": "Shock",
+    "light": "Light",
+    "co2": "CO2",
+    "searchPlaceholder": "Search sensors..."
+  },
+  "qcVerifications": {
+    "title": "QC Verifications",
+    "subtitle": "Quality control verification portal for certification bodies",
+    "requestVerification": "Request Verification",
+    "verificationType": "Verification Type",
+    "entityType": "Entity Type",
+    "status": "Status",
+    "inspector": "Inspector",
+    "scheduled": "Scheduled",
+    "completed": "Completed"
+  },
+  "complianceMarketplace": {
+    "title": "Compliance Marketplace",
+    "subtitle": "Find and book compliance services",
+    "bookService": "Book Service",
+    "verified": "Verified",
+    "myBookings": "My Bookings",
+    "certification": "Certification",
+    "audit": "Audit",
+    "labTesting": "Lab Testing",
+    "legal": "Legal",
+    "consulting": "Consulting",
+    "training": "Training"
+  },
+  "analytics": {
+    "title": "Analytics & Reports",
+    "subtitle": "Advanced analytics dashboard and report generation",
+    "generateReport": "Generate Report",
+    "reportType": "Report Type",
+    "title_field": "Title",
+    "dateRange": "Date Range",
+    "format": "Format",
+    "status": "Status",
+    "eudrCompliance": "EUDR Compliance",
+    "supplyChain": "Supply Chain",
+    "financial": "Financial",
+    "quality": "Quality",
+    "sustainability": "Sustainability",
+    "deforestation": "Deforestation"
+  },
+  "logistics": {
+    "title": "Logistics Hub",
+    "subtitle": "Freight forwarding, customs, and shipment management",
+    "totalShipments": "Total Shipments",
+    "inTransit": "In Transit",
+    "delivered": "Delivered",
+    "planned": "Planned",
+    "vessel": "Vessel",
+    "container": "Container",
+    "forwarder": "Forwarder",
+    "customsBroker": "Customs Broker"
   }
 }

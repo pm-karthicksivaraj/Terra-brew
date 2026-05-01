@@ -12,6 +12,9 @@ import {
   Coffee, ChevronLeft, ChevronRight, Globe,
   Droplets, Beaker, Waves, Sun, Hammer, Filter, Flame,
   Package, Ship, Warehouse as WarehouseIcon, Truck as TruckIcon, Store as StoreIcon,
+  ShieldCheck, FileCheck, CreditCard, Key, Thermometer,
+  TrendingUp, Anchor, Satellite, ShoppingBag,
+  Radio, CheckSquare, Truck as TruckIcon2,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -97,6 +100,37 @@ const NAVIGATION: NavGroup[] = [
       { label: 'Inspections', labelVi: 'Kiểm tra', href: '/coffee-inspections', icon: ClipboardCheck },
       { label: 'Smart Contracts', labelVi: 'HĐ thông minh', href: '/smart-contracts', icon: FileText },
       { label: 'Marketplace', labelVi: 'Thị trường', href: '/marketplace', icon: Store },
+    ],
+  },
+  {
+    title: 'B2B & Compliance',
+    titleVi: 'B2B & Tuân thủ',
+    items: [
+      { label: 'EUDR Compliance', labelVi: 'Tuân thủ EUDR', href: '/eudr-compliance', icon: Shield },
+      { label: 'Export Documents', labelVi: 'Tài liệu xuất khẩu', href: '/export-docs', icon: FileText },
+      { label: 'Shipments', labelVi: 'Lô hàng', href: '/shipments', icon: Ship },
+      { label: 'Buyers', labelVi: 'Người mua', href: '/buyers', icon: Users },
+      { label: 'Trading Desk', labelVi: 'Sàn giao dịch', href: '/trading-desk', icon: TrendingUp },
+      { label: 'Deforestation', labelVi: 'Rủi ro phá rừng', href: '/deforestation', icon: TreePine },
+    ],
+  },
+  {
+    title: 'Platform',
+    titleVi: 'Nền tảng',
+    items: [
+      { label: 'API & Webhooks', labelVi: 'API & Webhooks', href: '/api-settings', icon: Key },
+      { label: 'IoT Sensors', labelVi: 'Cảm biến IoT', href: '/iot-sensors', icon: Radio },
+      { label: 'QC Verification', labelVi: 'Kiểm định CL', href: '/qc-verifications', icon: CheckSquare },
+      { label: 'Marketplace', labelVi: 'Thị trường tuân thủ', href: '/compliance-marketplace', icon: Store },
+      { label: 'Analytics', labelVi: 'Phân tích', href: '/analytics', icon: BarChart3 },
+      { label: 'Logistics', labelVi: 'Vận tải & Hải quan', href: '/logistics', icon: TruckIcon2 },
+    ],
+  },
+  {
+    title: 'Account',
+    titleVi: 'Tài khoản',
+    items: [
+      { label: 'Billing', labelVi: 'Thanh toán', href: '/billing', icon: CreditCard },
     ],
   },
   {
