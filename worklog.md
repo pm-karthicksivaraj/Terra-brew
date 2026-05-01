@@ -296,3 +296,27 @@ Stage Summary:
 - Sensitive data is masked with eye toggle on both admin and public pages
 - Public verify page has working CSS animations and privacy masking
 - Build passes successfully with `npx next build`
+---
+Task ID: detail-pages-completion
+Agent: Main Agent
+Task: Complete all missing detail pages and pipeline stage pages for the Metrang Coffee E2E Traceability Platform
+
+Work Log:
+- Verified hydration errors are already fixed (StaggerContainer/StaggerItem no longer used in tables, BreadcrumbSeparator changed to <span>)
+- Created NFC Tags detail page at /nfc-tags/[id]/page.tsx with full detail view, SensitiveField for HMAC signature
+- Created Users detail page at /users/[id]/page.tsx with role badges, SensitiveField for email/phone
+- Created 7 processing stage detail pages (pulping, fermentation, washing, drying, hulling, sorting, roasting) at /processing/stages/{stage}/[id]/page.tsx
+- Created 5 new pipeline stage list pages (packaging, export, warehouse, distribution, retail) at /processing/stages/{stage}/page.tsx
+- Created 5 new pipeline stage detail pages at /processing/stages/{stage}/[id]/page.tsx
+- Added Eye/View buttons to NFC Tags, Users, Farmlands, Farmers, and Crop Monitorings list pages
+- Updated stage-layout.tsx Eye button to navigate to detail pages instead of opening dialog
+- Added 5 new pipeline stages to sidebar navigation in app-sidebar.tsx
+- Added breadcrumb map entries for new stages in dashboard-shell.tsx
+- Build passes with ZERO errors
+
+Stage Summary:
+- Total modules with detail pages: 21 (was 16)
+- New detail pages: NFC Tags, Users, 7 processing stages, 5 new pipeline stages
+- New list pages: Packaging, Export, Warehouse, Distribution, Retail
+- All list pages now have Eye/View navigation buttons to detail pages
+- Zero build errors, zero hydration errors

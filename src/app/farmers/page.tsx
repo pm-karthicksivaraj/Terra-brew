@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, Users, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Check,
+  Check, Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
@@ -458,6 +458,7 @@ export default function FarmersPage() {
                   <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t2('CC', 'Cert')}</th>
                   <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Điểm TD', 'Credit')}</th>
                   <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t2('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -500,6 +501,13 @@ export default function FarmersPage() {
                         <Badge className={`${farmer.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
                           {farmer.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/farmers/${farmer.id}`)} title={t2('Xem chi tiết', 'View Details')}>
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

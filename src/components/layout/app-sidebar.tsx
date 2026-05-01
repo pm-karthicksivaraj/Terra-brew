@@ -11,6 +11,7 @@ import {
   UserCog, Link2, QrCode, GitBranch, Nfc,
   Coffee, ChevronLeft, ChevronRight, Globe,
   Droplets, Beaker, Waves, Sun, Hammer, Filter, Flame,
+  Package, Ship, Warehouse as WarehouseIcon, Truck as TruckIcon, Store as StoreIcon,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -81,6 +82,11 @@ const NAVIGATION: NavGroup[] = [
       { label: 'Hulling', labelVi: 'Bachop', href: '/processing/stages/hulling', icon: Hammer },
       { label: 'Sorting/Grading', labelVi: 'Phan loai', href: '/processing/stages/sorting', icon: Filter },
       { label: 'Roasting', labelVi: 'Rang', href: '/processing/stages/roasting', icon: Flame },
+      { label: 'Packaging', labelVi: 'Đóng gói', href: '/processing/stages/packaging', icon: Package },
+      { label: 'Export', labelVi: 'Xuất khẩu', href: '/processing/stages/export', icon: Ship },
+      { label: 'Warehouse', labelVi: 'Kho bãi', href: '/processing/stages/warehouse', icon: WarehouseIcon },
+      { label: 'Distribution', labelVi: 'Phân phối', href: '/processing/stages/distribution', icon: TruckIcon },
+      { label: 'Retail', labelVi: 'Bán lẻ', href: '/processing/stages/retail', icon: StoreIcon },
     ],
   },
   {

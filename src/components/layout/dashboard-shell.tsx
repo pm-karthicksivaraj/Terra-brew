@@ -60,6 +60,11 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   hulling: { en: 'Hulling', vi: 'Bachop' },
   sorting: { en: 'Sorting/Grading', vi: 'Phan loai' },
   roasting: { en: 'Roasting', vi: 'Rang' },
+  packaging: { en: 'Packaging', vi: 'Đóng gói' },
+  export: { en: 'Export', vi: 'Xuất khẩu' },
+  warehouse: { en: 'Warehouse', vi: 'Kho bãi' },
+  distribution: { en: 'Distribution', vi: 'Phân phối' },
+  retail: { en: 'Retail', vi: 'Bán lẻ' },
 }
 
 // ─── Animation variants ───────────────────────────────────────────

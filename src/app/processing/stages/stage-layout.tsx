@@ -430,7 +430,7 @@ export function ProcessingStagePage({ config }: { config: StageConfig }) {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => { setDetailItem(record); setDetailOpen(true) }}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/processing/stages/${config.stageType}/${record.id}`)} title={t2('Xem chi tiết', 'View Details')}>
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEditDialog(record)}>

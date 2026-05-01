@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, UserCog, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2, X, Shield,
+  Pencil, Trash2, X, Shield, Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
@@ -460,6 +460,9 @@ export default function UsersPage() {
                         {isTenantAdmin && (
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" onClick={() => router.push(`/users/${item.id}`)} title={t2('Xem chi tiết', 'View Details')}>
+                                <Eye className="w-3 h-3" />
+                              </Button>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
                                 <Pencil className="w-3 h-3 text-muted-foreground" />
                               </Button>

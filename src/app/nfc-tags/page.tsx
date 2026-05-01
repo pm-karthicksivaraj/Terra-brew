@@ -567,15 +567,20 @@ export default function NFCTagsPage() {
                                 {new Date(record.createdAt).toLocaleDateString()}
                               </td>
                               <td className="px-4 py-3">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 text-foreground hover:text-foreground"
-                                  onClick={() => handleVerifyFromTable(tagId)}
-                                  title={t2('Xác minh', 'Verify')}
-                                >
-                                  <Shield className="w-3.5 h-3.5" />
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-foreground hover:text-foreground" onClick={() => router.push(`/nfc-tags/${record.id}`)} title={t2('Xem chi tiết', 'View Details')}>
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-foreground hover:text-foreground"
+                                    onClick={() => handleVerifyFromTable(tagId)}
+                                    title={t2('Xác minh', 'Verify')}
+                                  >
+                                    <Shield className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           )
