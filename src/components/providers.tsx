@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { SessionProvider } from 'next-auth/react'
 import { ThemeProvider, useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
+import { I18nProvider } from '@/i18n'
 
 // Load Toaster client-only — Sonner creates a portal on document.body
 // which causes React 19 removeChild hydration errors when rendered during SSR.
@@ -31,10 +32,12 @@ function DelayedToaster() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange={false}>
-      <SessionProvider>
-        {children}
-        <DelayedToaster />
-      </SessionProvider>
+      <I18nProvider>
+        <SessionProvider>
+          {children}
+          <DelayedToaster />
+        </SessionProvider>
+      </I18nProvider>
     </ThemeProvider>
   )
 }

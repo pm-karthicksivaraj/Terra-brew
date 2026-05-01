@@ -8,6 +8,7 @@ import { Menu, LogOut, Coffee, Globe, Sun, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useI18n } from '@/i18n'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,11 +94,12 @@ interface DashboardShellProps {
   onLangToggle: () => void
 }
 
-export function DashboardShell({ children, lang, onLangToggle }: DashboardShellProps) {
+export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangToggle }: DashboardShellProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
   const { theme, setTheme } = useTheme()
+  const { lang, setLang, t2 } = useI18n()
 
   // Hydration guard: only render dynamic layout after client mount.
   const [mounted, setMounted] = useState(false)
@@ -146,6 +148,8 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
   const tenantName = session?.user?.tenantName || 'Terra Brew'
   const userName = session?.user?.name || 'User'
   const userRole = session?.user?.role || ''
+
+  const onLangToggle = () => setLang(lang === 'vi' ? 'en' : 'vi')
 
   // Compute margin-left: only on desktop, matches sidebar width
   const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 256) : 0
@@ -287,7 +291,7 @@ export function DashboardShell({ children, lang, onLangToggle }: DashboardShellP
                     className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 text-xs cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5 mr-2" />
-                    {lang === 'vi' ? 'Đăng xuất' : 'Sign out'}
+                    {t2('Đăng xuất', 'Sign out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -160,3 +160,27 @@ Work Log:
 Stage Summary:
 - All animations and theme toggle already in place and working
 - Both light and dark themes with premium coffee/espresso color schemes
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix all pending items for Metrang Coffee E2E Traceability Platform
+
+Work Log:
+- Fixed .env: Added NEXTAUTH_SECRET and fixed DATABASE_URL to file:./dev.db
+- Verified DB has comprehensive seed data (8 farmers, 5 farmlands, 7 cultivations, 5 nurseries, 7 land preparations, etc.)
+- Re-ran seed script to ensure all pipeline data is complete (28 hash chain blocks, 2 batch IDs)
+- Fixed button visibility: Added text-foreground to outline and ghost variants in button.tsx
+- Added border-border to outline variant for consistent border color
+- Set up proper i18n integration: Created src/i18n/config.ts and src/i18n/index.tsx
+- Created I18nProvider with useI18n hook supporting t() (key-based) and t2() (inline) translation
+- Integrated I18nProvider into Providers component (wraps SessionProvider)
+- Updated DashboardShell to use useI18n() hook instead of local lang state
+- Verified both login APIs work: tenant login and platform admin login
+- Verified build succeeds with all changes
+
+Stage Summary:
+- .env now has NEXTAUTH_SECRET set (required for JWT encoding)
+- DATABASE_URL=file:./dev.db points to prisma/dev.db with all seed data
+- Button visibility fix: ghost variant now has text-foreground by default, outline variant has border-border and text-foreground
+- i18n system: I18nProvider with localStorage persistence, useI18n() hook for t() and t2() functions
+- Both login flows verified working: tenant (admin@metrang-coffee.terrabrew.com) and platform (admin@terrabrew.platform)
