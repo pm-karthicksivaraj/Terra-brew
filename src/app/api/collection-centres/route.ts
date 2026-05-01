@@ -14,9 +14,9 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { centreName: { contains: search, mode: 'insensitive' } },
-        { centreId: { contains: search, mode: 'insensitive' } },
-        { province: { contains: search, mode: 'insensitive' } },
+        { centreName: { contains: search } },
+        { centreId: { contains: search } },
+        { province: { contains: search } },
       ]
     }
 

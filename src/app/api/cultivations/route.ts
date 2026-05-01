@@ -29,10 +29,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { farmPlotName: { contains: search, mode: 'insensitive' } },
-        { plotBlockId: { contains: search, mode: 'insensitive' } },
-        { cultivatedCrop: { contains: search, mode: 'insensitive' } },
-        { cropVariety: { contains: search, mode: 'insensitive' } },
+        { farmPlotName: { contains: search } },
+        { plotBlockId: { contains: search } },
+        { cultivatedCrop: { contains: search } },
+        { cropVariety: { contains: search } },
       ]
     }
 

@@ -29,11 +29,11 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { contractId: { contains: search, mode: 'insensitive' } },
-        { title: { contains: search, mode: 'insensitive' } },
-        { contractType: { contains: search, mode: 'insensitive' } },
-        { partyA: { contains: search, mode: 'insensitive' } },
-        { partyB: { contains: search, mode: 'insensitive' } },
+        { contractId: { contains: search } },
+        { title: { contains: search } },
+        { contractType: { contains: search } },
+        { partyA: { contains: search } },
+        { partyB: { contains: search } },
       ]
     }
     if (statusFilter) {

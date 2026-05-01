@@ -30,8 +30,8 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { monitoringType: { contains: search, mode: 'insensitive' } },
-        { growthStage: { contains: search, mode: 'insensitive' } },
+        { monitoringType: { contains: search } },
+        { growthStage: { contains: search } },
         { healthScore: { equals: parseFloat(search) } },
       ]
     }

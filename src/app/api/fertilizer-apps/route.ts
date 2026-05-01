@@ -29,9 +29,9 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { fertilizerName: { contains: search, mode: 'insensitive' } },
-        { fertilizerType: { contains: search, mode: 'insensitive' } },
-        { applicationMethod: { contains: search, mode: 'insensitive' } },
+        { fertilizerName: { contains: search } },
+        { fertilizerType: { contains: search } },
+        { applicationMethod: { contains: search } },
       ]
     }
 

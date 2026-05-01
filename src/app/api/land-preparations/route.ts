@@ -29,9 +29,9 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { preparationType: { contains: search, mode: 'insensitive' } },
-        { method: { contains: search, mode: 'insensitive' } },
-        { equipmentUsed: { contains: search, mode: 'insensitive' } },
+        { preparationType: { contains: search } },
+        { method: { contains: search } },
+        { equipmentUsed: { contains: search } },
       ]
     }
 

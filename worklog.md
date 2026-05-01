@@ -320,3 +320,21 @@ Stage Summary:
 - New list pages: Packaging, Export, Warehouse, Distribution, Retail
 - All list pages now have Eye/View navigation buttons to detail pages
 - Zero build errors, zero hydration errors
+
+---
+Task ID: sqlite-insensitive-fix
+Agent: Main Agent
+Task: Fix Prisma "Unknown argument `mode`" error for SQLite compatibility
+
+Work Log:
+- Identified root cause: `mode: "insensitive"` in Prisma `contains` filters is PostgreSQL-only, not supported by SQLite
+- SQLite's `contains` filter is already case-insensitive by default, so removing `mode` doesn't change behavior
+- Fixed 16 API route files, removing 56 total instances of `mode: 'insensitive'`
+- Files fixed: farmers, processing, nurseries, collection-centres, coffee-inspections, pest-disease-mgmts, crop-monitorings, harvest-traceabilities, smart-contracts, fertilizer-apps, cultivations, farmlands, procurement, marketplace, land-preparations, users, cert-assessments
+- Verified zero remaining instances with grep count
+- Build passes with zero errors
+
+Stage Summary:
+- All 16 API routes now use SQLite-compatible `contains: search` instead of `contains: search, mode: 'insensitive'`
+- Search functionality remains case-insensitive (SQLite default behavior)
+- The 500 error when searching farmers (and any other entity) is now fixed

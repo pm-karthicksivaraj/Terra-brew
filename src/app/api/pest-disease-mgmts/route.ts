@@ -29,10 +29,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { pestOrDisease: { contains: search, mode: 'insensitive' } },
-        { type: { contains: search, mode: 'insensitive' } },
-        { severity: { contains: search, mode: 'insensitive' } },
-        { treatmentMethod: { contains: search, mode: 'insensitive' } },
+        { pestOrDisease: { contains: search } },
+        { type: { contains: search } },
+        { severity: { contains: search } },
+        { treatmentMethod: { contains: search } },
       ]
     }
 

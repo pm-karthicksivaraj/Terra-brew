@@ -32,10 +32,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { coffeeVariety: { contains: search, mode: 'insensitive' } },
-        { batchId: { contains: search, mode: 'insensitive' } },
-        { processingMethod: { contains: search, mode: 'insensitive' } },
-        { harvestMethod: { contains: search, mode: 'insensitive' } },
+        { coffeeVariety: { contains: search } },
+        { batchId: { contains: search } },
+        { processingMethod: { contains: search } },
+        { harvestMethod: { contains: search } },
       ]
     }
     // Support batchId filter

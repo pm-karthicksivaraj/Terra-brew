@@ -30,10 +30,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { listingId: { contains: search, mode: 'insensitive' } },
-        { coffeeVariety: { contains: search, mode: 'insensitive' } },
-        { origin: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search } },
+        { listingId: { contains: search } },
+        { coffeeVariety: { contains: search } },
+        { origin: { contains: search } },
       ]
     }
     if (listingStatusFilter) {

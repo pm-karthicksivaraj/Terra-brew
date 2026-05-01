@@ -30,10 +30,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { assessmentId: { contains: search, mode: 'insensitive' } },
-        { certificationStandard: { contains: search, mode: 'insensitive' } },
-        { certifyingBody: { contains: search, mode: 'insensitive' } },
-        { certificateNumber: { contains: search, mode: 'insensitive' } },
+        { assessmentId: { contains: search } },
+        { certificationStandard: { contains: search } },
+        { certifyingBody: { contains: search } },
+        { certificateNumber: { contains: search } },
       ]
     }
     // Support status filter

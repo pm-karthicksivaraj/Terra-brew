@@ -34,11 +34,11 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { jobOrderId: { contains: search, mode: 'insensitive' } },
-        { batchIdInput: { contains: search, mode: 'insensitive' } },
-        { processingMethod: { contains: search, mode: 'insensitive' } },
-        { operatorName: { contains: search, mode: 'insensitive' } },
-        { plantFacilityName: { contains: search, mode: 'insensitive' } },
+        { jobOrderId: { contains: search } },
+        { batchIdInput: { contains: search } },
+        { processingMethod: { contains: search } },
+        { operatorName: { contains: search } },
+        { plantFacilityName: { contains: search } },
       ]
     }
     // Support batchIdInput filter

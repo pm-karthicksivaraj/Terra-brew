@@ -28,10 +28,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { nurseryName: { contains: search, mode: 'insensitive' } },
-        { nurseryCode: { contains: search, mode: 'insensitive' } },
-        { location: { contains: search, mode: 'insensitive' } },
-        { species: { contains: search, mode: 'insensitive' } },
+        { nurseryName: { contains: search } },
+        { nurseryCode: { contains: search } },
+        { location: { contains: search } },
+        { species: { contains: search } },
       ]
     }
 

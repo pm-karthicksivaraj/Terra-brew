@@ -31,10 +31,10 @@ export async function GET(req: Request) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { inspectionId: { contains: search, mode: 'insensitive' } },
-        { batchId: { contains: search, mode: 'insensitive' } },
-        { inspectorName: { contains: search, mode: 'insensitive' } },
-        { overallGrade: { contains: search, mode: 'insensitive' } },
+        { inspectionId: { contains: search } },
+        { batchId: { contains: search } },
+        { inspectorName: { contains: search } },
+        { overallGrade: { contains: search } },
       ]
     }
     if (batchIdFilter) {
