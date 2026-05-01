@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   Award, Search, Plus, ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2, AlertTriangle,
+  Pencil, Trash2, Eye, AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -80,7 +81,7 @@ type StatusTab = 'all' | 'Active' | 'Expired' | 'Pending' | 'Suspended'
 export default function CertAssessmentsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [records, setRecords] = useState<CertRecord[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -98,7 +99,6 @@ export default function CertAssessmentsPage() {
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [farmLands, setFarmLands] = useState<FarmLand[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const resetForm = () => { setForm(initialForm); setEditingRecord(null) }
 
@@ -178,15 +178,15 @@ export default function CertAssessmentsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingRecord ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo mới thành công!', 'Created successfully!'))
+        toast.success(editingRecord ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo mới thành công!', 'Created successfully!'))
         setDialogOpen(false)
         resetForm()
         fetchRecords()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -199,15 +199,15 @@ export default function CertAssessmentsPage() {
       const res = await fetch(`/api/cert-assessments?id=${deletingRecord.id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         setDeleteDialogOpen(false)
         setDeletingRecord(null)
         fetchRecords()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -260,7 +260,7 @@ export default function CertAssessmentsPage() {
 
   if (status === 'loading' || (loading && records.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -268,7 +268,7 @@ export default function CertAssessmentsPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -277,14 +277,14 @@ export default function CertAssessmentsPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Award className="w-5 h-5 text-muted-foreground" />
-              {t('Đánh giá Chứng nhận', 'Certification Assessment')}
+              {t2('Đánh giá Chứng nhận', 'Certification Assessment')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
@@ -296,23 +296,23 @@ export default function CertAssessmentsPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm mới', 'Add New')}
+                {t2('Thêm mới', 'Add New')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Award className="w-5 h-5" />
-                  {editingRecord ? t('Sửa đánh giá', 'Edit Assessment') : t('Thêm đánh giá mới', 'Add New Assessment')}
+                  {editingRecord ? t2('Sửa đánh giá', 'Edit Assessment') : t2('Thêm đánh giá mới', 'Add New Assessment')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')}</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} /></SelectTrigger>
                       <SelectContent>
                         {farmers.map((f) => (<SelectItem key={f.id} value={f.id}>{f.fullName} {f.farmerCode ? `(${f.farmerCode})` : ''}</SelectItem>))}
                       </SelectContent>
@@ -321,9 +321,9 @@ export default function CertAssessmentsPage() {
 
                   {/* Farm Land */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Đất nông trại', 'Farm Land')}</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn đất', 'Select farm land')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn đất', 'Select farm land')} /></SelectTrigger>
                       <SelectContent>
                         {farmLands.filter(fl => !form.farmerId || fl.farmerId === form.farmerId).map((fl) => (<SelectItem key={fl.id} value={fl.id}>{fl.farmName}</SelectItem>))}
                       </SelectContent>
@@ -332,130 +332,130 @@ export default function CertAssessmentsPage() {
 
                   {/* Assessment ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã đánh giá', 'Assessment ID')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã đánh giá', 'Assessment ID')}</Label>
                     <Input value={form.assessmentId} onChange={(e) => setForm({ ...form, assessmentId: e.target.value })} placeholder="CERT-2024-001" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Assessment Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày đánh giá', 'Assessment Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày đánh giá', 'Assessment Date')}</Label>
                     <Input type="date" value={form.assessmentDate} onChange={(e) => setForm({ ...form, assessmentDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Certification Standard */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tiêu chuẩn', 'Certification Standard')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Tiêu chuẩn', 'Certification Standard')} *</Label>
                     <Select value={form.certificationStandard} onValueChange={(v) => setForm({ ...form, certificationStandard: v })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn tiêu chuẩn', 'Select standard')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn tiêu chuẩn', 'Select standard')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Organic">{t('Hữu cơ', 'Organic')}</SelectItem>
-                        <SelectItem value="Fairtrade">{t('Thương mại công bằng', 'Fairtrade')}</SelectItem>
-                        <SelectItem value="Rainforest Alliance">{t('Liên minh rừng mưa', 'Rainforest Alliance')}</SelectItem>
-                        <SelectItem value="UTZ">{t('UTZ', 'UTZ')}</SelectItem>
-                        <SelectItem value="4C">{t('4C', '4C')}</SelectItem>
-                        <SelectItem value="GAP">{t('GAP', 'GAP')}</SelectItem>
+                        <SelectItem value="Organic">{t2('Hữu cơ', 'Organic')}</SelectItem>
+                        <SelectItem value="Fairtrade">{t2('Thương mại công bằng', 'Fairtrade')}</SelectItem>
+                        <SelectItem value="Rainforest Alliance">{t2('Liên minh rừng mưa', 'Rainforest Alliance')}</SelectItem>
+                        <SelectItem value="UTZ">{t2('UTZ', 'UTZ')}</SelectItem>
+                        <SelectItem value="4C">{t2('4C', '4C')}</SelectItem>
+                        <SelectItem value="GAP">{t2('GAP', 'GAP')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Certifying Body */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổ chức CC', 'Certifying Body')}</Label>
-                    <Input value={form.certifyingBody} onChange={(e) => setForm({ ...form, certifyingBody: e.target.value })} placeholder={t('Control Union', 'Control Union')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Tổ chức CC', 'Certifying Body')}</Label>
+                    <Input value={form.certifyingBody} onChange={(e) => setForm({ ...form, certifyingBody: e.target.value })} placeholder={t2('Control Union', 'Control Union')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Assessment Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại đánh giá', 'Assessment Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại đánh giá', 'Assessment Type')}</Label>
                     <Select value={form.assessmentType} onValueChange={(v) => setForm({ ...form, assessmentType: v })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn loại', 'Select type')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn loại', 'Select type')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="initial">{t('Ban đầu', 'Initial')}</SelectItem>
-                        <SelectItem value="surveillance">{t('Giám sát', 'Surveillance')}</SelectItem>
-                        <SelectItem value="renewal">{t('Gia hạn', 'Renewal')}</SelectItem>
+                        <SelectItem value="initial">{t2('Ban đầu', 'Initial')}</SelectItem>
+                        <SelectItem value="surveillance">{t2('Giám sát', 'Surveillance')}</SelectItem>
+                        <SelectItem value="renewal">{t2('Gia hạn', 'Renewal')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Scope */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Phạm vi', 'Scope')}</Label>
-                    <Input value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value })} placeholder={t('Sản xuất cà phê', 'Coffee production')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Phạm vi', 'Scope')}</Label>
+                    <Input value={form.scope} onChange={(e) => setForm({ ...form, scope: e.target.value })} placeholder={t2('Sản xuất cà phê', 'Coffee production')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Status */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Trạng thái', 'Status')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Trạng thái', 'Status')}</Label>
                     <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                       <SelectTrigger className="rounded-xl border-input"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active">{t('Đang hiệu lực', 'Active')}</SelectItem>
-                        <SelectItem value="Expired">{t('Hết hạn', 'Expired')}</SelectItem>
-                        <SelectItem value="Pending">{t('Chờ duyệt', 'Pending')}</SelectItem>
-                        <SelectItem value="Suspended">{t('Bị đình chỉ', 'Suspended')}</SelectItem>
+                        <SelectItem value="Active">{t2('Đang hiệu lực', 'Active')}</SelectItem>
+                        <SelectItem value="Expired">{t2('Hết hạn', 'Expired')}</SelectItem>
+                        <SelectItem value="Pending">{t2('Chờ duyệt', 'Pending')}</SelectItem>
+                        <SelectItem value="Suspended">{t2('Bị đình chỉ', 'Suspended')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Điểm', 'Score')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điểm', 'Score')}</Label>
                     <Input type="number" step="0.5" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} placeholder="85" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Max Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Điểm tối đa', 'Max Score')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điểm tối đa', 'Max Score')}</Label>
                     <Input type="number" step="0.5" value={form.maxScore} onChange={(e) => setForm({ ...form, maxScore: e.target.value })} placeholder="100" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Valid From */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Hiệu lực từ', 'Valid From')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Hiệu lực từ', 'Valid From')}</Label>
                     <Input type="date" value={form.validFrom} onChange={(e) => setForm({ ...form, validFrom: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Valid Until */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Hiệu lực đến', 'Valid Until')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Hiệu lực đến', 'Valid Until')}</Label>
                     <Input type="date" value={form.validUntil} onChange={(e) => setForm({ ...form, validUntil: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Certificate Number */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Số chứng chỉ', 'Certificate Number')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số chứng chỉ', 'Certificate Number')}</Label>
                     <Input value={form.certificateNumber} onChange={(e) => setForm({ ...form, certificateNumber: e.target.value })} placeholder="CERT-12345" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Findings */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Kết quả đánh giá', 'Findings')}</Label>
-                    <Textarea value={form.findings} onChange={(e) => setForm({ ...form, findings: e.target.value })} placeholder={t('Mô tả kết quả...', 'Describe findings...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+                    <Label className="text-xs text-foreground">{t2('Kết quả đánh giá', 'Findings')}</Label>
+                    <Textarea value={form.findings} onChange={(e) => setForm({ ...form, findings: e.target.value })} placeholder={t2('Mô tả kết quả...', 'Describe findings...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* Non Conformities */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Không phù hợp', 'Non-Conformities')}</Label>
-                    <Textarea value={form.nonConformities} onChange={(e) => setForm({ ...form, nonConformities: e.target.value })} placeholder={t('Mô tả không phù hợp...', 'Describe non-conformities...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+                    <Label className="text-xs text-foreground">{t2('Không phù hợp', 'Non-Conformities')}</Label>
+                    <Textarea value={form.nonConformities} onChange={(e) => setForm({ ...form, nonConformities: e.target.value })} placeholder={t2('Mô tả không phù hợp...', 'Describe non-conformities...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* Corrective Actions */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Hành động khắc phục', 'Corrective Actions')}</Label>
-                    <Textarea value={form.correctiveActions} onChange={(e) => setForm({ ...form, correctiveActions: e.target.value })} placeholder={t('Mô tả khắc phục...', 'Describe corrective actions...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+                    <Label className="text-xs text-foreground">{t2('Hành động khắc phục', 'Corrective Actions')}</Label>
+                    <Textarea value={form.correctiveActions} onChange={(e) => setForm({ ...form, correctiveActions: e.target.value })} placeholder={t2('Mô tả khắc phục...', 'Describe corrective actions...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
-                    <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm...', 'Additional notes...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+                    <Label className="text-xs text-foreground">{t2('Ghi chú', 'Notes')}</Label>
+                    <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t2('Ghi chú thêm...', 'Additional notes...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                  <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">{t('Hủy', 'Cancel')}</Button>
+                  <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">{t2('Hủy', 'Cancel')}</Button>
                   <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
-                    {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</> : editingRecord ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')}
+                    {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Đang lưu...', 'Saving...')}</> : editingRecord ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')}
                   </Button>
                 </div>
               </form>
@@ -487,7 +487,7 @@ export default function CertAssessmentsPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm chứng nhận...', 'Search certifications...')}
+              placeholder={t2('Tìm kiếm chứng nhận...', 'Search certifications...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -502,15 +502,15 @@ export default function CertAssessmentsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã ĐG', 'Assess. ID')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Tiêu chuẩn', 'Standard')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Tổ chức CC', 'Body')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Điểm', 'Score')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Hiệu lực đến', 'Valid Until')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Thao tác', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Mã ĐG', 'Assess. ID')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Tiêu chuẩn', 'Standard')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Tổ chức CC', 'Body')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Điểm', 'Score')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Hiệu lực đến', 'Valid Until')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -518,7 +518,7 @@ export default function CertAssessmentsPage() {
                     <tr>
                       <td colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
                         <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        {t('Không có bản ghi nào', 'No records found')}
+                        {t2('Không có bản ghi nào', 'No records found')}
                       </td>
                     </tr>
                   ) : (
@@ -539,10 +539,10 @@ export default function CertAssessmentsPage() {
                         <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{record.assessmentType || '-'}</td>
                         <td className="px-4 py-3">
                           <Badge className={`${statusColor(record.status)} text-[10px] border-0`}>
-                            {record.status === 'Active' ? t('Hiệu lực', 'Active') :
-                             record.status === 'Expired' ? t('Hết hạn', 'Expired') :
-                             record.status === 'Pending' ? t('Chờ duyệt', 'Pending') :
-                             record.status === 'Suspended' ? t('Đình chỉ', 'Suspended') : record.status || '-'}
+                            {record.status === 'Active' ? t2('Hiệu lực', 'Active') :
+                             record.status === 'Expired' ? t2('Hết hạn', 'Expired') :
+                             record.status === 'Pending' ? t2('Chờ duyệt', 'Pending') :
+                             record.status === 'Suspended' ? t2('Đình chỉ', 'Suspended') : record.status || '-'}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell">
@@ -563,6 +563,9 @@ export default function CertAssessmentsPage() {
                         <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{record.validUntil ? new Date(record.validUntil).toLocaleDateString() : '-'}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/cert-assessments/${record.id}`)}>
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEditDialog(record)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
@@ -601,17 +604,17 @@ export default function CertAssessmentsPage() {
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
-              {t('Xác nhận xóa', 'Confirm Delete')}
+              {t2('Xác nhận xóa', 'Confirm Delete')}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {t(`Bạn có chắc muốn xóa đánh giá "${deletingRecord?.assessmentId || ''}"?`, `Are you sure you want to delete assessment "${deletingRecord?.assessmentId || ''}"?`)}
           </p>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">{t('Hủy', 'Cancel')}</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">{t2('Hủy', 'Cancel')}</Button>
             <Button onClick={handleDelete} disabled={submitting} className="bg-red-600 text-white rounded-xl hover:bg-red-700">
               {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              {t('Xóa', 'Delete')}
+              {t2('Xóa', 'Delete')}
             </Button>
           </div>
         </DialogContent>

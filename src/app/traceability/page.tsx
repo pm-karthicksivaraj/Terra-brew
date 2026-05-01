@@ -1,17 +1,20 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   Coffee, GitBranch, Search, Loader2, CheckCircle2, Clock,
   MinusCircle, Shield, ChevronDown, ChevronUp, FileText,
-  ArrowRight, ArrowLeft, MapPin,
+  ArrowRight, ArrowLeft, MapPin, QrCode, Download, Eye, EyeOff,
 } from 'lucide-react'
+import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { TraceabilityMap } from '@/components/map'
@@ -125,6 +128,54 @@ interface TraceabilityData {
   message?: string
 }
 
+// ─── Sensitive Field Component ───────────────────────────────
+
+const SENSITIVE_KEYS = new Set([
+  'pricePerKg', 'totalAmount', 'paymentStatus', 'contactNumber',
+  'nationalIdNo', 'phone', 'email', 'gpsLat', 'gpsLng',
+  'latitude', 'longitude', 'inspector',
+])
+
+function SensitiveField({ fieldKey, value }: { fieldKey: string; value: string }) {
+  const [revealed, setRevealed] = useState(false)
+  const isSensitive = SENSITIVE_KEYS.has(fieldKey)
+
+  if (!isSensitive) {
+    return <>{value}</>
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {revealed ? (
+        <span>{value}</span>
+      ) : (
+        <span className="text-muted-foreground tracking-wider">{'*'.repeat(Math.min(String(value).length, 8))}</span>
+      )}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setRevealed(!revealed) }}
+        className="inline-flex items-center justify-center w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label={revealed ? 'Hide' : 'Reveal'}
+      >
+        {revealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+      </button>
+    </span>
+  )
+}
+
+// ─── Recent Batch Type ──────────────────────────────────────
+
+interface RecentBatch {
+  id: string
+  batchId: string
+  coffeeVariety: string | null
+  actualHarvestDate: string | null
+  processingStage: string | null
+  farmer: { id: string; fullName: string; farmerCode: string | null }
+  farmLand: { id: string; farmName: string; plotBlockId: string | null } | null
+  createdAt: string
+}
+
 // ─── Stage detail component ───────────────────────────────────────
 
 function StageDetail({ data }: { data: StageData }) {
@@ -138,7 +189,9 @@ function StageDetail({ data }: { data: StageData }) {
           <div key={key} className="flex justify-between text-[11px]">
             <span className="text-foreground">{displayKey}</span>
             <span className="text-foreground font-medium truncate ml-2 max-w-[180px]">
-              {typeof value === 'boolean' ? (value ? '✓' : '✗') : String(value)}
+              {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : (
+                <SensitiveField fieldKey={key} value={String(value)} />
+              )}
             </span>
           </div>
         )
@@ -158,7 +211,7 @@ function SupplyChainPipeline({
   lang: 'vi' | 'en'
   onStageClick: (index: number) => void
 }) {
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+  const { t2 } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const statusStyles = {
@@ -196,10 +249,10 @@ function SupplyChainPipeline({
         </div>
         <div>
           <h3 className="text-sm font-bold text-foreground">
-            {t('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
+            {t2('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
           </h3>
           <p className="text-[10px] text-foreground">
-            {t('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
+            {t2('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
           </p>
         </div>
       </div>
@@ -220,7 +273,7 @@ function SupplyChainPipeline({
                 <button
                   onClick={() => onStageClick(index)}
                   className="group flex flex-col items-center gap-1 focus:outline-none"
-                  aria-label={`${t(stage.nameVi, stage.nameEn)} - ${stage.status}`}
+                  aria-label={`${t2(stage.nameVi, stage.nameEn)} - ${stage.status}`}
                 >
                   <div className={`
  w-[80px] h-[80px] rounded-xl border-2 flex flex-col items-center justify-center gap-0.5
@@ -230,9 +283,9 @@ function SupplyChainPipeline({
  `}>
                     <span className="text-xl leading-none">{stage.icon}</span>
                     <span className="text-[9px] font-semibold text-foreground leading-tight text-center px-1 line-clamp-2">
-                      {t(stage.nameVi, stage.nameEn).length > 14
-                        ? t(stage.nameVi, stage.nameEn).substring(0, 13) + '…'
-                        : t(stage.nameVi, stage.nameEn)}
+                      {t2(stage.nameVi, stage.nameEn).length > 14
+                        ? t2(stage.nameVi, stage.nameEn).substring(0, 13) + '…'
+                        : t2(stage.nameVi, stage.nameEn)}
                     </span>
                     <div className="mt-0.5">{style.indicator}</div>
                   </div>
@@ -264,19 +317,19 @@ function SupplyChainPipeline({
         <div className="flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
           <span className="text-[10px] text-foreground">
-            {t('Hoàn thành', 'Completed')}
+            {t2('Hoàn thành', 'Completed')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-amber-600" />
           <span className="text-[10px] text-foreground">
-            {t('Đang chờ', 'Pending')}
+            {t2('Đang chờ', 'Pending')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <MinusCircle className="w-3.5 h-3.5 text-gray-400" />
           <span className="text-[10px] text-foreground">
-            {t('Không có', 'N/A')}
+            {t2('Không có', 'N/A')}
           </span>
         </div>
       </div>
@@ -297,8 +350,8 @@ function TimelineCard({
   isLeft: boolean
   lang: 'vi' | 'en'
 }) {
+  const { t2 } = useI18n()
   const [expanded, setExpanded] = useState(false)
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const statusConfig = {
     completed: {
@@ -307,7 +360,7 @@ function TimelineCard({
       borderColor: 'border-border',
       badgeBg: 'bg-green-100 text-green-700',
       badgeIcon: <CheckCircle2 className="w-3 h-3" />,
-      badgeText: t('Hoàn thành', 'Completed'),
+      badgeText: t2('Hoàn thành', 'Completed'),
     },
     pending: {
       dotColor: 'bg-muted',
@@ -315,7 +368,7 @@ function TimelineCard({
       borderColor: 'border-border',
       badgeBg: 'bg-yellow-100 text-yellow-700',
       badgeIcon: <Clock className="w-3 h-3" />,
-      badgeText: t('Đang chờ', 'Pending'),
+      badgeText: t2('Đang chờ', 'Pending'),
     },
     not_available: {
       dotColor: 'bg-gray-300',
@@ -323,7 +376,7 @@ function TimelineCard({
       borderColor: 'border-gray-200',
       badgeBg: 'bg-gray-100 text-gray-500',
       badgeIcon: <MinusCircle className="w-3 h-3" />,
-      badgeText: t('Không có', 'N/A'),
+      badgeText: t2('Không có', 'N/A'),
     },
   }
 
@@ -346,7 +399,7 @@ function TimelineCard({
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{stage.icon}</span>
                     <span className="text-xs font-bold text-foreground">
-                      {t(stage.nameVi, stage.nameEn)}
+                      {t2(stage.nameVi, stage.nameEn)}
                     </span>
                   </div>
                   <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
@@ -413,7 +466,7 @@ function TimelineCard({
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{stage.icon}</span>
                     <span className="text-xs font-bold text-foreground">
-                      {t(stage.nameVi, stage.nameEn)}
+                      {t2(stage.nameVi, stage.nameEn)}
                     </span>
                   </div>
                   <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
@@ -480,7 +533,7 @@ function TimelineCard({
               <div className="flex items-center gap-2">
                 <span className="text-base">{stage.icon}</span>
                 <span className="text-xs font-bold text-foreground">
-                  {t(stage.nameVi, stage.nameEn)}
+                  {t2(stage.nameVi, stage.nameEn)}
                 </span>
               </div>
               <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
@@ -534,13 +587,83 @@ function TimelineCard({
 export default function TraceabilityPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [batchId, setBatchId] = useState('')
   const [loading, setLoading] = useState(false)
   const [traceData, setTraceData] = useState<TraceabilityData | null>(null)
   const [activeLocationId, setActiveLocationId] = useState<string | undefined>(undefined)
+  const [recentBatches, setRecentBatches] = useState<RecentBatch[]>([])
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string>('')
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+  // Fetch recent batches on mount
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    const fetchBatches = async () => {
+      try {
+        const res = await fetch('/api/harvest-traceabilities?pageSize=20&sortBy=createdAt&sortOrder=desc')
+        const data = await res.json()
+        if (data.success) {
+          const items = data.data?.data ?? data.data?.items ?? []
+          setRecentBatches(Array.isArray(items) ? items : [])
+        }
+      } catch {
+        // silently fail
+      }
+    }
+    fetchBatches()
+  }, [status])
+
+  // Generate QR code for the current batch
+  const handleGenerateQR = useCallback(async () => {
+    if (!traceData?.batchId) return
+    try {
+      // Generate a QR code URL that links to /verify/{batchId}
+      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(traceData.batchId)}`
+      const dataUrl = await QRCode.toDataURL(verifyUrl, {
+        width: 300,
+        margin: 2,
+        color: { dark: '#1a1a2e', light: '#ffffff' },
+      })
+      setQrDataUrl(dataUrl)
+      setQrDialogOpen(true)
+    } catch (err) {
+      toast.error(t2('Loi tao QR', 'Failed to generate QR code'))
+    }
+  }, [traceData, t2])
+
+  const handleDownloadQR = useCallback(() => {
+    if (!qrDataUrl) return
+    const link = document.createElement('a')
+    link.download = `qr-${traceData?.batchId || 'batch'}.png`
+    link.href = qrDataUrl
+    link.click()
+  }, [qrDataUrl, traceData])
+
+  // Handle clicking a recent batch card
+  const handleBatchClick = useCallback(async (clickedBatchId: string) => {
+    setBatchId(clickedBatchId)
+    setLoading(true)
+    setTraceData(null)
+    setActiveLocationId(undefined)
+    try {
+      const res = await fetch(`/api/traceability?batchId=${encodeURIComponent(clickedBatchId)}`)
+      const data = await res.json()
+      if (data.success) {
+        setTraceData(data.data ?? null)
+        if (!data.data?.found) {
+          toast.warning(t2('Khong tim thay du lieu cho ma lo nay', 'No data found for this batch ID'))
+        }
+      } else {
+        toast.error(data.error || t2('Loi khi truy xuat', 'Error fetching traceability'))
+      }
+    } catch {
+      toast.error(t2('Loi ket noi', 'Connection error'))
+    } finally {
+      setLoading(false)
+    }
+  }, [t2])
+
 
   // Convert trace stages to map locations
   const traceLocations: TraceLocation[] = useMemo(() => {
@@ -603,7 +726,7 @@ export default function TraceabilityPage() {
 
   const handleSearch = useCallback(async () => {
     if (!batchId.trim()) {
-      toast.error(t('Vui lòng nhập Mã lô', 'Please enter a Batch ID'))
+      toast.error(t2('Vui lòng nhập Mã lô', 'Please enter a Batch ID'))
       return
     }
     setLoading(true)
@@ -615,13 +738,13 @@ export default function TraceabilityPage() {
       if (data.success) {
         setTraceData(data.data ?? null)
         if (!data.data?.found) {
-          toast.warning(t('Không tìm thấy dữ liệu cho mã lô này', 'No data found for this batch ID'))
+          toast.warning(t2('Không tìm thấy dữ liệu cho mã lô này', 'No data found for this batch ID'))
         }
       } else {
-        toast.error(data.error || t('Lỗi khi truy xuất', 'Error fetching traceability'))
+        toast.error(data.error || t2('Lỗi khi truy xuất', 'Error fetching traceability'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setLoading(false)
     }
@@ -638,7 +761,7 @@ export default function TraceabilityPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${t('Báo cáo Truy xuất', 'Traceability Report')} - ${traceData.batchId}</title>
+        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} - ${traceData.batchId}</title>
         <style>
           body { font-family: 'Courier New', monospace; padding: 40px; color: #3C2415; }
           h1 { font-size: 24px; margin-bottom: 8px; }
@@ -661,32 +784,32 @@ export default function TraceabilityPage() {
         </style>
       </head>
       <body>
-        <h1>☕ ${t('Báo cáo Truy xuất Nguồn gốc', 'End-to-End Traceability Report')}</h1>
+        <h1>☕ ${t2('Báo cáo Truy xuất Nguồn gốc', 'End-to-End Traceability Report')}</h1>
         <div class="meta">
           <p><strong>Batch ID:</strong> ${traceData.batchId}</p>
-          <p><strong>${t('Nông dân', 'Farmer')}:</strong> ${traceData.farmerName || 'N/A'}</p>
-          <p><strong>${t('Nông trại', 'Farm')}:</strong> ${traceData.farmName || 'N/A'}</p>
-          <p><strong>${t('Giống cà phê', 'Coffee Variety')}:</strong> ${traceData.coffeeVariety || 'N/A'}</p>
-          <p><strong>${t('Ngày xuất', 'Export Date')}:</strong> ${new Date().toLocaleDateString()}</p>
-          <p><strong>${t('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t('giai đoạn', 'stages completed')}</p>
+          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> ${traceData.farmerName || 'N/A'}</p>
+          <p><strong>${t2('Nông trại', 'Farm')}:</strong> ${traceData.farmName || 'N/A'}</p>
+          <p><strong>${t2('Giống cà phê', 'Coffee Variety')}:</strong> ${traceData.coffeeVariety || 'N/A'}</p>
+          <p><strong>${t2('Ngày xuất', 'Export Date')}:</strong> ${new Date().toLocaleDateString()}</p>
+          <p><strong>${t2('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t2('giai đoạn', 'stages completed')}</p>
         </div>
 
-        <h2>${t('Danh sách Giai đoạn', 'Stage Overview')}</h2>
+        <h2>${t2('Danh sách Giai đoạn', 'Stage Overview')}</h2>
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th>${t('Giai đoạn', 'Stage')}</th>
-              <th>${t('Ngày', 'Date')}</th>
-              <th>${t('Trạng thái', 'Status')}</th>
-              <th>${t('Chi tiết chính', 'Key Details')}</th>
+              <th>${t2('Giai đoạn', 'Stage')}</th>
+              <th>${t2('Ngày', 'Date')}</th>
+              <th>${t2('Trạng thái', 'Status')}</th>
+              <th>${t2('Chi tiết chính', 'Key Details')}</th>
             </tr>
           </thead>
           <tbody>
             ${(traceData.stages || []).map((s: any, i: number) => {
               const statusClass = s.status === 'completed' ? 'completed' : s.status === 'pending' ? 'pending' : 'na'
               const badgeClass = s.status === 'completed' ? 'badge-completed' : s.status === 'pending' ? 'badge-pending' : 'badge-na'
-              const statusLabel = s.status === 'completed' ? t('Hoàn thành', 'Completed') : s.status === 'pending' ? t('Đang chờ', 'Pending') : t('Không có', 'N/A')
+              const statusLabel = s.status === 'completed' ? t2('Hoàn thành', 'Completed') : s.status === 'pending' ? t2('Đang chờ', 'Pending') : t2('Không có', 'N/A')
               const keyDetails = s.data ? Object.entries(s.data).filter(([, v]) => v != null && typeof v !== 'object').slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(', ') : '-'
               return `<tr>
                 <td>${s.icon} ${i + 1}</td>
@@ -702,14 +825,14 @@ export default function TraceabilityPage() {
         ${traceData.chainVerification ? `
           <div>
             <span class="chain-badge ${traceData.chainVerification.valid ? 'chain-valid' : 'chain-invalid'}">
-              🔗 ${traceData.chainVerification.valid ? t('Chuỗi hash toàn vẹn', 'Hash Chain Intact') : t('Chuỗi hash bị đứt', 'Hash Chain Broken')}
-              — ${traceData.chainVerification.totalBlocks} ${t('khối', 'blocks')}
+              🔗 ${traceData.chainVerification.valid ? t2('Chuỗi hash toàn vẹn', 'Hash Chain Intact') : t2('Chuỗi hash bị đứt', 'Hash Chain Broken')}
+              — ${traceData.chainVerification.totalBlocks} ${t2('khối', 'blocks')}
             </span>
           </div>
         ` : ''}
 
         <div class="footer">
-          <p>Terra Brew Coffee Traceability Platform — ${t('Báo cáo được tạo tự động', 'Report auto-generated')} — ${new Date().toISOString()}</p>
+          <p>Terra Brew Coffee Traceability Platform — ${t2('Báo cáo được tạo tự động', 'Report auto-generated')} — ${new Date().toISOString()}</p>
         </div>
       </body>
       </html>
@@ -720,7 +843,7 @@ export default function TraceabilityPage() {
 
   if (status === 'loading') {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
@@ -728,7 +851,7 @@ export default function TraceabilityPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -739,7 +862,7 @@ export default function TraceabilityPage() {
   if (status === 'unauthenticated') {
     router.push('/login')
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <Loader2 className="w-6 h-6 animate-spin text-foreground" />
         </div>
@@ -751,28 +874,38 @@ export default function TraceabilityPage() {
   const totalStages = traceData?.stages.length || 14
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <GitBranch className="w-5 h-5 text-foreground" />
-              {t('Truy xuất Nguồn gốc E2E', 'E2E Traceability Timeline')}
+              {t2('Truy xuất Nguồn gốc E2E', 'E2E Traceability Timeline')}
             </h2>
             <p className="text-sm text-foreground">
-              {t('Truy xuất từ nông trại đến ly cà phê', 'Trace from farm to cup')}
+              {t2('Truy xuất từ nông trại đến ly cà phê', 'Trace from farm to cup')}
             </p>
           </div>
           {traceData?.found && (
-            <Button
-              onClick={handleExportReport}
-              variant="outline"
-              className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              {t('Xuất báo cáo', 'Export Report')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleGenerateQR}
+                variant="outline"
+                className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
+              >
+                <QrCode className="w-4 h-4" />
+                {t2('Tao QR', 'Generate QR')}
+              </Button>
+              <Button
+                onClick={handleExportReport}
+                variant="outline"
+                className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                {t2('Xuat bao cao', 'Export Report')}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -784,7 +917,7 @@ export default function TraceabilityPage() {
               <Input
                 value={batchId}
                 onChange={(e) => setBatchId(e.target.value)}
-                placeholder={t('Nhập Mã lô (Batch ID)...', 'Enter Batch ID...')}
+                placeholder={t2('Nhập Mã lô (Batch ID)...', 'Enter Batch ID...')}
                 className="pl-9 rounded-xl border-border focus:border-border font-mono text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
@@ -799,10 +932,94 @@ export default function TraceabilityPage() {
               ) : (
                 <GitBranch className="w-4 h-4" />
               )}
-              {t('Truy xuất', 'Trace')}
+              {t2('Truy xuất', 'Trace')}
             </Button>
           </div>
         </Card>
+
+        {/* Recent Batches */}
+        {recentBatches.length > 0 && (
+          <FadeIn delay={0.05}>
+            <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Coffee className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold text-foreground">
+                  {t2('Lo gan day', 'Recent Batches')}
+                </h3>
+                <Badge variant="outline" className="border-border text-muted-foreground text-[9px] ml-auto">
+                  {recentBatches.length}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto">
+                {recentBatches.map((batch) => (
+                  <button
+                    key={batch.id}
+                    onClick={() => handleBatchClick(batch.batchId)}
+                    className="text-left p-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-mono font-bold text-primary truncate max-w-[140px]">
+                        {batch.batchId}
+                      </span>
+                      {batch.processingStage && (
+                        <Badge className="bg-amber-100 text-amber-700 text-[8px] border-0 shrink-0">
+                          {batch.processingStage}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] text-foreground truncate">
+                        {batch.farmer?.fullName || '-'}
+                      </p>
+                      {batch.farmLand?.farmName && (
+                        <p className="text-[9px] text-muted-foreground truncate">
+                          {batch.farmLand.farmName}
+                        </p>
+                      )}
+                      {batch.coffeeVariety && (
+                        <p className="text-[9px] text-muted-foreground truncate">
+                          {batch.coffeeVariety}
+                        </p>
+                      )}
+                      {batch.actualHarvestDate && (
+                        <p className="text-[8px] text-muted-foreground">
+                          {new Date(batch.actualHarvestDate).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </FadeIn>
+        )}
+
+        {/* QR Code Dialog */}
+        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+          <DialogContent className="max-w-sm rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <QrCode className="w-5 h-5" />
+                {t2('Ma QR Truy xuat', 'Traceability QR Code')}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-4">
+              {qrDataUrl && (
+                <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 rounded-xl" />
+              )}
+              <p className="text-xs text-muted-foreground text-center font-mono">
+                {traceData?.batchId}
+              </p>
+              <Button
+                onClick={handleDownloadQR}
+                className="rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Download className="w-4 h-4" />
+                {t2('Tai QR', 'Download QR')}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Results */}
         {loading && (
@@ -814,7 +1031,7 @@ export default function TraceabilityPage() {
                 </div>
                 <div className="flex items-center gap-2 text-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">{t('Đang truy xuất...', 'Tracing...')}</span>
+                  <span className="text-sm">{t2('Đang truy xuất...', 'Tracing...')}</span>
                 </div>
               </div>
             </div>
@@ -828,10 +1045,10 @@ export default function TraceabilityPage() {
                     <GitBranch className="w-7 h-7 text-foreground" />
                   </div>
                   <p className="text-sm font-medium text-foreground">
-                    {t('Không tìm thấy dữ liệu', 'No traceability data found')}
+                    {t2('Không tìm thấy dữ liệu', 'No traceability data found')}
                   </p>
                   <p className="text-xs text-foreground">
-                    {t('Vui lòng kiểm tra lại Mã lô và thử lại', 'Please check the Batch ID and try again')}
+                    {t2('Vui lòng kiểm tra lại Mã lô và thử lại', 'Please check the Batch ID and try again')}
                   </p>
                 </div>
               </Card>
@@ -845,7 +1062,7 @@ export default function TraceabilityPage() {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-foreground font-mono">
-                      {t('Lô:', 'Batch:')} {traceData.batchId}
+                      {t2('Lô:', 'Batch:')} {traceData.batchId}
                     </span>
                   </div>
                   {traceData.farmerName && (
@@ -893,10 +1110,10 @@ export default function TraceabilityPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-foreground">
-                        {t('Bản đồ Hành trình', 'Journey Map')}
+                        {t2('Bản đồ Hành trình', 'Journey Map')}
                       </h3>
                       <p className="text-[10px] text-muted-foreground">
-                        {t('Nhấn vào giai đoạn để xem vị trí trên bản đồ', 'Click a stage to see its location on the map')}
+                        {t2('Nhấn vào giai đoạn để xem vị trí trên bản đồ', 'Click a stage to see its location on the map')}
                       </p>
                     </div>
                   </div>
@@ -944,7 +1161,7 @@ export default function TraceabilityPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-foreground">
-                            {t('Chuỗi Hash Blockchain', 'Blockchain Hash Chain')}
+                            {t2('Chuỗi Hash Blockchain', 'Blockchain Hash Chain')}
                           </span>
                           <Badge className={`text-[10px] border-0 ${
                             traceData.chainVerification.valid
@@ -952,8 +1169,8 @@ export default function TraceabilityPage() {
                               : 'bg-red-100 text-red-700'
                           }`}>
                             {traceData.chainVerification.valid
-                              ? t('✓ Toàn vẹn', '✓ Intact')
-                              : t('✗ Bị đứt', '✗ Broken')
+                              ? t2('✓ Toàn vẹn', '✓ Intact')
+                              : t2('✗ Bị đứt', '✗ Broken')
                             }
                           </Badge>
                         </div>
@@ -982,7 +1199,7 @@ export default function TraceabilityPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground mb-1">
-                      {t('Nhập Mã lô để bắt đầu', 'Enter a Batch ID to get started')}
+                      {t2('Nhập Mã lô để bắt đầu', 'Enter a Batch ID to get started')}
                     </p>
                     <p className="text-xs text-foreground max-w-sm mx-auto">
                       {t(

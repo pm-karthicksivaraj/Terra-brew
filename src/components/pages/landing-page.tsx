@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { Coffee, Globe, ChevronRight, Leaf, Shield, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/i18n'
 
 // Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
@@ -12,10 +13,10 @@ function seededRandom(seed: number): number {
 }
 
 export default function LandingPage() {
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const router = useRouter()
-
+  const { t: tI18n, t2, lang, setLang } = useI18n()
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
 
   const floatingBeans = useMemo(() =>
     Array.from({ length: 12 }, (_, i) => ({
@@ -35,7 +36,7 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col overflow-hidden relative" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen flex flex-col overflow-hidden relative">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-background via-amber-50 to-stone-100" />
 
@@ -116,7 +117,7 @@ export default function LandingPage() {
               className="text-lg md:text-2xl text-muted-foreground mb-3 font-medium"
               style={{ animation: 'fadeIn 0.6s ease-out 0.7s both' }}
             >
-              {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
+              {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
             </p>
 
             <p
@@ -139,7 +140,7 @@ export default function LandingPage() {
                 className="bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white px-8 py-6 text-base rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/20"
                 onClick={() => router.push('/login')}
               >
-                {t('Vào Nền tảng', 'Enter Platform')}
+                {t2('Vào Nền tảng', 'Enter Platform')}
                 <ChevronRight className="w-5 h-5 ml-1" />
               </Button>
 
@@ -149,7 +150,7 @@ export default function LandingPage() {
                 className="border-border text-foreground hover:bg-muted px-8 py-6 text-base rounded-xl"
                 onClick={() => router.push('/super-admin')}
               >
-                {t('Quản trị Nền tảng', 'Platform Admin')}
+                {t2('Quản trị Nền tảng', 'Platform Admin')}
               </Button>
             </div>
           </div>
@@ -181,7 +182,7 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="text-center py-6 px-4">
           <p className="text-xs text-muted-foreground">
-            © 2024 Terra Brew — {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
+            © 2024 Terra Brew — {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
           </p>
         </footer>
       </div>

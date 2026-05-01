@@ -25,6 +25,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { signOut } from 'next-auth/react'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 // ════════════════════════════════════════════════════════════════
@@ -152,7 +153,7 @@ const ALL_LANGUAGES = [...new Map(COUNTRIES.map(c => [c.language, { code: c.lang
 export default function SuperAdminDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t2, lang, setLang } = useI18n()
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [modules, setModules] = useState<ModuleDef[]>([])
   const [platformUsers, setPlatformUsers] = useState<PlatformUser[]>([])
@@ -186,7 +187,6 @@ export default function SuperAdminDashboard() {
     email: '', password: '', name: '', role: 'support' as 'super_admin' | 'support',
   })
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const resetForm = () => {
     setForm({
@@ -291,7 +291,7 @@ export default function SuperAdminDashboard() {
         })
         const data = await res.json()
         if (data.success) {
-          toast.success(t('Cập nhật tổ chức thành công!', 'Tenant updated!'))
+          toast.success(t2('Cập nhật tổ chức thành công!', 'Tenant updated!'))
           setDialogOpen(false)
           resetForm()
           fetchData()
@@ -308,7 +308,7 @@ export default function SuperAdminDashboard() {
         })
         const data = await res.json()
         if (data.success) {
-          toast.success(t('Tạo tổ chức thành công!', 'Tenant created!'))
+          toast.success(t2('Tạo tổ chức thành công!', 'Tenant created!'))
           setDialogOpen(false)
           resetForm()
           fetchData()
@@ -317,7 +317,7 @@ export default function SuperAdminDashboard() {
         }
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -357,15 +357,15 @@ export default function SuperAdminDashboard() {
       if (data.success) {
         toast.success(
           tenant.isActive
-            ? t('Đã vô hiệu hóa tổ chức', 'Tenant deactivated')
-            : t('Đã kích hoạt lại tổ chức', 'Tenant reactivated')
+            ? t2('Đã vô hiệu hóa tổ chức', 'Tenant deactivated')
+            : t2('Đã kích hoạt lại tổ chức', 'Tenant reactivated')
         )
         fetchData()
       } else {
         toast.error(data.error || 'Error')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -391,7 +391,7 @@ export default function SuperAdminDashboard() {
         })
         const data = await res.json()
         if (data.success) {
-          toast.success(t('Cập nhật người dùng thành công!', 'User updated!'))
+          toast.success(t2('Cập nhật người dùng thành công!', 'User updated!'))
           setUserDialogOpen(false)
           resetUserForm()
           fetchPlatformUsers()
@@ -406,7 +406,7 @@ export default function SuperAdminDashboard() {
         })
         const data = await res.json()
         if (data.success) {
-          toast.success(t('Tạo người dùng thành công!', 'User created!'))
+          toast.success(t2('Tạo người dùng thành công!', 'User created!'))
           setUserDialogOpen(false)
           resetUserForm()
           fetchPlatformUsers()
@@ -415,7 +415,7 @@ export default function SuperAdminDashboard() {
         }
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setUserSubmitting(false)
     }
@@ -439,15 +439,15 @@ export default function SuperAdminDashboard() {
       if (data.success) {
         toast.success(
           user.isActive
-            ? t('Đã vô hiệu hóa người dùng', 'User deactivated')
-            : t('Đã kích hoạt lại người dùng', 'User reactivated')
+            ? t2('Đã vô hiệu hóa người dùng', 'User deactivated')
+            : t2('Đã kích hoạt lại người dùng', 'User reactivated')
         )
         fetchPlatformUsers()
       } else {
         toast.error(data.error || 'Error')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -483,14 +483,14 @@ export default function SuperAdminDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen flex items-center justify-center bg-stone-950" >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
             <Shield className="w-9 h-9 text-white animate-pulse" />
           </div>
           <div className="flex items-center gap-2 text-stone-400">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+            <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
           </div>
         </div>
       </div>
@@ -499,7 +499,7 @@ export default function SuperAdminDashboard() {
 
   if (!session?.user?.isPlatformAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen flex items-center justify-center bg-stone-950" >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
             <Shield className="w-9 h-9 text-white animate-pulse" />
@@ -518,7 +518,7 @@ export default function SuperAdminDashboard() {
   // ════════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen bg-stone-950 text-stone-100" >
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 bg-stone-900/80 backdrop-blur-xl border-b border-stone-800/50">
         <div className="flex items-center justify-between px-4 md:px-8 py-3">
@@ -527,8 +527,8 @@ export default function SuperAdminDashboard() {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-stone-100">Terra Brew {t('Quản trị', 'Admin')}</h1>
-              <p className="text-[10px] text-stone-500">{t('Nền tảng quản trị', 'Platform Administration')}</p>
+              <h1 className="text-sm font-bold text-stone-100">Terra Brew {t2('Quản trị', 'Admin')}</h1>
+              <p className="text-[10px] text-stone-500">{t2('Nền tảng quản trị', 'Platform Administration')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -554,19 +554,19 @@ export default function SuperAdminDashboard() {
           <TabsList className="bg-stone-900 border border-stone-800 rounded-xl p-1 mb-6">
             <TabsTrigger value="overview" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-              {t('Tổng quan', 'Overview')}
+              {t2('Tổng quan', 'Overview')}
             </TabsTrigger>
             <TabsTrigger value="tenants" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Building2 className="w-3.5 h-3.5 mr-1.5" />
-              {t('Tổ chức', 'Tenants')}
+              {t2('Tổ chức', 'Tenants')}
             </TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <UserCog className="w-3.5 h-3.5 mr-1.5" />
-              {t('Quản trị viên', 'Admins')}
+              {t2('Quản trị viên', 'Admins')}
             </TabsTrigger>
             <TabsTrigger value="audit" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <FileText className="w-3.5 h-3.5 mr-1.5" />
-              {t('Nhật ký', 'Audit Log')}
+              {t2('Nhật ký', 'Audit Log')}
             </TabsTrigger>
             <TabsTrigger value="modules" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Package className="w-3.5 h-3.5 mr-1.5" />
@@ -574,7 +574,7 @@ export default function SuperAdminDashboard() {
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Globe className="w-3.5 h-3.5 mr-1.5" />
-              {t('Cài đặt', 'Settings')}
+              {t2('Cài đặt', 'Settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -586,10 +586,10 @@ export default function SuperAdminDashboard() {
               {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
-                  { title: t('Tổng tổ chức', 'Total Tenants'), value: tenants.length, icon: Building2, color: 'from-stone-600 to-stone-800' },
-                  { title: t('Hoạt động', 'Active'), value: activeTenants.length, icon: Check, color: 'from-emerald-600 to-emerald-800' },
-                  { title: t('Tổng nông dân', 'Total Farmers'), value: totalFarmers, icon: Leaf, color: 'from-teal-600 to-teal-800' },
-                  { title: t('Tổng người dùng', 'Total Users'), value: totalUsers, icon: Users, color: 'from-cyan-600 to-cyan-800' },
+                  { title: t2('Tổng tổ chức', 'Total Tenants'), value: tenants.length, icon: Building2, color: 'from-stone-600 to-stone-800' },
+                  { title: t2('Hoạt động', 'Active'), value: activeTenants.length, icon: Check, color: 'from-emerald-600 to-emerald-800' },
+                  { title: t2('Tổng nông dân', 'Total Farmers'), value: totalFarmers, icon: Leaf, color: 'from-teal-600 to-teal-800' },
+                  { title: t2('Tổng người dùng', 'Total Users'), value: totalUsers, icon: Users, color: 'from-cyan-600 to-cyan-800' },
                 ].map((stat, i) => (
                   <div key={i} >
                     <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur">
@@ -611,7 +611,7 @@ export default function SuperAdminDashboard() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-stone-500" />
-                      {t('Phân bố gói dịch vụ', 'Plan Distribution')}
+                      {t2('Phân bố gói dịch vụ', 'Plan Distribution')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -623,12 +623,12 @@ export default function SuperAdminDashboard() {
                               <Cell key={index} fill={Object.values(PLAN_COLORS)[index % Object.values(PLAN_COLORS).length]} />
                             ))}
                           </Pie>
-                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: '"Space Mono", monospace', fontSize: '10px' }} />
-                          <Legend wrapperStyle={{ fontSize: '10px', fontFamily: '"Space Mono", monospace' }} />
+                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: 'Inter, system-ui, sans-serif', fontSize: '10px' }} />
+                          <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'Inter, system-ui, sans-serif' }} />
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-[200px] flex items-center justify-center text-stone-600 text-xs">{t('Chưa có dữ liệu', 'No data yet')}</div>
+                      <div className="h-[200px] flex items-center justify-center text-stone-600 text-xs">{t2('Chưa có dữ liệu', 'No data yet')}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -638,7 +638,7 @@ export default function SuperAdminDashboard() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                       <Package className="w-4 h-4 text-stone-500" />
-                      {t('Sử dụng Modules', 'Module Usage')}
+                      {t2('Sử dụng Modules', 'Module Usage')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -646,14 +646,14 @@ export default function SuperAdminDashboard() {
                       <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={moduleUsage} layout="vertical">
                           <CartesianGrid strokeDasharray="3 3" stroke="#44403c" />
-                          <XAxis type="number" tick={{ fill: '#a8a29e', fontSize: 9, fontFamily: '"Space Mono", monospace' }} />
-                          <YAxis type="category" dataKey="name" width={110} tick={{ fill: '#a8a29e', fontSize: 8, fontFamily: '"Space Mono", monospace' }} />
-                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: '"Space Mono", monospace', fontSize: '10px' }} />
-                          <Bar dataKey="tenants" fill="#78716c" radius={[0, 4, 4, 0]} name={t('Tổ chức', 'Tenants')} />
+                          <XAxis type="number" tick={{ fill: '#a8a29e', fontSize: 9, fontFamily: 'Inter, system-ui, sans-serif' }} />
+                          <YAxis type="category" dataKey="name" width={110} tick={{ fill: '#a8a29e', fontSize: 8, fontFamily: 'Inter, system-ui, sans-serif' }} />
+                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: 'Inter, system-ui, sans-serif', fontSize: '10px' }} />
+                          <Bar dataKey="tenants" fill="#78716c" radius={[0, 4, 4, 0]} name={t2('Tổ chức', 'Tenants')} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-[200px] flex items-center justify-center text-stone-600 text-xs">{t('Chưa có dữ liệu', 'No data yet')}</div>
+                      <div className="h-[200px] flex items-center justify-center text-stone-600 text-xs">{t2('Chưa có dữ liệu', 'No data yet')}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -664,12 +664,12 @@ export default function SuperAdminDashboard() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                     <Activity className="w-4 h-4 text-stone-500" />
-                    {t('Hoạt động gần đây', 'Recent Activity')}
+                    {t2('Hoạt động gần đây', 'Recent Activity')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {recentLogs.length === 0 ? (
-                    <div className="py-8 text-center text-stone-600 text-xs">{t('Chưa có hoạt động', 'No activity yet')}</div>
+                    <div className="py-8 text-center text-stone-600 text-xs">{t2('Chưa có hoạt động', 'No activity yet')}</div>
                   ) : (
                     <div className="space-y-2">
                       {recentLogs.map((log) => (
@@ -698,7 +698,7 @@ export default function SuperAdminDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-stone-500" />
-                  {t('Quản lý Tổ chức', 'Tenant Management')}
+                  {t2('Quản lý Tổ chức', 'Tenant Management')}
                 </h2>
                 <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
                   <Button
@@ -706,21 +706,21 @@ export default function SuperAdminDashboard() {
                     onClick={() => { resetForm(); setDialogOpen(true) }}
                   >
                     <Plus className="w-4 h-4" />
-                    {t('Tạo tổ chức', 'Create Tenant')}
+                    {t2('Tạo tổ chức', 'Create Tenant')}
                   </Button>
                   <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-stone-900 border-stone-800 text-stone-100">
                     <DialogHeader>
                       <DialogTitle className="text-stone-100 flex items-center gap-2">
                         <Building2 className="w-5 h-5 text-stone-500" />
                         {editingTenant
-                          ? t('Chỉnh sửa tổ chức', 'Edit Tenant')
-                          : t('Tạo tổ chức mới', 'Create New Tenant')}
+                          ? t2('Chỉnh sửa tổ chức', 'Edit Tenant')
+                          : t2('Tạo tổ chức mới', 'Create New Tenant')}
                       </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleTenantSubmit} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5 col-span-2">
-                          <Label className="text-xs text-stone-400">{t('Tên tổ chức', 'Name')} *</Label>
+                          <Label className="text-xs text-stone-400">{t2('Tên tổ chức', 'Name')} *</Label>
                           <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" required />
                         </div>
                         {!editingTenant && (
@@ -730,22 +730,22 @@ export default function SuperAdminDashboard() {
                           </div>
                         )}
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Tên pháp lý', 'Legal Name')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Tên pháp lý', 'Legal Name')}</Label>
                           <Input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Gói', 'Plan')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Gói', 'Plan')}</Label>
                           <Select value={form.plan} onValueChange={(v) => setForm({ ...form, plan: v })}>
                             <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-stone-800 border-stone-700">
-                              <SelectItem value="starter">Starter</SelectItem>
-                              <SelectItem value="professional">Professional</SelectItem>
-                              <SelectItem value="enterprise">Enterprise</SelectItem>
+                              <SelectItem value="starter">{t2('Khởi nghiệp', 'Starter')}</SelectItem>
+                              <SelectItem value="professional">{t2('Chuyên nghiệp', 'Professional')}</SelectItem>
+                              <SelectItem value="enterprise">{t2('Doanh nghiệp', 'Enterprise')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Quốc gia', 'Country')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Quốc gia', 'Country')}</Label>
                           <Select value={form.country} onValueChange={(v) => {
                             const c = COUNTRIES.find(x => x.code === v)
                             if (c) setForm({ ...form, country: c.code, currency: c.currency, currencySymbol: c.symbol, language: c.language, timezone: c.timezone, region: c.region })
@@ -759,7 +759,7 @@ export default function SuperAdminDashboard() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Ngôn ngữ', 'Language')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Ngôn ngữ', 'Language')}</Label>
                           <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v })}>
                             <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-stone-800 border-stone-700">
@@ -770,7 +770,7 @@ export default function SuperAdminDashboard() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Tiền tệ', 'Currency')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Tiền tệ', 'Currency')}</Label>
                           <Select value={form.currency} onValueChange={(v) => {
                             const c = ALL_CURRENCIES.find(x => x.code === v)
                             setForm({ ...form, currency: v, currencySymbol: c?.symbol || '$' })
@@ -784,11 +784,11 @@ export default function SuperAdminDashboard() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Múi giờ', 'Timezone')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Múi giờ', 'Timezone')}</Label>
                           <Input value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Khu vực', 'Region')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Khu vực', 'Region')}</Label>
                           <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}>
                             <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-stone-800 border-stone-700">
@@ -800,21 +800,21 @@ export default function SuperAdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch checked={form.eudrCompliant} onCheckedChange={(v) => setForm({ ...form, eudrCompliant: v })} />
-                          <Label className="text-xs text-stone-400">EUDR {t('Tuân thủ', 'Compliant')}</Label>
+                          <Label className="text-xs text-stone-400">EUDR {t2('Tuân thủ', 'Compliant')}</Label>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Tối đa người dùng', 'Max Users')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Tối đa người dùng', 'Max Users')}</Label>
                           <Input type="number" value={form.maxUsers} onChange={(e) => setForm({ ...form, maxUsers: parseInt(e.target.value) || 10 })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs text-stone-400">{t('Tối đa nông dân', 'Max Farmers')}</Label>
+                          <Label className="text-xs text-stone-400">{t2('Tối đa nông dân', 'Max Farmers')}</Label>
                           <Input type="number" value={form.maxFarmers} onChange={(e) => setForm({ ...form, maxFarmers: parseInt(e.target.value) || 500 })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
                         </div>
                       </div>
 
                       {/* Module toggles */}
                       <div className="space-y-2 pt-2 border-t border-stone-800">
-                        <Label className="text-xs font-bold text-stone-400">{t('Bật/Tắt Modules', 'Enable/Disable Modules')}</Label>
+                        <Label className="text-xs font-bold text-stone-400">{t2('Bật/Tắt Modules', 'Enable/Disable Modules')}</Label>
                         <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                           {MODULE_LIST.map(mod => (
                             <div key={mod} className="flex items-center gap-2 p-1 rounded-lg hover:bg-stone-800/30 transition-colors">
@@ -829,9 +829,9 @@ export default function SuperAdminDashboard() {
                       </div>
 
                       <div className="flex justify-end gap-3 pt-4 border-t border-stone-800">
-                        <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</Button>
+                        <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</Button>
                         <Button type="submit" disabled={submitting} className="bg-gradient-to-r from-stone-600 to-stone-800 text-white rounded-xl hover:from-stone-500 hover:to-stone-700">
-                          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingTenant ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')}
+                          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingTenant ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')}
                         </Button>
                       </div>
                     </form>
@@ -845,13 +845,13 @@ export default function SuperAdminDashboard() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-stone-800/30 border-b border-stone-800">
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Tổ chức', 'Tenant')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Gói', 'Plan')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Người dùng', 'Users')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t('Nông dân', 'Farmers')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t('Modules', 'Modules')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider text-right">{t('Hành động', 'Actions')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Tổ chức', 'Tenant')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Gói', 'Plan')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Người dùng', 'Users')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('Nông dân', 'Farmers')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('Modules', 'Modules')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider text-right">{t2('Hành động', 'Actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -894,7 +894,7 @@ export default function SuperAdminDashboard() {
                             <td className="px-4 py-3 text-xs text-stone-400 hidden lg:table-cell">{enabledCount}/{MODULE_LIST.length}</td>
                             <td className="px-4 py-3">
                               <Badge className={`${tenant.isActive ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'} text-[10px] border-0`}>
-                                {tenant.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                                {tenant.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                               </Badge>
                             </td>
                             <td className="px-4 py-3">
@@ -915,18 +915,18 @@ export default function SuperAdminDashboard() {
                                     <AlertDialogHeader>
                                       <AlertDialogTitle className="text-stone-100 flex items-center gap-2">
                                         <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                        {tenant.isActive ? t('Vô hiệu hóa tổ chức?', 'Deactivate Tenant?') : t('Kích hoạt lại tổ chức?', 'Reactivate Tenant?')}
+                                        {tenant.isActive ? t2('Vô hiệu hóa tổ chức?', 'Deactivate Tenant?') : t2('Kích hoạt lại tổ chức?', 'Reactivate Tenant?')}
                                       </AlertDialogTitle>
                                       <AlertDialogDescription className="text-stone-400">
                                         {tenant.isActive
-                                          ? t(`Bạn có chắc muốn vô hiệu hóa "${tenant.name}"? Tất cả người dùng sẽ không thể truy cập.`, `Are you sure you want to deactivate "${tenant.name}"? All users will lose access.`)
-                                          : t(`Bạn có chắc muốn kích hoạt lại "${tenant.name}"?`, `Are you sure you want to reactivate "${tenant.name}"?`)}
+                                          ? t2(`Bạn có chắc muốn vô hiệu hóa "${tenant.name}"? Tất cả người dùng sẽ không thể truy cập.`, `Are you sure you want to deactivate "${tenant.name}"? All users will lose access.`)
+                                          : t2(`Bạn có chắc muốn kích hoạt lại "${tenant.name}"?`, `Are you sure you want to reactivate "${tenant.name}"?`)}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</AlertDialogCancel>
+                                      <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</AlertDialogCancel>
                                       <AlertDialogAction onClick={() => toggleTenantActive(tenant)} className={tenant.isActive ? 'bg-red-700 hover:bg-red-600 text-white' : 'bg-emerald-700 hover:bg-emerald-600 text-white'}>
-                                        {tenant.isActive ? t('Vô hiệu hóa', 'Deactivate') : t('Kích hoạt lại', 'Reactivate')}
+                                        {tenant.isActive ? t2('Vô hiệu hóa', 'Deactivate') : t2('Kích hoạt lại', 'Reactivate')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -941,7 +941,7 @@ export default function SuperAdminDashboard() {
                 </div>
                 {tenants.length === 0 && (
                   <div className="py-12 text-center text-stone-600 text-xs">
-                    {t('Chưa có tổ chức nào', 'No tenants yet')}
+                    {t2('Chưa có tổ chức nào', 'No tenants yet')}
                   </div>
                 )}
               </Card>
@@ -956,7 +956,7 @@ export default function SuperAdminDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <UserCog className="w-5 h-5 text-stone-500" />
-                  {t('Quản lý Quản trị viên', 'Platform Admins')}
+                  {t2('Quản lý Quản trị viên', 'Platform Admins')}
                 </h2>
                 <Dialog open={userDialogOpen} onOpenChange={(open) => { setUserDialogOpen(open); if (!open) resetUserForm() }}>
                   <Button
@@ -964,20 +964,20 @@ export default function SuperAdminDashboard() {
                     onClick={() => { resetUserForm(); setUserDialogOpen(true) }}
                   >
                     <Plus className="w-4 h-4" />
-                    {t('Tạo quản trị viên', 'Create Admin')}
+                    {t2('Tạo quản trị viên', 'Create Admin')}
                   </Button>
                   <DialogContent className="max-w-md rounded-2xl bg-stone-900 border-stone-800 text-stone-100">
                     <DialogHeader>
                       <DialogTitle className="text-stone-100 flex items-center gap-2">
                         <UserCog className="w-5 h-5 text-stone-500" />
                         {editingUser
-                          ? t('Chỉnh sửa quản trị viên', 'Edit Admin')
-                          : t('Tạo quản trị viên mới', 'Create New Admin')}
+                          ? t2('Chỉnh sửa quản trị viên', 'Edit Admin')
+                          : t2('Tạo quản trị viên mới', 'Create New Admin')}
                       </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleUserSubmit} className="space-y-4">
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-stone-400">{t('Họ tên', 'Full Name')} *</Label>
+                        <Label className="text-xs text-stone-400">{t2('Họ tên', 'Full Name')} *</Label>
                         <Input value={userForm.name} onChange={(e) => setUserForm({ ...userForm, name: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" required />
                       </div>
                       <div className="space-y-1.5">
@@ -986,12 +986,12 @@ export default function SuperAdminDashboard() {
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-xs text-stone-400">
-                          {editingUser ? t('Mật khẩu mới (để trống nếu không đổi)', 'New Password (leave blank to keep)') : t('Mật khẩu', 'Password')} {!editingUser && '*'}
+                          {editingUser ? t2('Mật khẩu mới (để trống nếu không đổi)', 'New Password (leave blank to keep)') : t2('Mật khẩu', 'Password')} {!editingUser && '*'}
                         </Label>
                         <Input type="password" value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" {...(editingUser ? {} : { required: true })} />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-stone-400">{t('Vai trò', 'Role')}</Label>
+                        <Label className="text-xs text-stone-400">{t2('Vai trò', 'Role')}</Label>
                         <Select value={userForm.role} onValueChange={(v) => setUserForm({ ...userForm, role: v as 'super_admin' | 'support' })}>
                           <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                           <SelectContent className="bg-stone-800 border-stone-700">
@@ -1001,9 +1001,9 @@ export default function SuperAdminDashboard() {
                         </Select>
                       </div>
                       <div className="flex justify-end gap-3 pt-4 border-t border-stone-800">
-                        <Button type="button" variant="outline" onClick={() => { setUserDialogOpen(false); resetUserForm() }} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</Button>
+                        <Button type="button" variant="outline" onClick={() => { setUserDialogOpen(false); resetUserForm() }} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</Button>
                         <Button type="submit" disabled={userSubmitting} className="bg-gradient-to-r from-stone-600 to-stone-800 text-white rounded-xl hover:from-stone-500 hover:to-stone-700">
-                          {userSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingUser ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')}
+                          {userSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingUser ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')}
                         </Button>
                       </div>
                     </form>
@@ -1016,11 +1016,11 @@ export default function SuperAdminDashboard() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-stone-800/30 border-b border-stone-800">
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Quản trị viên', 'Admin')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Vai trò', 'Role')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Đăng nhập gần nhất', 'Last Login')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider text-right">{t('Hành động', 'Actions')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Quản trị viên', 'Admin')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Vai trò', 'Role')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Đăng nhập gần nhất', 'Last Login')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider text-right">{t2('Hành động', 'Actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1048,7 +1048,7 @@ export default function SuperAdminDashboard() {
                           </td>
                           <td className="px-4 py-3">
                             <Badge className={`${pUser.isActive ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'} text-[10px] border-0`}>
-                              {pUser.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                              {pUser.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                             </Badge>
                           </td>
                           <td className="px-4 py-3">
@@ -1066,18 +1066,18 @@ export default function SuperAdminDashboard() {
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className="text-stone-100 flex items-center gap-2">
                                       <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                      {pUser.isActive ? t('Vô hiệu hóa tài khoản?', 'Deactivate Account?') : t('Kích hoạt lại tài khoản?', 'Reactivate Account?')}
+                                      {pUser.isActive ? t2('Vô hiệu hóa tài khoản?', 'Deactivate Account?') : t2('Kích hoạt lại tài khoản?', 'Reactivate Account?')}
                                     </AlertDialogTitle>
                                     <AlertDialogDescription className="text-stone-400">
                                       {pUser.isActive
-                                        ? t(`${pUser.name} sẽ không thể đăng nhập.`, `${pUser.name} will not be able to sign in.`)
-                                        : t(`${pUser.name} sẽ có thể đăng nhập lại.`, `${pUser.name} will be able to sign in again.`)}
+                                        ? t2(`${pUser.name} sẽ không thể đăng nhập.`, `${pUser.name} will not be able to sign in.`)
+                                        : t2(`${pUser.name} sẽ có thể đăng nhập lại.`, `${pUser.name} will be able to sign in again.`)}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</AlertDialogCancel>
+                                    <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => toggleUserActive(pUser)} className={pUser.isActive ? 'bg-red-700 hover:bg-red-600 text-white' : 'bg-emerald-700 hover:bg-emerald-600 text-white'}>
-                                      {pUser.isActive ? t('Vô hiệu hóa', 'Deactivate') : t('Kích hoạt lại', 'Reactivate')}
+                                      {pUser.isActive ? t2('Vô hiệu hóa', 'Deactivate') : t2('Kích hoạt lại', 'Reactivate')}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -1091,7 +1091,7 @@ export default function SuperAdminDashboard() {
                 </div>
                 {platformUsers.length === 0 && (
                   <div className="py-12 text-center text-stone-600 text-xs">
-                    {t('Chưa có quản trị viên nào', 'No platform admins yet')}
+                    {t2('Chưa có quản trị viên nào', 'No platform admins yet')}
                   </div>
                 )}
               </Card>
@@ -1106,7 +1106,7 @@ export default function SuperAdminDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-stone-500" />
-                  {t('Nhật ký Hệ thống', 'Audit Log')}
+                  {t2('Nhật ký Hệ thống', 'Audit Log')}
                 </h2>
               </div>
 
@@ -1114,18 +1114,18 @@ export default function SuperAdminDashboard() {
               <div className="flex flex-wrap gap-3 mb-4">
                 <Select value={logFilter.action || '_all'} onValueChange={(v) => setLogFilter({ ...logFilter, action: v === '_all' ? '' : v })}>
                   <SelectTrigger className="w-40 rounded-xl border-stone-700 bg-stone-800/50 text-stone-300 text-xs">
-                    <SelectValue placeholder={t('Hành động', 'Action')} />
+                    <SelectValue placeholder={t2('Hành động', 'Action')} />
                   </SelectTrigger>
                   <SelectContent className="bg-stone-800 border-stone-700">
-                    <SelectItem value="_all">{t('Tất cả', 'All')}</SelectItem>
-                    <SelectItem value="CREATE">CREATE</SelectItem>
-                    <SelectItem value="UPDATE">UPDATE</SelectItem>
-                    <SelectItem value="DELETE">DELETE</SelectItem>
-                    <SelectItem value="LOGIN">LOGIN</SelectItem>
+                    <SelectItem value="_all">{t2('Tất cả', 'All')}</SelectItem>
+                    <SelectItem value="CREATE">{t2('Tạo', 'CREATE')}</SelectItem>
+                    <SelectItem value="UPDATE">{t2('Cập nhật', 'UPDATE')}</SelectItem>
+                    <SelectItem value="DELETE">{t2('Xóa', 'DELETE')}</SelectItem>
+                    <SelectItem value="LOGIN">{t2('Đăng nhập', 'LOGIN')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
-                  placeholder={t('Tìm kiếm entity...', 'Search entity...')}
+                  placeholder={t2('Tìm kiếm entity...', 'Search entity...')}
                   value={logFilter.entity}
                   onChange={(e) => setLogFilter({ ...logFilter, entity: e.target.value })}
                   className="w-48 rounded-xl border-stone-700 bg-stone-800/50 text-stone-300 text-xs"
@@ -1137,12 +1137,12 @@ export default function SuperAdminDashboard() {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-stone-800/30 border-b border-stone-800">
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Thời gian', 'Time')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Hành động', 'Action')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Entity', 'Entity')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Chi tiết', 'Details')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t('Tổ chức', 'Tenant')}</th>
-                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t('IP', 'IP')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Thời gian', 'Time')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Hành động', 'Action')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Entity', 'Entity')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Chi tiết', 'Details')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('Tổ chức', 'Tenant')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('IP', 'IP')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1171,7 +1171,7 @@ export default function SuperAdminDashboard() {
                 </div>
                 {auditLogs.length === 0 && (
                   <div className="py-12 text-center text-stone-600 text-xs">
-                    {t('Chưa có nhật ký', 'No audit logs yet')}
+                    {t2('Chưa có nhật ký', 'No audit logs yet')}
                   </div>
                 )}
               </Card>
@@ -1185,7 +1185,7 @@ export default function SuperAdminDashboard() {
             <div>
               <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2 mb-4">
                 <Package className="w-5 h-5 text-stone-500" />
-                {t('Thị trường Modules', 'Module Marketplace')}
+                {t2('Thị trường Modules', 'Module Marketplace')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {modules.map((mod, i: number) => (
@@ -1224,12 +1224,12 @@ export default function SuperAdminDashboard() {
             <div>
               <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2 mb-6">
                 <Globe className="w-5 h-5 text-stone-500" />
-                {t('Cài đặt Nền tảng', 'Platform Settings')}
+                {t2('Cài đặt Nền tảng', 'Platform Settings')}
               </h2>
 
               {/* Region Overview */}
               <div className="mb-8">
-                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t('Tổng quan Khu vực', 'Region Overview')}</h3>
+                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t2('Tổng quan Khu vực', 'Region Overview')}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                   {REGIONS.map(region => {
                     const regionTenants = tenants.filter(t => {
@@ -1249,7 +1249,7 @@ export default function SuperAdminDashboard() {
                             ))}
                           </div>
                           <p className="text-[10px] text-stone-500">
-                            {regionTenants.length} {t('tổ chức', 'tenants')}
+                            {regionTenants.length} {t2('tổ chức', 'tenants')}
                           </p>
                         </CardContent>
                       </Card>
@@ -1260,17 +1260,17 @@ export default function SuperAdminDashboard() {
 
               {/* Supported Countries Table */}
               <div className="mb-8">
-                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t('Quốc gia được hỗ trợ', 'Supported Countries')}</h3>
+                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t2('Quốc gia được hỗ trợ', 'Supported Countries')}</h3>
                 <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-stone-800/30 border-b border-stone-800">
-                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Quốc gia', 'Country')}</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Tiền tệ', 'Currency')}</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Ngôn ngữ', 'Language')}</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Múi giờ', 'Timezone')}</th>
-                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t('Khu vực', 'Region')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t2('Quốc gia', 'Country')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t2('Tiền tệ', 'Currency')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t2('Ngôn ngữ', 'Language')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t2('Múi giờ', 'Timezone')}</th>
+                          <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase">{t2('Khu vực', 'Region')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1294,19 +1294,19 @@ export default function SuperAdminDashboard() {
                 {/* Platform Info */}
                 <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs text-stone-300">{t('Thông tin Nền tảng', 'Platform Info')}</CardTitle>
+                    <CardTitle className="text-xs text-stone-300">{t2('Thông tin Nền tảng', 'Platform Info')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Tên nền tảng', 'Platform Name')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Tên nền tảng', 'Platform Name')}</Label>
                       <Input defaultValue="Terra Brew" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Email hỗ trợ', 'Support Email')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Email hỗ trợ', 'Support Email')}</Label>
                       <Input defaultValue="support@terrabrew.platform" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Ngôn ngữ mặc định', 'Default Language')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Ngôn ngữ mặc định', 'Default Language')}</Label>
                       <Select defaultValue="vi">
                         <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent className="bg-stone-800 border-stone-700">
@@ -1315,7 +1315,7 @@ export default function SuperAdminDashboard() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Tiền tệ mặc định', 'Default Currency')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Tiền tệ mặc định', 'Default Currency')}</Label>
                       <Select defaultValue="VND">
                         <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent className="bg-stone-800 border-stone-700">
@@ -1329,19 +1329,19 @@ export default function SuperAdminDashboard() {
                 {/* API Settings */}
                 <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs text-stone-300">API {t('Cài đặt', 'Settings')}</CardTitle>
+                    <CardTitle className="text-xs text-stone-300">API {t2('Cài đặt', 'Settings')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Giới hạn API/phút', 'Rate Limit/min')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Giới hạn API/phút', 'Rate Limit/min')}</Label>
                       <Input type="number" defaultValue={100} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Kích thước lô tối đa', 'Max Batch Size')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Kích thước lô tối đa', 'Max Batch Size')}</Label>
                       <Input type="number" defaultValue={50} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">Webhook URL</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('URL Webhook', 'Webhook URL')}</Label>
                       <Input placeholder="https://..." className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                   </CardContent>
@@ -1350,19 +1350,19 @@ export default function SuperAdminDashboard() {
                 {/* Security Settings */}
                 <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs text-stone-300">{t('Bảo mật', 'Security')}</CardTitle>
+                    <CardTitle className="text-xs text-stone-300">{t2('Bảo mật', 'Security')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Thời gian phiên (giây)', 'Session Timeout (s)')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Thời gian phiên (giây)', 'Session Timeout (s)')}</Label>
                       <Input type="number" defaultValue={86400} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Lần đăng nhập sai tối đa', 'Max Login Attempts')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Lần đăng nhập sai tối đa', 'Max Login Attempts')}</Label>
                       <Input type="number" defaultValue={5} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Độ dài mật khẩu tối thiểu', 'Min Password Length')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Độ dài mật khẩu tối thiểu', 'Min Password Length')}</Label>
                       <Input type="number" defaultValue={8} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                   </CardContent>
@@ -1371,25 +1371,25 @@ export default function SuperAdminDashboard() {
                 {/* Theme Settings */}
                 <Card className="rounded-2xl border border-stone-800 bg-stone-900/50">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs text-stone-300">{t('Giao diện', 'Theme')}</CardTitle>
+                    <CardTitle className="text-xs text-stone-300">{t2('Giao diện', 'Theme')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Màu chính', 'Primary Color')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Màu chính', 'Primary Color')}</Label>
                       <div className="flex items-center gap-2">
                         <input type="color" defaultValue="#8b5a1e" className="w-8 h-8 rounded-lg border border-stone-700 cursor-pointer" />
                         <Input defaultValue="#8b5a1e" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs flex-1" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Logo URL', 'Logo URL')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Logo URL', 'Logo URL')}</Label>
                       <Input defaultValue="/logo.svg" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 text-xs" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-[10px] text-stone-500">{t('Email thông báo', 'Email Notifications')}</Label>
+                      <Label className="text-[10px] text-stone-500">{t2('Email thông báo', 'Email Notifications')}</Label>
                       <div className="flex items-center gap-2">
                         <Switch defaultChecked />
-                        <span className="text-[10px] text-stone-400">{t('Bật', 'Enabled')}</span>
+                        <span className="text-[10px] text-stone-400">{t2('Bật', 'Enabled')}</span>
                       </div>
                     </div>
                   </CardContent>

@@ -10,6 +10,7 @@ import {
   Factory, User, BadgeCheck, Droplets,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -64,14 +65,13 @@ interface ProcessingDetail {
 export default function ProcessingDetailPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { t, t2, lang } = useI18n()
   const params = useParams()
   const id = params.id as string
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [record, setRecord] = useState<ProcessingDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set())
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const fetchRecord = useCallback(async () => {
     try {
@@ -81,11 +81,11 @@ export default function ProcessingDetailPage() {
       if (data.success && data.data?.data) {
         setRecord(data.data?.data ?? null)
       } else {
-        toast.error(data.error || t('Không tìm thấy bản ghi', 'Record not found'))
+        toast.error(data.error || t2('Không tìm thấy bản ghi', 'Record not found'))
         router.push('/processing')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setLoading(false)
     }
@@ -143,7 +143,7 @@ export default function ProcessingDetailPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -151,7 +151,7 @@ export default function ProcessingDetailPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -161,9 +161,9 @@ export default function ProcessingDetailPage() {
 
   if (!record) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
-          <p className="text-muted-foreground">{t('Không tìm thấy dữ liệu', 'Data not found')}</p>
+          <p className="text-muted-foreground">{t2('Không tìm thấy dữ liệu', 'Data not found')}</p>
         </div>
       </DashboardShell>
     )
@@ -184,7 +184,7 @@ export default function ProcessingDetailPage() {
     : null
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -196,7 +196,7 @@ export default function ProcessingDetailPage() {
               className="text-muted-foreground hover:text-foreground gap-1 -ml-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">{t('Quay lại', 'Back')}</span>
+              <span className="hidden sm:inline text-xs">{t2('Quay lại', 'Back')}</span>
             </Button>
             <Separator orientation="vertical" className="h-8 bg-muted" />
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
@@ -204,10 +204,10 @@ export default function ProcessingDetailPage() {
             </div>
             <div>
               <h1 className="text-lg md:text-xl font-bold text-foreground">
-                {record.jobOrderId || t('Lệnh chế biến', 'Job Order')}
+                {record.jobOrderId || t2('Lệnh chế biến', 'Job Order')}
               </h1>
               <p className="text-xs text-muted-foreground">
-                {record.batchIdInput ? `${t('Lô', 'Batch')}: ${record.batchIdInput}` : ''} {record.plantFacilityName ? `· ${record.plantFacilityName}` : ''}
+                {record.batchIdInput ? `${t2('Lô', 'Batch')}: ${record.batchIdInput}` : ''} {record.plantFacilityName ? `· ${record.plantFacilityName}` : ''}
               </p>
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function ProcessingDetailPage() {
               onClick={() => router.push('/processing')}
             >
               <Pencil className="w-3.5 h-3.5" />
-              {t('Chỉnh sửa', 'Edit')}
+              {t2('Chỉnh sửa', 'Edit')}
             </Button>
           </div>
         </div>
@@ -244,10 +244,10 @@ export default function ProcessingDetailPage() {
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: t('SL đầu vào', 'Input Qty'), value: record.inputQuantityKg ? `${record.inputQuantityKg.toLocaleString()} kg` : '-', icon: Scale, color: 'from-blue-500 to-blue-700' },
-            { label: t('TL đầu ra', 'Output'), value: record.finalOutputWeightKg ? `${record.finalOutputWeightKg.toLocaleString()} kg` : '-', icon: Scale, color: 'from-green-500 to-green-700' },
-            { label: t('Xuất (%)', 'Outturn'), value: record.overallOutturn ? `${record.overallOutturn}%` : '-', icon: BarChart3, color: 'from-amber-500 to-amber-700' },
-            { label: t('Chi phí/kg', 'Cost/kg'), value: record.costPerKg ? formatCurrency(record.costPerKg, 'VND') : '-', icon: Coffee, color: ' ' },
+            { label: t2('SL đầu vào', 'Input Qty'), value: record.inputQuantityKg ? `${record.inputQuantityKg.toLocaleString()} kg` : '-', icon: Scale, color: 'from-blue-500 to-blue-700' },
+            { label: t2('TL đầu ra', 'Output'), value: record.finalOutputWeightKg ? `${record.finalOutputWeightKg.toLocaleString()} kg` : '-', icon: Scale, color: 'from-green-500 to-green-700' },
+            { label: t2('Xuất (%)', 'Outturn'), value: record.overallOutturn ? `${record.overallOutturn}%` : '-', icon: BarChart3, color: 'from-amber-500 to-amber-700' },
+            { label: t2('Chi phí/kg', 'Cost/kg'), value: record.costPerKg ? formatCurrency(record.costPerKg, 'VND') : '-', icon: Coffee, color: ' ' },
           ].map((stat, i) => (
             <Card key={i} className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4">
@@ -268,21 +268,21 @@ export default function ProcessingDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-foreground flex items-center gap-2">
                 <Hash className="w-4 h-4 text-muted-foreground" />
-                {t('Thông tin lệnh chế biến', 'Job Order Info')}
+                {t2('Thông tin lệnh chế biến', 'Job Order Info')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <InfoRow label={t('Mã lệnh (Job Order ID)', 'Job Order ID')} value={record.jobOrderId} icon={<Hash className="w-3.5 h-3.5" />} />
-              <InfoRow label={t('Ngày chế biến', 'Processing Date')} value={record.processingDate ? new Date(record.processingDate).toLocaleDateString() : null} icon={<Calendar className="w-3.5 h-3.5" />} />
-              <InfoRow label={t('Mã lô đầu vào', 'Batch ID Input')} value={record.batchIdInput} />
-              <InfoRow label={t('Loại CP đầu vào', 'Coffee Type Input')} value={record.coffeeTypeInput} icon={<Coffee className="w-3.5 h-3.5" />} />
-              <InfoRow label={t('Giống CP đầu vào', 'Coffee Variety Input')} value={record.coffeeVarietyInput} />
-              <InfoRow label={t('Số lượng đầu vào (kg)', 'Input Quantity (kg)')} value={record.inputQuantityKg?.toLocaleString()} />
-              <InfoRow label={t('Phương pháp chế biến', 'Processing Method')} value={record.processingMethod} />
-              <InfoRow label={t('SP đầu ra mục tiêu', 'Target Output Product')} value={record.targetOutputProduct} />
+              <InfoRow label={t2('Mã lệnh (Job Order ID)', 'Job Order ID')} value={record.jobOrderId} icon={<Hash className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Ngày chế biến', 'Processing Date')} value={record.processingDate ? new Date(record.processingDate).toLocaleDateString() : null} icon={<Calendar className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Mã lô đầu vào', 'Batch ID Input')} value={record.batchIdInput} />
+              <InfoRow label={t2('Loại CP đầu vào', 'Coffee Type Input')} value={record.coffeeTypeInput} icon={<Coffee className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Giống CP đầu vào', 'Coffee Variety Input')} value={record.coffeeVarietyInput} />
+              <InfoRow label={t2('Số lượng đầu vào (kg)', 'Input Quantity (kg)')} value={record.inputQuantityKg?.toLocaleString()} />
+              <InfoRow label={t2('Phương pháp chế biến', 'Processing Method')} value={record.processingMethod} />
+              <InfoRow label={t2('SP đầu ra mục tiêu', 'Target Output Product')} value={record.targetOutputProduct} />
               <Separator className="my-2 bg-muted" />
-              <InfoRow label={t('Người vận hành', 'Operator Name')} value={record.operatorName} icon={<User className="w-3.5 h-3.5" />} />
-              <InfoRow label={t('Nhà máy', 'Plant Facility')} value={record.plantFacilityName} icon={<Factory className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Người vận hành', 'Operator Name')} value={record.operatorName} icon={<User className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Nhà máy', 'Plant Facility')} value={record.plantFacilityName} icon={<Factory className="w-3.5 h-3.5" />} />
             </CardContent>
           </Card>
 
@@ -291,17 +291,17 @@ export default function ProcessingDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-foreground flex items-center gap-2">
                 <Scale className="w-4 h-4 text-muted-foreground" />
-                {t('Tóm tắt Đầu vào/Ra', 'Input/Output Summary')}
+                {t2('Tóm tắt Đầu vào/Ra', 'Input/Output Summary')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                  <p className="text-[9px] text-blue-400 uppercase">{t('TL đầu vào (kg)', 'Input Weight (kg)')}</p>
+                  <p className="text-[9px] text-blue-400 uppercase">{t2('TL đầu vào (kg)', 'Input Weight (kg)')}</p>
                   <p className="text-lg font-bold text-blue-800">{record.inputWeightKg?.toLocaleString() ?? '-'}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                  <p className="text-[9px] text-green-400 uppercase">{t('TL đầu ra (kg)', 'Output Weight (kg)')}</p>
+                  <p className="text-[9px] text-green-400 uppercase">{t2('TL đầu ra (kg)', 'Output Weight (kg)')}</p>
                   <p className="text-lg font-bold text-green-800">{record.finalOutputWeightKg?.toLocaleString() ?? '-'}</p>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function ProcessingDetailPage() {
               {record.overallOutturn && (
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] text-muted-foreground uppercase">{t('Tỷ lệ xuất (%)', 'Outturn (%)')}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Tỷ lệ xuất (%)', 'Outturn (%)')}</p>
                     <span className="text-sm font-bold text-foreground">{record.overallOutturn}%</span>
                   </div>
                   <Progress value={Math.min(record.overallOutturn, 100)} className="h-2 bg-muted" />
@@ -320,7 +320,7 @@ export default function ProcessingDetailPage() {
               {/* Yield Loss */}
               {yieldLoss && (
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted">
-                  <p className="text-[10px] text-muted-foreground uppercase">{t('Hao hụt (%)', 'Yield Loss (%)')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Hao hụt (%)', 'Yield Loss (%)')}</p>
                   <Badge className={`${parseFloat(yieldLoss) > 80 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-amber-100 text-amber-700'} text-[10px] border-0`}>
                     {yieldLoss}%
                   </Badge>
@@ -330,8 +330,8 @@ export default function ProcessingDetailPage() {
               <Separator className="my-2 bg-muted" />
 
               {/* Cost Breakdown */}
-              <InfoRow label={t('Tổng chi phí (VND)', 'Total Cost (VND)')} value={record.totalProcessingCost ? formatCurrency(record.totalProcessingCost, 'VND') : null} icon={<Coffee className="w-3.5 h-3.5" />} />
-              <InfoRow label={t('Chi phí/kg (VND)', 'Cost/kg (VND)')} value={record.costPerKg ? formatCurrency(record.costPerKg, 'VND') : null} />
+              <InfoRow label={t2('Tổng chi phí (VND)', 'Total Cost (VND)')} value={record.totalProcessingCost ? formatCurrency(record.totalProcessingCost, 'VND') : null} icon={<Coffee className="w-3.5 h-3.5" />} />
+              <InfoRow label={t2('Chi phí/kg (VND)', 'Cost/kg (VND)')} value={record.costPerKg ? formatCurrency(record.costPerKg, 'VND') : null} />
             </CardContent>
           </Card>
 
@@ -340,14 +340,14 @@ export default function ProcessingDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-foreground flex items-center gap-2">
                 <Beaker className="w-4 h-4 text-muted-foreground" />
-                {t('Kết quả chất lượng', 'Quality Results')}
+                {t2('Kết quả chất lượng', 'Quality Results')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {/* Moisture */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-muted-foreground uppercase">{t('Độ ẩm cuối (%)', 'Final Moisture (%)')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Độ ẩm cuối (%)', 'Final Moisture (%)')}</p>
                   <span className="text-sm font-bold text-foreground">{record.finalMoistureContent !== null ? `${record.finalMoistureContent}%` : '-'}</span>
                 </div>
                 {record.finalMoistureContent !== null && (
@@ -358,7 +358,7 @@ export default function ProcessingDetailPage() {
               {/* Cup Score */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] text-muted-foreground uppercase">{t('Điểm cupping', 'Cup Score')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Điểm cupping', 'Cup Score')}</p>
                   <Badge className={`${cupScoreColor(record.cupScore)} text-[10px] border-0 font-bold`}>
                     {record.cupScore ?? '-'}
                   </Badge>
@@ -372,7 +372,7 @@ export default function ProcessingDetailPage() {
               {record.cuppingNotes && (
                 <>
                   <Separator className="my-2 bg-muted" />
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('Ghi chú cupping', 'Cupping Notes')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t2('Ghi chú cupping', 'Cupping Notes')}</p>
                   <div className="p-3 rounded-lg bg-muted">
                     <p className="text-sm text-foreground">{record.cuppingNotes}</p>
                   </div>
@@ -389,9 +389,9 @@ export default function ProcessingDetailPage() {
                   <XCircle className="w-5 h-5 text-muted-foreground shrink-0" />
                 )}
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">{t('QC duyệt', 'QC Approval')}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{t2('QC duyệt', 'QC Approval')}</p>
                   <p className="text-sm font-medium text-foreground">
-                    {record.qcApprovedBy || t('Chưa duyệt', 'Not approved')}
+                    {record.qcApprovedBy || t2('Chưa duyệt', 'Not approved')}
                   </p>
                   {record.qcApprovalDate && (
                     <p className="text-[10px] text-muted-foreground">{new Date(record.qcApprovalDate).toLocaleDateString()}</p>
@@ -406,13 +406,13 @@ export default function ProcessingDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-foreground flex items-center gap-2">
                 <Cog className="w-4 h-4 text-muted-foreground" />
-                {t('Giai đoạn chế biến', 'Processing Stages')} ({record.processingStages.length})
+                {t2('Giai đoạn chế biến', 'Processing Stages')} ({record.processingStages.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               {record.processingStages.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground text-sm italic">
-                  {t('Chưa có giai đoạn chế biến nào', 'No processing stages recorded')}
+                  {t2('Chưa có giai đoạn chế biến nào', 'No processing stages recorded')}
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -448,45 +448,45 @@ export default function ProcessingDetailPage() {
                           <div className="px-3 pb-3 border-t border-border">
                             <div className="grid grid-cols-2 gap-2 mt-2">
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('TL vào (kg)', 'Input (kg)')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('TL vào (kg)', 'Input (kg)')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.inputWeight ?? '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('TL ra (kg)', 'Output (kg)')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('TL ra (kg)', 'Output (kg)')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.outputWeight ?? '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Thời gian (phút)', 'Duration (min)')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Thời gian (phút)', 'Duration (min)')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.durationMinutes ?? '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Nhiệt độ', 'Temperature')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Nhiệt độ', 'Temperature')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.temperature !== null ? `${stage.temperature}°C` : '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Độ ẩm', 'Humidity')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Độ ẩm', 'Humidity')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.humidity !== null ? `${stage.humidity}%` : '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Máy', 'Machine')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Máy', 'Machine')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.machineUsed || '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Người vận hành', 'Operator')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Người vận hành', 'Operator')}</p>
                                 <p className="text-xs font-medium text-foreground">{stage.operatorName || '-'}</p>
                               </div>
                               <div className="p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Kiểm tra chất lượng', 'QC Check')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Kiểm tra chất lượng', 'QC Check')}</p>
                                 <p className="text-xs font-medium">
                                   {stage.qualityCheckPassed ? (
                                     <Badge className="bg-green-100 text-green-700 text-[9px] border-0 gap-1">
                                       <CheckCircle className="w-2.5 h-2.5" />
-                                      {t('Đạt', 'Pass')}
+                                      {t2('Đạt', 'Pass')}
                                     </Badge>
                                   ) : (
                                     <Badge className="bg-red-100 text-red-600 text-[9px] border-0 gap-1">
                                       <XCircle className="w-2.5 h-2.5" />
-                                      {t('Không đạt', 'Fail')}
+                                      {t2('Không đạt', 'Fail')}
                                     </Badge>
                                   )}
                                 </p>
@@ -494,7 +494,7 @@ export default function ProcessingDetailPage() {
                             </div>
                             {stage.notes && (
                               <div className="mt-2 p-2 rounded-lg bg-muted">
-                                <p className="text-[9px] text-muted-foreground">{t('Ghi chú', 'Notes')}</p>
+                                <p className="text-[9px] text-muted-foreground">{t2('Ghi chú', 'Notes')}</p>
                                 <p className="text-xs text-foreground">{stage.notes}</p>
                               </div>
                             )}
@@ -508,11 +508,11 @@ export default function ProcessingDetailPage() {
               <Separator className="my-3 bg-muted" />
               <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
                 <div>
-                  <span className="uppercase">{t('Ngày tạo', 'Created')}</span>
+                  <span className="uppercase">{t2('Ngày tạo', 'Created')}</span>
                   <p className="text-muted-foreground font-medium text-xs">{new Date(record.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <span className="uppercase">{t('Cập nhật', 'Updated')}</span>
+                  <span className="uppercase">{t2('Cập nhật', 'Updated')}</span>
                   <p className="text-muted-foreground font-medium text-xs">{new Date(record.updatedAt).toLocaleDateString()}</p>
                 </div>
               </div>

@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, ShoppingBag, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2, X,
+  Pencil, Trash2, Eye, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -86,7 +87,7 @@ const listingStatusColors: Record<string, string> = {
 export default function MarketplacePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [listings, setListings] = useState<MarketplaceListing[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -100,7 +101,6 @@ export default function MarketplacePage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [farmerOptions, setFarmerOptions] = useState<FarmerOption[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const [form, setForm] = useState(emptyForm)
 
@@ -224,15 +224,15 @@ export default function MarketplacePage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo đăng bán thành công!', 'Listing created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo đăng bán thành công!', 'Listing created!'))
         setDialogOpen(false)
         resetForm()
         fetchListings()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -243,14 +243,14 @@ export default function MarketplacePage() {
       const res = await fetch(`/api/marketplace?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         setDeleteConfirm(null)
         fetchListings()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -260,7 +260,7 @@ export default function MarketplacePage() {
 
   if (status === 'loading' || (loading && listings.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -268,7 +268,7 @@ export default function MarketplacePage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -277,14 +277,14 @@ export default function MarketplacePage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-muted-foreground" />
-              {t('Thị trường & Bán hàng', 'Marketplace & Sales')}
+              {t2('Thị trường & Bán hàng', 'Marketplace & Sales')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} đăng bán`, `Total: ${total} listings`)}</p>
           </div>
@@ -296,24 +296,24 @@ export default function MarketplacePage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm đăng bán mới', 'Add New Listing')}
+                {t2('Thêm đăng bán mới', 'Add New Listing')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5" />
-                  {editingItem ? t('Sửa đăng bán', 'Edit Listing') : t('Thêm đăng bán mới', 'Add New Listing')}
+                  {editingItem ? t2('Sửa đăng bán', 'Edit Listing') : t2('Thêm đăng bán mới', 'Add New Listing')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')}</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
+                        <SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
                         {farmerOptions.map((f) => (
@@ -325,7 +325,7 @@ export default function MarketplacePage() {
 
                   {/* Listing ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã đăng bán', 'Listing ID')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã đăng bán', 'Listing ID')}</Label>
                     <Input
                       value={form.listingId}
                       onChange={(e) => setForm({ ...form, listingId: e.target.value })}
@@ -336,11 +336,11 @@ export default function MarketplacePage() {
 
                   {/* Title */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Tiêu đề', 'Title')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Tiêu đề', 'Title')} *</Label>
                     <Input
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      placeholder={t('Cà phê Robusta Hạng 1', 'Robusta Grade 1 Coffee')}
+                      placeholder={t2('Cà phê Robusta Hạng 1', 'Robusta Grade 1 Coffee')}
                       className="rounded-xl border-input focus:border-primary"
                       required
                     />
@@ -348,77 +348,77 @@ export default function MarketplacePage() {
 
                   {/* Description */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Mô tả', 'Description')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mô tả', 'Description')}</Label>
                     <Input
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      placeholder={t('Mô tả sản phẩm...', 'Product description...')}
+                      placeholder={t2('Mô tả sản phẩm...', 'Product description...')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Coffee Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại cà phê', 'Coffee Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại cà phê', 'Coffee Type')}</Label>
                     <Select value={form.coffeeType} onValueChange={(v) => setForm({ ...form, coffeeType: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Robusta">Robusta</SelectItem>
-                        <SelectItem value="Arabica">Arabica</SelectItem>
-                        <SelectItem value="Liberica">Liberica</SelectItem>
-                        <SelectItem value="Excelsa">Excelsa</SelectItem>
+                        <SelectItem value="Robusta">{t2('Cà phê Robusta', 'Robusta Coffee')}</SelectItem>
+                        <SelectItem value="Arabica">{t2('Cà phê Arabica', 'Arabica Coffee')}</SelectItem>
+                        <SelectItem value="Liberica">{t2('Cà phê Liberica', 'Liberica Coffee')}</SelectItem>
+                        <SelectItem value="Excelsa">{t2('Cà phê Excelsa', 'Excelsa Coffee')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Coffee Variety */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Giống', 'Variety')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Giống', 'Variety')}</Label>
                     <Input
                       value={form.coffeeVariety}
                       onChange={(e) => setForm({ ...form, coffeeVariety: e.target.value })}
-                      placeholder={t('Catimor', 'Catimor')}
+                      placeholder={t2('Catimor', 'Catimor')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Grade */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Hạng', 'Grade')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Hạng', 'Grade')}</Label>
                     <Select value={form.grade} onValueChange={(v) => setForm({ ...form, grade: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
+                        <SelectValue placeholder={t2('Chọn hạng', 'Select grade')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Specialty">{t('Đặc sản', 'Specialty')}</SelectItem>
-                        <SelectItem value="Premium">{t('Cao cấp', 'Premium')}</SelectItem>
-                        <SelectItem value="Grade 1">{t('Hạng 1', 'Grade 1')}</SelectItem>
-                        <SelectItem value="Grade 2">{t('Hạng 2', 'Grade 2')}</SelectItem>
+                        <SelectItem value="Specialty">{t2('Đặc sản', 'Specialty')}</SelectItem>
+                        <SelectItem value="Premium">{t2('Cao cấp', 'Premium')}</SelectItem>
+                        <SelectItem value="Grade 1">{t2('Hạng 1', 'Grade 1')}</SelectItem>
+                        <SelectItem value="Grade 2">{t2('Hạng 2', 'Grade 2')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Processing Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Phương pháp chế biến', 'Processing Method')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Phương pháp chế biến', 'Processing Method')}</Label>
                     <Select value={form.processingMethod} onValueChange={(v) => setForm({ ...form, processingMethod: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn phương pháp', 'Select method')} />
+                        <SelectValue placeholder={t2('Chọn phương pháp', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Washed">{t('Rửa', 'Washed')}</SelectItem>
-                        <SelectItem value="Natural">{t('Tự nhiên', 'Natural')}</SelectItem>
-                        <SelectItem value="Honey">{t('Mật ong', 'Honey')}</SelectItem>
-                        <SelectItem value="Wet-hulled">{t('Ướt', 'Wet-hulled')}</SelectItem>
+                        <SelectItem value="Washed">{t2('Rửa', 'Washed')}</SelectItem>
+                        <SelectItem value="Natural">{t2('Tự nhiên', 'Natural')}</SelectItem>
+                        <SelectItem value="Honey">{t2('Mật ong', 'Honey')}</SelectItem>
+                        <SelectItem value="Wet-hulled">{t2('Ướt', 'Wet-hulled')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Quantity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số lượng (kg)', 'Quantity (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số lượng (kg)', 'Quantity (kg)')}</Label>
                     <Input
                       type="number"
                       value={form.quantityKg}
@@ -430,7 +430,7 @@ export default function MarketplacePage() {
 
                   {/* Price per kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đơn giá/kg', 'Price/kg')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Đơn giá/kg', 'Price/kg')}</Label>
                     <Input
                       type="number"
                       value={form.pricePerKg}
@@ -442,7 +442,7 @@ export default function MarketplacePage() {
 
                   {/* Total Value */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổng giá trị', 'Total Value')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tổng giá trị', 'Total Value')}</Label>
                     <Input
                       type="number"
                       value={form.totalValue}
@@ -453,7 +453,7 @@ export default function MarketplacePage() {
 
                   {/* Currency */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tiền tệ', 'Currency')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tiền tệ', 'Currency')}</Label>
                     <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
@@ -470,18 +470,18 @@ export default function MarketplacePage() {
 
                   {/* Origin */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nguồn gốc', 'Origin')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nguồn gốc', 'Origin')}</Label>
                     <Input
                       value={form.origin}
                       onChange={(e) => setForm({ ...form, origin: e.target.value })}
-                      placeholder={t('Đắk Lắk, Việt Nam', 'Dak Lak, Vietnam')}
+                      placeholder={t2('Đắk Lắk, Việt Nam', 'Dak Lak, Vietnam')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Cup Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Điểm cupping', 'Cup Score')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điểm cupping', 'Cup Score')}</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -495,7 +495,7 @@ export default function MarketplacePage() {
 
                   {/* Certifications */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Chứng nhận', 'Certifications')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Chứng nhận', 'Certifications')}</Label>
                     <Input
                       value={form.certifications}
                       onChange={(e) => setForm({ ...form, certifications: e.target.value })}
@@ -506,7 +506,7 @@ export default function MarketplacePage() {
 
                   {/* Harvest Year */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Năm thu hoạch', 'Harvest Year')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Năm thu hoạch', 'Harvest Year')}</Label>
                     <Input
                       value={form.harvestYear}
                       onChange={(e) => setForm({ ...form, harvestYear: e.target.value })}
@@ -517,38 +517,38 @@ export default function MarketplacePage() {
 
                   {/* Availability */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tình trạng', 'Availability')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tình trạng', 'Availability')}</Label>
                     <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="In Stock">{t('Còn hàng', 'In Stock')}</SelectItem>
-                        <SelectItem value="Limited">{t('Hạn chế', 'Limited')}</SelectItem>
-                        <SelectItem value="Pre-order">{t('Đặt trước', 'Pre-order')}</SelectItem>
+                        <SelectItem value="In Stock">{t2('Còn hàng', 'In Stock')}</SelectItem>
+                        <SelectItem value="Limited">{t2('Hạn chế', 'Limited')}</SelectItem>
+                        <SelectItem value="Pre-order">{t2('Đặt trước', 'Pre-order')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Listing Status */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Trạng thái', 'Status')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Trạng thái', 'Status')}</Label>
                     <Select value={form.listingStatus} onValueChange={(v) => setForm({ ...form, listingStatus: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Draft">{t('Nháp', 'Draft')}</SelectItem>
-                        <SelectItem value="Active">{t('Đang bán', 'Active')}</SelectItem>
-                        <SelectItem value="Sold">{t('Đã bán', 'Sold')}</SelectItem>
-                        <SelectItem value="Expired">{t('Hết hạn', 'Expired')}</SelectItem>
+                        <SelectItem value="Draft">{t2('Nháp', 'Draft')}</SelectItem>
+                        <SelectItem value="Active">{t2('Đang bán', 'Active')}</SelectItem>
+                        <SelectItem value="Sold">{t2('Đã bán', 'Sold')}</SelectItem>
+                        <SelectItem value="Expired">{t2('Hết hạn', 'Expired')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Listing Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày đăng', 'Listing Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày đăng', 'Listing Date')}</Label>
                     <Input
                       type="date"
                       value={form.listingDate}
@@ -559,7 +559,7 @@ export default function MarketplacePage() {
 
                   {/* Expiry Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày hết hạn', 'Expiry Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày hết hạn', 'Expiry Date')}</Label>
                     <Input
                       type="date"
                       value={form.expiryDate}
@@ -572,7 +572,7 @@ export default function MarketplacePage() {
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -582,10 +582,10 @@ export default function MarketplacePage() {
                     {submitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t('Đang lưu...', 'Saving...')}
+                        {t2('Đang lưu...', 'Saving...')}
                       </>
                     ) : (
-                      editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                      editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -599,16 +599,16 @@ export default function MarketplacePage() {
           <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
             <TabsList className="bg-muted rounded-xl h-8">
               <TabsTrigger value="all" className="text-[10px] data-[state=active]:bg-muted data-[state=active]:text-white rounded-lg px-2">
-                {t('Tất cả', 'All')}
+                {t2('Tất cả', 'All')}
               </TabsTrigger>
               <TabsTrigger value="Active" className="text-[10px] data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Đang bán', 'Active')}
+                {t2('Đang bán', 'Active')}
               </TabsTrigger>
               <TabsTrigger value="Sold" className="text-[10px] data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Đã bán', 'Sold')}
+                {t2('Đã bán', 'Sold')}
               </TabsTrigger>
               <TabsTrigger value="Expired" className="text-[10px] data-[state=active]:bg-gray-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Hết hạn', 'Expired')}
+                {t2('Hết hạn', 'Expired')}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -617,7 +617,7 @@ export default function MarketplacePage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm đăng bán...', 'Search listings...')}
+              placeholder={t2('Tìm kiếm đăng bán...', 'Search listings...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -632,15 +632,15 @@ export default function MarketplacePage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã ĐB', 'Listing ID')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Tiêu đề', 'Title')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Hạng', 'Grade')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Số lượng', 'Qty')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Giá/kg', 'Price/kg')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tổng', 'Total')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Mã ĐB', 'Listing ID')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Tiêu đề', 'Title')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Hạng', 'Grade')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Số lượng', 'Qty')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Giá/kg', 'Price/kg')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Tổng', 'Total')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t2('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -649,7 +649,7 @@ export default function MarketplacePage() {
                       <td colSpan={9} className="px-4 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <ShoppingBag className="w-10 h-10" />
-                          <p className="text-sm">{t('Chưa có đăng bán nào', 'No listings found')}</p>
+                          <p className="text-sm">{t2('Chưa có đăng bán nào', 'No listings found')}</p>
                         </div>
                       </td>
                     </tr>
@@ -681,16 +681,19 @@ export default function MarketplacePage() {
                         </td>
                         <td className="px-4 py-3">
                           <Badge className={`${listingStatusColors[item.listingStatus || 'Draft'] || 'bg-gray-100 text-gray-600'} text-[10px] border-0`}>
-                            {item.listingStatus === 'Active' ? t('Đang bán', 'Active') :
-                             item.listingStatus === 'Sold' ? t('Đã bán', 'Sold') :
-                             item.listingStatus === 'Expired' ? t('Hết hạn', 'Expired') :
-                             t('Nháp', 'Draft')}
+                            {item.listingStatus === 'Active' ? t2('Đang bán', 'Active') :
+                             item.listingStatus === 'Sold' ? t2('Đã bán', 'Sold') :
+                             item.listingStatus === 'Expired' ? t2('Hết hạn', 'Expired') :
+                             t2('Nháp', 'Draft')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
-                              <Pencil className="w-3 h-3 text-muted-foreground" />
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/marketplace/${item.id}`)}>
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
+                                <Pencil className="w-3 h-3 text-muted-foreground" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">

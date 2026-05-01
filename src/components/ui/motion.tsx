@@ -9,8 +9,11 @@ export const PageTransition = motion.div
 // Card animation
 export const MotionCard = motion.div
 
-// Table row animation (stagger)
+// Table row animation (stagger) — renders as <tr> for valid HTML in tables
 export const MotionRow = motion.tr
+
+// Table body animation container — renders as <tbody> for valid HTML
+export const MotionTbody = motion.tbody
 
 // Button press animation
 export const MotionButton = motion.button
@@ -27,7 +30,7 @@ export const FadeIn = ({ children, delay = 0, ...props }: { children: React.Reac
   </motion.div>
 )
 
-// Stagger container for lists
+// Stagger container for lists (NOT for use inside tables — use TableStaggerTbody instead)
 export const StaggerContainer = ({ children, ...props }: { children: React.ReactNode } & HTMLMotionProps<'div'>) => (
   <motion.div
     initial="hidden"
@@ -42,7 +45,7 @@ export const StaggerContainer = ({ children, ...props }: { children: React.React
   </motion.div>
 )
 
-// Stagger item
+// Stagger item (NOT for use inside tables — use TableStaggerRow instead)
 export const StaggerItem = ({ children, ...props }: { children: React.ReactNode } & HTMLMotionProps<'div'>) => (
   <motion.div
     variants={{
@@ -53,6 +56,39 @@ export const StaggerItem = ({ children, ...props }: { children: React.ReactNode 
   >
     {children}
   </motion.div>
+)
+
+// ─── Table-safe stagger animation components ───
+// These render proper HTML table elements (<tbody> and <tr>) to avoid
+// the "div cannot be a child of tbody" and "tr cannot be a child of div"
+// hydration errors.
+
+// Table stagger container — renders as <tbody> with stagger animation
+export const TableStaggerTbody = ({ children, ...props }: { children: React.ReactNode } & HTMLMotionProps<'tbody'>) => (
+  <motion.tbody
+    initial="hidden"
+    animate="visible"
+    variants={{
+      hidden: { opacity: 0 },
+      visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+    }}
+    {...props}
+  >
+    {children}
+  </motion.tbody>
+)
+
+// Table stagger row — renders as <tr> with stagger item animation
+export const TableStaggerRow = ({ children, ...props }: { children: React.ReactNode } & HTMLMotionProps<'tr'>) => (
+  <motion.tr
+    variants={{
+      hidden: { opacity: 0, y: 12 },
+      visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } }
+    }}
+    {...props}
+  >
+    {children}
+  </motion.tr>
 )
 
 // Scale on hover for cards/buttons

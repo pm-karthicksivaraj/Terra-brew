@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n'
 
 // Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
@@ -16,15 +17,14 @@ function seededRandom(seed: number): number {
 }
 
 export default function SuperAdminLoginPage() {
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [email, setEmail] = useState('admin@terrabrew.platform')
   const [password, setPassword] = useState('Admin@2024')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { t2, lang, setLang } = useI18n()
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Pre-compute particle positions using deterministic random
   const particles = useMemo(() =>
@@ -53,24 +53,24 @@ export default function SuperAdminLoginPage() {
       const data = await res.json()
 
       if (!data.success) {
-        setError(data.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
-        toast.error(data.error || t('Đăng nhập thất bại', 'Login failed'))
+        setError(data.error || t2('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        toast.error(data.error || t2('Đăng nhập thất bại', 'Login failed'))
         return
       }
 
-      toast.success(t('Đăng nhập thành công!', 'Login successful!'))
+      toast.success(t2('Đăng nhập thành công!', 'Login successful!'))
       router.push('/super-admin/dashboard')
       router.refresh()
     } catch {
-      setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
-      toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))
+      setError(t2('Lỗi kết nối máy chủ', 'Server connection error'))
+      toast.error(t2('Lỗi kết nối máy chủ', 'Server connection error'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-coffee-900" />
 
@@ -104,7 +104,7 @@ export default function SuperAdminLoginPage() {
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center shadow-lg mb-4">
                 <Shield className="w-9 h-9 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-stone-800">{t('Quản trị Nền tảng', 'Platform Admin')}</h1>
+              <h1 className="text-2xl font-bold text-stone-800">{t2('Quản trị Nền tảng', 'Platform Admin')}</h1>
               <p className="text-stone-500 text-sm mt-1">Terra Brew</p>
             </div>
             <div className="flex justify-center">
@@ -118,11 +118,11 @@ export default function SuperAdminLoginPage() {
           <CardContent className="px-8 pb-8 pt-4">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-stone-700 text-xs font-medium">Email</Label>
+                <Label className="text-stone-700 text-xs font-medium">{t2('Email', 'Email')}</Label>
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-stone-50/50 border-stone-200 focus:border-stone-500 rounded-xl h-11 text-sm" required />
               </div>
               <div className="space-y-2">
-                <Label className="text-stone-700 text-xs font-medium">{t('Mật khẩu', 'Password')}</Label>
+                <Label className="text-stone-700 text-xs font-medium">{t2('Mật khẩu', 'Password')}</Label>
                 <div className="relative">
                   <Input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-stone-50/50 border-stone-200 focus:border-stone-500 rounded-xl h-11 text-sm pr-10" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
@@ -139,18 +139,18 @@ export default function SuperAdminLoginPage() {
               )}
 
               <div className="bg-stone-50 border border-stone-200/50 rounded-xl p-3 text-xs text-stone-600">
-                <p className="font-medium mb-1">{t('Tài khoản quản trị nền tảng', 'Platform admin credentials')}</p>
+                <p className="font-medium mb-1">{t2('Tài khoản quản trị nền tảng', 'Platform admin credentials')}</p>
                 <p className="text-stone-400">admin@terrabrew.platform / Admin@2024</p>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-stone-600 to-stone-800 hover:from-stone-700 hover:to-stone-900 text-white h-11 rounded-xl shadow-lg transition-all text-sm font-medium">
-                {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang đăng nhập...', 'Signing in...')}</>) : t('Đăng nhập', 'Sign In')}
+                {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Đang đăng nhập...', 'Signing in...')}</>) : t2('Đăng nhập', 'Sign In')}
               </Button>
             </form>
 
             <div className="mt-4 text-center">
               <button onClick={() => router.push('/login')} className="text-xs text-stone-400 hover:text-stone-600 underline underline-offset-2 transition-colors">
-                {t('← Quay lại đăng nhập tổ chức', '← Back to tenant login')}
+                {t2('← Quay lại đăng nhập tổ chức', '← Back to tenant login')}
               </button>
             </div>
           </CardContent>

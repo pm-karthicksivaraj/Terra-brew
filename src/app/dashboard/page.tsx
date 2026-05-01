@@ -10,6 +10,7 @@ import {
   PieChart as PieChartIcon, Loader2,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useI18n } from '@/i18n'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -47,11 +48,10 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { t, t2, lang } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const fetchStats = useCallback(async () => {
     try {
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
@@ -85,7 +85,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -95,11 +95,11 @@ export default function DashboardPage() {
 
   if (!session) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-6 h-6 animate-spin text-foreground" />
-            <span className="text-sm text-foreground">{t('Đang chuyển hướng...', 'Redirecting...')}</span>
+            <span className="text-sm text-foreground">{t2('Đang chuyển hướng...', 'Redirecting...')}</span>
           </div>
         </div>
       </DashboardShell>
@@ -109,32 +109,32 @@ export default function DashboardPage() {
   const currency = session.user?.currency || 'VND'
 
   const primaryKPIs = [
-    { title: t('Tổng doanh thu', 'Total Revenue'), value: stats?.totalPurchaseAmount || 2850000000, icon: DollarSign, format: 'currency', gradient: 'from-amber-600 to-amber-800' },
-    { title: t('Tổng nông dân', 'Total Farmers'), value: stats?.totalFarmers || 0, icon: Users, format: 'number', gradient: ' ' },
-    { title: t('Diện tích (ha)', 'Farm Area (ha)'), value: stats?.totalLandArea || 0, icon: MapPin, format: 'decimal', gradient: 'from-emerald-600 to-emerald-800' },
-    { title: t('Sản lượng (kg)', 'Harvest Volume (kg)'), value: stats?.totalCherryWeight || 0, icon: Wheat, format: 'number', gradient: 'from-yellow-600 to-yellow-800' },
-    { title: t('Giá TB/kg', 'Avg Price/kg'), value: stats?.avgPricePerKg || 0, icon: TrendingUp, format: 'currency', gradient: 'from-orange-600 to-orange-800' },
-    { title: t('Điểm chất lượng', 'Quality Score'), value: stats?.avgCupScore || 0, icon: Award, format: 'score', gradient: 'from-stone-600 to-stone-800' },
+    { title: t2('Tổng doanh thu', 'Total Revenue'), value: stats?.totalPurchaseAmount || 2850000000, icon: DollarSign, format: 'currency', gradient: 'from-amber-600 to-amber-800' },
+    { title: t2('Tổng nông dân', 'Total Farmers'), value: stats?.totalFarmers || 0, icon: Users, format: 'number', gradient: ' ' },
+    { title: t2('Diện tích (ha)', 'Farm Area (ha)'), value: stats?.totalLandArea || 0, icon: MapPin, format: 'decimal', gradient: 'from-emerald-600 to-emerald-800' },
+    { title: t2('Sản lượng (kg)', 'Harvest Volume (kg)'), value: stats?.totalCherryWeight || 0, icon: Wheat, format: 'number', gradient: 'from-yellow-600 to-yellow-800' },
+    { title: t2('Giá TB/kg', 'Avg Price/kg'), value: stats?.avgPricePerKg || 0, icon: TrendingUp, format: 'currency', gradient: 'from-orange-600 to-orange-800' },
+    { title: t2('Điểm chất lượng', 'Quality Score'), value: stats?.avgCupScore || 0, icon: Award, format: 'score', gradient: 'from-stone-600 to-stone-800' },
   ]
 
   const secondaryKPIs = [
-    { title: t('Đơn thu mua', 'Procurement Orders'), value: stats?.totalProcurementRecords || 0, icon: ShoppingCart, color: 'text-blue-600' },
-    { title: t('Danh sách TT', 'Marketplace Listings'), value: stats?.totalMarketplaceListings || 0, icon: Store, color: 'text-purple-600' },
-    { title: t('Nông trại CC', 'Certified Farms'), value: stats?.certifiedFarmersCount || 0, icon: FileCheck, color: 'text-green-600' },
-    { title: t('HĐ thông minh', 'Smart Contracts'), value: stats?.totalSmartContracts || 0, icon: FileCheck, color: 'text-indigo-600' },
-    { title: t('Vườn ươm', 'Nurseries'), value: stats?.totalNurseries || 0, icon: TreePine, color: 'text-teal-600' },
-    { title: t('Lần kiểm tra', 'Inspections'), value: stats?.totalInspections || 0, icon: ClipboardCheck, color: 'text-rose-600' },
+    { title: t2('Đơn thu mua', 'Procurement Orders'), value: stats?.totalProcurementRecords || 0, icon: ShoppingCart, color: 'text-blue-600' },
+    { title: t2('Danh sách TT', 'Marketplace Listings'), value: stats?.totalMarketplaceListings || 0, icon: Store, color: 'text-purple-600' },
+    { title: t2('Nông trại CC', 'Certified Farms'), value: stats?.certifiedFarmersCount || 0, icon: FileCheck, color: 'text-green-600' },
+    { title: t2('HĐ thông minh', 'Smart Contracts'), value: stats?.totalSmartContracts || 0, icon: FileCheck, color: 'text-indigo-600' },
+    { title: t2('Vườn ươm', 'Nurseries'), value: stats?.totalNurseries || 0, icon: TreePine, color: 'text-teal-600' },
+    { title: t2('Lần kiểm tra', 'Inspections'), value: stats?.totalInspections || 0, icon: ClipboardCheck, color: 'text-rose-600' },
   ]
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Title */}
         <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">
-            {t('Bảng điều khiển', 'Dashboard')}
+            {t2('Bảng điều khiển', 'Dashboard')}
           </h2>
-          <p className="text-sm text-foreground">{t('Phân tích theo thời gian thực', 'Real-time analytics')}</p>
+          <p className="text-sm text-foreground">{t2('Phân tích theo thời gian thực', 'Real-time analytics')}</p>
         </div>
 
         {/* Primary KPI Cards */}
@@ -191,7 +191,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-foreground" />
-                  {t('Xu hướng chuỗi cung ứng', 'Supply Chain Trends')}
+                  {t2('Xu hướng chuỗi cung ứng', 'Supply Chain Trends')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-4">
@@ -208,11 +208,11 @@ export default function DashboardPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0e6d6" />
-                    <XAxis dataKey="month" tick={{ fontSize: 10, fontFamily: 'Space Mono' }} stroke="#b8a089" />
-                    <YAxis tick={{ fontSize: 10, fontFamily: 'Space Mono' }} stroke="#b8a089" />
-                    <Tooltip contentStyle={{ fontFamily: 'Space Mono', fontSize: 11, borderRadius: 12 }} />
-                    <Area type="monotone" dataKey="harvests" stroke="#8b5a1e" fillOpacity={1} fill="url(#colorHarvests)" name={t('Thu hoạch', 'Harvests')} />
-                    <Area type="monotone" dataKey="weight" stroke="#d4a574" fillOpacity={1} fill="url(#colorWeight)" name={t('Khối lượng', 'Weight')} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" />
+                    <YAxis tick={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" />
+                    <Tooltip contentStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, borderRadius: 12 }} />
+                    <Area type="monotone" dataKey="harvests" stroke="#8b5a1e" fillOpacity={1} fill="url(#colorHarvests)" name={t2('Thu hoạch', 'Harvests')} />
+                    <Area type="monotone" dataKey="weight" stroke="#d4a574" fillOpacity={1} fill="url(#colorWeight)" name={t2('Khối lượng', 'Weight')} />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <PieChartIcon className="w-4 h-4 text-foreground" />
-                  {t('Phân bố cây trồng', 'Crop Distribution')}
+                  {t2('Phân bố cây trồng', 'Crop Distribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-4">
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ fontFamily: 'Space Mono', fontSize: 11, borderRadius: 12 }} />
+                    <Tooltip contentStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, borderRadius: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -264,17 +264,17 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Activity className="w-4 h-4 text-foreground" />
-                  {t('Quy trình chế biến', 'Processing Pipeline')}
+                  {t2('Quy trình chế biến', 'Processing Pipeline')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-4">
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={stats?.processingByStage || []} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0e6d6" />
-                    <XAxis type="number" tick={{ fontSize: 10, fontFamily: 'Space Mono' }} stroke="#b8a089" />
-                    <YAxis dataKey="stageType" type="category" tick={{ fontSize: 10, fontFamily: 'Space Mono' }} stroke="#b8a089" width={80} />
-                    <Tooltip contentStyle={{ fontFamily: 'Space Mono', fontSize: 11, borderRadius: 12 }} />
-                    <Bar dataKey="_count.stageType" name={t('Số lượng', 'Count')} radius={[0, 6, 6, 0]}>
+                    <XAxis type="number" tick={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" />
+                    <YAxis dataKey="stageType" type="category" tick={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" width={80} />
+                    <Tooltip contentStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, borderRadius: 12 }} />
+                    <Bar dataKey="_count.stageType" name={t2('Số lượng', 'Count')} radius={[0, 6, 6, 0]}>
                       {(stats?.processingByStage || []).map((_, i) => (
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
@@ -291,7 +291,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Award className="w-4 h-4 text-foreground" />
-                  {t('Phân bố chất lượng', 'Quality Distribution')}
+                  {t2('Phân bố chất lượng', 'Quality Distribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-4">
@@ -311,8 +311,8 @@ export default function DashboardPage() {
                         <Cell key={i} fill={['#2e7d32', '#8b5a1e', '#d4a574', '#c62828'][i]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ fontFamily: 'Space Mono', fontSize: 11, borderRadius: 12 }} />
-                    <Legend wrapperStyle={{ fontFamily: 'Space Mono', fontSize: 10 }} />
+                    <Tooltip contentStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 10 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Clock className="w-4 h-4 text-foreground" />
-                  {t('Hoạt động gần đây', 'Recent Activity')}
+                  {t2('Hoạt động gần đây', 'Recent Activity')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-5 pb-5">
@@ -376,7 +376,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-2 pt-5 px-5">
                 <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-foreground" />
-                  {t('Nông dân theo tỉnh', 'Farmers per Province')}
+                  {t2('Nông dân theo tỉnh', 'Farmers per Province')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-3 pb-4">
@@ -386,10 +386,10 @@ export default function DashboardPage() {
                     count: fp._count.province,
                   }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0e6d6" />
-                    <XAxis dataKey="province" tick={{ fontSize: 9, fontFamily: 'Space Mono' }} stroke="#b8a089" />
-                    <YAxis tick={{ fontSize: 10, fontFamily: 'Space Mono' }} stroke="#b8a089" />
-                    <Tooltip contentStyle={{ fontFamily: 'Space Mono', fontSize: 11, borderRadius: 12 }} />
-                    <Bar dataKey="count" name={t('Nông dân', 'Farmers')} radius={[6, 6, 0, 0]}>
+                    <XAxis dataKey="province" tick={{ fontSize: 9, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" />
+                    <YAxis tick={{ fontSize: 10, fontFamily: 'Inter, system-ui, sans-serif' }} stroke="#b8a089" />
+                    <Tooltip contentStyle={{ fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, borderRadius: 12 }} />
+                    <Bar dataKey="count" name={t2('Nông dân', 'Farmers')} radius={[6, 6, 0, 0]}>
                       {(stats?.farmersPerProvince || []).map((_, i) => (
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}

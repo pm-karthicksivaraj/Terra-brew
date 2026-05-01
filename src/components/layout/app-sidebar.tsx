@@ -10,6 +10,7 @@ import {
   Award, ClipboardCheck, FileText, Store,
   UserCog, Link2, QrCode, GitBranch, Nfc,
   Coffee, ChevronLeft, ChevronRight, Globe,
+  Droplets, Beaker, Waves, Sun, Hammer, Filter, Flame,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -60,13 +61,26 @@ const NAVIGATION: NavGroup[] = [
   },
   {
     title: 'Supply Chain',
-    titleVi: 'Chuỗi cung ứng',
+    titleVi: 'Chuoi cung ung',
     items: [
-      { label: 'Harvest', labelVi: 'Thu hoạch', href: '/harvest', icon: Wheat },
+      { label: 'Harvest', labelVi: 'Thu hoach', href: '/harvest', icon: Wheat },
       { label: 'Procurement', labelVi: 'Thu mua', href: '/procurement', icon: Truck },
-      { label: 'Processing', labelVi: 'Chế biến', href: '/processing', icon: Factory },
-      { label: 'Processing Wizard', labelVi: 'Tạo lệnh CB 7 bước', href: '/processing/wizard', icon: Factory },
-      { label: 'Track Journey', labelVi: 'Truy xuất hành trình', href: '/traceability', icon: GitBranch },
+      { label: 'Processing', labelVi: 'Che bien', href: '/processing', icon: Factory },
+      { label: 'Processing Wizard', labelVi: 'Tao lenh CB 7 buoc', href: '/processing/wizard', icon: Factory },
+      { label: 'Track Journey', labelVi: 'Truy xuat hanh trinh', href: '/traceability', icon: GitBranch },
+    ],
+  },
+  {
+    title: 'Processing Stages',
+    titleVi: 'Cac buoc che bien',
+    items: [
+      { label: 'Pulping', labelVi: 'Xoac', href: '/processing/stages/pulping', icon: Droplets },
+      { label: 'Fermentation', labelVi: 'Len men', href: '/processing/stages/fermentation', icon: Beaker },
+      { label: 'Washing', labelVi: 'Rua', href: '/processing/stages/washing', icon: Waves },
+      { label: 'Drying', labelVi: 'Say', href: '/processing/stages/drying', icon: Sun },
+      { label: 'Hulling', labelVi: 'Bachop', href: '/processing/stages/hulling', icon: Hammer },
+      { label: 'Sorting/Grading', labelVi: 'Phan loai', href: '/processing/stages/sorting', icon: Filter },
+      { label: 'Roasting', labelVi: 'Rang', href: '/processing/stages/roasting', icon: Flame },
     ],
   },
   {
@@ -168,7 +182,7 @@ function SidebarContent({
   )
 
   return (
-    <div className="flex flex-col h-full" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="flex flex-col h-full">
       {/* Tenant header */}
       <div className={cn('px-3 pt-4 pb-2', collapsed && 'px-2')}>
         <div className="flex items-center gap-2.5">
@@ -270,7 +284,7 @@ export function AppSidebar({
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border"
- style={{ fontFamily: '"Space Mono", monospace' }}>
+>
         <SidebarContent
           collapsed={collapsed}
           tenantName={tenantName}

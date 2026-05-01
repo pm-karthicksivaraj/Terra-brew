@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, TreePine, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2,
+  Pencil, Trash2, Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -47,7 +48,7 @@ interface Nursery {
 export default function NurseriesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [items, setItems] = useState<Nursery[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -59,7 +60,6 @@ export default function NurseriesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const [form, setForm] = useState({
     nurseryName: '',
@@ -158,7 +158,7 @@ export default function NurseriesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.nurseryName) {
-      toast.error(t('Vui lòng nhập tên vườn ươm', 'Please enter nursery name'))
+      toast.error(t2('Vui lòng nhập tên vườn ươm', 'Please enter nursery name'))
       return
     }
     setSubmitting(true)
@@ -188,15 +188,15 @@ export default function NurseriesPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo vườn ươm thành công!', 'Nursery created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo vườn ươm thành công!', 'Nursery created!'))
         setDialogOpen(false)
         resetForm()
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -207,13 +207,13 @@ export default function NurseriesPage() {
       const res = await fetch(`/api/nurseries?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
     setDeleteConfirm(null)
   }
@@ -239,7 +239,7 @@ export default function NurseriesPage() {
 
   if (status === 'loading' || (loading && items.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -247,7 +247,7 @@ export default function NurseriesPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -256,14 +256,14 @@ export default function NurseriesPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <TreePine className="w-5 h-5 text-muted-foreground" />
-              {t('Quản lý Vườn ươm', 'Nursery Management')}
+              {t2('Quản lý Vườn ươm', 'Nursery Management')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} vườn ươm`, `Total: ${total} nurseries`)}</p>
           </div>
@@ -275,25 +275,25 @@ export default function NurseriesPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm vườn ươm', 'Add Nursery')}
+                {t2('Thêm vườn ươm', 'Add Nursery')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <TreePine className="w-5 h-5" />
-                  {editingItem ? t('Sửa vườn ươm', 'Edit Nursery') : t('Thêm vườn ươm mới', 'Add New Nursery')}
+                  {editingItem ? t2('Sửa vườn ươm', 'Edit Nursery') : t2('Thêm vườn ươm mới', 'Add New Nursery')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Nursery Name */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Tên vườn ươm', 'Nursery Name')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Tên vườn ươm', 'Nursery Name')} *</Label>
                     <Input
                       value={form.nurseryName}
                       onChange={(e) => setForm({ ...form, nurseryName: e.target.value })}
-                      placeholder={t('Nhập tên vườn ươm', 'Enter nursery name')}
+                      placeholder={t2('Nhập tên vườn ươm', 'Enter nursery name')}
                       className="rounded-xl border-input focus:border-primary"
                       required
                     />
@@ -301,7 +301,7 @@ export default function NurseriesPage() {
 
                   {/* Nursery Code */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã vườn ươm', 'Nursery Code')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã vườn ươm', 'Nursery Code')}</Label>
                     <Input
                       value={form.nurseryCode}
                       onChange={(e) => setForm({ ...form, nurseryCode: e.target.value })}
@@ -312,44 +312,44 @@ export default function NurseriesPage() {
 
                   {/* Nursery Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại vườn ươm', 'Nursery Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại vườn ươm', 'Nursery Type')}</Label>
                     <Select value={form.nurseryType} onValueChange={(v) => setForm({ ...form, nurseryType: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn loại', 'Select type')} />
+                        <SelectValue placeholder={t2('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="seedling">{t('Cây giống', 'Seedling')}</SelectItem>
-                        <SelectItem value="clonal">{t('Cấy ghép', 'Clonal')}</SelectItem>
-                        <SelectItem value="grafted">{t('Ghép cành', 'Grafted')}</SelectItem>
+                        <SelectItem value="seedling">{t2('Cây giống', 'Seedling')}</SelectItem>
+                        <SelectItem value="clonal">{t2('Cấy ghép', 'Clonal')}</SelectItem>
+                        <SelectItem value="grafted">{t2('Ghép cành', 'Grafted')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Location */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Vị trí', 'Location')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Vị trí', 'Location')}</Label>
                     <Input
                       value={form.location}
                       onChange={(e) => setForm({ ...form, location: e.target.value })}
-                      placeholder={t('Mô tả vị trí', 'Location description')}
+                      placeholder={t2('Mô tả vị trí', 'Location description')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Province */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tỉnh/Thành phố', 'Province')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tỉnh/Thành phố', 'Province')}</Label>
                     <Input
                       value={form.province}
                       onChange={(e) => setForm({ ...form, province: e.target.value })}
-                      placeholder={t('Đắk Lắk', 'Dak Lak')}
+                      placeholder={t2('Đắk Lắk', 'Dak Lak')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* District */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Quận/Huyện', 'District')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Quận/Huyện', 'District')}</Label>
                     <Input
                       value={form.district}
                       onChange={(e) => setForm({ ...form, district: e.target.value })}
@@ -360,7 +360,7 @@ export default function NurseriesPage() {
 
                   {/* Commune */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Xã/Phường', 'Commune')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Xã/Phường', 'Commune')}</Label>
                     <Input
                       value={form.commune}
                       onChange={(e) => setForm({ ...form, commune: e.target.value })}
@@ -370,7 +370,7 @@ export default function NurseriesPage() {
 
                   {/* Latitude */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Vĩ độ', 'Latitude')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Vĩ độ', 'Latitude')}</Label>
                     <Input
                       type="number"
                       value={form.latitude}
@@ -383,7 +383,7 @@ export default function NurseriesPage() {
 
                   {/* Longitude */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Kinh độ', 'Longitude')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Kinh độ', 'Longitude')}</Label>
                     <Input
                       type="number"
                       value={form.longitude}
@@ -396,7 +396,7 @@ export default function NurseriesPage() {
 
                   {/* Capacity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Sức chứa', 'Capacity')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Sức chứa', 'Capacity')}</Label>
                     <Input
                       type="number"
                       value={form.capacity}
@@ -408,7 +408,7 @@ export default function NurseriesPage() {
 
                   {/* Current Stock */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tồn kho hiện tại', 'Current Stock')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tồn kho hiện tại', 'Current Stock')}</Label>
                     <Input
                       type="number"
                       value={form.currentStock}
@@ -420,44 +420,44 @@ export default function NurseriesPage() {
 
                   {/* Species */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loài', 'Species')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loài', 'Species')}</Label>
                     <Select value={form.species} onValueChange={(v) => setForm({ ...form, species: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn loài', 'Select species')} />
+                        <SelectValue placeholder={t2('Chọn loài', 'Select species')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Coffea canephora">Coffea canephora (Robusta)</SelectItem>
-                        <SelectItem value="Coffea arabica">Coffea arabica (Arabica)</SelectItem>
-                        <SelectItem value="Coffea liberica">Coffea liberica (Liberica)</SelectItem>
+                        <SelectItem value="Coffea canephora">Coffea canephora ({t2('Robusta', 'Robusta')})</SelectItem>
+                        <SelectItem value="Coffea arabica">Coffea arabica ({t2('Arabica', 'Arabica')})</SelectItem>
+                        <SelectItem value="Coffea liberica">Coffea liberica ({t2('Liberica', 'Liberica')})</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Variety */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Giống', 'Variety')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Giống', 'Variety')}</Label>
                     <Input
                       value={form.variety}
                       onChange={(e) => setForm({ ...form, variety: e.target.value })}
-                      placeholder={t('VD: TR4', 'e.g. TR4')}
+                      placeholder={t2('VD: TR4', 'e.g. TR4')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Seed Source */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nguồn giống', 'Seed Source')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nguồn giống', 'Seed Source')}</Label>
                     <Input
                       value={form.seedSource}
                       onChange={(e) => setForm({ ...form, seedSource: e.target.value })}
-                      placeholder={t('VD: WAFCO', 'e.g. WAFCO')}
+                      placeholder={t2('VD: WAFCO', 'e.g. WAFCO')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Planting Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày gieo', 'Planting Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày gieo', 'Planting Date')}</Label>
                     <Input
                       type="date"
                       value={form.plantingDate}
@@ -468,7 +468,7 @@ export default function NurseriesPage() {
 
                   {/* Expected Ready Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày dự kiến sẵn sàng', 'Expected Ready Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày dự kiến sẵn sàng', 'Expected Ready Date')}</Label>
                     <Input
                       type="date"
                       value={form.expectedReadyDate}
@@ -479,7 +479,7 @@ export default function NurseriesPage() {
 
                   {/* Germination Rate */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tỷ lệ nảy mầm (%)', 'Germination Rate (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tỷ lệ nảy mầm (%)', 'Germination Rate (%)')}</Label>
                     <Input
                       type="number"
                       value={form.germinationRate}
@@ -492,7 +492,7 @@ export default function NurseriesPage() {
 
                   {/* Survival Rate */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tỷ lệ sống (%)', 'Survival Rate (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tỷ lệ sống (%)', 'Survival Rate (%)')}</Label>
                     <Input
                       type="number"
                       value={form.survivalRate}
@@ -505,28 +505,28 @@ export default function NurseriesPage() {
 
                   {/* Health Status */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tình trạng sức khỏe', 'Health Status')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tình trạng sức khỏe', 'Health Status')}</Label>
                     <Select value={form.healthStatus} onValueChange={(v) => setForm({ ...form, healthStatus: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn tình trạng', 'Select status')} />
+                        <SelectValue placeholder={t2('Chọn tình trạng', 'Select status')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Excellent">{t('Tuyệt vời', 'Excellent')}</SelectItem>
-                        <SelectItem value="Good">{t('Tốt', 'Good')}</SelectItem>
-                        <SelectItem value="Fair">{t('Trung bình', 'Fair')}</SelectItem>
-                        <SelectItem value="Poor">{t('Kém', 'Poor')}</SelectItem>
-                        <SelectItem value="Critical">{t('Nguy hiểm', 'Critical')}</SelectItem>
+                        <SelectItem value="Excellent">{t2('Tuyệt vời', 'Excellent')}</SelectItem>
+                        <SelectItem value="Good">{t2('Tốt', 'Good')}</SelectItem>
+                        <SelectItem value="Fair">{t2('Trung bình', 'Fair')}</SelectItem>
+                        <SelectItem value="Poor">{t2('Kém', 'Poor')}</SelectItem>
+                        <SelectItem value="Critical">{t2('Nguy hiểm', 'Critical')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ghi chú', 'Notes')}</Label>
                     <Input
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder={t('Ghi chú thêm', 'Additional notes')}
+                      placeholder={t2('Ghi chú thêm', 'Additional notes')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
@@ -535,7 +535,7 @@ export default function NurseriesPage() {
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -545,10 +545,10 @@ export default function NurseriesPage() {
                     {submitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t('Đang lưu...', 'Saving...')}
+                        {t2('Đang lưu...', 'Saving...')}
                       </>
                     ) : (
-                      editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                      editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -564,7 +564,7 @@ export default function NurseriesPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm vườn ươm...', 'Search nurseries...')}
+              placeholder={t2('Tìm kiếm vườn ươm...', 'Search nurseries...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -579,23 +579,23 @@ export default function NurseriesPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Tên', 'Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Mã', 'Code')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loài', 'Species')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Giống', 'Variety')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Sức chứa', 'Capacity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tồn kho', 'Stock')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Sức khỏe', 'Health')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Tên', 'Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Mã', 'Code')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Loài', 'Species')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Giống', 'Variety')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Sức chứa', 'Capacity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Tồn kho', 'Stock')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('Sức khỏe', 'Health')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground text-sm">
-                        {t('Không tìm thấy dữ liệu', 'No data found')}
+                        {t2('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
@@ -627,21 +627,24 @@ export default function NurseriesPage() {
                         <td className="px-4 py-3 hidden xl:table-cell">{getHealthBadge(item.healthStatus)}</td>
                         <td className="px-4 py-3">
                           <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
-                            {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                            {item.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/nurseries/${item.id}`)}>
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
-                                  {t('Xóa', 'Del')}
+                                  {t2('Xóa', 'Del')}
                                 </Button>
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
-                                  {t('Hủy', 'No')}
+                                  {t2('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (

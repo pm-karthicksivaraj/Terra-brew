@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n'
 
 // Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
@@ -16,7 +17,6 @@ function seededRandom(seed: number): number {
 }
 
 export default function LoginPage() {
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [email, setEmail] = useState('admin@metrang-coffee.terrabrew.com')
   const [password, setPassword] = useState('Admin@2024')
   const [tenantSlug, setTenantSlug] = useState('metrang-coffee')
@@ -24,8 +24,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { t2, lang, setLang } = useI18n()
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Pre-compute particle positions using deterministic random
   const particles = useMemo(() =>
@@ -55,24 +55,24 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (!data.success) {
-        setError(data.error || t('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
-        toast.error(data.error || t('Đăng nhập thất bại', 'Login failed'))
+        setError(data.error || t2('Thông tin đăng nhập không hợp lệ', 'Invalid credentials'))
+        toast.error(data.error || t2('Đăng nhập thất bại', 'Login failed'))
         return
       }
 
-      toast.success(t('Đăng nhập thành công!', 'Login successful!'))
+      toast.success(t2('Đăng nhập thành công!', 'Login successful!'))
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError(t('Lỗi kết nối máy chủ', 'Server connection error'))
-      toast.error(t('Lỗi kết nối máy chủ', 'Server connection error'))
+      setError(t2('Lỗi kết nối máy chủ', 'Server connection error'))
+      toast.error(t2('Lỗi kết nối máy chủ', 'Server connection error'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
 
@@ -129,7 +129,7 @@ export default function LoginPage() {
               </div>
               <h1 className="text-2xl font-bold text-coffee-900">Terra Brew</h1>
               <p className="text-coffee-500 text-sm mt-1">
-                {t('Đăng nhập vào Nền tảng', 'Sign in to Platform')}
+                {t2('Đăng nhập vào Nền tảng', 'Sign in to Platform')}
               </p>
             </div>
 
@@ -152,7 +152,7 @@ export default function LoginPage() {
               {/* Tenant Slug */}
               <div className="space-y-2">
                 <Label htmlFor="tenantSlug" className="text-coffee-700 text-xs font-medium">
-                  {t('Mã Tổ chức', 'Tenant Slug')}
+                  {t2('Mã Tổ chức', 'Tenant Slug')}
                 </Label>
                 <Input
                   id="tenantSlug"
@@ -167,14 +167,14 @@ export default function LoginPage() {
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-coffee-700 text-xs font-medium">
-                  Email
+                  {t2('Email', 'Email')}
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('Nhập email của bạn', 'Enter your email')}
+                  placeholder={t2('Nhập email của bạn', 'Enter your email')}
                   className="bg-coffee-50/50 border-coffee-200 focus:border-coffee-500 focus:ring-coffee-500/20 rounded-xl h-11 text-sm"
                   required
                 />
@@ -183,7 +183,7 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-coffee-700 text-xs font-medium">
-                  {t('Mật khẩu', 'Password')}
+                  {t2('Mật khẩu', 'Password')}
                 </Label>
                 <div className="relative">
                   <Input
@@ -215,7 +215,7 @@ export default function LoginPage() {
 
               {/* Demo info */}
               <div className="bg-coffee-50 border border-coffee-200/50 rounded-xl p-3 text-xs text-coffee-600">
-                <p className="font-medium mb-1">{t('Tài khoản demo đã được điền sẵn', 'Demo credentials pre-filled')}</p>
+                <p className="font-medium mb-1">{t2('Tài khoản demo đã được điền sẵn', 'Demo credentials pre-filled')}</p>
                 <p className="text-coffee-500">admin@metrang-coffee.terrabrew.com / Admin@2024 / metrang-coffee</p>
               </div>
 
@@ -228,10 +228,10 @@ export default function LoginPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t('Đang đăng nhập...', 'Signing in...')}
+                    {t2('Đang đăng nhập...', 'Signing in...')}
                   </>
                 ) : (
-                  t('Đăng nhập', 'Sign In')
+                  t2('Đăng nhập', 'Sign In')
                 )}
               </Button>
             </form>
@@ -244,17 +244,17 @@ export default function LoginPage() {
                     const res = await fetch('/api/seed', { method: 'POST' })
                     const data = await res.json()
                     if (data.success) {
-                      toast.success(t('Đã tải dữ liệu mẫu thành công!', 'Sample data loaded!'))
+                      toast.success(t2('Đã tải dữ liệu mẫu thành công!', 'Sample data loaded!'))
                     } else {
                       toast.error(data.error || 'Error')
                     }
                   } catch {
-                    toast.error(t('Lỗi khi tải dữ liệu mẫu', 'Error loading sample data'))
+                    toast.error(t2('Lỗi khi tải dữ liệu mẫu', 'Error loading sample data'))
                   }
                 }}
                 className="text-xs text-coffee-500 hover:text-coffee-700 underline underline-offset-2 transition-colors"
               >
-                {t('Tải dữ liệu mẫu (Đầy đủ)', 'Load Sample Data (Full Pipeline)')}
+                {t2('Tải dữ liệu mẫu (Đầy đủ)', 'Load Sample Data (Full Pipeline)')}
               </button>
             </div>
           </CardContent>
@@ -262,7 +262,7 @@ export default function LoginPage() {
 
         {/* Bottom text */}
         <p className="text-center text-coffee-400/60 text-xs mt-6">
-          © 2024 Terra Brew — {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
+          © 2024 Terra Brew — {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
         </p>
       </div>
 

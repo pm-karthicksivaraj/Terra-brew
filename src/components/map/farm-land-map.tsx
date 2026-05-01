@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Trash2, Save, Undo2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -47,9 +48,12 @@ export function FarmLandMap({
   onPolygonDrawn,
   onPolygonDelete,
   onSave,
-  lang = 'vi',
+  lang: langProp,
   height = '500px',
 }: FarmLandMapProps) {
+  const { t2, lang: i18nLang } = useI18n()
+  const effectiveLang = langProp || i18nLang
+  const t = (vi: string, en: string) => effectiveLang === 'vi' ? vi : en
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
   const drawnItemsRef = useRef<any>(null)
@@ -61,8 +65,6 @@ export function FarmLandMap({
   const polygonsRef = useRef(polygons)
   const previewLayersRef = useRef<any[]>([])
   polygonsRef.current = polygons
-
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   useEffect(() => { setMounted(true) }, [])
 

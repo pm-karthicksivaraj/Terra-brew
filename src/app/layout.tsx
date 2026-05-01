@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ClientApp } from "@/components/client-app";
 
-const spaceMono = Space_Mono({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-space-mono",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#6B4226",
+  themeColor: "#0D9488",
 };
 
 export default function RootLayout({
@@ -34,8 +33,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${spaceMono.variable} antialiased bg-background text-foreground`}
-        style={{ fontFamily: '"Space Mono", monospace' }}
+        className={`${inter.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
         <ClientApp>{children}</ClientApp>

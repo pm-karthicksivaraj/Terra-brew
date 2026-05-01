@@ -9,6 +9,7 @@ import {
   Gem, BarChart3, Package, Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -136,13 +137,12 @@ const STEPS = [
 export default function ProcessingWizardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [currentStep, setCurrentStep] = useState(0) // 0-indexed
   const [formData, setFormData] = useState<StepData>(initialFormData)
   const [submitting, setSubmitting] = useState(false)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const updateField = <K extends keyof StepData>(key: K, value: StepData[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }))
@@ -307,13 +307,13 @@ export default function ProcessingWizardPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Tạo lệnh chế biến thành công!', 'Processing job order created successfully!'))
+        toast.success(t2('Tạo lệnh chế biến thành công!', 'Processing job order created successfully!'))
         router.push('/processing')
       } else {
-        toast.error(data.error || t('Lỗi khi tạo', 'Error creating'))
+        toast.error(data.error || t2('Lỗi khi tạo', 'Error creating'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -323,7 +323,7 @@ export default function ProcessingWizardPage() {
 
   if (status === 'loading') {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary flex items-center justify-center">
@@ -331,7 +331,7 @@ export default function ProcessingWizardPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -351,13 +351,13 @@ export default function ProcessingWizardPage() {
       {/* Job-level fields */}
       <div className="space-y-1.5 md:col-span-2">
         <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
-          {t('Thông tin lệnh chế biến', 'Job Order Information')}
+          {t2('Thông tin lệnh chế biến', 'Job Order Information')}
         </Label>
         <div className="h-px bg-muted" />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Mã lệnh (Job Order ID)', 'Job Order ID')} *</Label>
+        <Label className="text-xs text-foreground">{t2('Mã lệnh (Job Order ID)', 'Job Order ID')} *</Label>
         <Input
           value={formData.jobOrderId}
           onChange={e => updateField('jobOrderId', e.target.value)}
@@ -366,7 +366,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Ngày chế biến', 'Processing Date')} *</Label>
+        <Label className="text-xs text-foreground">{t2('Ngày chế biến', 'Processing Date')} *</Label>
         <Input
           type="date"
           value={formData.processingDate}
@@ -375,25 +375,25 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp chế biến', 'Processing Method')} *</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp chế biến', 'Processing Method')} *</Label>
         <Select value={formData.processingMethod} onValueChange={v => updateField('processingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="wet">{t('Ướt (Wet)', 'Wet')}</SelectItem>
-            <SelectItem value="dry">{t('Khô (Dry)', 'Dry')}</SelectItem>
-            <SelectItem value="honey">{t('Mật ong (Honey)', 'Honey')}</SelectItem>
-            <SelectItem value="natural">{t('Tự nhiên (Natural)', 'Natural')}</SelectItem>
+            <SelectItem value="wet">{t2('Ướt (Wet)', 'Wet')}</SelectItem>
+            <SelectItem value="dry">{t2('Khô (Dry)', 'Dry')}</SelectItem>
+            <SelectItem value="honey">{t2('Mật ong (Honey)', 'Honey')}</SelectItem>
+            <SelectItem value="natural">{t2('Tự nhiên (Natural)', 'Natural')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Nhà máy', 'Plant Facility')}</Label>
+        <Label className="text-xs text-foreground">{t2('Nhà máy', 'Plant Facility')}</Label>
         <Input
           value={formData.plantFacilityName}
           onChange={e => updateField('plantFacilityName', e.target.value)}
-          placeholder={t('Nhà máy ABC', 'Factory ABC')}
+          placeholder={t2('Nhà máy ABC', 'Factory ABC')}
           className="rounded-xl border-border focus:border-border"
         />
       </div>
@@ -401,13 +401,13 @@ export default function ProcessingWizardPage() {
       {/* Step 1 fields */}
       <div className="space-y-1.5 md:col-span-2 mt-3">
         <Label className="text-xs font-bold text-foreground uppercase tracking-wider">
-          {t('Phân loại & Làm sạch', 'Reception & Sorting')}
+          {t2('Phân loại & Làm sạch', 'Reception & Sorting')}
         </Label>
         <div className="h-px bg-muted" />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Mã lô (Batch ID)', 'Batch ID')} *</Label>
+        <Label className="text-xs text-foreground">{t2('Mã lô (Batch ID)', 'Batch ID')} *</Label>
         <Input
           value={formData.batchId}
           onChange={e => updateField('batchId', e.target.value)}
@@ -416,7 +416,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Trọng lượng đầu vào (kg)', 'Input Weight (kg)')} *</Label>
+        <Label className="text-xs text-foreground">{t2('Trọng lượng đầu vào (kg)', 'Input Weight (kg)')} *</Label>
         <Input
           type="number" step="0.1"
           value={formData.inputWeight}
@@ -426,21 +426,21 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Cấp độ chín', 'Cherry Ripeness Grade')}</Label>
+        <Label className="text-xs text-foreground">{t2('Cấp độ chín', 'Cherry Ripeness Grade')}</Label>
         <Select value={formData.cherryRipenessGrade} onValueChange={v => updateField('cherryRipenessGrade', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn cấp độ', 'Select grade')} />
+            <SelectValue placeholder={t2('Chọn cấp độ', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="A">{t('A - Chín hoàn toàn', 'A - Fully ripe')}</SelectItem>
-            <SelectItem value="B">{t('B - Chín vừa', 'B - Semi-ripe')}</SelectItem>
-            <SelectItem value="C">{t('C - Chưa chín', 'C - Unripe')}</SelectItem>
-            <SelectItem value="Mixed">{t('Hỗn hợp', 'Mixed')}</SelectItem>
+            <SelectItem value="A">{t2('A - Chín hoàn toàn', 'A - Fully ripe')}</SelectItem>
+            <SelectItem value="B">{t2('B - Chín vừa', 'B - Semi-ripe')}</SelectItem>
+            <SelectItem value="C">{t2('C - Chưa chín', 'C - Unripe')}</SelectItem>
+            <SelectItem value="Mixed">{t2('Hỗn hợp', 'Mixed')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Tỷ lệ lỗi (%)', 'Defects (%)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Tỷ lệ lỗi (%)', 'Defects (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.defects}
@@ -450,25 +450,25 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp phân loại', 'Sorting Method')}</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp phân loại', 'Sorting Method')}</Label>
         <Select value={formData.sortingMethod} onValueChange={v => updateField('sortingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="manual">{t('Thủ công', 'Manual')}</SelectItem>
-            <SelectItem value="mechanical">{t('Cơ khí', 'Mechanical')}</SelectItem>
-            <SelectItem value="optical">{t('Quang học', 'Optical')}</SelectItem>
-            <SelectItem value="density">{t('Mật độ', 'Density')}</SelectItem>
+            <SelectItem value="manual">{t2('Thủ công', 'Manual')}</SelectItem>
+            <SelectItem value="mechanical">{t2('Cơ khí', 'Mechanical')}</SelectItem>
+            <SelectItem value="optical">{t2('Quang học', 'Optical')}</SelectItem>
+            <SelectItem value="density">{t2('Mật độ', 'Density')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Người vận hành', 'Operator Name')}</Label>
+        <Label className="text-xs text-foreground">{t2('Người vận hành', 'Operator Name')}</Label>
         <Input
           value={formData.operatorName}
           onChange={e => updateField('operatorName', e.target.value)}
-          placeholder={t('Nguyễn Văn A', 'Nguyen Van A')}
+          placeholder={t2('Nguyễn Văn A', 'Nguyen Van A')}
           className="rounded-xl border-border focus:border-border"
         />
       </div>
@@ -478,35 +478,35 @@ export default function ProcessingWizardPage() {
   const renderStep2 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp bóc vỏ', 'Pulping Method')}</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp bóc vỏ', 'Pulping Method')}</Label>
         <Select value={formData.pulpingMethod} onValueChange={v => updateField('pulpingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="disc-pulper">{t('Máy đĩa', 'Disc Pulper')}</SelectItem>
-            <SelectItem value="drum-pulper">{t('Máy trống', 'Drum Pulper')}</SelectItem>
-            <SelectItem value="eco-pulper">{t('Máy sinh thái', 'Eco Pulper')}</SelectItem>
-            <SelectItem value="manual">{t('Thủ công', 'Manual')}</SelectItem>
+            <SelectItem value="disc-pulper">{t2('Máy đĩa', 'Disc Pulper')}</SelectItem>
+            <SelectItem value="drum-pulper">{t2('Máy trống', 'Drum Pulper')}</SelectItem>
+            <SelectItem value="eco-pulper">{t2('Máy sinh thái', 'Eco Pulper')}</SelectItem>
+            <SelectItem value="manual">{t2('Thủ công', 'Manual')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Loại lên men', 'Fermentation Type')}</Label>
+        <Label className="text-xs text-foreground">{t2('Loại lên men', 'Fermentation Type')}</Label>
         <Select value={formData.fermentationType} onValueChange={v => updateField('fermentationType', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn loại', 'Select type')} />
+            <SelectValue placeholder={t2('Chọn loại', 'Select type')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="dry">{t('Khô (Dry)', 'Dry Fermentation')}</SelectItem>
-            <SelectItem value="wet">{t('Ướt (Wet)', 'Wet Fermentation')}</SelectItem>
-            <SelectItem value="anaerobic">{t('Kỵ khí', 'Anaerobic')}</SelectItem>
-            <SelectItem value="carbonic-maceration">{t('Ngâm CO2', 'Carbonic Maceration')}</SelectItem>
+            <SelectItem value="dry">{t2('Khô (Dry)', 'Dry Fermentation')}</SelectItem>
+            <SelectItem value="wet">{t2('Ướt (Wet)', 'Wet Fermentation')}</SelectItem>
+            <SelectItem value="anaerobic">{t2('Kỵ khí', 'Anaerobic')}</SelectItem>
+            <SelectItem value="carbonic-maceration">{t2('Ngâm CO2', 'Carbonic Maceration')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Thời gian lên men (giờ)', 'Fermentation Duration (hrs)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Thời gian lên men (giờ)', 'Fermentation Duration (hrs)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.fermentationDurationHrs}
@@ -516,7 +516,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Lượng nước sử dụng (L)', 'Water Usage (L)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Lượng nước sử dụng (L)', 'Water Usage (L)')}</Label>
         <Input
           type="number" step="1"
           value={formData.waterUsage}
@@ -526,7 +526,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Mức pH', 'pH Level')}</Label>
+        <Label className="text-xs text-foreground">{t2('Mức pH', 'pH Level')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.phLevel}
@@ -536,7 +536,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.temperature2}
@@ -551,35 +551,35 @@ export default function ProcessingWizardPage() {
   const renderStep3 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp rửa', 'Washing Method')}</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp rửa', 'Washing Method')}</Label>
         <Select value={formData.washingMethod} onValueChange={v => updateField('washingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="channel-wash">{t('Rửa kênh', 'Channel Wash')}</SelectItem>
-            <SelectItem value="tank-wash">{t('Rửa bể', 'Tank Wash')}</SelectItem>
-            <SelectItem value="pressure-wash">{t('Rửa áp lực', 'Pressure Wash')}</SelectItem>
-            <SelectItem value="multiple">{t('Nhiều lần', 'Multiple')}</SelectItem>
+            <SelectItem value="channel-wash">{t2('Rửa kênh', 'Channel Wash')}</SelectItem>
+            <SelectItem value="tank-wash">{t2('Rửa bể', 'Tank Wash')}</SelectItem>
+            <SelectItem value="pressure-wash">{t2('Rửa áp lực', 'Pressure Wash')}</SelectItem>
+            <SelectItem value="multiple">{t2('Nhiều lần', 'Multiple')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Nguồn nước', 'Water Source')}</Label>
+        <Label className="text-xs text-foreground">{t2('Nguồn nước', 'Water Source')}</Label>
         <Select value={formData.waterSource} onValueChange={v => updateField('waterSource', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn nguồn', 'Select source')} />
+            <SelectValue placeholder={t2('Chọn nguồn', 'Select source')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="spring">{t('Nước suối', 'Spring Water')}</SelectItem>
-            <SelectItem value="well">{t('Giếng khoan', 'Well Water')}</SelectItem>
-            <SelectItem value="rain">{t('Nước mưa', 'Rainwater')}</SelectItem>
-            <SelectItem value="municipal">{t('Nước máy', 'Municipal')}</SelectItem>
+            <SelectItem value="spring">{t2('Nước suối', 'Spring Water')}</SelectItem>
+            <SelectItem value="well">{t2('Giếng khoan', 'Well Water')}</SelectItem>
+            <SelectItem value="rain">{t2('Nước mưa', 'Rainwater')}</SelectItem>
+            <SelectItem value="municipal">{t2('Nước máy', 'Municipal')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Số lần rửa', 'Wash Cycles')}</Label>
+        <Label className="text-xs text-foreground">{t2('Số lần rửa', 'Wash Cycles')}</Label>
         <Input
           type="number" step="1"
           value={formData.washCycles}
@@ -589,7 +589,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Nước sạch sử dụng (L)', 'Clean Water Used (L)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Nước sạch sử dụng (L)', 'Clean Water Used (L)')}</Label>
         <Input
           type="number" step="1"
           value={formData.cleanWaterUsed}
@@ -604,21 +604,21 @@ export default function ProcessingWizardPage() {
   const renderStep4 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp sấy', 'Drying Method')}</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp sấy', 'Drying Method')}</Label>
         <Select value={formData.dryingMethod} onValueChange={v => updateField('dryingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="sun-dry">{t('Phơi nắng', 'Sun Drying')}</SelectItem>
-            <SelectItem value="mechanical">{t('Sấy cơ khí', 'Mechanical Dryer')}</SelectItem>
-            <SelectItem value="greenhouse">{t('Nhà kính', 'Greenhouse')}</SelectItem>
-            <SelectItem value="hybrid">{t('Kết hợp', 'Hybrid')}</SelectItem>
+            <SelectItem value="sun-dry">{t2('Phơi nắng', 'Sun Drying')}</SelectItem>
+            <SelectItem value="mechanical">{t2('Sấy cơ khí', 'Mechanical Dryer')}</SelectItem>
+            <SelectItem value="greenhouse">{t2('Nhà kính', 'Greenhouse')}</SelectItem>
+            <SelectItem value="hybrid">{t2('Kết hợp', 'Hybrid')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Thời gian sấy (ngày)', 'Drying Duration (days)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Thời gian sấy (ngày)', 'Drying Duration (days)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.dryingDurationDays}
@@ -628,7 +628,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Độ ẩm mục tiêu (%)', 'Target Moisture (%)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Độ ẩm mục tiêu (%)', 'Target Moisture (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.targetMoisture}
@@ -638,7 +638,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Độ ẩm thực tế (%)', 'Actual Moisture (%)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Độ ẩm thực tế (%)', 'Actual Moisture (%)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.actualMoisture}
@@ -648,7 +648,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Nhiệt độ (°C)', 'Temperature (°C)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.temperature4}
@@ -658,7 +658,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Độ ẩm không khí (%)', 'Humidity (%)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Độ ẩm không khí (%)', 'Humidity (%)')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.humidity}
@@ -668,11 +668,11 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5 md:col-span-2">
-        <Label className="text-xs text-foreground">{t('Máy sấy sử dụng', 'Machine Used')}</Label>
+        <Label className="text-xs text-foreground">{t2('Máy sấy sử dụng', 'Machine Used')}</Label>
         <Input
           value={formData.machineUsed}
           onChange={e => updateField('machineUsed', e.target.value)}
-          placeholder={t('Máy sấy ABC-2000', 'Dryer ABC-2000')}
+          placeholder={t2('Máy sấy ABC-2000', 'Dryer ABC-2000')}
           className="rounded-xl border-border focus:border-border"
         />
       </div>
@@ -682,20 +682,20 @@ export default function ProcessingWizardPage() {
   const renderStep5 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Phương pháp bóc lụa', 'Hulling Method')}</Label>
+        <Label className="text-xs text-foreground">{t2('Phương pháp bóc lụa', 'Hulling Method')}</Label>
         <Select value={formData.hullingMethod} onValueChange={v => updateField('hullingMethod', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+            <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="roller">{t('Máy lô', 'Roller Huller')}</SelectItem>
-            <SelectItem value="abrasive">{t('Máy mài', 'Abrasive Huller')}</SelectItem>
-            <SelectItem value="centrifugal">{t('Ly tâm', 'Centrifugal')}</SelectItem>
+            <SelectItem value="roller">{t2('Máy lô', 'Roller Huller')}</SelectItem>
+            <SelectItem value="abrasive">{t2('Máy mài', 'Abrasive Huller')}</SelectItem>
+            <SelectItem value="centrifugal">{t2('Ly tâm', 'Centrifugal')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Trọng lượng đầu ra (kg)', 'Output Weight (kg)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Trọng lượng đầu ra (kg)', 'Output Weight (kg)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.outputWeight}
@@ -705,10 +705,10 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
+        <Label className="text-xs text-foreground">{t2('Kích thước rây (screen)', 'Screen Size')}</Label>
         <Select value={formData.screenSize5} onValueChange={v => updateField('screenSize5', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn size', 'Select size')} />
+            <SelectValue placeholder={t2('Chọn size', 'Select size')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="13">13</SelectItem>
@@ -729,7 +729,7 @@ export default function ProcessingWizardPage() {
           className="border-border data-[state=checked]:bg-muted data-[state=checked]:border-border"
         />
         <Label htmlFor="polishingDone" className="text-xs text-foreground cursor-pointer">
-          {t('Đã đánh bóng', 'Polishing Done')}
+          {t2('Đã đánh bóng', 'Polishing Done')}
         </Label>
       </div>
     </div>
@@ -738,24 +738,24 @@ export default function ProcessingWizardPage() {
   const renderStep6 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Hạng (Grade)', 'Grade')}</Label>
+        <Label className="text-xs text-foreground">{t2('Hạng (Grade)', 'Grade')}</Label>
         <Select value={formData.grade} onValueChange={v => updateField('grade', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
+            <SelectValue placeholder={t2('Chọn hạng', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="G1">{t('G1 - Đặc biệt', 'G1 - Speciality')}</SelectItem>
-            <SelectItem value="G2">{t('G2 - Xuất khẩu', 'G2 - Export')}</SelectItem>
-            <SelectItem value="G3">{t('G3 - Nội địa', 'G3 - Domestic')}</SelectItem>
-            <SelectItem value="G4">{t('G4 - Công nghiệp', 'G4 - Industrial')}</SelectItem>
+            <SelectItem value="G1">{t2('G1 - Đặc biệt', 'G1 - Speciality')}</SelectItem>
+            <SelectItem value="G2">{t2('G2 - Xuất khẩu', 'G2 - Export')}</SelectItem>
+            <SelectItem value="G3">{t2('G3 - Nội địa', 'G3 - Domestic')}</SelectItem>
+            <SelectItem value="G4">{t2('G4 - Công nghiệp', 'G4 - Industrial')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Kích thước rây (screen)', 'Screen Size')}</Label>
+        <Label className="text-xs text-foreground">{t2('Kích thước rây (screen)', 'Screen Size')}</Label>
         <Select value={formData.screenSize6} onValueChange={v => updateField('screenSize6', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn size', 'Select size')} />
+            <SelectValue placeholder={t2('Chọn size', 'Select size')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="13">13</SelectItem>
@@ -769,7 +769,7 @@ export default function ProcessingWizardPage() {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Số lỗi', 'Defect Count')}</Label>
+        <Label className="text-xs text-foreground">{t2('Số lỗi', 'Defect Count')}</Label>
         <Input
           type="number" step="1"
           value={formData.defectCount}
@@ -779,7 +779,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Tạp chất (%)', 'Foreign Matter (%)')}</Label>
         <Input
           type="number" step="0.01"
           value={formData.foreignMatter}
@@ -789,7 +789,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Điểm cupping', 'Cup Score')}</Label>
+        <Label className="text-xs text-foreground">{t2('Điểm cupping', 'Cup Score')}</Label>
         <Input
           type="number" step="0.5"
           value={formData.cupScore}
@@ -799,15 +799,15 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Hạng tổng thể', 'Overall Grade')}</Label>
+        <Label className="text-xs text-foreground">{t2('Hạng tổng thể', 'Overall Grade')}</Label>
         <Select value={formData.overallGrade} onValueChange={v => updateField('overallGrade', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
+            <SelectValue placeholder={t2('Chọn hạng', 'Select grade')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Premium">{t('Cao cấp', 'Premium')}</SelectItem>
-            <SelectItem value="Standard">{t('Tiêu chuẩn', 'Standard')}</SelectItem>
-            <SelectItem value="Below-Standard">{t('Dưới tiêu chuẩn', 'Below Standard')}</SelectItem>
+            <SelectItem value="Premium">{t2('Cao cấp', 'Premium')}</SelectItem>
+            <SelectItem value="Standard">{t2('Tiêu chuẩn', 'Standard')}</SelectItem>
+            <SelectItem value="Below-Standard">{t2('Dưới tiêu chuẩn', 'Below Standard')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -817,16 +817,16 @@ export default function ProcessingWizardPage() {
   const renderStep7 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('QC duyệt bởi', 'QC Approved By')} *</Label>
+        <Label className="text-xs text-foreground">{t2('QC duyệt bởi', 'QC Approved By')} *</Label>
         <Input
           value={formData.qcApprovedBy}
           onChange={e => updateField('qcApprovedBy', e.target.value)}
-          placeholder={t('Trần Văn B', 'Tran Van B')}
+          placeholder={t2('Trần Văn B', 'Tran Van B')}
           className="rounded-xl border-border focus:border-border"
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Ngày QC duyệt', 'QC Approval Date')}</Label>
+        <Label className="text-xs text-foreground">{t2('Ngày QC duyệt', 'QC Approval Date')}</Label>
         <Input
           type="date"
           value={formData.qcApprovalDate}
@@ -835,21 +835,21 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Loại đóng gói', 'Packaging Type')}</Label>
+        <Label className="text-xs text-foreground">{t2('Loại đóng gói', 'Packaging Type')}</Label>
         <Select value={formData.packagingType} onValueChange={v => updateField('packagingType', v)}>
           <SelectTrigger className="rounded-xl border-border w-full">
-            <SelectValue placeholder={t('Chọn loại', 'Select type')} />
+            <SelectValue placeholder={t2('Chọn loại', 'Select type')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="jute-bag">{t('Túi đay 60kg', 'Jute Bag 60kg')}</SelectItem>
-            <SelectItem value="grainpro">{t('Túi GrainPro', 'GrainPro Bag')}</SelectItem>
-            <SelectItem value="vacuum">{t('Túi chân không', 'Vacuum Pack')}</SelectItem>
-            <SelectItem value="custom">{t('Tùy chỉnh', 'Custom')}</SelectItem>
+            <SelectItem value="jute-bag">{t2('Túi đay 60kg', 'Jute Bag 60kg')}</SelectItem>
+            <SelectItem value="grainpro">{t2('Túi GrainPro', 'GrainPro Bag')}</SelectItem>
+            <SelectItem value="vacuum">{t2('Túi chân không', 'Vacuum Pack')}</SelectItem>
+            <SelectItem value="custom">{t2('Tùy chỉnh', 'Custom')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Trọng lượng đóng gói (kg)', 'Package Weight (kg)')}</Label>
+        <Label className="text-xs text-foreground">{t2('Trọng lượng đóng gói (kg)', 'Package Weight (kg)')}</Label>
         <Input
           type="number" step="0.1"
           value={formData.packageWeight}
@@ -859,7 +859,7 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Số lô', 'Lot Number')}</Label>
+        <Label className="text-xs text-foreground">{t2('Số lô', 'Lot Number')}</Label>
         <Input
           value={formData.lotNumber}
           onChange={e => updateField('lotNumber', e.target.value)}
@@ -868,11 +868,11 @@ export default function ProcessingWizardPage() {
         />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+        <Label className="text-xs text-foreground">{t2('Ghi chú', 'Notes')}</Label>
         <Textarea
           value={formData.notes}
           onChange={e => updateField('notes', e.target.value)}
-          placeholder={t('Ghi chú thêm...', 'Additional notes...')}
+          placeholder={t2('Ghi chú thêm...', 'Additional notes...')}
           className="rounded-xl border-border focus:border-border min-h-[80px]"
           rows={3}
         />
@@ -887,79 +887,79 @@ export default function ProcessingWizardPage() {
       {
         title: STEPS[0],
         items: [
-          { label: t('Mã lệnh', 'Job Order ID'), value: formData.jobOrderId },
-          { label: t('Ngày chế biến', 'Processing Date'), value: formData.processingDate },
-          { label: t('PP chế biến', 'Method'), value: formData.processingMethod },
-          { label: t('Nhà máy', 'Facility'), value: formData.plantFacilityName },
-          { label: t('Mã lô', 'Batch ID'), value: formData.batchId },
-          { label: t('TL đầu vào', 'Input Weight'), value: formData.inputWeight ? `${formData.inputWeight} kg` : '' },
-          { label: t('Cấp độ chín', 'Ripeness'), value: formData.cherryRipenessGrade },
-          { label: t('Lỗi', 'Defects'), value: formData.defects ? `${formData.defects}%` : '' },
-          { label: t('PP phân loại', 'Sorting'), value: formData.sortingMethod },
-          { label: t('Người VH', 'Operator'), value: formData.operatorName },
+          { label: t2('Mã lệnh', 'Job Order ID'), value: formData.jobOrderId },
+          { label: t2('Ngày chế biến', 'Processing Date'), value: formData.processingDate },
+          { label: t2('PP chế biến', 'Method'), value: formData.processingMethod },
+          { label: t2('Nhà máy', 'Facility'), value: formData.plantFacilityName },
+          { label: t2('Mã lô', 'Batch ID'), value: formData.batchId },
+          { label: t2('TL đầu vào', 'Input Weight'), value: formData.inputWeight ? `${formData.inputWeight} kg` : '' },
+          { label: t2('Cấp độ chín', 'Ripeness'), value: formData.cherryRipenessGrade },
+          { label: t2('Lỗi', 'Defects'), value: formData.defects ? `${formData.defects}%` : '' },
+          { label: t2('PP phân loại', 'Sorting'), value: formData.sortingMethod },
+          { label: t2('Người VH', 'Operator'), value: formData.operatorName },
         ],
       },
       {
         title: STEPS[1],
         items: [
-          { label: t('PP bóc vỏ', 'Pulping'), value: formData.pulpingMethod },
-          { label: t('Loại lên men', 'Fermentation'), value: formData.fermentationType },
-          { label: t('Thời gian LM', 'Duration'), value: formData.fermentationDurationHrs ? `${formData.fermentationDurationHrs} hrs` : '' },
-          { label: t('Nước', 'Water'), value: formData.waterUsage ? `${formData.waterUsage} L` : '' },
-          { label: t('pH', 'pH'), value: formData.phLevel },
-          { label: t('Nhiệt độ', 'Temp'), value: formData.temperature2 ? `${formData.temperature2}°C` : '' },
+          { label: t2('PP bóc vỏ', 'Pulping'), value: formData.pulpingMethod },
+          { label: t2('Loại lên men', 'Fermentation'), value: formData.fermentationType },
+          { label: t2('Thời gian LM', 'Duration'), value: formData.fermentationDurationHrs ? `${formData.fermentationDurationHrs} hrs` : '' },
+          { label: t2('Nước', 'Water'), value: formData.waterUsage ? `${formData.waterUsage} L` : '' },
+          { label: t2('pH', 'pH'), value: formData.phLevel },
+          { label: t2('Nhiệt độ', 'Temp'), value: formData.temperature2 ? `${formData.temperature2}°C` : '' },
         ],
       },
       {
         title: STEPS[2],
         items: [
-          { label: t('PP rửa', 'Washing'), value: formData.washingMethod },
-          { label: t('Nguồn nước', 'Source'), value: formData.waterSource },
-          { label: t('Số lần rửa', 'Cycles'), value: formData.washCycles },
-          { label: t('Nước sạch', 'Clean Water'), value: formData.cleanWaterUsed ? `${formData.cleanWaterUsed} L` : '' },
+          { label: t2('PP rửa', 'Washing'), value: formData.washingMethod },
+          { label: t2('Nguồn nước', 'Source'), value: formData.waterSource },
+          { label: t2('Số lần rửa', 'Cycles'), value: formData.washCycles },
+          { label: t2('Nước sạch', 'Clean Water'), value: formData.cleanWaterUsed ? `${formData.cleanWaterUsed} L` : '' },
         ],
       },
       {
         title: STEPS[3],
         items: [
-          { label: t('PP sấy', 'Drying'), value: formData.dryingMethod },
-          { label: t('Thời gian sấy', 'Duration'), value: formData.dryingDurationDays ? `${formData.dryingDurationDays} days` : '' },
-          { label: t('Độ ẩm mục tiêu', 'Target Moisture'), value: formData.targetMoisture ? `${formData.targetMoisture}%` : '' },
-          { label: t('Độ ẩm thực tế', 'Actual Moisture'), value: formData.actualMoisture ? `${formData.actualMoisture}%` : '' },
-          { label: t('Nhiệt độ', 'Temp'), value: formData.temperature4 ? `${formData.temperature4}°C` : '' },
-          { label: t('Độ ẩm KK', 'Humidity'), value: formData.humidity ? `${formData.humidity}%` : '' },
-          { label: t('Máy', 'Machine'), value: formData.machineUsed },
+          { label: t2('PP sấy', 'Drying'), value: formData.dryingMethod },
+          { label: t2('Thời gian sấy', 'Duration'), value: formData.dryingDurationDays ? `${formData.dryingDurationDays} days` : '' },
+          { label: t2('Độ ẩm mục tiêu', 'Target Moisture'), value: formData.targetMoisture ? `${formData.targetMoisture}%` : '' },
+          { label: t2('Độ ẩm thực tế', 'Actual Moisture'), value: formData.actualMoisture ? `${formData.actualMoisture}%` : '' },
+          { label: t2('Nhiệt độ', 'Temp'), value: formData.temperature4 ? `${formData.temperature4}°C` : '' },
+          { label: t2('Độ ẩm KK', 'Humidity'), value: formData.humidity ? `${formData.humidity}%` : '' },
+          { label: t2('Máy', 'Machine'), value: formData.machineUsed },
         ],
       },
       {
         title: STEPS[4],
         items: [
-          { label: t('PP bóc lụa', 'Hulling'), value: formData.hullingMethod },
-          { label: t('TL đầu ra', 'Output Weight'), value: formData.outputWeight ? `${formData.outputWeight} kg` : '' },
-          { label: t('Rây (screen)', 'Screen'), value: formData.screenSize5 },
-          { label: t('Đánh bóng', 'Polished'), value: formData.polishingDone ? t('Có', 'Yes') : t('Không', 'No') },
+          { label: t2('PP bóc lụa', 'Hulling'), value: formData.hullingMethod },
+          { label: t2('TL đầu ra', 'Output Weight'), value: formData.outputWeight ? `${formData.outputWeight} kg` : '' },
+          { label: t2('Rây (screen)', 'Screen'), value: formData.screenSize5 },
+          { label: t2('Đánh bóng', 'Polished'), value: formData.polishingDone ? t2('Có', 'Yes') : t2('Không', 'No') },
         ],
       },
       {
         title: STEPS[5],
         items: [
-          { label: t('Hạng', 'Grade'), value: formData.grade },
-          { label: t('Rây (screen)', 'Screen'), value: formData.screenSize6 },
-          { label: t('Số lỗi', 'Defects'), value: formData.defectCount },
-          { label: t('Tạp chất', 'Foreign Matter'), value: formData.foreignMatter ? `${formData.foreignMatter}%` : '' },
-          { label: t('Điểm cupping', 'Cup Score'), value: formData.cupScore },
-          { label: t('Hạng tổng', 'Overall'), value: formData.overallGrade },
+          { label: t2('Hạng', 'Grade'), value: formData.grade },
+          { label: t2('Rây (screen)', 'Screen'), value: formData.screenSize6 },
+          { label: t2('Số lỗi', 'Defects'), value: formData.defectCount },
+          { label: t2('Tạp chất', 'Foreign Matter'), value: formData.foreignMatter ? `${formData.foreignMatter}%` : '' },
+          { label: t2('Điểm cupping', 'Cup Score'), value: formData.cupScore },
+          { label: t2('Hạng tổng', 'Overall'), value: formData.overallGrade },
         ],
       },
       {
         title: STEPS[6],
         items: [
-          { label: t('QC duyệt', 'QC By'), value: formData.qcApprovedBy },
-          { label: t('Ngày QC', 'QC Date'), value: formData.qcApprovalDate },
-          { label: t('Loại đóng gói', 'Packaging'), value: formData.packagingType },
-          { label: t('TL đóng gói', 'Pkg Weight'), value: formData.packageWeight ? `${formData.packageWeight} kg` : '' },
-          { label: t('Số lô', 'Lot No'), value: formData.lotNumber },
-          { label: t('Ghi chú', 'Notes'), value: formData.notes },
+          { label: t2('QC duyệt', 'QC By'), value: formData.qcApprovedBy },
+          { label: t2('Ngày QC', 'QC Date'), value: formData.qcApprovalDate },
+          { label: t2('Loại đóng gói', 'Packaging'), value: formData.packagingType },
+          { label: t2('TL đóng gói', 'Pkg Weight'), value: formData.packageWeight ? `${formData.packageWeight} kg` : '' },
+          { label: t2('Số lô', 'Lot No'), value: formData.lotNumber },
+          { label: t2('Ghi chú', 'Notes'), value: formData.notes },
         ],
       },
     ]
@@ -997,7 +997,7 @@ export default function ProcessingWizardPage() {
   // ─── Main render ─────────────────────────────────────────────
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -1013,10 +1013,10 @@ export default function ProcessingWizardPage() {
             <div>
               <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
                 <Cog className="w-5 h-5 text-foreground" />
-                {t('Tạo lệnh chế biến', 'Processing Wizard')}
+                {t2('Tạo lệnh chế biến', 'Processing Wizard')}
               </h2>
               <p className="text-xs text-foreground mt-0.5">
-                {t('Điền thông tin từng bước trong quy trình chế biến', 'Fill in each step of the processing pipeline')}
+                {t2('Điền thông tin từng bước trong quy trình chế biến', 'Fill in each step of the processing pipeline')}
               </p>
             </div>
           </div>
@@ -1167,7 +1167,7 @@ export default function ProcessingWizardPage() {
             className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
           >
             <ChevronLeft className="w-4 h-4" />
-            {t('Quay lại', 'Back')}
+            {t2('Quay lại', 'Back')}
           </Button>
 
           <div className="flex items-center gap-2">
@@ -1189,7 +1189,7 @@ export default function ProcessingWizardPage() {
               onClick={goNext}
               className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
             >
-              {t('Tiếp theo', 'Next')}
+              {t2('Tiếp theo', 'Next')}
               <ChevronRight className="w-4 h-4" />
             </Button>
           ) : currentStep === 6 ? (
@@ -1200,7 +1200,7 @@ export default function ProcessingWizardPage() {
               }}
               className="btn-primary-gradient gap-2 rounded-xl shadow-sm"
             >
-              {t('Xem lại', 'Review')}
+              {t2('Xem lại', 'Review')}
               <ClipboardCheck className="w-4 h-4" />
             </Button>
           ) : (
@@ -1212,12 +1212,12 @@ export default function ProcessingWizardPage() {
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('Đang gửi...', 'Submitting...')}
+                  {t2('Đang gửi...', 'Submitting...')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  {t('Gửi lệnh chế biến', 'Submit Job Order')}
+                  {t2('Gửi lệnh chế biến', 'Submit Job Order')}
                 </>
               )}
             </Button>
@@ -1236,7 +1236,7 @@ export default function ProcessingWizardPage() {
               className="text-foreground hover:text-foreground text-xs gap-1"
             >
               <ChevronLeft className="w-3 h-3" />
-              {t('Quay lại chỉnh sửa', 'Go back to edit')}
+              {t2('Quay lại chỉnh sửa', 'Go back to edit')}
             </Button>
           </div>
         )}

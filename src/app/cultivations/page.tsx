@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, Sprout, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2,
+  Pencil, Trash2, Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -47,7 +48,7 @@ interface Cultivation {
 export default function CultivationsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [items, setItems] = useState<Cultivation[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -63,7 +64,6 @@ export default function CultivationsPage() {
   const [farmers, setFarmers] = useState<FarmerOption[]>([])
   const [farmLands, setFarmLands] = useState<FarmLandOption[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Form state
   const [form, setForm] = useState({
@@ -194,7 +194,7 @@ export default function CultivationsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.farmPlotName || !form.farmerId || !form.farmLandId) {
-      toast.error(t('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
+      toast.error(t2('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
       return
     }
     setSubmitting(true)
@@ -222,15 +222,15 @@ export default function CultivationsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo canh tác thành công!', 'Cultivation created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo canh tác thành công!', 'Cultivation created!'))
         setDialogOpen(false)
         resetForm()
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -241,13 +241,13 @@ export default function CultivationsPage() {
       const res = await fetch(`/api/cultivations?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
     setDeleteConfirm(null)
   }
@@ -256,7 +256,7 @@ export default function CultivationsPage() {
 
   if (status === 'loading' || (loading && items.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -264,7 +264,7 @@ export default function CultivationsPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -273,14 +273,14 @@ export default function CultivationsPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Sprout className="w-5 h-5 text-muted-foreground" />
-              {t('Quản lý Canh tác', 'Cultivation Management')}
+              {t2('Quản lý Canh tác', 'Cultivation Management')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} canh tác`, `Total: ${total} cultivations`)}</p>
           </div>
@@ -292,25 +292,25 @@ export default function CultivationsPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm canh tác mới', 'Add New Cultivation')}
+                {t2('Thêm canh tác mới', 'Add New Cultivation')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Sprout className="w-5 h-5" />
-                  {editingItem ? t('Sửa canh tác', 'Edit Cultivation') : t('Thêm canh tác mới', 'Add New Cultivation')}
+                  {editingItem ? t2('Sửa canh tác', 'Edit Cultivation') : t2('Thêm canh tác mới', 'Add New Cultivation')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Plot Name */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Tên lô canh tác', 'Plot Name')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Tên lô canh tác', 'Plot Name')} *</Label>
                     <Input
                       value={form.farmPlotName}
                       onChange={(e) => setForm({ ...form, farmPlotName: e.target.value })}
-                      placeholder={t('Nhập tên lô', 'Enter plot name')}
+                      placeholder={t2('Nhập tên lô', 'Enter plot name')}
                       className="rounded-xl border-input focus:border-primary"
                       required
                     />
@@ -318,10 +318,10 @@ export default function CultivationsPage() {
 
                   {/* Farmer Select */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
+                        <SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
                         {farmers.map((f) => (
@@ -335,10 +335,10 @@ export default function CultivationsPage() {
 
                   {/* Farm Land Select (filtered by farmer) */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })} disabled={!form.farmerId}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
+                        <SelectValue placeholder={t2('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
                         {filteredFarmLands.map((fl) => (
@@ -352,49 +352,49 @@ export default function CultivationsPage() {
 
                   {/* Cultivated Crop */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Cây trồng', 'Crop')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Cây trồng', 'Crop')}</Label>
                     <Select value={form.cultivatedCrop} onValueChange={(v) => setForm({ ...form, cultivatedCrop: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn cây trồng', 'Select crop')} />
+                        <SelectValue placeholder={t2('Chọn cây trồng', 'Select crop')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Robusta">{t('Cà phê Robusta', 'Robusta Coffee')}</SelectItem>
-                        <SelectItem value="Arabica">{t('Cà phê Arabica', 'Arabica Coffee')}</SelectItem>
-                        <SelectItem value="Liberica">{t('Cà phê Liberica', 'Liberica Coffee')}</SelectItem>
-                        <SelectItem value="Excelsa">{t('Cà phê Excelsa', 'Excelsa Coffee')}</SelectItem>
+                        <SelectItem value="Robusta">{t2('Cà phê Robusta', 'Robusta Coffee')}</SelectItem>
+                        <SelectItem value="Arabica">{t2('Cà phê Arabica', 'Arabica Coffee')}</SelectItem>
+                        <SelectItem value="Liberica">{t2('Cà phê Liberica', 'Liberica Coffee')}</SelectItem>
+                        <SelectItem value="Excelsa">{t2('Cà phê Excelsa', 'Excelsa Coffee')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Crop Variety */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Giống', 'Variety')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Giống', 'Variety')}</Label>
                     <Input
                       value={form.cropVariety}
                       onChange={(e) => setForm({ ...form, cropVariety: e.target.value })}
-                      placeholder={t('VD: Catimor', 'e.g. Catimor')}
+                      placeholder={t2('VD: Catimor', 'e.g. Catimor')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Coffee Species */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loài cà phê', 'Coffee Species')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loài cà phê', 'Coffee Species')}</Label>
                     <Select value={form.coffeeSpecies} onValueChange={(v) => setForm({ ...form, coffeeSpecies: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn loài', 'Select species')} />
+                        <SelectValue placeholder={t2('Chọn loài', 'Select species')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Coffea canephora">Coffea canephora</SelectItem>
-                        <SelectItem value="Coffea arabica">Coffea arabica</SelectItem>
-                        <SelectItem value="Coffea liberica">Coffea liberica</SelectItem>
+                        <SelectItem value="Coffea canephora">Coffea canephora ({t2('Robusta', 'Robusta')})</SelectItem>
+                        <SelectItem value="Coffea arabica">Coffea arabica ({t2('Arabica', 'Arabica')})</SelectItem>
+                        <SelectItem value="Coffea liberica">Coffea liberica ({t2('Liberica', 'Liberica')})</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Cultivation Area */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Diện tích (ha)', 'Area (ha)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Diện tích (ha)', 'Area (ha)')}</Label>
                     <Input
                       type="number"
                       value={form.cultivationArea}
@@ -407,7 +407,7 @@ export default function CultivationsPage() {
 
                   {/* Planting Spacing */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Khoảng cách trồng (m)', 'Planting Spacing (m)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Khoảng cách trồng (m)', 'Planting Spacing (m)')}</Label>
                     <Input
                       type="number"
                       value={form.plantingSpacing}
@@ -420,7 +420,7 @@ export default function CultivationsPage() {
 
                   {/* Tree Density */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mật độ cây (cây/ha)', 'Tree Density (trees/ha)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mật độ cây (cây/ha)', 'Tree Density (trees/ha)')}</Label>
                     <Input
                       type="number"
                       value={form.treeDensity}
@@ -432,7 +432,7 @@ export default function CultivationsPage() {
 
                   {/* Sowing Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày gieo trồng', 'Sowing Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày gieo trồng', 'Sowing Date')}</Label>
                     <Input
                       type="date"
                       value={form.sowingDate}
@@ -443,33 +443,33 @@ export default function CultivationsPage() {
 
                   {/* Seed Source */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nguồn giống', 'Seed Source')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nguồn giống', 'Seed Source')}</Label>
                     <Input
                       value={form.seedSource}
                       onChange={(e) => setForm({ ...form, seedSource: e.target.value })}
-                      placeholder={t('VD: WAFCO', 'e.g. WAFCO')}
+                      placeholder={t2('VD: WAFCO', 'e.g. WAFCO')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Seed Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại hạt giống', 'Seed Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại hạt giống', 'Seed Type')}</Label>
                     <Select value={form.seedType} onValueChange={(v) => setForm({ ...form, seedType: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn loại', 'Select type')} />
+                        <SelectValue placeholder={t2('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="certified">{t('Đã chứng nhận', 'Certified')}</SelectItem>
-                        <SelectItem value="local">{t('Giống địa phương', 'Local Variety')}</SelectItem>
-                        <SelectItem value="hybrid">{t('Lai', 'Hybrid')}</SelectItem>
+                        <SelectItem value="certified">{t2('Đã chứng nhận', 'Certified')}</SelectItem>
+                        <SelectItem value="local">{t2('Giống địa phương', 'Local Variety')}</SelectItem>
+                        <SelectItem value="hybrid">{t2('Lai', 'Hybrid')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Seed Quantity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số lượng hạt (kg)', 'Seed Quantity (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số lượng hạt (kg)', 'Seed Quantity (kg)')}</Label>
                     <Input
                       type="number"
                       value={form.seedQuantity}
@@ -482,7 +482,7 @@ export default function CultivationsPage() {
 
                   {/* Seed Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Chi phí hạt giống', 'Seed Cost')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Chi phí hạt giống', 'Seed Cost')}</Label>
                     <Input
                       type="number"
                       value={form.seedCost}
@@ -494,32 +494,32 @@ export default function CultivationsPage() {
 
                   {/* Intended Processing Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('PP chế biến dự kiến', 'Intended Processing')}</Label>
+                    <Label className="text-xs text-foreground">{t2('PP chế biến dự kiến', 'Intended Processing')}</Label>
                     <Select value={form.intendedProcessingMethod} onValueChange={(v) => setForm({ ...form, intendedProcessingMethod: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn phương pháp', 'Select method')} />
+                        <SelectValue placeholder={t2('Chọn phương pháp', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="wet">{t('Ướt', 'Wet Process')}</SelectItem>
-                        <SelectItem value="dry">{t('Khô', 'Dry Process')}</SelectItem>
-                        <SelectItem value="honey">{t('Mật ong', 'Honey Process')}</SelectItem>
-                        <SelectItem value="natural">{t('Tự nhiên', 'Natural')}</SelectItem>
+                        <SelectItem value="wet">{t2('Ướt', 'Wet Process')}</SelectItem>
+                        <SelectItem value="dry">{t2('Khô', 'Dry Process')}</SelectItem>
+                        <SelectItem value="honey">{t2('Mật ong', 'Honey Process')}</SelectItem>
+                        <SelectItem value="natural">{t2('Tự nhiên', 'Natural')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Irrigation Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('PP tưới tiêu', 'Irrigation Method')}</Label>
+                    <Label className="text-xs text-foreground">{t2('PP tưới tiêu', 'Irrigation Method')}</Label>
                     <Select value={form.irrigationMethod} onValueChange={(v) => setForm({ ...form, irrigationMethod: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn phương pháp', 'Select method')} />
+                        <SelectValue placeholder={t2('Chọn phương pháp', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="rainfed">{t('Tưới tự nhiên', 'Rainfed')}</SelectItem>
-                        <SelectItem value="drip">{t('Nhỏ giọt', 'Drip Irrigation')}</SelectItem>
-                        <SelectItem value="sprinkler">{t('Phun mưa', 'Sprinkler')}</SelectItem>
-                        <SelectItem value="flood">{t('Ngập', 'Flood Irrigation')}</SelectItem>
+                        <SelectItem value="rainfed">{t2('Tưới tự nhiên', 'Rainfed')}</SelectItem>
+                        <SelectItem value="drip">{t2('Nhỏ giọt', 'Drip Irrigation')}</SelectItem>
+                        <SelectItem value="sprinkler">{t2('Phun mưa', 'Sprinkler')}</SelectItem>
+                        <SelectItem value="flood">{t2('Ngập', 'Flood Irrigation')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -528,7 +528,7 @@ export default function CultivationsPage() {
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -538,10 +538,10 @@ export default function CultivationsPage() {
                     {submitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t('Đang lưu...', 'Saving...')}
+                        {t2('Đang lưu...', 'Saving...')}
                       </>
                     ) : (
-                      editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                      editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -557,7 +557,7 @@ export default function CultivationsPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm canh tác...', 'Search cultivations...')}
+              placeholder={t2('Tìm kiếm canh tác...', 'Search cultivations...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -572,23 +572,23 @@ export default function CultivationsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Tên lô', 'Plot Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Cây trồng', 'Crop')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Giống', 'Variety')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Diện tích', 'Area')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Ngày gieo', 'Sowing Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('SL ước', 'Est. Yield')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Tên lô', 'Plot Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Nông trại', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Cây trồng', 'Crop')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Giống', 'Variety')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Diện tích', 'Area')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('Ngày gieo', 'Sowing Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('SL ước', 'Est. Yield')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground text-sm">
-                        {t('Không tìm thấy dữ liệu', 'No data found')}
+                        {t2('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
@@ -609,21 +609,24 @@ export default function CultivationsPage() {
                         <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">{item.estYield || '-'}</td>
                         <td className="px-4 py-3">
                           <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
-                            {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                            {item.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/cultivations/${item.id}`)}>
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
-                                  {t('Xóa', 'Del')}
+                                  {t2('Xóa', 'Del')}
                                 </Button>
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
-                                  {t('Hủy', 'No')}
+                                  {t2('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (

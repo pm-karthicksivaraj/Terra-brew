@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { signOut } from 'next-auth/react'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 // ════════════════════════════════════════════════════════════════
@@ -140,10 +141,10 @@ const ROLE_COLORS: Record<string, string> = {
 
 export default function TenantDetailPage() {
   const { data: session, status } = useSession()
+  const { t2, lang, setLang } = useI18n()
   const router = useRouter()
   const params = useParams()
   const tenantId = params.id as string
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [tenant, setTenant] = useState<TenantDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -156,7 +157,6 @@ export default function TenantDetailPage() {
     enabledModules: {} as Record<string, boolean>,
   })
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const fetchTenant = useCallback(async () => {
     try {
@@ -169,11 +169,11 @@ export default function TenantDetailPage() {
         router.push('/super-admin/dashboard')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setLoading(false)
     }
-  }, [tenantId, router, t])
+  }, [tenantId, router])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -229,14 +229,14 @@ export default function TenantDetailPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Cập nhật thành công!', 'Updated successfully!'))
+        toast.success(t2('Cập nhật thành công!', 'Updated successfully!'))
         setEditDialogOpen(false)
         fetchTenant()
       } else {
         toast.error(data.error || 'Error')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -249,15 +249,15 @@ export default function TenantDetailPage() {
       if (data.success) {
         toast.success(
           tenant!.isActive
-            ? t('Đã vô hiệu hóa', 'Deactivated')
-            : t('Đã kích hoạt lại', 'Reactivated')
+            ? t2('Đã vô hiệu hóa', 'Deactivated')
+            : t2('Đã kích hoạt lại', 'Reactivated')
         )
         fetchTenant()
       } else {
         toast.error(data.error || 'Error')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -279,13 +279,13 @@ export default function TenantDetailPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(enabled ? t('Đã bật module', 'Module enabled') : t('Đã tắt module', 'Module disabled'))
+        toast.success(enabled ? t2('Đã bật module', 'Module enabled') : t2('Đã tắt module', 'Module disabled'))
         fetchTenant()
       } else {
         toast.error(data.error || 'Error')
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -299,27 +299,27 @@ export default function TenantDetailPage() {
   })()
 
   const recordsPerModule = tenant?._count ? [
-    { name: t('Nông dân', 'Farmers'), count: tenant._count.farmers || 0 },
-    { name: t('Đất', 'Farmlands'), count: tenant._count.farmLands || 0 },
-    { name: t('Canh tác', 'Cultivations'), count: tenant._count.cultivations || 0 },
-    { name: t('Vườn ươm', 'Nurseries'), count: tenant._count.nurseries || 0 },
-    { name: t('Thu hoạch', 'Harvests'), count: tenant._count.harvestTraceabilities || 0 },
-    { name: t('Thu mua', 'Procurement'), count: tenant._count.procurementRecords || 0 },
-    { name: t('Chế biến', 'Processing'), count: tenant._count.processingJobOrders || 0 },
-    { name: t('Chứng nhận', 'Certs'), count: tenant._count.certAssessments || 0 },
+    { name: t2('Nông dân', 'Farmers'), count: tenant._count.farmers || 0 },
+    { name: t2('Đất', 'Farmlands'), count: tenant._count.farmLands || 0 },
+    { name: t2('Canh tác', 'Cultivations'), count: tenant._count.cultivations || 0 },
+    { name: t2('Vườn ươm', 'Nurseries'), count: tenant._count.nurseries || 0 },
+    { name: t2('Thu hoạch', 'Harvests'), count: tenant._count.harvestTraceabilities || 0 },
+    { name: t2('Thu mua', 'Procurement'), count: tenant._count.procurementRecords || 0 },
+    { name: t2('Chế biến', 'Processing'), count: tenant._count.processingJobOrders || 0 },
+    { name: t2('Chứng nhận', 'Certs'), count: tenant._count.certAssessments || 0 },
   ].filter(d => d.count > 0) : []
 
   // Loading
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen flex items-center justify-center bg-stone-950" >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
             <Shield className="w-9 h-9 text-white animate-pulse" />
           </div>
           <div className="flex items-center gap-2 text-stone-400">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+            <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
           </div>
         </div>
       </div>
@@ -328,7 +328,7 @@ export default function TenantDetailPage() {
 
   if (!session?.user?.isPlatformAdmin || !tenant) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-950" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen flex items-center justify-center bg-stone-950" >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
             <Shield className="w-9 h-9 text-white animate-pulse" />
@@ -343,14 +343,14 @@ export default function TenantDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen bg-stone-950 text-stone-100" >
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 bg-stone-900/80 backdrop-blur-xl border-b border-stone-800/50">
         <div className="flex items-center justify-between px-4 md:px-8 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => router.push('/super-admin/dashboard')} className="text-stone-400 hover:text-stone-200 gap-1">
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline text-xs">{t('Quay lại', 'Back')}</span>
+              <span className="hidden md:inline text-xs">{t2('Quay lại', 'Back')}</span>
             </Button>
             <Separator orientation="vertical" className="h-5 bg-stone-800" />
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-600 to-stone-800 flex items-center justify-center">
@@ -363,7 +363,7 @@ export default function TenantDetailPage() {
           </div>
           <div className="flex items-center gap-2">
             <Badge className={`${tenant.isActive ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'} text-[10px] border-0`}>
-              {tenant.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+              {tenant.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
             </Badge>
             <Button variant="ghost" size="sm" onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')} className="gap-1 text-stone-400 hover:text-stone-200 text-xs">
               <Globe className="w-3.5 h-3.5" />
@@ -378,31 +378,31 @@ export default function TenantDetailPage() {
         <div className="flex items-center gap-2 mb-6">
           <Button onClick={openEditDialog} className="bg-gradient-to-r from-stone-600 to-stone-800 text-white gap-2 rounded-xl hover:from-stone-500 hover:to-stone-700 text-xs">
             <Pencil className="w-3.5 h-3.5" />
-            {t('Chỉnh sửa', 'Edit')}
+            {t2('Chỉnh sửa', 'Edit')}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className={`gap-2 rounded-xl text-xs ${tenant.isActive ? 'border-red-900/50 text-red-400 hover:bg-red-900/20' : 'border-emerald-900/50 text-emerald-400 hover:bg-emerald-900/20'}`}>
                 <Power className="w-3.5 h-3.5" />
-                {tenant.isActive ? t('Vô hiệu hóa', 'Deactivate') : t('Kích hoạt lại', 'Reactivate')}
+                {tenant.isActive ? t2('Vô hiệu hóa', 'Deactivate') : t2('Kích hoạt lại', 'Reactivate')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-stone-900 border-stone-800 text-stone-100">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-stone-100 flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
-                  {tenant.isActive ? t('Vô hiệu hóa tổ chức?', 'Deactivate Tenant?') : t('Kích hoạt lại?', 'Reactivate?')}
+                  {tenant.isActive ? t2('Vô hiệu hóa tổ chức?', 'Deactivate Tenant?') : t2('Kích hoạt lại?', 'Reactivate?')}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-stone-400">
                   {tenant.isActive
-                    ? t('Tất cả người dùng sẽ không thể truy cập.', 'All users will lose access.')
-                    : t('Người dùng sẽ có thể đăng nhập lại.', 'Users will be able to sign in again.')}
+                    ? t2('Tất cả người dùng sẽ không thể truy cập.', 'All users will lose access.')
+                    : t2('Người dùng sẽ có thể đăng nhập lại.', 'Users will be able to sign in again.')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</AlertDialogCancel>
+                <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={toggleTenantActive} className={tenant.isActive ? 'bg-red-700 hover:bg-red-600 text-white' : 'bg-emerald-700 hover:bg-emerald-600 text-white'}>
-                  {tenant.isActive ? t('Vô hiệu hóa', 'Deactivate') : t('Kích hoạt lại', 'Reactivate')}
+                  {tenant.isActive ? t2('Vô hiệu hóa', 'Deactivate') : t2('Kích hoạt lại', 'Reactivate')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -413,7 +413,7 @@ export default function TenantDetailPage() {
           <TabsList className="bg-stone-900 border border-stone-800 rounded-xl p-1 mb-6">
             <TabsTrigger value="overview" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
-              {t('Tổng quan', 'Overview')}
+              {t2('Tổng quan', 'Overview')}
             </TabsTrigger>
             <TabsTrigger value="modules" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Package className="w-3.5 h-3.5 mr-1.5" />
@@ -421,11 +421,11 @@ export default function TenantDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Users className="w-3.5 h-3.5 mr-1.5" />
-              {t('Người dùng', 'Users')}
+              {t2('Người dùng', 'Users')}
             </TabsTrigger>
             <TabsTrigger value="audit" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <FileText className="w-3.5 h-3.5 mr-1.5" />
-              {t('Nhật ký', 'Audit Log')}
+              {t2('Nhật ký', 'Audit Log')}
             </TabsTrigger>
           </TabsList>
 
@@ -437,10 +437,10 @@ export default function TenantDetailPage() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
-                  { title: t('Nông dân', 'Farmers'), value: tenant._count?.farmers || 0, max: tenant.maxFarmers, icon: Leaf, color: 'from-teal-600 to-teal-800' },
-                  { title: t('Người dùng', 'Users'), value: tenant._count?.users || 0, max: tenant.maxUsers, icon: Users, color: 'from-cyan-600 to-cyan-800' },
-                  { title: t('Đất nông nghiệp', 'Farmlands'), value: tenant._count?.farmLands || 0, icon: MapPin, color: 'from-emerald-600 to-emerald-800' },
-                  { title: t('Nhật ký', 'Audit Logs'), value: tenant._count?.auditLogs || 0, icon: FileText, color: 'from-stone-600 to-stone-800' },
+                  { title: t2('Nông dân', 'Farmers'), value: tenant._count?.farmers || 0, max: tenant.maxFarmers, icon: Leaf, color: 'from-teal-600 to-teal-800' },
+                  { title: t2('Người dùng', 'Users'), value: tenant._count?.users || 0, max: tenant.maxUsers, icon: Users, color: 'from-cyan-600 to-cyan-800' },
+                  { title: t2('Đất nông nghiệp', 'Farmlands'), value: tenant._count?.farmLands || 0, icon: MapPin, color: 'from-emerald-600 to-emerald-800' },
+                  { title: t2('Nhật ký', 'Audit Logs'), value: tenant._count?.auditLogs || 0, icon: FileText, color: 'from-stone-600 to-stone-800' },
                 ].map((stat, i) => (
                   <div key={i} >
                     <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur">
@@ -468,21 +468,21 @@ export default function TenantDetailPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-stone-500" />
-                      {t('Thông tin tổ chức', 'Tenant Info')}
+                      {t2('Thông tin tổ chức', 'Tenant Info')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: t('Tên', 'Name'), value: tenant.name },
+                        { label: t2('Tên', 'Name'), value: tenant.name },
                         { label: 'Slug', value: tenant.slug },
-                        { label: t('Tên pháp lý', 'Legal Name'), value: tenant.legalName || '—' },
-                        { label: t('Mã số thuế', 'Tax ID'), value: tenant.taxId || '—' },
-                        { label: t('Tiền tệ', 'Currency'), value: `${tenant.currency} (${tenant.currencySymbol})` },
-                        { label: t('Ngôn ngữ', 'Language'), value: tenant.language.toUpperCase() },
-                        { label: t('Múi giờ', 'Timezone'), value: tenant.timezone },
-                        { label: t('Quốc gia', 'Country'), value: tenant.country },
-                        { label: t('Gói', 'Plan'), value: tenant.plan },
+                        { label: t2('Tên pháp lý', 'Legal Name'), value: tenant.legalName || '—' },
+                        { label: t2('Mã số thuế', 'Tax ID'), value: tenant.taxId || '—' },
+                        { label: t2('Tiền tệ', 'Currency'), value: `${tenant.currency} (${tenant.currencySymbol})` },
+                        { label: t2('Ngôn ngữ', 'Language'), value: tenant.language.toUpperCase() },
+                        { label: t2('Múi giờ', 'Timezone'), value: tenant.timezone },
+                        { label: t2('Quốc gia', 'Country'), value: tenant.country },
+                        { label: t2('Gói', 'Plan'), value: tenant.plan },
                         { label: 'EUDR', value: tenant.eudrCompliant ? '✓' : '✗' },
                       ].map((item, i) => (
                         <div key={i} className="p-2 rounded-lg bg-stone-800/30">
@@ -492,7 +492,7 @@ export default function TenantDetailPage() {
                       ))}
                     </div>
                     <div className="mt-3 p-2 rounded-lg bg-stone-800/30">
-                      <p className="text-[9px] text-stone-600">{t('Ngày tạo', 'Created')}</p>
+                      <p className="text-[9px] text-stone-600">{t2('Ngày tạo', 'Created')}</p>
                       <p className="text-[11px] text-stone-300 font-medium">{new Date(tenant.createdAt).toLocaleString()}</p>
                     </div>
                   </CardContent>
@@ -503,7 +503,7 @@ export default function TenantDetailPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                       <BarChart3 className="w-4 h-4 text-stone-500" />
-                      {t('Bản ghi theo Module', 'Records per Module')}
+                      {t2('Bản ghi theo Module', 'Records per Module')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -511,14 +511,14 @@ export default function TenantDetailPage() {
                       <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={recordsPerModule}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#44403c" />
-                          <XAxis dataKey="name" tick={{ fill: '#a8a29e', fontSize: 8, fontFamily: '"Space Mono", monospace' }} />
-                          <YAxis tick={{ fill: '#a8a29e', fontSize: 9, fontFamily: '"Space Mono", monospace' }} />
-                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: '"Space Mono", monospace', fontSize: '10px' }} />
-                          <Bar dataKey="count" fill="#78716c" radius={[4, 4, 0, 0]} name={t('Số bản ghi', 'Records')} />
+                          <XAxis dataKey="name" tick={{ fill: '#a8a29e', fontSize: 8, fontFamily: 'Inter, system-ui, sans-serif' }} />
+                          <YAxis tick={{ fill: '#a8a29e', fontSize: 9, fontFamily: 'Inter, system-ui, sans-serif' }} />
+                          <Tooltip contentStyle={{ background: '#1c1917', border: '1px solid #44403c', borderRadius: '12px', fontFamily: 'Inter, system-ui, sans-serif', fontSize: '10px' }} />
+                          <Bar dataKey="count" fill="#78716c" radius={[4, 4, 0, 0]} name={t2('Số bản ghi', 'Records')} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-[250px] flex items-center justify-center text-stone-600 text-xs">{t('Chưa có dữ liệu', 'No data yet')}</div>
+                      <div className="h-[250px] flex items-center justify-center text-stone-600 text-xs">{t2('Chưa có dữ liệu', 'No data yet')}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -529,7 +529,7 @@ export default function TenantDetailPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                     <Activity className="w-4 h-4 text-stone-500" />
-                    {t('Hoạt động gần đây', 'Recent Activity')}
+                    {t2('Hoạt động gần đây', 'Recent Activity')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -552,7 +552,7 @@ export default function TenantDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="py-8 text-center text-stone-600 text-xs">{t('Chưa có hoạt động', 'No activity yet')}</div>
+                    <div className="py-8 text-center text-stone-600 text-xs">{t2('Chưa có hoạt động', 'No activity yet')}</div>
                   )}
                 </CardContent>
               </Card>
@@ -568,7 +568,7 @@ export default function TenantDetailPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                     <Package className="w-4 h-4 text-stone-500" />
-                    {t('Quản lý Modules', 'Module Management')}
+                    {t2('Quản lý Modules', 'Module Management')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -617,7 +617,7 @@ export default function TenantDetailPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                     <Users className="w-4 h-4 text-stone-500" />
-                    {t('Người dùng trong tổ chức', 'Users in Tenant')} ({tenant._count?.users || 0})
+                    {t2('Người dùng trong tổ chức', 'Users in Tenant')} ({tenant._count?.users || 0})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -625,10 +625,10 @@ export default function TenantDetailPage() {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-stone-800/30 border-b border-stone-800">
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Người dùng', 'User')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Vai trò', 'Role')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t('Đăng nhập gần nhất', 'Last Login')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Người dùng', 'User')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Vai trò', 'Role')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Đăng nhập gần nhất', 'Last Login')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -656,7 +656,7 @@ export default function TenantDetailPage() {
                             </td>
                             <td className="px-4 py-2.5">
                               <Badge className={`${u.isActive ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'} text-[9px] border-0`}>
-                                {u.isActive ? t('HĐ', 'Active') : t('Tắt', 'Off')}
+                                {u.isActive ? t2('HĐ', 'Active') : t2('Tắt', 'Off')}
                               </Badge>
                             </td>
                           </tr>
@@ -665,7 +665,7 @@ export default function TenantDetailPage() {
                     </table>
                   </div>
                   {(!tenant.users || tenant.users.length === 0) && (
-                    <div className="py-8 text-center text-stone-600 text-xs">{t('Chưa có người dùng', 'No users yet')}</div>
+                    <div className="py-8 text-center text-stone-600 text-xs">{t2('Chưa có người dùng', 'No users yet')}</div>
                   )}
                 </CardContent>
               </Card>
@@ -681,7 +681,7 @@ export default function TenantDetailPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs text-stone-300 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-stone-500" />
-                    {t('Nhật ký hoạt động', 'Activity Log')} ({tenant._count?.auditLogs || 0})
+                    {t2('Nhật ký hoạt động', 'Activity Log')} ({tenant._count?.auditLogs || 0})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -689,11 +689,11 @@ export default function TenantDetailPage() {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-stone-800/30 border-b border-stone-800">
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Thời gian', 'Time')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Hành động', 'Action')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Entity', 'Entity')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t('Chi tiết', 'Details')}</th>
-                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t('IP', 'IP')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Thời gian', 'Time')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Hành động', 'Action')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Entity', 'Entity')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Chi tiết', 'Details')}</th>
+                          <th className="px-4 py-2.5 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('IP', 'IP')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -720,7 +720,7 @@ export default function TenantDetailPage() {
                     </table>
                   </div>
                   {(!tenant.auditLogs || tenant.auditLogs.length === 0) && (
-                    <div className="py-8 text-center text-stone-600 text-xs">{t('Chưa có nhật ký', 'No audit logs yet')}</div>
+                    <div className="py-8 text-center text-stone-600 text-xs">{t2('Chưa có nhật ký', 'No audit logs yet')}</div>
                   )}
                 </CardContent>
               </Card>
@@ -737,32 +737,32 @@ export default function TenantDetailPage() {
           <DialogHeader>
             <DialogTitle className="text-stone-100 flex items-center gap-2">
               <Pencil className="w-5 h-5 text-stone-500" />
-              {t('Chỉnh sửa tổ chức', 'Edit Tenant')}
+              {t2('Chỉnh sửa tổ chức', 'Edit Tenant')}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 col-span-2">
-                <Label className="text-xs text-stone-400">{t('Tên tổ chức', 'Name')} *</Label>
+                <Label className="text-xs text-stone-400">{t2('Tên tổ chức', 'Name')} *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" required />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Tên pháp lý', 'Legal Name')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Tên pháp lý', 'Legal Name')}</Label>
                 <Input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Gói', 'Plan')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Gói', 'Plan')}</Label>
                 <Select value={form.plan} onValueChange={(v) => setForm({ ...form, plan: v })}>
                   <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-stone-800 border-stone-700">
-                    <SelectItem value="starter">Starter</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                    <SelectItem value="starter">{t2('Khởi nghiệp', 'Starter')}</SelectItem>
+                    <SelectItem value="professional">{t2('Chuyên nghiệp', 'Professional')}</SelectItem>
+                    <SelectItem value="enterprise">{t2('Doanh nghiệp', 'Enterprise')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Ngôn ngữ', 'Language')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Ngôn ngữ', 'Language')}</Label>
                 <Select value={form.language} onValueChange={(v) => setForm({ ...form, language: v })}>
                   <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-stone-800 border-stone-700">
@@ -772,7 +772,7 @@ export default function TenantDetailPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Tiền tệ', 'Currency')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Tiền tệ', 'Currency')}</Label>
                 <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
                   <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-stone-800 border-stone-700">
@@ -783,18 +783,18 @@ export default function TenantDetailPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Tối đa người dùng', 'Max Users')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Tối đa người dùng', 'Max Users')}</Label>
                 <Input type="number" value={form.maxUsers} onChange={(e) => setForm({ ...form, maxUsers: parseInt(e.target.value) || 10 })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-400">{t('Tối đa nông dân', 'Max Farmers')}</Label>
+                <Label className="text-xs text-stone-400">{t2('Tối đa nông dân', 'Max Farmers')}</Label>
                 <Input type="number" value={form.maxFarmers} onChange={(e) => setForm({ ...form, maxFarmers: parseInt(e.target.value) || 500 })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
               </div>
             </div>
 
             {/* Module toggles */}
             <div className="space-y-2 pt-2 border-t border-stone-800">
-              <Label className="text-xs font-bold text-stone-400">{t('Bật/Tắt Modules', 'Enable/Disable Modules')}</Label>
+              <Label className="text-xs font-bold text-stone-400">{t2('Bật/Tắt Modules', 'Enable/Disable Modules')}</Label>
               <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                 {MODULE_LIST.map(mod => (
                   <div key={mod} className="flex items-center gap-2 p-1 rounded-lg hover:bg-stone-800/30 transition-colors">
@@ -809,9 +809,9 @@ export default function TenantDetailPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-stone-800">
-              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t('Hủy', 'Cancel')}</Button>
+              <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</Button>
               <Button type="submit" disabled={submitting} className="bg-gradient-to-r from-stone-600 to-stone-800 text-white rounded-xl hover:from-stone-500 hover:to-stone-700">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Cập nhật', 'Update')}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t2('Cập nhật', 'Update')}
               </Button>
             </div>
           </form>

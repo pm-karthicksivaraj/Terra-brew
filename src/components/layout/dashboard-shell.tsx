@@ -49,9 +49,17 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   marketplace: { en: 'Marketplace', vi: 'Thị trường' },
   users: { en: 'Users & Roles', vi: 'Người dùng & Vai trò' },
   blockchain: { en: 'Blockchain', vi: 'Blockchain' },
-  'qr-verify': { en: 'QR Verify', vi: 'Xác minh QR' },
+  'qr-verify': { en: 'QR Verify', vi: 'Xac minh QR' },
   'nfc-tags': { en: 'NFC Tags', vi: 'NFC Tags' },
-  traceability: { en: 'Traceability', vi: 'Truy xuất' },
+  traceability: { en: 'Traceability', vi: 'Truy xuat' },
+  stages: { en: 'Stages', vi: 'Cac buoc' },
+  pulping: { en: 'Pulping', vi: 'Xoac' },
+  fermentation: { en: 'Fermentation', vi: 'Len men' },
+  washing: { en: 'Washing', vi: 'Rua' },
+  drying: { en: 'Drying', vi: 'Say' },
+  hulling: { en: 'Hulling', vi: 'Bachop' },
+  sorting: { en: 'Sorting/Grading', vi: 'Phan loai' },
+  roasting: { en: 'Roasting', vi: 'Rang' },
 }
 
 // ─── Animation variants ───────────────────────────────────────────
@@ -90,16 +98,18 @@ function useIsDesktop(breakpoint = 1024): boolean {
 
 interface DashboardShellProps {
   children: ReactNode
-  lang: 'vi' | 'en'
-  onLangToggle: () => void
+  /** @deprecated Use useI18n() hook instead — lang is now managed globally */
+  lang?: 'vi' | 'en'
+  /** @deprecated Use useI18n() hook instead — lang is now managed globally */
+  onLangToggle?: () => void
 }
 
-export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangToggle }: DashboardShellProps) {
+export function DashboardShell({ children }: DashboardShellProps) {
   const { data: session } = useSession()
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
   const { theme, setTheme } = useTheme()
-  const { lang, setLang, t2 } = useI18n()
+  const { lang, setLang, t, t2 } = useI18n()
 
   // Hydration guard: only render dynamic layout after client mount.
   const [mounted, setMounted] = useState(false)
@@ -157,7 +167,7 @@ export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangTog
   // Before client mount, render a minimal shell that matches the server output.
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-background" style={{ fontFamily: '"Space Mono", monospace' }}>
+      <div className="min-h-screen bg-background">
         <div className="flex flex-col min-h-screen">
           <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border">
             <div className="flex items-center justify-between px-4 md:px-6 py-2.5">
@@ -178,7 +188,7 @@ export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangTog
   }
 
   return (
-    <div className="min-h-screen bg-background" style={{ fontFamily: '"Space Mono", monospace' }} suppressHydrationWarning>
+    <div className="min-h-screen bg-background" suppressHydrationWarning>
       {/* Sidebar */}
       <AppSidebar
         collapsed={collapsed}
@@ -291,7 +301,7 @@ export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangTog
                     className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950 text-xs cursor-pointer"
                   >
                     <LogOut className="w-3.5 h-3.5 mr-2" />
-                    {t2('Đăng xuất', 'Sign out')}
+                    {t('auth.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -316,7 +326,7 @@ export function DashboardShell({ children, lang: _lang, onLangToggle: _onLangTog
           <div className="px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between text-[10px] text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Coffee className="w-3 h-3" />
-              <span>Terra Brew Coffee Platform</span>
+              <span>{t('app.footer')}</span>
             </div>
             <span>&copy; {new Date().getFullYear()}</span>
           </div>

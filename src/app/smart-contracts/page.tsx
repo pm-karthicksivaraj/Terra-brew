@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, FileText, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2, X, PenTool,
+  Pencil, Trash2, Eye, X, PenTool,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -90,7 +91,7 @@ const statusColors: Record<string, string> = {
 export default function SmartContractsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [contracts, setContracts] = useState<SmartContract[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -104,7 +105,6 @@ export default function SmartContractsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [farmerOptions, setFarmerOptions] = useState<FarmerOption[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const [form, setForm] = useState(emptyForm)
 
@@ -227,15 +227,15 @@ export default function SmartContractsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo hợp đồng thành công!', 'Contract created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo hợp đồng thành công!', 'Contract created!'))
         setDialogOpen(false)
         resetForm()
         fetchContracts()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -246,14 +246,14 @@ export default function SmartContractsPage() {
       const res = await fetch(`/api/smart-contracts?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         setDeleteConfirm(null)
         fetchContracts()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -277,10 +277,10 @@ export default function SmartContractsPage() {
         toast.success(t(`Bên ${party === 'A' ? 'A' : 'B'} đã ký!`, `Party ${party} signed!`))
         fetchContracts()
       } else {
-        toast.error(data.error || t('Lỗi khi ký', 'Error signing'))
+        toast.error(data.error || t2('Lỗi khi ký', 'Error signing'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
   }
 
@@ -290,7 +290,7 @@ export default function SmartContractsPage() {
 
   if (status === 'loading' || (loading && contracts.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -298,7 +298,7 @@ export default function SmartContractsPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -307,14 +307,14 @@ export default function SmartContractsPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <FileText className="w-5 h-5 text-muted-foreground" />
-              {t('Hợp đồng Thông minh', 'Smart Contracts')}
+              {t2('Hợp đồng Thông minh', 'Smart Contracts')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} hợp đồng`, `Total: ${total} contracts`)}</p>
           </div>
@@ -326,24 +326,24 @@ export default function SmartContractsPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm hợp đồng mới', 'Add New Contract')}
+                {t2('Thêm hợp đồng mới', 'Add New Contract')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  {editingItem ? t('Sửa hợp đồng', 'Edit Contract') : t('Thêm hợp đồng mới', 'Add New Contract')}
+                  {editingItem ? t2('Sửa hợp đồng', 'Edit Contract') : t2('Thêm hợp đồng mới', 'Add New Contract')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')}</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
+                        <SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
                         {farmerOptions.map((f) => (
@@ -355,7 +355,7 @@ export default function SmartContractsPage() {
 
                   {/* Contract ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã hợp đồng', 'Contract ID')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã hợp đồng', 'Contract ID')}</Label>
                     <Input
                       value={form.contractId}
                       onChange={(e) => setForm({ ...form, contractId: e.target.value })}
@@ -366,11 +366,11 @@ export default function SmartContractsPage() {
 
                   {/* Title */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Tiêu đề', 'Title')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Tiêu đề', 'Title')} *</Label>
                     <Input
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      placeholder={t('Hợp đồng xuất khẩu cà phê', 'Coffee export contract')}
+                      placeholder={t2('Hợp đồng xuất khẩu cà phê', 'Coffee export contract')}
                       className="rounded-xl border-input focus:border-primary"
                       required
                     />
@@ -378,75 +378,75 @@ export default function SmartContractsPage() {
 
                   {/* Description */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Mô tả', 'Description')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mô tả', 'Description')}</Label>
                     <Input
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      placeholder={t('Mô tả hợp đồng...', 'Contract description...')}
+                      placeholder={t2('Mô tả hợp đồng...', 'Contract description...')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Contract Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại HĐ', 'Contract Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại HĐ', 'Contract Type')}</Label>
                     <Select value={form.contractType} onValueChange={(v) => setForm({ ...form, contractType: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Sale">{t('Bán', 'Sale')}</SelectItem>
-                        <SelectItem value="Purchase">{t('Mua', 'Purchase')}</SelectItem>
-                        <SelectItem value="Processing">{t('Chế biến', 'Processing')}</SelectItem>
-                        <SelectItem value="Export">{t('Xuất khẩu', 'Export')}</SelectItem>
-                        <SelectItem value="Service">{t('Dịch vụ', 'Service')}</SelectItem>
+                        <SelectItem value="Sale">{t2('Bán', 'Sale')}</SelectItem>
+                        <SelectItem value="Purchase">{t2('Mua', 'Purchase')}</SelectItem>
+                        <SelectItem value="Processing">{t2('Chế biến', 'Processing')}</SelectItem>
+                        <SelectItem value="Export">{t2('Xuất khẩu', 'Export')}</SelectItem>
+                        <SelectItem value="Service">{t2('Dịch vụ', 'Service')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Status */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Trạng thái', 'Status')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Trạng thái', 'Status')}</Label>
                     <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Draft">{t('Nháp', 'Draft')}</SelectItem>
-                        <SelectItem value="Pending">{t('Chờ duyệt', 'Pending')}</SelectItem>
-                        <SelectItem value="Active">{t('Hiệu lực', 'Active')}</SelectItem>
-                        <SelectItem value="Completed">{t('Hoàn thành', 'Completed')}</SelectItem>
-                        <SelectItem value="Expired">{t('Hết hạn', 'Expired')}</SelectItem>
-                        <SelectItem value="Cancelled">{t('Hủy', 'Cancelled')}</SelectItem>
+                        <SelectItem value="Draft">{t2('Nháp', 'Draft')}</SelectItem>
+                        <SelectItem value="Pending">{t2('Chờ duyệt', 'Pending')}</SelectItem>
+                        <SelectItem value="Active">{t2('Hiệu lực', 'Active')}</SelectItem>
+                        <SelectItem value="Completed">{t2('Hoàn thành', 'Completed')}</SelectItem>
+                        <SelectItem value="Expired">{t2('Hết hạn', 'Expired')}</SelectItem>
+                        <SelectItem value="Cancelled">{t2('Hủy', 'Cancelled')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Party A */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Bên A', 'Party A')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Bên A', 'Party A')}</Label>
                     <Input
                       value={form.partyA}
                       onChange={(e) => setForm({ ...form, partyA: e.target.value })}
-                      placeholder={t('Công ty XYZ', 'XYZ Company')}
+                      placeholder={t2('Công ty XYZ', 'XYZ Company')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Party B */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Bên B', 'Party B')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Bên B', 'Party B')}</Label>
                     <Input
                       value={form.partyB}
                       onChange={(e) => setForm({ ...form, partyB: e.target.value })}
-                      placeholder={t('Nhà nhập khẩu ABC', 'ABC Importer')}
+                      placeholder={t2('Nhà nhập khẩu ABC', 'ABC Importer')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Quantity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số lượng (kg)', 'Quantity (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số lượng (kg)', 'Quantity (kg)')}</Label>
                     <Input
                       type="number"
                       value={form.quantityKg}
@@ -458,7 +458,7 @@ export default function SmartContractsPage() {
 
                   {/* Price per kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đơn giá/kg', 'Price/kg')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Đơn giá/kg', 'Price/kg')}</Label>
                     <Input
                       type="number"
                       value={form.pricePerKg}
@@ -470,7 +470,7 @@ export default function SmartContractsPage() {
 
                   {/* Total Value */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổng giá trị', 'Total Value')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tổng giá trị', 'Total Value')}</Label>
                     <Input
                       type="number"
                       value={form.totalValue}
@@ -481,7 +481,7 @@ export default function SmartContractsPage() {
 
                   {/* Currency */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tiền tệ', 'Currency')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tiền tệ', 'Currency')}</Label>
                     <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
                       <SelectTrigger className="rounded-xl border-input">
                         <SelectValue />
@@ -498,23 +498,23 @@ export default function SmartContractsPage() {
 
                   {/* Quality Grade */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Hạng chất lượng', 'Quality Grade')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Hạng chất lượng', 'Quality Grade')}</Label>
                     <Select value={form.qualityGrade} onValueChange={(v) => setForm({ ...form, qualityGrade: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn hạng', 'Select grade')} />
+                        <SelectValue placeholder={t2('Chọn hạng', 'Select grade')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Specialty">{t('Đặc sản', 'Specialty')}</SelectItem>
-                        <SelectItem value="Premium">{t('Cao cấp', 'Premium')}</SelectItem>
-                        <SelectItem value="Grade 1">{t('Hạng 1', 'Grade 1')}</SelectItem>
-                        <SelectItem value="Grade 2">{t('Hạng 2', 'Grade 2')}</SelectItem>
+                        <SelectItem value="Specialty">{t2('Đặc sản', 'Specialty')}</SelectItem>
+                        <SelectItem value="Premium">{t2('Cao cấp', 'Premium')}</SelectItem>
+                        <SelectItem value="Grade 1">{t2('Hạng 1', 'Grade 1')}</SelectItem>
+                        <SelectItem value="Grade 2">{t2('Hạng 2', 'Grade 2')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Delivery Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày giao hàng', 'Delivery Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày giao hàng', 'Delivery Date')}</Label>
                     <Input
                       type="date"
                       value={form.deliveryDate}
@@ -525,18 +525,18 @@ export default function SmartContractsPage() {
 
                   {/* Delivery Location */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Địa điểm giao', 'Delivery Location')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Địa điểm giao', 'Delivery Location')}</Label>
                     <Input
                       value={form.deliveryLocation}
                       onChange={(e) => setForm({ ...form, deliveryLocation: e.target.value })}
-                      placeholder={t('Cảng Cát Lái', 'Cat Lai Port')}
+                      placeholder={t2('Cảng Cát Lái', 'Cat Lai Port')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Effective Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày hiệu lực', 'Effective Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày hiệu lực', 'Effective Date')}</Label>
                     <Input
                       type="date"
                       value={form.effectiveDate}
@@ -547,7 +547,7 @@ export default function SmartContractsPage() {
 
                   {/* Expiry Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày hết hạn', 'Expiry Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày hết hạn', 'Expiry Date')}</Label>
                     <Input
                       type="date"
                       value={form.expiryDate}
@@ -558,22 +558,22 @@ export default function SmartContractsPage() {
 
                   {/* Terms */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Điều khoản', 'Terms')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điều khoản', 'Terms')}</Label>
                     <Input
                       value={form.terms}
                       onChange={(e) => setForm({ ...form, terms: e.target.value })}
-                      placeholder={t('Điều khoản hợp đồng...', 'Contract terms...')}
+                      placeholder={t2('Điều khoản hợp đồng...', 'Contract terms...')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ghi chú', 'Notes')}</Label>
                     <Input
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder={t('Ghi chú thêm...', 'Additional notes...')}
+                      placeholder={t2('Ghi chú thêm...', 'Additional notes...')}
                       className="rounded-xl border-input focus:border-primary"
                     />
                   </div>
@@ -582,7 +582,7 @@ export default function SmartContractsPage() {
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -592,10 +592,10 @@ export default function SmartContractsPage() {
                     {submitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t('Đang lưu...', 'Saving...')}
+                        {t2('Đang lưu...', 'Saving...')}
                       </>
                     ) : (
-                      editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                      editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -609,19 +609,19 @@ export default function SmartContractsPage() {
           <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
             <TabsList className="bg-muted rounded-xl h-8">
               <TabsTrigger value="all" className="text-[10px] data-[state=active]:bg-muted data-[state=active]:text-white rounded-lg px-2">
-                {t('Tất cả', 'All')}
+                {t2('Tất cả', 'All')}
               </TabsTrigger>
               <TabsTrigger value="Active" className="text-[10px] data-[state=active]:bg-green-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Hiệu lực', 'Active')}
+                {t2('Hiệu lực', 'Active')}
               </TabsTrigger>
               <TabsTrigger value="Pending" className="text-[10px] data-[state=active]:bg-yellow-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Chờ duyệt', 'Pending')}
+                {t2('Chờ duyệt', 'Pending')}
               </TabsTrigger>
               <TabsTrigger value="Completed" className="text-[10px] data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Hoàn thành', 'Completed')}
+                {t2('Hoàn thành', 'Completed')}
               </TabsTrigger>
               <TabsTrigger value="Expired" className="text-[10px] data-[state=active]:bg-red-600 data-[state=active]:text-white rounded-lg px-2">
-                {t('Hết hạn', 'Expired')}
+                {t2('Hết hạn', 'Expired')}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -630,7 +630,7 @@ export default function SmartContractsPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm hợp đồng...', 'Search contracts...')}
+              placeholder={t2('Tìm kiếm hợp đồng...', 'Search contracts...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -645,16 +645,16 @@ export default function SmartContractsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã HĐ', 'Contract ID')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Tiêu đề', 'Title')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Bên A', 'Party A')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Bên B', 'Party B')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Số lượng', 'Quantity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Giá trị', 'Total Value')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Chữ ký', 'Signed')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t('Thao tác', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Mã HĐ', 'Contract ID')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Tiêu đề', 'Title')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Bên A', 'Party A')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Bên B', 'Party B')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Số lượng', 'Quantity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Giá trị', 'Total Value')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Chữ ký', 'Signed')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">{t2('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -663,7 +663,7 @@ export default function SmartContractsPage() {
                       <td colSpan={10} className="px-4 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-muted-foreground">
                           <FileText className="w-10 h-10" />
-                          <p className="text-sm">{t('Chưa có hợp đồng nào', 'No contracts found')}</p>
+                          <p className="text-sm">{t2('Chưa có hợp đồng nào', 'No contracts found')}</p>
                         </div>
                       </td>
                     </tr>
@@ -693,7 +693,12 @@ export default function SmartContractsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <Badge className={`${statusColors[item.status || 'Draft'] || 'bg-gray-100 text-gray-600'} text-[10px] border-0`}>
-                            {item.status || 'Draft'}
+                            {item.status === 'Active' ? t2('Hiệu lực', 'Active') :
+                             item.status === 'Pending' ? t2('Chờ duyệt', 'Pending') :
+                             item.status === 'Completed' ? t2('Hoàn thành', 'Completed') :
+                             item.status === 'Expired' ? t2('Hết hạn', 'Expired') :
+                             item.status === 'Cancelled' ? t2('Hủy', 'Cancelled') :
+                             t2('Nháp', 'Draft')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 hidden lg:table-cell">
@@ -720,8 +725,11 @@ export default function SmartContractsPage() {
                                 B
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
-                              <Pencil className="w-3 h-3 text-muted-foreground" />
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/smart-contracts/${item.id}`)}>
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg hover:bg-muted" onClick={() => handleEdit(item)}>
+                                <Pencil className="w-3 h-3 text-muted-foreground" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">

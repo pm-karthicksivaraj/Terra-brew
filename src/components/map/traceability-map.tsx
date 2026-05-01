@@ -188,7 +188,7 @@ export function TraceabilityMap({
 
         // Tooltip
         marker.bindTooltip(`
-          <div style="font-family:'Space Mono',monospace;font-size:10px;min-width:120px;">
+          <div style="font-family:'Inter',system-ui,sans-serif;font-size:10px;min-width:120px;">
             <div style="font-weight:bold;margin-bottom:2px;">${loc.name}</div>
             <div style="color:#666;">${loc.stage}</div>
             ${loc.date ? `<div style="color:#999;margin-top:2px;">${new Date(loc.date).toLocaleDateString()}</div>` : ''}
@@ -260,7 +260,7 @@ export function TraceabilityMap({
           .addTo(map)
 
         marker.bindTooltip(`
-          <div style="font-family:'Space Mono',monospace;font-size:10px;min-width:120px;">
+          <div style="font-family:'Inter',system-ui,sans-serif;font-size:10px;min-width:120px;">
             <div style="font-weight:bold;margin-bottom:2px;">${loc.name}</div>
             <div style="color:#666;">${loc.stage}</div>
             ${loc.date ? `<div style="color:#999;margin-top:2px;">${new Date(loc.date).toLocaleDateString()}</div>` : ''}

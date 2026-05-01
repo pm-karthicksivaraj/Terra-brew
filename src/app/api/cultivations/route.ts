@@ -8,8 +8,23 @@ export async function GET(req: Request) {
   if (authError) return authError
 
   try {
-    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
     const tenantId = user!.tenantId!
+    const url = new URL(req.url)
+    const idParam = url.searchParams.get('id')
+
+    if (idParam) {
+      const item = await db.cultivation.findFirst({
+        where: { id: idParam, tenantId, isActive: true },
+        include: {
+          farmer: { select: { id: true, fullName: true, farmerCode: true, province: true, contactNumber: true } },
+          farmLand: { select: { id: true, farmName: true, plotBlockId: true, altitude: true } },
+        },
+      })
+      if (!item) return apiError('Cultivation not found', 404)
+      return apiResponse({ data: item })
+    }
+
+    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
 
     const where: any = { tenantId, isActive: true }
     if (search) {

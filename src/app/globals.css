@@ -1,109 +1,107 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-space-mono: 'Space Mono', monospace;
+  /* ── Modern Professional Light Theme ── */
+  /* Clean white backgrounds, deep dark text, rich teal primary for excellent contrast */
 
-  /* ── Premium Coffee Light Theme ── */
-  /* Warm cream backgrounds, rich brown text, vibrant amber/copper accent */
-  --background: oklch(0.98 0.005 75);
-  --foreground: oklch(0.22 0.05 50);
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222 47% 11%);
 
-  --card: oklch(0.995 0.003 75);
-  --card-foreground: oklch(0.22 0.05 50);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222 47% 11%);
 
-  --popover: oklch(0.995 0.003 75);
-  --popover-foreground: oklch(0.22 0.05 50);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222 47% 11%);
 
-  /* Vibrant amber/copper accent — HIGHLY visible on light backgrounds */
-  --primary: oklch(0.52 0.17 45);
-  --primary-foreground: oklch(0.98 0.005 75);
+  /* Rich teal primary - VERY visible on white, professional and modern */
+  --primary: hsl(170 56% 36%);
+  --primary-foreground: hsl(0 0% 100%);
 
-  --secondary: oklch(0.93 0.015 75);
-  --secondary-foreground: oklch(0.35 0.06 50);
+  --secondary: hsl(220 14% 96%);
+  --secondary-foreground: hsl(222 47% 11%);
 
-  --muted: oklch(0.94 0.01 75);
-  --muted-foreground: oklch(0.45 0.04 50);
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 9% 46%);
 
-  --accent: oklch(0.91 0.02 75);
-  --accent-foreground: oklch(0.35 0.06 50);
+  --accent: hsl(220 14% 92%);
+  --accent-foreground: hsl(222 47% 11%);
 
-  --destructive: oklch(0.55 0.24 25);
-  --destructive-foreground: oklch(0.98 0.005 75);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  --border: oklch(0.88 0.015 75);
-  --input: oklch(0.88 0.015 75);
-  --ring: oklch(0.52 0.17 45);
+  --border: hsl(220 13% 85%);
+  --input: hsl(220 13% 85%);
+  --ring: hsl(170 56% 36%);
 
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  /* Sidebar — warm latte tones */
-  --sidebar-background: oklch(0.965 0.01 75);
-  --sidebar-foreground: oklch(0.30 0.06 50);
-  --sidebar-primary: oklch(0.52 0.17 45);
-  --sidebar-primary-foreground: oklch(0.98 0.005 75);
-  --sidebar-accent: oklch(0.91 0.02 75);
-  --sidebar-accent-foreground: oklch(0.30 0.06 50);
-  --sidebar-border: oklch(0.88 0.015 75);
-  --sidebar-ring: oklch(0.52 0.17 45);
+  /* Sidebar — clean professional tones */
+  --sidebar-background: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(222 47% 11%);
+  --sidebar-primary: hsl(170 56% 36%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(170 40% 94%);
+  --sidebar-accent-foreground: hsl(222 47% 11%);
+  --sidebar-border: hsl(220 13% 88%);
+  --sidebar-ring: hsl(170 56% 36%);
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-1: hsl(170 56% 36%);
+  --chart-2: hsl(220 70% 50%);
+  --chart-3: hsl(38 92% 50%);
+  --chart-4: hsl(280 65% 58%);
+  --chart-5: hsl(0 84% 60%);
 }
 
 .dark {
-  /* ── Premium Espresso Dark Theme ── */
-  /* Deep espresso backgrounds, warm latte text, golden accent */
-  --background: oklch(0.15 0.025 50);
-  --foreground: oklch(0.93 0.008 75);
+  /* ── Modern Professional Dark Theme ── */
+  /* Deep slate backgrounds, bright text, vibrant teal primary that pops on dark */
 
-  --card: oklch(0.19 0.025 50);
-  --card-foreground: oklch(0.93 0.008 75);
+  --background: hsl(222 47% 6%);
+  --foreground: hsl(210 40% 98%);
 
-  --popover: oklch(0.19 0.025 50);
-  --popover-foreground: oklch(0.93 0.008 75);
+  --card: hsl(222 47% 9%);
+  --card-foreground: hsl(210 40% 98%);
 
-  /* Golden amber accent — stands out beautifully on dark */
-  --primary: oklch(0.75 0.16 55);
-  --primary-foreground: oklch(0.15 0.025 50);
+  --popover: hsl(222 47% 9%);
+  --popover-foreground: hsl(210 40% 98%);
 
-  --secondary: oklch(0.24 0.025 50);
-  --secondary-foreground: oklch(0.90 0.01 75);
+  /* Bright teal primary - POPS on dark backgrounds, very high contrast */
+  --primary: hsl(170 70% 55%);
+  --primary-foreground: hsl(222 47% 6%);
 
-  --muted: oklch(0.24 0.02 50);
-  --muted-foreground: oklch(0.65 0.025 75);
+  --secondary: hsl(222 40% 14%);
+  --secondary-foreground: hsl(210 40% 98%);
 
-  --accent: oklch(0.26 0.03 50);
-  --accent-foreground: oklch(0.90 0.01 75);
+  --muted: hsl(222 33% 14%);
+  --muted-foreground: hsl(215 20% 65%);
 
-  --destructive: oklch(0.65 0.22 20);
-  --destructive-foreground: oklch(0.95 0.01 75);
+  --accent: hsl(222 40% 16%);
+  --accent-foreground: hsl(210 40% 98%);
 
-  --border: oklch(0.30 0.025 50);
-  --input: oklch(0.30 0.025 50);
-  --ring: oklch(0.75 0.16 55);
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  /* Sidebar — deep roasted espresso */
-  --sidebar-background: oklch(0.13 0.03 50);
-  --sidebar-foreground: oklch(0.88 0.01 75);
-  --sidebar-primary: oklch(0.75 0.16 55);
-  --sidebar-primary-foreground: oklch(0.13 0.03 50);
-  --sidebar-accent: oklch(0.23 0.03 50);
-  --sidebar-accent-foreground: oklch(0.88 0.01 75);
-  --sidebar-border: oklch(0.27 0.025 50);
-  --sidebar-ring: oklch(0.75 0.16 55);
+  --border: hsl(222 33% 18%);
+  --input: hsl(222 33% 18%);
+  --ring: hsl(170 70% 55%);
 
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  /* Sidebar — deep slate */
+  --sidebar-background: hsl(222 47% 8%);
+  --sidebar-foreground: hsl(210 40% 98%);
+  --sidebar-primary: hsl(170 70% 55%);
+  --sidebar-primary-foreground: hsl(222 47% 6%);
+  --sidebar-accent: hsl(222 40% 14%);
+  --sidebar-accent-foreground: hsl(210 40% 98%);
+  --sidebar-border: hsl(222 33% 16%);
+  --sidebar-ring: hsl(170 70% 55%);
+
+  --chart-1: hsl(170 70% 55%);
+  --chart-2: hsl(217 91% 73%);
+  --chart-3: hsl(38 92% 50%);
+  --chart-4: hsl(280 65% 70%);
+  --chart-5: hsl(0 84% 65%);
 }
 
 @theme inline {
@@ -143,8 +141,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-space-mono);
-  --font-mono: var(--font-space-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   /* Coffee color scale — warm brown palette for login/theme pages */
   --color-coffee-50: #faf6f1;
@@ -166,51 +164,25 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-space-mono), monospace;
-    transition: background-color 0.3s, color 0.3s;
+    font-family: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+    line-height: 1.5;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
-/* ── Premium Button Styles ── */
-/* Ensure primary buttons are always visible with strong contrast */
+/* ── Button visibility enhancements ── */
 @layer components {
-  .btn-primary-gradient {
-    background: linear-gradient(135deg, oklch(0.52 0.17 45), oklch(0.48 0.15 35));
-    color: oklch(0.98 0.005 75);
-    box-shadow: 0 1px 3px oklch(0.4 0.1 45 / 0.3);
-    transition: all 0.2s ease;
-  }
-  .btn-primary-gradient:hover {
-    background: linear-gradient(135deg, oklch(0.57 0.17 45), oklch(0.52 0.15 35));
-    box-shadow: 0 4px 12px oklch(0.4 0.1 45 / 0.35);
-    transform: translateY(-1px);
-  }
-  .btn-primary-gradient:active {
-    transform: translateY(0);
-  }
-
-  .dark .btn-primary-gradient {
-    background: linear-gradient(135deg, oklch(0.75 0.16 55), oklch(0.70 0.14 45));
-    color: oklch(0.15 0.025 50);
-    box-shadow: 0 1px 3px oklch(0.75 0.16 55 / 0.25);
-  }
-  .dark .btn-primary-gradient:hover {
-    background: linear-gradient(135deg, oklch(0.78 0.16 55), oklch(0.73 0.14 45));
-    box-shadow: 0 4px 12px oklch(0.75 0.16 55 / 0.3);
-  }
-}
-
-/* ── Button visibility fixes ── */
-/* Ensure ghost/outline buttons are always distinguishable as interactive elements */
-@layer components {
-  /* Ghost buttons: subtle ring/underline hint */
+  /* Ghost buttons: subtle background so they're recognizable as buttons */
   button[data-slot="button"].text-foreground,
   button[data-slot="button"].text-muted-foreground {
     min-width: 32px;
     min-height: 32px;
   }
 
-  /* Outline variant: ensure border is clearly visible in both themes */
+  /* Outline variant: ensure border is clearly visible */
   button[data-slot="button"]:not(.bg-primary):not(.bg-destructive):not(.bg-secondary).border-border {
     border-width: 1.5px;
   }
@@ -225,22 +197,21 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.7 0.02 63.4);
+  background: hsl(220 10% 70%);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.5 0.02 63.4);
+  background: hsl(220 10% 50%);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: oklch(0.35 0.02 50);
+  background: hsl(222 33% 30%);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.02 50);
+  background: hsl(222 33% 40%);
 }
 
-/* ═══ Premium Animations ═══ */
+/* ── Animations ── */
 
-/* Login Page Keyframes */
 @keyframes loginFloat {
   0%, 100% { transform: translateY(0) translateX(0); }
   25% { transform: translateY(-8px) translateX(4px); }
@@ -263,7 +234,6 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Super Admin Login Keyframes */
 @keyframes saFloat {
   0%, 100% { transform: translateY(0) translateX(0); }
   33% { transform: translateY(-6px) translateX(3px); }
@@ -280,9 +250,6 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-/* ── Premium micro-interactions ── */
-
-/* Landing Page Keyframes */
 @keyframes beanFloat {
   0%, 100% { transform: translateY(0) translateX(0); }
   25% { transform: translateY(-15px) translateX(8px); }
@@ -311,13 +278,13 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.52 0.17 45 / 0.4); }
-  50% { box-shadow: 0 0 0 8px oklch(0.52 0.17 45 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(170 56% 36% / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(170 56% 36% / 0); }
 }
 
 @keyframes pulse-glow-dark {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.75 0.16 55 / 0.4); }
-  50% { box-shadow: 0 0 0 8px oklch(0.75 0.16 55 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(170 70% 55% / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(170 70% 55% / 0); }
 }
 
 @keyframes slideInRight {
@@ -333,6 +300,59 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes tracePulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes verifyFloat {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-12px) translateX(6px); }
+  50% { transform: translateY(-4px) translateX(-8px); }
+  75% { transform: translateY(-16px) translateX(4px); }
+}
+
+@keyframes verifyPulse {
+  0%, 100% { transform: scale(1); opacity: 0.1; }
+  50% { transform: scale(1.15); opacity: 0.15; }
+}
+
+@keyframes verifyPulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes verifyFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes verifyScaleIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes verifySlideLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes verifySlideRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes verifySlideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes verifySpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ── Animation utility classes ── */
@@ -367,10 +387,10 @@
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px oklch(0.4 0.1 45 / 0.12);
+  box-shadow: 0 8px 25px hsl(170 56% 36% / 0.08);
 }
 .dark .card-hover:hover {
-  box-shadow: 0 8px 25px oklch(0.75 0.16 55 / 0.08);
+  box-shadow: 0 8px 25px hsl(170 70% 55% / 0.06);
 }
 
 /* ── Table row hover ── */
@@ -378,10 +398,10 @@
   transition: background-color 0.15s ease;
 }
 .table-row-hover:hover {
-  background-color: oklch(0.94 0.015 75);
+  background-color: hsl(220 14% 96%);
 }
 .dark .table-row-hover:hover {
-  background-color: oklch(0.24 0.025 50);
+  background-color: hsl(222 33% 14%);
 }
 
 /* ── Focus ring ── */
@@ -390,13 +410,7 @@
   outline-offset: 2px;
 }
 
-/* ── Traceability map pulse animation ── */
-@keyframes tracePulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
-}
-
+/* ── Traceability map ── */
 .trace-marker {
   background: none !important;
   border: none !important;
@@ -404,18 +418,18 @@
 
 /* ── Leaflet overrides ── */
 .leaflet-container {
-  font-family: var(--font-space-mono), monospace;
-  border-radius: 16px;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  border-radius: 12px;
 }
 
 .leaflet-tooltip {
-  font-family: var(--font-space-mono), monospace;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   border-radius: 8px;
   padding: 6px 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .farm-land-tooltip {
-  font-family: var(--font-space-mono), monospace;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-size: 10px;
 }

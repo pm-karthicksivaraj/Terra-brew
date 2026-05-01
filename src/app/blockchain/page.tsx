@@ -9,6 +9,7 @@ import {
   Anchor, ExternalLink, Link as LinkIcon, Box, Calendar, Network,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -63,7 +64,7 @@ function truncateHash(hash: string, len = 8): string {
 export default function BlockchainPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [batchId, setBatchId] = useState('')
   const [blocks, setBlocks] = useState<HashChainBlock[]>([])
   const [verification, setVerification] = useState<VerificationResult | null>(null)
@@ -76,7 +77,6 @@ export default function BlockchainPage() {
   const [anchorStatus, setAnchorStatus] = useState<{ anchored: boolean; anchor: AnchorData | null } | null>(null)
   const [showAnchorDialog, setShowAnchorDialog] = useState(false)
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const checkAnchorStatus = useCallback(async (batch: string) => {
     try {
@@ -92,7 +92,7 @@ export default function BlockchainPage() {
 
   const fetchChain = useCallback(async () => {
     if (!batchId.trim()) {
-      toast.error(t('Nhập mã lô', 'Enter a Batch ID'))
+      toast.error(t2('Nhập mã lô', 'Enter a Batch ID'))
       return
     }
     try {
@@ -107,12 +107,12 @@ export default function BlockchainPage() {
         // Check anchor status after blocks are loaded
         checkAnchorStatus(batchId.trim())
       } else {
-        toast.error(data.error || t('Lỗi khi tải', 'Error loading'))
+        toast.error(data.error || t2('Lỗi khi tải', 'Error loading'))
         setBlocks([])
         setVerification(null)
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
       setBlocks([])
       setVerification(null)
     } finally {
@@ -130,13 +130,13 @@ export default function BlockchainPage() {
         const v: VerificationResult = data.data.verification
         setVerification(v)
         if (v.valid) {
-          toast.success(t('Chuỗi hợp lệ! ✓', 'Chain verified! ✓'))
+          toast.success(t2('Chuỗi hợp lệ! ✓', 'Chain verified! ✓'))
         } else {
           toast.error(t(`Chuỗi bị đứt tại block ${v.brokenAt}`, `Chain broken at block ${v.brokenAt}`))
         }
       }
     } catch {
-      toast.error(t('Lỗi xác minh', 'Verification error'))
+      toast.error(t2('Lỗi xác minh', 'Verification error'))
     } finally {
       setVerifying(false)
     }
@@ -153,14 +153,14 @@ export default function BlockchainPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Đã neo trên chuỗi thành công!', 'Anchored on-chain successfully!'))
+        toast.success(t2('Đã neo trên chuỗi thành công!', 'Anchored on-chain successfully!'))
         // Refresh anchor status
         checkAnchorStatus(batchId.trim())
       } else {
-        toast.error(data.error || t('Lỗi khi neo trên chuỗi', 'Anchoring error'))
+        toast.error(data.error || t2('Lỗi khi neo trên chuỗi', 'Anchoring error'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối khi neo', 'Connection error during anchoring'))
+      toast.error(t2('Lỗi kết nối khi neo', 'Connection error during anchoring'))
     } finally {
       setAnchoring(false)
       setShowAnchorDialog(false)
@@ -179,7 +179,7 @@ export default function BlockchainPage() {
 
   if (status === 'loading') {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primaryflex items-center justify-center">
@@ -187,7 +187,7 @@ export default function BlockchainPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -201,15 +201,15 @@ export default function BlockchainPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
             <Link2 className="w-5 h-5 text-foreground" />
-            {t('Xem Chuỗi Blockchain', 'Blockchain Hash Chain Viewer')}
+            {t2('Xem Chuỗi Blockchain', 'Blockchain Hash Chain Viewer')}
           </h2>
-          <p className="text-sm text-foreground">{t('Truy xuất nguồn gốc bằng chuỗi băm', 'Trace origin with hash chain verification')}</p>
+          <p className="text-sm text-foreground">{t2('Truy xuất nguồn gốc bằng chuỗi băm', 'Trace origin with hash chain verification')}</p>
         </div>
 
         {/* Search */}
@@ -220,7 +220,7 @@ export default function BlockchainPage() {
               value={batchId}
               onChange={(e) => setBatchId(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('Nhập mã lô (Batch ID)...', 'Enter Batch ID...')}
+              placeholder={t2('Nhập mã lô (Batch ID)...', 'Enter Batch ID...')}
               className="pl-9 rounded-xl border-border focus:border-border bg-background"
             />
           </div>
@@ -230,7 +230,7 @@ export default function BlockchainPage() {
             className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            {t('Tìm kiếm', 'Search')}
+            {t2('Tìm kiếm', 'Search')}
           </Button>
           {blocks.length > 0 && (
             <Button
@@ -240,7 +240,7 @@ export default function BlockchainPage() {
               className="gap-2 rounded-xl border-border text-foreground hover:bg-muted"
             >
               {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-              {t('Xác minh chuỗi', 'Verify Chain')}
+              {t2('Xác minh chuỗi', 'Verify Chain')}
             </Button>
           )}
           {showAnchorButton && (
@@ -251,7 +251,7 @@ export default function BlockchainPage() {
               className="gap-2 rounded-xl border-amber-400 text-amber-700 hover:bg-amber-50 bg-amber-50/50"
             >
               {anchoring ? <Loader2 className="w-4 h-4 animate-spin" /> : <Anchor className="w-4 h-4" />}
-              {t('Neo trên chuỗi', 'Anchor On-Chain')}
+              {t2('Neo trên chuỗi', 'Anchor On-Chain')}
             </Button>
           )}
         </div>
@@ -271,8 +271,8 @@ export default function BlockchainPage() {
               <div>
                 <p className={`text-sm font-medium ${verification.valid ? 'text-green-800' : 'text-red-800'}`}>
                   {verification.valid
-                    ? t('Chuỗi hợp lệ!', 'Chain Verified!')
-                    : t('Chuỗi bị đứt!', 'Chain Broken!')}
+                    ? t2('Chuỗi hợp lệ!', 'Chain Verified!')
+                    : t2('Chuỗi bị đứt!', 'Chain Broken!')}
                 </p>
                 <p className={`text-xs ${verification.valid ? 'text-green-600' : 'text-red-600'}`}>
                   {verification.message}
@@ -292,10 +292,10 @@ export default function BlockchainPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-green-800">
-                        {t('Đã neo trên chuỗi', 'Anchored On-Chain')}
+                        {t2('Đã neo trên chuỗi', 'Anchored On-Chain')}
                       </p>
                       <p className="text-xs text-green-600">
-                        {t('Dữ liệu đã được xác nhận trên blockchain', 'Data has been confirmed on the blockchain')}
+                        {t2('Dữ liệu đã được xác nhận trên blockchain', 'Data has been confirmed on the blockchain')}
                       </p>
                     </div>
                     <Badge className="bg-green-100 text-green-700 text-[10px] border-0 ml-auto">
@@ -308,7 +308,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <LinkIcon className="w-3 h-3" />
-                          {t('Tx Hash', 'Tx Hash')}
+                          {t2('Tx Hash', 'Tx Hash')}
                         </p>
                         <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
                           {truncateHash(anchorStatus.anchor.txHash, 14)}
@@ -320,7 +320,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <Box className="w-3 h-3" />
-                          {t('Merkle Root', 'Merkle Root')}
+                          {t2('Merkle Root', 'Merkle Root')}
                         </p>
                         <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
                           {truncateHash(anchorStatus.anchor.merkleRoot, 14)}
@@ -332,7 +332,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <Box className="w-3 h-3" />
-                          {t('Số khối', 'Block Number')}
+                          {t2('Số khối', 'Block Number')}
                         </p>
                         <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1">
                           {anchorStatus.anchor.blockNumber.toLocaleString()}
@@ -344,7 +344,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <Network className="w-3 h-3" />
-                          {t('Mạng', 'Network')}
+                          {t2('Mạng', 'Network')}
                         </p>
                         <p className="text-[10px] text-green-800 bg-green-100/60 rounded-lg px-2 py-1 capitalize">
                           {anchorStatus.anchor.network}
@@ -356,7 +356,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {t('Thời gian neo', 'Anchored At')}
+                          {t2('Thời gian neo', 'Anchored At')}
                         </p>
                         <p className="text-[10px] text-green-800 bg-green-100/60 rounded-lg px-2 py-1">
                           {new Date(anchorStatus.anchor.anchoredAt).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US', {
@@ -374,7 +374,7 @@ export default function BlockchainPage() {
                       <div className="space-y-0.5">
                         <p className="text-[10px] font-bold text-green-600 uppercase flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
-                          {t('Băm khối neo', 'Anchor Block Hash')}
+                          {t2('Băm khối neo', 'Anchor Block Hash')}
                         </p>
                         <p className="text-[10px] text-green-800 font-mono bg-green-100/60 rounded-lg px-2 py-1 truncate">
                           {truncateHash(anchorStatus.anchor.anchorBlockHash, 14)}
@@ -390,7 +390,7 @@ export default function BlockchainPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-amber-800">
-                      {t('Chưa được neo trên chuỗi', 'Not yet anchored on-chain')}
+                      {t2('Chưa được neo trên chuỗi', 'Not yet anchored on-chain')}
                     </p>
                     <p className="text-xs text-amber-600">
                       {t('Dữ liệu chuỗi băm chưa được xác nhận trên blockchain. Nhấn "Neo trên chuỗi" để xác nhận.', 'Hash chain data has not been confirmed on the blockchain. Click "Anchor On-Chain" to confirm.')}
@@ -406,7 +406,7 @@ export default function BlockchainPage() {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-foreground">
                 <Anchor className="w-5 h-5 text-amber-600" />
-                {t('Xác nhận neo trên chuỗi', 'Confirm On-Chain Anchoring')}
+                {t2('Xác nhận neo trên chuỗi', 'Confirm On-Chain Anchoring')}
               </AlertDialogTitle>
               <AlertDialogDescription className="text-foreground">
                 {t(
@@ -416,12 +416,12 @@ export default function BlockchainPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="my-2 p-3 rounded-xl bg-muted border border-border">
-              <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t('Mã lô', 'Batch ID')}</p>
+              <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t2('Mã lô', 'Batch ID')}</p>
               <p className="text-sm text-foreground font-mono font-bold">{batchId}</p>
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel className="rounded-xl border-border text-foreground hover:bg-muted">
-                {t('Hủy', 'Cancel')}
+                {t2('Hủy', 'Cancel')}
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleAnchor}
@@ -431,12 +431,12 @@ export default function BlockchainPage() {
                 {anchoring ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    {t('Đang neo...', 'Anchoring...')}
+                    {t2('Đang neo...', 'Anchoring...')}
                   </>
                 ) : (
                   <>
                     <Anchor className="w-4 h-4" />
-                    {t('Xác nhận neo', 'Confirm Anchor')}
+                    {t2('Xác nhận neo', 'Confirm Anchor')}
                   </>
                 )}
               </AlertDialogAction>
@@ -452,7 +452,7 @@ export default function BlockchainPage() {
                 <Link2 className="w-10 h-10" />
               </div>
               <p className="text-sm text-center max-w-md">
-                {t('Nhập mã lô (Batch ID) để xem chuỗi blockchain', 'Enter a Batch ID to view its blockchain record')}
+                {t2('Nhập mã lô (Batch ID) để xem chuỗi blockchain', 'Enter a Batch ID to view its blockchain record')}
               </p>
             </div>
           </Card>
@@ -475,7 +475,7 @@ export default function BlockchainPage() {
           <div className="flex items-center justify-center py-20">
             <div className="flex items-center gap-3 text-foreground">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">{t('Đang tải chuỗi...', 'Loading chain...')}</span>
+              <span className="text-sm">{t2('Đang tải chuỗi...', 'Loading chain...')}</span>
             </div>
           </div>
         )}
@@ -533,9 +533,9 @@ export default function BlockchainPage() {
                             })}
                           </span>
                           {isVerified ? (
-                            <Badge className="bg-green-100 text-green-700 text-[10px] border-0">{t('Đã xác minh', 'Verified')}</Badge>
+                            <Badge className="bg-green-100 text-green-700 text-[10px] border-0">{t2('Đã xác minh', 'Verified')}</Badge>
                           ) : (
-                            <Badge className="bg-red-100 text-red-700 text-[10px] border-0">{t('Lỗi', 'Broken')}</Badge>
+                            <Badge className="bg-red-100 text-red-700 text-[10px] border-0">{t2('Lỗi', 'Broken')}</Badge>
                           )}
                         </div>
                       </div>
@@ -545,7 +545,7 @@ export default function BlockchainPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                           {/* Data Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm dữ liệu', 'Data Hash')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t2('Băm dữ liệu', 'Data Hash')}</p>
                             <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate">
                               {truncateHash(block.dataHash, 12)}
                             </p>
@@ -553,7 +553,7 @@ export default function BlockchainPage() {
 
                           {/* Previous Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm trước', 'Previous Hash')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t2('Băm trước', 'Previous Hash')}</p>
                             <p className={`text-[10px] font-mono rounded-lg px-2 py-1 truncate ${
                               block.blockIndex === 0 ? 'text-foreground bg-muted' : 'text-foreground bg-muted'
                             }`}>
@@ -563,7 +563,7 @@ export default function BlockchainPage() {
 
                           {/* Block Hash */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Băm khối', 'Block Hash')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t2('Băm khối', 'Block Hash')}</p>
                             <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate font-bold">
                               {truncateHash(block.blockHash, 12)}
                             </p>
@@ -571,7 +571,7 @@ export default function BlockchainPage() {
 
                           {/* Recorded By */}
                           <div className="space-y-0.5">
-                            <p className="text-[10px] font-bold text-foreground uppercase">{t('Ghi bởi', 'Recorded By')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase">{t2('Ghi bởi', 'Recorded By')}</p>
                             <p className="text-[10px] text-foreground font-mono bg-muted rounded-lg px-2 py-1 truncate">
                               {block.recordedBy ? truncateHash(block.recordedBy, 6) : '-'}
                             </p>
@@ -581,7 +581,7 @@ export default function BlockchainPage() {
                         {/* Data content (collapsible) */}
                         {block.data && (
                           <div className="mt-3 pt-2 border-t border-border">
-                            <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t('Dữ liệu', 'Data')}</p>
+                            <p className="text-[10px] font-bold text-foreground uppercase mb-1">{t2('Dữ liệu', 'Data')}</p>
                             <p className="text-[10px] text-foreground font-mono bg-muted/50 rounded-lg px-2 py-1.5 break-all max-h-20 overflow-y-auto">
                               {block.data.length > 500 ? block.data.slice(0, 500) + '...' : block.data}
                             </p>
@@ -610,7 +610,7 @@ export default function BlockchainPage() {
                       <div>
                         <p className={`text-sm font-bold ${verification.valid ? 'text-green-800' : 'text-red-800'}`}>
                           {verification.valid
-                            ? t('Toàn bộ chuỗi đã được xác minh', 'Entire chain verified successfully')
+                            ? t2('Toàn bộ chuỗi đã được xác minh', 'Entire chain verified successfully')
                             : t('Chuỗi có lỗi tại block #' + verification.brokenAt, 'Chain broken at block #' + verification.brokenAt)}
                         </p>
                         <p className="text-xs text-foreground">
@@ -619,7 +619,7 @@ export default function BlockchainPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-foreground">{t('Mã lô', 'Batch ID')}</p>
+                      <p className="text-[10px] text-foreground">{t2('Mã lô', 'Batch ID')}</p>
                       <p className="text-xs text-foreground font-mono font-bold">{batchId}</p>
                     </div>
                   </div>

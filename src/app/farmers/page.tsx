@@ -9,6 +9,7 @@ import {
   Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -48,7 +49,7 @@ interface Farmer {
 export default function FarmersPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [farmers, setFarmers] = useState<Farmer[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -59,7 +60,6 @@ export default function FarmersPage() {
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Form state
   const [form, setForm] = useState({
@@ -149,15 +149,15 @@ export default function FarmersPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Tạo nông dân thành công!', 'Farmer created!'))
+        toast.success(t2('Tạo nông dân thành công!', 'Farmer created!'))
         setDialogOpen(false)
         resetForm()
         fetchFarmers()
       } else {
-        toast.error(data.error || t('Lỗi khi tạo nông dân', 'Error creating farmer'))
+        toast.error(data.error || t2('Lỗi khi tạo nông dân', 'Error creating farmer'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -167,7 +167,7 @@ export default function FarmersPage() {
 
   if (status === 'loading' || (loading && farmers.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function FarmersPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -184,14 +184,14 @@ export default function FarmersPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Users className="w-5 h-5 text-foreground" />
-              {t('Quản lý Nông dân', 'Farmer Management')}
+              {t2('Quản lý Nông dân', 'Farmer Management')}
             </h2>
             <p className="text-sm text-foreground">{t(`Tổng số: ${total} nông dân`, `Total: ${total} farmers`)}</p>
           </div>
@@ -203,25 +203,25 @@ export default function FarmersPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm nông dân mới', 'Add New Farmer')}
+                {t2('Thêm nông dân mới', 'Add New Farmer')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  {editingFarmer ? t('Sửa thông tin nông dân', 'Edit Farmer') : t('Thêm nông dân mới', 'Add New Farmer')}
+                  {editingFarmer ? t2('Sửa thông tin nông dân', 'Edit Farmer') : t2('Thêm nông dân mới', 'Add New Farmer')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* FullName */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Họ và tên', 'Full Name')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Họ và tên', 'Full Name')} *</Label>
                     <Input
                       value={form.fullName}
                       onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                      placeholder={t('Nhập họ và tên', 'Enter full name')}
+                      placeholder={t2('Nhập họ và tên', 'Enter full name')}
                       className="rounded-xl border-border focus:border-border"
                       required
                     />
@@ -229,7 +229,7 @@ export default function FarmersPage() {
 
                   {/* Contact Number */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số điện thoại', 'Contact Number')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Số điện thoại', 'Contact Number')} *</Label>
                     <Input
                       value={form.contactNumber}
                       onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
@@ -241,7 +241,7 @@ export default function FarmersPage() {
 
                   {/* Email */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">Email</Label>
+                    <Label className="text-xs text-foreground">{t2('Email', 'Email')}</Label>
                     <Input
                       type="email"
                       value={form.email}
@@ -253,22 +253,22 @@ export default function FarmersPage() {
 
                   {/* Gender */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Giới tính', 'Gender')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Giới tính', 'Gender')}</Label>
                     <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
                       <SelectTrigger className="rounded-xl border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Male">{t('Nam', 'Male')}</SelectItem>
-                        <SelectItem value="Female">{t('Nữ', 'Female')}</SelectItem>
-                        <SelectItem value="Other">{t('Khác', 'Other')}</SelectItem>
+                        <SelectItem value="Male">{t2('Nam', 'Male')}</SelectItem>
+                        <SelectItem value="Female">{t2('Nữ', 'Female')}</SelectItem>
+                        <SelectItem value="Other">{t2('Khác', 'Other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Age */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tuổi', 'Age')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tuổi', 'Age')}</Label>
                     <Input
                       type="number"
                       value={form.age}
@@ -280,29 +280,29 @@ export default function FarmersPage() {
 
                   {/* Province */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tỉnh/Thành phố', 'Province')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tỉnh/Thành phố', 'Province')}</Label>
                     <Input
                       value={form.province}
                       onChange={(e) => setForm({ ...form, province: e.target.value })}
-                      placeholder={t('Lâm Đồng', 'Lam Dong')}
+                      placeholder={t2('Lâm Đồng', 'Lam Dong')}
                       className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* District */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Quận/Huyện', 'District')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Quận/Huyện', 'District')}</Label>
                     <Input
                       value={form.district}
                       onChange={(e) => setForm({ ...form, district: e.target.value })}
-                      placeholder={t('Đà Lạt', 'Da Lat')}
+                      placeholder={t2('Đà Lạt', 'Da Lat')}
                       className="rounded-xl border-border focus:border-border"
                     />
                   </div>
 
                   {/* Commune */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Xã/Phường', 'Commune')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Xã/Phường', 'Commune')}</Label>
                     <Input
                       value={form.commune}
                       onChange={(e) => setForm({ ...form, commune: e.target.value })}
@@ -312,7 +312,7 @@ export default function FarmersPage() {
 
                   {/* Village */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Thôn/Bản', 'Village')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Thôn/Bản', 'Village')}</Label>
                     <Input
                       value={form.village}
                       onChange={(e) => setForm({ ...form, village: e.target.value })}
@@ -322,7 +322,7 @@ export default function FarmersPage() {
 
                   {/* National ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số CMND/CCCD', 'National ID')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số CMND/CCCD', 'National ID')}</Label>
                     <Input
                       value={form.nationalIdNo}
                       onChange={(e) => setForm({ ...form, nationalIdNo: e.target.value })}
@@ -333,7 +333,7 @@ export default function FarmersPage() {
 
                   {/* Years of Experience */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Kinh nghiệm (năm)', 'Experience (years)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Kinh nghiệm (năm)', 'Experience (years)')}</Label>
                     <Input
                       type="number"
                       value={form.yearsOfFarmingExperience}
@@ -345,7 +345,7 @@ export default function FarmersPage() {
 
                   {/* Credit Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Điểm tín dụng', 'Credit Score')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điểm tín dụng', 'Credit Score')}</Label>
                     <Input
                       type="number"
                       value={form.creditScore}
@@ -358,11 +358,11 @@ export default function FarmersPage() {
 
                   {/* Cooperative */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Hợp tác xã', 'Cooperative')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Hợp tác xã', 'Cooperative')}</Label>
                     <Input
                       value={form.cooperative}
                       onChange={(e) => setForm({ ...form, cooperative: e.target.value })}
-                      placeholder={t('HTX Cà phê Metrang', 'Metrang Coffee Co-op')}
+                      placeholder={t2('HTX Cà phê Metrang', 'Metrang Coffee Co-op')}
                       className="rounded-xl border-border focus:border-border"
                     />
                   </div>
@@ -376,7 +376,7 @@ export default function FarmersPage() {
                       checked={form.isCertified}
                       onCheckedChange={(v) => setForm({ ...form, isCertified: !!v })}
                     />
-                    <Label htmlFor="isCertified" className="text-xs text-foreground">{t('Đã chứng nhận', 'Certified')}</Label>
+                    <Label htmlFor="isCertified" className="text-xs text-foreground">{t2('Đã chứng nhận', 'Certified')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -384,7 +384,7 @@ export default function FarmersPage() {
                       checked={form.loanTaken}
                       onCheckedChange={(v) => setForm({ ...form, loanTaken: !!v })}
                     />
-                    <Label htmlFor="loanTaken" className="text-xs text-foreground">{t('Có vay vốn', 'Has Loan')}</Label>
+                    <Label htmlFor="loanTaken" className="text-xs text-foreground">{t2('Có vay vốn', 'Has Loan')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -392,7 +392,7 @@ export default function FarmersPage() {
                       checked={form.smartphoneOwnership}
                       onCheckedChange={(v) => setForm({ ...form, smartphoneOwnership: !!v })}
                     />
-                    <Label htmlFor="smartphone" className="text-xs text-foreground">{t('Có điện thoại', 'Has Smartphone')}</Label>
+                    <Label htmlFor="smartphone" className="text-xs text-foreground">{t2('Có điện thoại', 'Has Smartphone')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -400,14 +400,14 @@ export default function FarmersPage() {
                       checked={form.gapTrainingAttended}
                       onCheckedChange={(v) => setForm({ ...form, gapTrainingAttended: !!v })}
                     />
-                    <Label htmlFor="gapTraining" className="text-xs text-foreground">{t('Đào tạo GAP', 'GAP Training')}</Label>
+                    <Label htmlFor="gapTraining" className="text-xs text-foreground">{t2('Đào tạo GAP', 'GAP Training')}</Label>
                   </div>
                 </div>
 
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -417,10 +417,10 @@ export default function FarmersPage() {
                     {submitting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t('Đang lưu...', 'Saving...')}
+                        {t2('Đang lưu...', 'Saving...')}
                       </>
                     ) : (
-                      t('Tạo mới', 'Create')
+                      t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -436,7 +436,7 @@ export default function FarmersPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm nông dân...', 'Search farmers...')}
+              placeholder={t2('Tìm kiếm nông dân...', 'Search farmers...')}
               className="pl-9 rounded-xl border-border focus:border-border bg-background"
             />
           </div>
@@ -451,13 +451,13 @@ export default function FarmersPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Mã', 'Code')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Họ và tên', 'Full Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t('Số ĐT', 'Contact')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tỉnh', 'Province')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t('CC', 'Cert')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t('Điểm TD', 'Credit')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t2('Mã', 'Code')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t2('Họ và tên', 'Full Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t2('Số ĐT', 'Contact')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Tỉnh', 'Province')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">{t2('CC', 'Cert')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Điểm TD', 'Credit')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -468,7 +468,7 @@ export default function FarmersPage() {
                       <td className="px-4 py-3">
                         <div>
                           <p className="text-xs font-medium text-foreground">{farmer.fullName}</p>
-                          <p className="text-[10px] text-foreground">{farmer.gender} {farmer.age ? `• ${farmer.age}` + t(' tuổi', ' yrs') : ''}</p>
+                          <p className="text-[10px] text-foreground">{farmer.gender} {farmer.age ? `• ${farmer.age}` + t2(' tuổi', ' yrs') : ''}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-foreground hidden md:table-cell">{farmer.contactNumber}</td>
@@ -478,9 +478,9 @@ export default function FarmersPage() {
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         {farmer.isCertified ? (
-                          <Badge className="bg-green-100 text-green-700 text-[10px] border-0">{t('Đã CC', 'Certified')}</Badge>
+                          <Badge className="bg-green-100 text-green-700 text-[10px] border-0">{t2('Đã CC', 'Certified')}</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] border-border text-foreground">{t('Chưa', 'No')}</Badge>
+                          <Badge variant="outline" className="text-[10px] border-border text-foreground">{t2('Chưa', 'No')}</Badge>
                         )}
                       </td>
                       <td className="px-4 py-3 text-xs text-foreground hidden lg:table-cell">
@@ -498,7 +498,7 @@ export default function FarmersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`${farmer.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} text-[10px] border-0`}>
-                          {farmer.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                          {farmer.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                         </Badge>
                       </td>
                     </tr>

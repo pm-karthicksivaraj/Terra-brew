@@ -5,9 +5,10 @@ import { useParams } from 'next/navigation'
 import {
   Coffee, CheckCircle2, XCircle, AlertTriangle, Shield, Globe,
   MapPin, Sprout, Truck, Package, Clock, Eye, Link2, Hash,
-  Leaf, Award, Fingerprint, ArrowRight,
+  Leaf, Award, Fingerprint, ArrowRight, EyeOff,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useI18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
 
 // Deterministic pseudo-random to avoid SSR/client mismatch
@@ -41,6 +42,42 @@ interface VerifyData {
 
 type PageState = 'loading' | 'verified' | 'tampered' | 'not_found' | 'error'
 
+// ─── Sensitive Field Component ───────────────────────────────
+
+const VERIFY_SENSITIVE_KEYS = new Set([
+  'contactNumber', 'nationalIdNo', 'phone', 'email',
+  'pricePerKg', 'totalAmount', 'paymentStatus', 'totalPurchaseAmount',
+  'purchasePricePerKg', 'latitude', 'longitude', 'gpsLat', 'gpsLng',
+  'idProofPhoto', 'farmerPhoto', 'firstName', 'lastName', 'middleName',
+])
+
+function VerifySensitiveField({ fieldKey, value }: { fieldKey: string; value: string }) {
+  const [revealed, setRevealed] = useState(false)
+  const isSensitive = VERIFY_SENSITIVE_KEYS.has(fieldKey)
+
+  if (!isSensitive) {
+    return <>{value}</>
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {revealed ? (
+        <span>{value}</span>
+      ) : (
+        <span className="text-stone-400 tracking-wider">{'*'.repeat(Math.min(String(value).length, 8))}</span>
+      )}
+      <button
+        type="button"
+        onClick={() => setRevealed(!revealed)}
+        className="inline-flex items-center justify-center w-4 h-4 text-stone-400 hover:text-stone-600 transition-colors"
+        aria-label={revealed ? 'Hide' : 'Reveal'}
+      >
+        {revealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+      </button>
+    </span>
+  )
+}
+
 // ─── Stage Icons & Labels ────────────────────────────────────────
 const STAGE_META: Record<string, { icon: React.ElementType; labelVi: string; labelEn: string; color: string }> = {
   FARMER_REGISTRATION: { icon: Sprout, labelVi: 'Đăng ký Nông dân', labelEn: 'Farmer Registration', color: 'text-green-600' },
@@ -72,13 +109,15 @@ const ENTITY_LABELS: Record<string, { labelVi: string; labelEn: string }> = {
 export default function PublicVerifyPage() {
   const params = useParams()
   const qrCode = params.qrCode as string
+  const { t: tI18n, t2, lang, setLang } = useI18n()
 
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
   const [pageState, setPageState] = useState<PageState>('loading')
   const [data, setData] = useState<VerifyData | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
 
+  // Translation helper (vi, en) for this page
   const t = (vi: string, en: string) => lang === 'vi' ? vi : en
+
 
   // Pre-compute particle positions using deterministic random
   const particles = useMemo(() =>
@@ -174,7 +213,7 @@ export default function PublicVerifyPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* ─── Background ─── */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/80 to-stone-900" />
 
@@ -211,7 +250,7 @@ export default function PublicVerifyPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Coffee className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white font-bold text-sm">Terra Brew</span>
+            <span className="text-white font-bold text-sm">{t2('Terra Brew', 'Terra Brew')}</span>
           </div>
 
           <div style={{ animation: 'verifySlideRight 0.5s ease-out 0.3s both' }}>
@@ -257,8 +296,8 @@ export default function PublicVerifyPage() {
                   <div style={{ animation: 'verifyScaleIn 0.4s ease-out 0.3s both' }}>
                     <CheckCircle2 className="w-14 h-14 text-white drop-shadow-lg" />
                   </div>
-                  <h1 className="text-xl font-bold text-white mt-2">{t('Sản phẩm Đã Xác minh', 'Product Verified')}</h1>
-                  <p className="text-green-100 text-xs mt-1">{t('Nguồn gốc cà phê đã được xác thực qua blockchain', 'Coffee origin verified via blockchain')}</p>
+                  <h1 className="text-xl font-bold text-white mt-2">{t2('Sản phẩm Đã Xác minh', 'Product Verified')}</h1>
+                  <p className="text-green-100 text-xs mt-1">{t2('Nguồn gốc cà phê đã được xác thực qua blockchain', 'Coffee origin verified via blockchain')}</p>
                 </div>
 
                 {/* Product Info */}
@@ -272,11 +311,11 @@ export default function PublicVerifyPage() {
                     )}
                     <Badge className="bg-emerald-50 text-emerald-700 text-[10px] border border-emerald-200 font-medium px-2.5 py-1 rounded-lg gap-1">
                       <Shield className="w-3 h-3" />
-                      {t('Chữ ký hợp lệ', 'Signature Valid')}
+                      {t2('Chữ ký hợp lệ', 'Signature Valid')}
                     </Badge>
                     <Badge className="bg-blue-50 text-blue-700 text-[10px] border border-blue-200 font-medium px-2.5 py-1 rounded-lg gap-1">
                       <Link2 className="w-3 h-3" />
-                      {t('Chuỗi toàn vẹn', 'Chain Intact')}
+                      {t2('Chuỗi toàn vẹn', 'Chain Intact')}
                     </Badge>
                   </div>
 
@@ -289,7 +328,7 @@ export default function PublicVerifyPage() {
                             <Coffee className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Giống cà phê', 'Coffee Variety')}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t2('Giống cà phê', 'Coffee Variety')}</p>
                             <p className="text-xs font-bold text-foreground">{getVariety()}</p>
                           </div>
                         </div>
@@ -300,7 +339,7 @@ export default function PublicVerifyPage() {
                             <MapPin className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Xuất xứ', 'Origin')}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t2('Xuất xứ', 'Origin')}</p>
                             <p className="text-xs font-bold text-foreground">{getOrigin()}</p>
                           </div>
                         </div>
@@ -311,7 +350,7 @@ export default function PublicVerifyPage() {
                             <Award className="w-3.5 h-3.5 text-foreground" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t('Chứng nhận', 'Certifications')}</p>
+                            <p className="text-[10px] text-foreground uppercase tracking-wider">{t2('Chứng nhận', 'Certifications')}</p>
                             <div className="flex flex-wrap gap-1.5 mt-1">
                               {getCertifications().map((cert, i) => (
                                 <span key={i} className="inline-flex items-center bg-card/80 text-foreground text-[10px] font-medium px-2 py-0.5 rounded-md border border-border">
@@ -329,7 +368,7 @@ export default function PublicVerifyPage() {
                   {getEntityFields().length > 0 && (
                     <div className="bg-card/60 rounded-xl p-3.5 space-y-1.5">
                       <p className="text-[10px] text-foreground uppercase tracking-wider font-medium mb-2">
-                        {t('Thông tin chi tiết', 'Detailed Information')}
+                        {t2('Thông tin chi tiết', 'Detailed Information')}
                       </p>
                       {getEntityFields().map(([key, value]) => (
                         <div key={key} className="flex justify-between items-start text-[11px]">
@@ -337,7 +376,7 @@ export default function PublicVerifyPage() {
                             {key.replace(/([A-Z])/g, ' $1').trim()}
                           </span>
                           <span className="text-foreground font-medium text-right ml-3 max-w-[60%] break-all">
-                            {String(value)}
+                            <VerifySensitiveField fieldKey={key} value={String(value)} />
                           </span>
                         </div>
                       ))}
@@ -352,10 +391,10 @@ export default function PublicVerifyPage() {
                   <div className="px-6 py-4 border-b border-border">
                     <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                       <Fingerprint className="w-4 h-4 text-foreground" />
-                      {t('Hành trình Sản phẩm', 'Product Journey')}
+                      {t2('Hành trình Sản phẩm', 'Product Journey')}
                     </h2>
                     <p className="text-[10px] text-foreground mt-0.5">
-                      {t('Mỗi bước được ghi nhận trên blockchain không thể thay đổi', 'Each step is immutably recorded on blockchain')}
+                      {t2('Mỗi bước được ghi nhận trên blockchain không thể thay đổi', 'Each step is immutably recorded on blockchain')}
                     </p>
                   </div>
 
@@ -430,7 +469,7 @@ export default function PublicVerifyPage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-xs font-bold text-foreground">
-                        {t('Xác minh Blockchain', 'Blockchain Verified')}
+                        {t2('Xác minh Blockchain', 'Blockchain Verified')}
                       </p>
                       <p className="text-[10px] text-foreground mt-0.5">
                         {t(
@@ -441,7 +480,7 @@ export default function PublicVerifyPage() {
                     </div>
                     <div className="flex flex-col items-end">
                       <Badge className="bg-emerald-50 text-emerald-700 text-[10px] border border-emerald-200 font-medium">
-                        {t('Hợp lệ', 'Valid')}
+                        {t2('Hợp lệ', 'Valid')}
                       </Badge>
                     </div>
                   </div>
@@ -451,24 +490,24 @@ export default function PublicVerifyPage() {
                     <div className="bg-muted rounded-xl p-3">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Fingerprint className="w-3 h-3 text-foreground" />
-                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">HMAC</span>
+                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">{t2('HMAC', 'HMAC')}</span>
                       </div>
                       <p className="text-[10px] text-foreground">
                         {data.signatureValid
-                          ? t('Chữ ký hợp lệ ✓', 'Signature valid ✓')
-                          : t('Chữ ký không hợp lệ ✗', 'Signature invalid ✗')
+                          ? t2('Chữ ký hợp lệ ✓', 'Signature valid ✓')
+                          : t2('Chữ ký không hợp lệ ✗', 'Signature invalid ✗')
                         }
                       </p>
                     </div>
                     <div className="bg-muted rounded-xl p-3">
                       <div className="flex items-center gap-1.5 mb-1">
                         <Link2 className="w-3 h-3 text-foreground" />
-                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">Hash Chain</span>
+                        <span className="text-[9px] font-bold text-foreground uppercase tracking-wider">{t2('Chuỗi Hash', 'Hash Chain')}</span>
                       </div>
                       <p className="text-[10px] text-foreground">
                         {data.chainIntegrity.valid
-                          ? t('Toàn vẹn ✓', 'Intact ✓')
-                          : t('Đứt chuỗi ✗', 'Broken ✗')
+                          ? t2('Toàn vẹn ✓', 'Intact ✓')
+                          : t2('Đứt chuỗi ✗', 'Broken ✗')
                         }
                       </p>
                     </div>
@@ -482,7 +521,7 @@ export default function PublicVerifyPage() {
                     </span>
                     {data.lastScannedAt && (
                       <span>
-                        {t('Quét gần nhất', 'Last scan')}: {formatTime(data.lastScannedAt)}
+                        {t2('Quét gần nhất', 'Last scan')}: {formatTime(data.lastScannedAt)}
                       </span>
                     )}
                   </div>
@@ -499,8 +538,8 @@ export default function PublicVerifyPage() {
                 <div style={{ animation: 'verifyScaleIn 0.4s ease-out 0.2s both' }}>
                   <XCircle className="w-14 h-14 text-white drop-shadow-lg" />
                 </div>
-                <h1 className="text-xl font-bold text-white mt-2">{t('Phát hiện Giả mạo!', 'Tampering Detected!')}</h1>
-                <p className="text-red-100 text-xs mt-1">{t('Dữ liệu sản phẩm không khớp với bản ghi blockchain', 'Product data does not match blockchain records')}</p>
+                <h1 className="text-xl font-bold text-white mt-2">{t2('Phát hiện Giả mạo!', 'Tampering Detected!')}</h1>
+                <p className="text-red-100 text-xs mt-1">{t2('Dữ liệu sản phẩm không khớp với bản ghi blockchain', 'Product data does not match blockchain records')}</p>
               </div>
 
               <div className="px-6 py-5 space-y-4">
@@ -508,7 +547,7 @@ export default function PublicVerifyPage() {
                   <div className="flex items-start gap-2.5">
                     <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-red-800">{t('Cảnh báo Bảo mật', 'Security Warning')}</p>
+                      <p className="text-xs font-bold text-red-800">{t2('Cảnh báo Bảo mật', 'Security Warning')}</p>
                       <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
                         {t(
                           'Sản phẩm này có thể đã bị thay đổi hoặc giả mạo. Chữ ký HMAC hoặc chuỗi hash không còn toàn vẹn. Vui lòng liên hệ nhà sản xuất.',
@@ -523,19 +562,19 @@ export default function PublicVerifyPage() {
                   {!data.signatureValid && (
                     <div className="flex items-center gap-2 text-[11px]">
                       <XCircle className="w-4 h-4 text-red-500" />
-                      <span className="text-red-700 font-medium">{t('Chữ ký HMAC không hợp lệ', 'HMAC signature is invalid')}</span>
+                      <span className="text-red-700 font-medium">{t2('Chữ ký HMAC không hợp lệ', 'HMAC signature is invalid')}</span>
                     </div>
                   )}
                   {!data.chainIntegrity.valid && (
                     <div className="flex items-center gap-2 text-[11px]">
                       <XCircle className="w-4 h-4 text-red-500" />
-                      <span className="text-red-700 font-medium">{t('Chuỗi hash bị đứt', 'Hash chain is broken')}</span>
+                      <span className="text-red-700 font-medium">{t2('Chuỗi hash bị đứt', 'Hash chain is broken')}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="bg-muted rounded-xl p-3 space-y-1">
-                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Mã QR', 'QR Code')}</p>
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t2('Mã QR', 'QR Code')}</p>
                   <p className="text-[11px] font-mono text-foreground break-all">{data.qrCode}</p>
                 </div>
               </div>
@@ -549,8 +588,8 @@ export default function PublicVerifyPage() {
                 <div style={{ animation: 'verifyScaleIn 0.4s ease-out 0.2s both' }}>
                   <AlertTriangle className="w-14 h-14 text-white drop-shadow-lg" />
                 </div>
-                <h1 className="text-xl font-bold text-white mt-2">{t('Không tìm thấy', 'Not Found')}</h1>
-                <p className="text-amber-900/60 text-xs mt-1">{t('Mã QR không có trong hệ thống', 'QR code not found in system')}</p>
+                <h1 className="text-xl font-bold text-white mt-2">{t2('Không tìm thấy', 'Not Found')}</h1>
+                <p className="text-amber-900/60 text-xs mt-1">{t2('Mã QR không có trong hệ thống', 'QR code not found in system')}</p>
               </div>
 
               <div className="px-6 py-6 space-y-4">
@@ -565,24 +604,24 @@ export default function PublicVerifyPage() {
                 </div>
 
                 <div className="bg-muted rounded-xl p-3 space-y-1">
-                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Mã đã quét', 'Scanned Code')}</p>
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t2('Mã đã quét', 'Scanned Code')}</p>
                   <p className="text-[11px] font-mono text-foreground break-all">{qrCode}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t('Gợi ý', 'Suggestions')}</p>
+                  <p className="text-[10px] text-foreground uppercase tracking-wider font-medium">{t2('Gợi ý', 'Suggestions')}</p>
                   <ul className="text-[11px] text-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
-                      {t('Kiểm tra lại mã QR trên bao bì sản phẩm', 'Double-check the QR code on the product packaging')}
+                      {t2('Kiểm tra lại mã QR trên bao bì sản phẩm', 'Double-check the QR code on the product packaging')}
                     </li>
                     <li className="flex items-start gap-2">
                       <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
-                      {t('Đảm bảo quét mã chính xác, không bị mờ hoặc rách', 'Ensure you scan the correct code without blur or damage')}
+                      {t2('Đảm bảo quét mã chính xác, không bị mờ hoặc rách', 'Ensure you scan the correct code without blur or damage')}
                     </li>
                     <li className="flex items-start gap-2">
                       <ArrowRight className="w-3 h-3 text-foreground shrink-0 mt-0.5" />
-                      {t('Liên hệ nhà sản xuất nếu vấn đề vẫn tiếp tục', 'Contact the manufacturer if the problem persists')}
+                      {t2('Liên hệ nhà sản xuất nếu vấn đề vẫn tiếp tục', 'Contact the manufacturer if the problem persists')}
                     </li>
                   </ul>
                 </div>
@@ -597,8 +636,8 @@ export default function PublicVerifyPage() {
                 <div style={{ animation: 'verifyScaleIn 0.4s ease-out 0.2s both' }}>
                   <AlertTriangle className="w-14 h-14 text-white drop-shadow-lg" />
                 </div>
-                <h1 className="text-xl font-bold text-white mt-2">{t('Lỗi Hệ thống', 'System Error')}</h1>
-                <p className="text-stone-200 text-xs mt-1">{t('Không thể xác minh lúc này', 'Unable to verify at this time')}</p>
+                <h1 className="text-xl font-bold text-white mt-2">{t2('Lỗi Hệ thống', 'System Error')}</h1>
+                <p className="text-stone-200 text-xs mt-1">{t2('Không thể xác minh lúc này', 'Unable to verify at this time')}</p>
               </div>
 
               <div className="px-6 py-6 space-y-4">
@@ -613,7 +652,7 @@ export default function PublicVerifyPage() {
 
                 {errorMsg && (
                   <div className="bg-muted rounded-xl p-3">
-                    <p className="text-[10px] text-foreground uppercase tracking-wider font-medium mb-1">{t('Chi tiết lỗi', 'Error Details')}</p>
+                    <p className="text-[10px] text-foreground uppercase tracking-wider font-medium mb-1">{t2('Chi tiết lỗi', 'Error Details')}</p>
                     <p className="text-[11px] font-mono text-red-600 break-all">{errorMsg}</p>
                   </div>
                 )}
@@ -627,7 +666,7 @@ export default function PublicVerifyPage() {
       <footer className="relative z-10 mt-auto">
         <div className="max-w-2xl mx-auto px-4 py-4 text-center">
           <p className="text-amber-200/40 text-[10px]">
-            &copy; {new Date().getFullYear()} Terra Brew — {t('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
+            &copy; {new Date().getFullYear()} Terra Brew — {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
           </p>
         </div>
       </footer>

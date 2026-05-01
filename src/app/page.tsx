@@ -6,7 +6,7 @@ import { Coffee, Loader2 } from 'lucide-react'
 const LandingContent = dynamic(() => import('@/components/pages/landing-page'), {
   ssr: false,
   loading: () => (
-    <div className="min-h-screen flex flex-col relative" style={{ fontFamily: '"Space Mono", monospace' }}>
+    <div className="min-h-screen flex flex-col relative">
       <div className="absolute inset-0 bg-gradient-to-br from-background via-amber-50 to-stone-100" />
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="flex items-center justify-between px-6 md:px-12 py-6">
@@ -25,10 +25,10 @@ const LandingContent = dynamic(() => import('@/components/pages/landing-page'), 
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 leading-tight">Terra Brew</h1>
-            <p className="text-lg md:text-2xl text-muted-foreground mb-3 font-medium">Nền tảng Truy xuất Nguồn gốc Cà phê</p>
+            <p className="text-lg md:text-2xl text-muted-foreground mb-3 font-medium">Coffee Traceability Platform</p>
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Đang tải...</span>
+              <span className="text-sm">Loading...</span>
             </div>
           </div>
         </main>

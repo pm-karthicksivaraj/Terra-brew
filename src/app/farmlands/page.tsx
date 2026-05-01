@@ -9,6 +9,7 @@ import {
   Pencil, Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -19,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { formatCurrency } from '@/types'
-import { FadeIn, StaggerContainer, StaggerItem, hoverScale, MotionButton } from '@/components/ui/motion'
+import { FadeIn, TableStaggerTbody, TableStaggerRow, hoverScale, MotionButton } from '@/components/ui/motion'
 import { FarmLandMap, type FarmLandPolygon, type PolygonCoordinate } from '@/components/map'
 
 interface FarmerOption {
@@ -54,7 +55,7 @@ interface FarmLand {
 export default function FarmLandsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [items, setItems] = useState<FarmLand[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -71,7 +72,6 @@ export default function FarmLandsPage() {
   const [viewMode, setViewMode] = useState<'table' | 'map'>('table')
   const [mapPolygons, setMapPolygons] = useState<FarmLandPolygon[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Form state
   const [form, setForm] = useState({
@@ -93,6 +93,9 @@ export default function FarmLandsPage() {
     polygonGeoJson: '',
   })
 
+  // Form map polygons for the mini map inside the dialog
+  const [formMapPolygons, setFormMapPolygons] = useState<FarmLandPolygon[]>([])
+
   const resetForm = () => {
     setForm({
       farmName: '', farmerId: '', plotBlockId: '',
@@ -103,6 +106,7 @@ export default function FarmLandsPage() {
       ppeAvailable: false, polygonGeoJson: '',
     })
     setEditingItem(null)
+    setFormMapPolygons([])
   }
 
   const fetchItems = useCallback(async () => {
@@ -204,17 +208,61 @@ export default function FarmLandsPage() {
       ppeAvailable: item.ppeAvailable,
       polygonGeoJson: item.polygonGeoJson || '',
     })
+    // Build polygon for the form mini map when editing
+    if (item.polygonGeoJson) {
+      try {
+        const geojson = JSON.parse(item.polygonGeoJson)
+        const coords: PolygonCoordinate[] = (geojson.coordinates?.[0] || []).map((c: number[]) => ({ lat: c[1], lng: c[0] }))
+        if (coords.length >= 3) {
+          setFormMapPolygons([{ id: item.id, name: item.farmName, coordinates: coords.slice(0, -1), color: '#059669' }])
+        } else {
+          setFormMapPolygons([])
+        }
+      } catch {
+        setFormMapPolygons([])
+      }
+    } else {
+      setFormMapPolygons([])
+    }
     setDialogOpen(true)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.farmName || !form.farmerId) {
-      toast.error(t('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
+      toast.error(t2('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
       return
     }
     setSubmitting(true)
     try {
+      // Compute geo center from polygon if available
+      let geoCenterLat: number | undefined
+      let geoCenterLng: number | undefined
+      let boundaryArea: number | undefined
+      if (form.polygonGeoJson) {
+        try {
+          const geojson = JSON.parse(form.polygonGeoJson)
+          const ring: number[][] = geojson.coordinates?.[0] || []
+          const points = ring.slice(0, -1) // remove closing point
+          if (points.length >= 3) {
+            geoCenterLat = points.reduce((s: number, c: number[]) => s + c[1], 0) / points.length
+            geoCenterLng = points.reduce((s: number, c: number[]) => s + c[0], 0) / points.length
+            // Calculate area using spherical excess
+            const R = 6371000
+            let area = 0
+            for (let i = 0; i < points.length; i++) {
+              const j = (i + 1) % points.length
+              const lat1 = (points[i][1] * Math.PI) / 180
+              const lat2 = (points[j][1] * Math.PI) / 180
+              const lng1 = (points[i][0] * Math.PI) / 180
+              const lng2 = (points[j][0] * Math.PI) / 180
+              area += (lng2 - lng1) * (2 + Math.sin(lat1) + Math.sin(lat2))
+            }
+            boundaryArea = Math.abs((area * R * R) / 2) / 10000 // hectares
+          }
+        } catch { /* ignore parse errors */ }
+      }
+
       const payload = {
         ...form,
         totalLandHolding: form.totalLandHolding ? parseFloat(form.totalLandHolding) : undefined,
@@ -223,6 +271,9 @@ export default function FarmLandsPage() {
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
         noOfTrees: form.noOfTrees ? parseInt(form.noOfTrees) : undefined,
         estYield: form.estYield ? parseFloat(form.estYield) : undefined,
+        boundaryArea,
+        geoCenterLat,
+        geoCenterLng,
       }
 
       const url = editingItem ? '/api/farmlands' : '/api/farmlands'
@@ -238,15 +289,15 @@ export default function FarmLandsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo đất nông trại thành công!', 'Farm land created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo đất nông trại thành công!', 'Farm land created!'))
         setDialogOpen(false)
         resetForm()
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -257,13 +308,13 @@ export default function FarmLandsPage() {
       const res = await fetch(`/api/farmlands?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
     setDeleteConfirm(null)
   }
@@ -272,7 +323,7 @@ export default function FarmLandsPage() {
 
   if (status === 'loading' || (loading && items.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -280,7 +331,7 @@ export default function FarmLandsPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -289,15 +340,15 @@ export default function FarmLandsPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <FadeIn>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
+          <div className="flex flex-row items-center justify-between gap-3 mb-6">
+            <div className="min-w-0 flex-1">
               <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
-                {t('Quản lý Đất nông trại', 'Farm Land Management')}
+                <MapPin className="w-5 h-5 text-primary shrink-0" />
+                <span className="truncate">{t2('Quản lý Đất nông trại', 'Farm Land Management')}</span>
               </h2>
               <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} mảnh đất`, `Total: ${total} farm lands`)}</p>
             </div>
@@ -305,30 +356,31 @@ export default function FarmLandsPage() {
             <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
               <DialogTrigger asChild>
                 <MotionButton
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-md h-9 px-4 text-xs font-medium cursor-pointer"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 rounded-xl shadow-md h-9 px-3 sm:px-4 text-xs font-medium cursor-pointer shrink-0"
                   onClick={() => { resetForm(); setDialogOpen(true) }}
                   {...hoverScale}
                 >
-                  <Plus className="w-4 h-4" />
-                  {t('Thêm đất mới', 'Add New Farm Land')}
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">{t2('Thêm đất', 'Add Land')}</span>
+                  <span className="sm:hidden">{t2('Thêm', 'Add')}</span>
                 </MotionButton>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-foreground flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
-                    {editingItem ? t('Sửa thông tin đất', 'Edit Farm Land') : t('Thêm đất nông trại mới', 'Add New Farm Land')}
+                    {editingItem ? t2('Sửa thông tin đất', 'Edit Farm Land') : t2('Thêm đất nông trại mới', 'Add New Farm Land')}
                   </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Farm Name */}
                     <div className="space-y-1.5 md:col-span-2">
-                      <Label className="text-xs text-foreground">{t('Tên nông trại', 'Farm Name')} *</Label>
+                      <Label className="text-xs text-foreground">{t2('Tên nông trại', 'Farm Name')} *</Label>
                       <Input
                         value={form.farmName}
                         onChange={(e) => setForm({ ...form, farmName: e.target.value })}
-                        placeholder={t('Nhập tên nông trại', 'Enter farm name')}
+                        placeholder={t2('Nhập tên nông trại', 'Enter farm name')}
                         className="rounded-xl border-input focus:border-primary"
                         required
                       />
@@ -336,10 +388,10 @@ export default function FarmLandsPage() {
 
                     {/* Farmer Select */}
                     <div className="space-y-1.5 md:col-span-2">
-                      <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
+                      <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')} *</Label>
                       <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v })}>
                         <SelectTrigger className="rounded-xl border-input">
-                          <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
+                          <SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} />
                         </SelectTrigger>
                         <SelectContent>
                           {farmers.map((f) => (
@@ -353,18 +405,18 @@ export default function FarmLandsPage() {
 
                     {/* Plot Block ID */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Mã lô đất', 'Plot Block ID')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Mã lô đất', 'Plot Block ID')}</Label>
                       <Input
                         value={form.plotBlockId}
                         onChange={(e) => setForm({ ...form, plotBlockId: e.target.value })}
-                        placeholder={t('PB-001', 'PB-001')}
+                        placeholder={t2('PB-001', 'PB-001')}
                         className="rounded-xl border-input focus:border-primary"
                       />
                     </div>
 
                     {/* Total Land Holding */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Diện tích (ha)', 'Area (ha)')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Diện tích (ha)', 'Area (ha)')}</Label>
                       <Input
                         type="number"
                         value={form.totalLandHolding}
@@ -377,7 +429,7 @@ export default function FarmLandsPage() {
 
                     {/* Altitude */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Độ cao (m)', 'Altitude (m)')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Độ cao (m)', 'Altitude (m)')}</Label>
                       <Input
                         type="number"
                         value={form.altitude}
@@ -389,7 +441,7 @@ export default function FarmLandsPage() {
 
                     {/* Latitude */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Vĩ độ', 'Latitude')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Vĩ độ', 'Latitude')}</Label>
                       <Input
                         type="number"
                         value={form.latitude}
@@ -402,7 +454,7 @@ export default function FarmLandsPage() {
 
                     {/* Longitude */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Kinh độ', 'Longitude')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Kinh độ', 'Longitude')}</Label>
                       <Input
                         type="number"
                         value={form.longitude}
@@ -415,55 +467,55 @@ export default function FarmLandsPage() {
 
                     {/* Land Ownership */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Quyền sở hữu', 'Land Ownership')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Quyền sở hữu', 'Land Ownership')}</Label>
                       <Select value={form.landOwnership} onValueChange={(v) => setForm({ ...form, landOwnership: v })}>
                         <SelectTrigger className="rounded-xl border-input">
-                          <SelectValue placeholder={t('Chọn...', 'Select...')} />
+                          <SelectValue placeholder={t2('Chọn...', 'Select...')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="owned">{t('Sở hữu', 'Owned')}</SelectItem>
-                          <SelectItem value="leased">{t('Thuê', 'Leased')}</SelectItem>
-                          <SelectItem value="shared">{t('Chung', 'Shared')}</SelectItem>
+                          <SelectItem value="owned">{t2('Sở hữu', 'Owned')}</SelectItem>
+                          <SelectItem value="leased">{t2('Thuê', 'Leased')}</SelectItem>
+                          <SelectItem value="shared">{t2('Chung', 'Shared')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* Soil Type */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Loại đất', 'Soil Type')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Loại đất', 'Soil Type')}</Label>
                       <Select value={form.soilType} onValueChange={(v) => setForm({ ...form, soilType: v })}>
                         <SelectTrigger className="rounded-xl border-input">
-                          <SelectValue placeholder={t('Chọn loại đất', 'Select soil type')} />
+                          <SelectValue placeholder={t2('Chọn loại đất', 'Select soil type')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Basalt (Đỏ bazan)">{t('Đỏ bazan', 'Basalt Red')}</SelectItem>
-                          <SelectItem value="Sandy (Cát)">{t('Cát', 'Sandy')}</SelectItem>
-                          <SelectItem value="Clay (Đất sét)">{t('Đất sét', 'Clay')}</SelectItem>
-                          <SelectItem value="Loam (Đất thịt)">{t('Đất thịt', 'Loam')}</SelectItem>
-                          <SelectItem value="Volcanic (Đất núi lửa)">{t('Đất núi lửa', 'Volcanic')}</SelectItem>
+                          <SelectItem value="Basalt (Đỏ bazan)">{t2('Đỏ bazan', 'Basalt Red')}</SelectItem>
+                          <SelectItem value="Sandy (Cát)">{t2('Cát', 'Sandy')}</SelectItem>
+                          <SelectItem value="Clay (Đất sét)">{t2('Đất sét', 'Clay')}</SelectItem>
+                          <SelectItem value="Loam (Đất thịt)">{t2('Đất thịt', 'Loam')}</SelectItem>
+                          <SelectItem value="Volcanic (Đất núi lửa)">{t2('Đất núi lửa', 'Volcanic')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* Water Source */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Nguồn nước', 'Water Source')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Nguồn nước', 'Water Source')}</Label>
                       <Select value={form.waterSource} onValueChange={(v) => setForm({ ...form, waterSource: v })}>
                         <SelectTrigger className="rounded-xl border-input">
-                          <SelectValue placeholder={t('Chọn nguồn nước', 'Select water source')} />
+                          <SelectValue placeholder={t2('Chọn nguồn nước', 'Select water source')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="rainfed">{t('Tưới tự nhiên', 'Rainfed')}</SelectItem>
-                          <SelectItem value="irrigation">{t('Tưới tiêu', 'Irrigation')}</SelectItem>
-                          <SelectItem value="well">{t('Giếng', 'Well')}</SelectItem>
-                          <SelectItem value="river">{t('Sông/Suối', 'River/Stream')}</SelectItem>
+                          <SelectItem value="rainfed">{t2('Tưới tự nhiên', 'Rainfed')}</SelectItem>
+                          <SelectItem value="irrigation">{t2('Tưới tiêu', 'Irrigation')}</SelectItem>
+                          <SelectItem value="well">{t2('Giếng', 'Well')}</SelectItem>
+                          <SelectItem value="river">{t2('Sông/Suối', 'River/Stream')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     {/* No of Trees */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Số cây', 'Trees')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Số cây', 'Trees')}</Label>
                       <Input
                         type="number"
                         value={form.noOfTrees}
@@ -475,7 +527,7 @@ export default function FarmLandsPage() {
 
                     {/* Est Yield */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground">{t('Sản lượng ước (kg)', 'Est. Yield (kg)')}</Label>
+                      <Label className="text-xs text-foreground">{t2('Sản lượng ước (kg)', 'Est. Yield (kg)')}</Label>
                       <Input
                         type="number"
                         value={form.estYield}
@@ -495,7 +547,7 @@ export default function FarmLandsPage() {
                         checked={form.childLabourPolicy}
                         onCheckedChange={(v) => setForm({ ...form, childLabourPolicy: !!v })}
                       />
-                      <Label htmlFor="childLabourPolicy" className="text-xs text-foreground">{t('Không lao động trẻ em', 'No Child Labour')}</Label>
+                      <Label htmlFor="childLabourPolicy" className="text-xs text-foreground">{t2('Không lao động trẻ em', 'No Child Labour')}</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -503,7 +555,7 @@ export default function FarmLandsPage() {
                         checked={form.minimumWageCompliance}
                         onCheckedChange={(v) => setForm({ ...form, minimumWageCompliance: !!v })}
                       />
-                      <Label htmlFor="minimumWageCompliance" className="text-xs text-foreground">{t('Tuân thủ lương tối thiểu', 'Min Wage Compliance')}</Label>
+                      <Label htmlFor="minimumWageCompliance" className="text-xs text-foreground">{t2('Tuân thủ lương tối thiểu', 'Min Wage Compliance')}</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -511,14 +563,65 @@ export default function FarmLandsPage() {
                         checked={form.ppeAvailable}
                         onCheckedChange={(v) => setForm({ ...form, ppeAvailable: !!v })}
                       />
-                      <Label htmlFor="ppeAvailable" className="text-xs text-foreground">{t('Có đồ bảo hộ', 'PPE Available')}</Label>
+                      <Label htmlFor="ppeAvailable" className="text-xs text-foreground">{t2('Có đồ bảo hộ', 'PPE Available')}</Label>
                     </div>
+                  </div>
+
+                  {/* Draw Boundary on Map */}
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <Label className="text-xs font-medium text-foreground">
+                        {t2('Vẽ ranh giới trên bản đồ', 'Draw boundary on map')}
+                      </Label>
+                      {form.polygonGeoJson && (
+                        <Badge className="bg-green-100 text-green-700 text-[9px] border-0">
+                          {t2('Da giac da ve', 'Polygon drawn')}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t2(
+                        'Nhan "Ve da giac" roi nhan vao ban do de tao cac diem. It nhat 3 diem de tao da giac.',
+                        'Click "Draw Polygon" then click on the map to place points. At least 3 points required.'
+                      )}
+                    </p>
+                    <FarmLandMap
+                      center={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : [12.668, 108.038]}
+                      zoom={14}
+                      polygons={formMapPolygons}
+                      drawMode={true}
+                      lang={lang}
+                      height="280px"
+                      onPolygonDrawn={(coords) => {
+                        // Store the polygon coordinates as GeoJSON
+                        const geoJson = {
+                          type: 'Polygon' as const,
+                          coordinates: [coords.map(c => [c.lng, c.lat] as [number, number]).concat([[coords[0].lng, coords[0].lat]] as [number, number][])],
+                        }
+                        // Calculate center point from polygon
+                        const centerLat = coords.reduce((sum, c) => sum + c.lat, 0) / coords.length
+                        const centerLng = coords.reduce((sum, c) => sum + c.lng, 0) / coords.length
+                        setFormMapPolygons([{ id: 'form-polygon', name: form.farmName || t2('Dat moi', 'New Land'), coordinates: coords, color: '#059669' }])
+                        setForm(f => ({
+                          ...f,
+                          polygonGeoJson: JSON.stringify(geoJson),
+                          latitude: centerLat.toFixed(6),
+                          longitude: centerLng.toFixed(6),
+                        }))
+                        toast.success(t2('Ranh gioi da duoc ve thanh cong!', 'Boundary drawn successfully!'))
+                      }}
+                      onPolygonDelete={() => {
+                        setFormMapPolygons([])
+                        setForm(f => ({ ...f, polygonGeoJson: '' }))
+                      }}
+                    />
                   </div>
 
                   {/* Submit */}
                   <div className="flex justify-end gap-3 pt-4 border-t border-border">
                     <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                      {t('Hủy', 'Cancel')}
+                      {t2('Hủy', 'Cancel')}
                     </Button>
                     <Button
                       type="submit"
@@ -528,10 +631,10 @@ export default function FarmLandsPage() {
                       {submitting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {t('Đang lưu...', 'Saving...')}
+                          {t2('Đang lưu...', 'Saving...')}
                         </>
                       ) : (
-                        editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                        editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                       )}
                     </Button>
                   </div>
@@ -549,7 +652,7 @@ export default function FarmLandsPage() {
               <Input
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                placeholder={t('Tìm kiếm đất nông trại...', 'Search farm lands...')}
+                placeholder={t2('Tìm kiếm đất nông trại...', 'Search farm lands...')}
                 className="pl-9 rounded-xl border-input focus:border-primary bg-background"
               />
             </div>
@@ -563,7 +666,7 @@ export default function FarmLandsPage() {
                 className="h-7 px-2.5 text-[10px] rounded-md"
                 onClick={() => setViewMode('table')}
               >
-                {t('Bảng', 'Table')}
+                {t2('Bảng', 'Table')}
               </Button>
               <Button
                 variant={viewMode === 'map' ? 'default' : 'ghost'}
@@ -572,7 +675,7 @@ export default function FarmLandsPage() {
                 onClick={() => setViewMode('map')}
               >
                 <MapPin className="w-3 h-3" />
-                {t('Bản đồ', 'Map')}
+                {t2('Bản đồ', 'Map')}
               </Button>
             </div>
           </div>
@@ -596,13 +699,13 @@ export default function FarmLandsPage() {
                     coordinates: [coords.map(c => [c.lng, c.lat]).concat([[coords[0].lng, coords[0].lat]])],
                   }
                   setForm(f => ({ ...f, polygonGeoJson: JSON.stringify(geoJson) }))
-                  toast.success(t('Đa giác đã được vẽ! Mở form để lưu.', 'Polygon drawn! Open form to save.'))
+                  toast.success(t2('Đa giác đã được vẽ! Mở form để lưu.', 'Polygon drawn! Open form to save.'))
                 }}
                 onPolygonDelete={(id) => {
                   setMapPolygons(prev => prev.filter(p => p.id !== id))
                 }}
                 onSave={(polys) => {
-                  toast.success(t('Tọa độ đã được cập nhật', 'Coordinates updated'))
+                  toast.success(t2('Tọa độ đã được cập nhật', 'Coordinates updated'))
                 }}
               />
             </Card>
@@ -612,30 +715,29 @@ export default function FarmLandsPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Tên nông trại', 'Farm Name')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Mã lô', 'Plot ID')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Diện tích', 'Area (ha)')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Độ cao', 'Altitude')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Loại đất', 'Soil')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Số cây', 'Trees')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('SL ước', 'Est. Yield')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Tên nông trại', 'Farm Name')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Nông dân', 'Farmer')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Mã lô', 'Plot ID')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Diện tích', 'Area (ha)')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Độ cao', 'Altitude')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Loại đất', 'Soil')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Số cây', 'Trees')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('SL ước', 'Est. Yield')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                    <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Hành động', 'Actions')}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <TableStaggerTbody>
                   {items.length === 0 ? (
                       <tr>
                         <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground text-sm">
-                          {t('Không tìm thấy dữ liệu', 'No data found')}
+                          {t2('Không tìm thấy dữ liệu', 'No data found')}
                         </td>
                       </tr>
                     ) : (
-                      <StaggerContainer className="contents">
+                        <>
                         {items.map((item) => (
-                          <StaggerItem key={item.id} className="contents">
-                            <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <TableStaggerRow key={item.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                               <td className="px-4 py-3">
                                 <p className="text-xs font-medium text-foreground">{item.farmName}</p>
                               </td>
@@ -651,7 +753,7 @@ export default function FarmLandsPage() {
                               <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">{item.estYield ? `${item.estYield.toLocaleString()} kg` : '-'}</td>
                               <td className="px-4 py-3">
                                 <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
-                                  {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                                  {item.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                                 </Badge>
                               </td>
                               <td className="px-4 py-3">
@@ -662,10 +764,10 @@ export default function FarmLandsPage() {
                                   {deleteConfirm === item.id ? (
                                     <div className="flex items-center gap-1">
                                       <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
-                                        {t('Xóa', 'Del')}
+                                        {t2('Xóa', 'Del')}
                                       </Button>
                                       <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
-                                        {t('Hủy', 'No')}
+                                        {t2('Hủy', 'No')}
                                       </Button>
                                     </div>
                                   ) : (
@@ -675,12 +777,11 @@ export default function FarmLandsPage() {
                                   )}
                                 </div>
                               </td>
-                            </tr>
-                          </StaggerItem>
+                            </TableStaggerRow>
                         ))}
-                      </StaggerContainer>
+                        </>
                     )}
-</tbody>
+                </TableStaggerTbody>
             </table>
           </div>
 

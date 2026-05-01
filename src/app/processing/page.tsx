@@ -8,6 +8,7 @@ import {
   Pencil, Trash2, AlertTriangle, ChevronDown, ChevronUp, CheckCircle, XCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -86,7 +87,7 @@ const initialForm = {
 export default function ProcessingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [records, setRecords] = useState<ProcessingRecord[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -101,7 +102,6 @@ export default function ProcessingPage() {
   const [form, setForm] = useState(initialForm)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const resetForm = () => { setForm(initialForm); setEditingRecord(null) }
 
@@ -170,15 +170,15 @@ export default function ProcessingPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingRecord ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo mới thành công!', 'Created successfully!'))
+        toast.success(editingRecord ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo mới thành công!', 'Created successfully!'))
         setDialogOpen(false)
         resetForm()
         fetchRecords()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -191,15 +191,15 @@ export default function ProcessingPage() {
       const res = await fetch(`/api/processing?id=${deletingRecord.id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         setDeleteDialogOpen(false)
         setDeletingRecord(null)
         fetchRecords()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -269,7 +269,7 @@ export default function ProcessingPage() {
 
   if (status === 'loading' || (loading && records.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function ProcessingPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -286,14 +286,14 @@ export default function ProcessingPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Cog className="w-5 h-5 text-muted-foreground" />
-              {t('Chế biến', 'Processing Pipeline')}
+              {t2('Chế biến', 'Processing Pipeline')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
@@ -305,159 +305,159 @@ export default function ProcessingPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm mới', 'Add New')}
+                {t2('Thêm mới', 'Add New')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Cog className="w-5 h-5" />
-                  {editingRecord ? t('Sửa lệnh chế biến', 'Edit Job Order') : t('Thêm lệnh chế biến', 'Add Job Order')}
+                  {editingRecord ? t2('Sửa lệnh chế biến', 'Edit Job Order') : t2('Thêm lệnh chế biến', 'Add Job Order')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Job Order ID */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã lệnh (Job Order ID)', 'Job Order ID')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã lệnh (Job Order ID)', 'Job Order ID')}</Label>
                     <Input value={form.jobOrderId} onChange={(e) => setForm({ ...form, jobOrderId: e.target.value })} placeholder="JO-2024-001" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Processing Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày chế biến', 'Processing Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày chế biến', 'Processing Date')}</Label>
                     <Input type="date" value={form.processingDate} onChange={(e) => setForm({ ...form, processingDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Batch ID Input */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Mã lô đầu vào', 'Batch ID Input')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Mã lô đầu vào', 'Batch ID Input')}</Label>
                     <Input value={form.batchIdInput} onChange={(e) => setForm({ ...form, batchIdInput: e.target.value })} placeholder="BATCH-2024-001" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Coffee Type Input */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại CP đầu vào', 'Coffee Type Input')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại CP đầu vào', 'Coffee Type Input')}</Label>
                     <Select value={form.coffeeTypeInput} onValueChange={(v) => setForm({ ...form, coffeeTypeInput: v })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn loại', 'Select type')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn loại', 'Select type')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Robusta">Robusta</SelectItem>
-                        <SelectItem value="Arabica">Arabica</SelectItem>
-                        <SelectItem value="Liberica">Liberica</SelectItem>
+                        <SelectItem value="Robusta">{t2('Cà phê Robusta', 'Robusta Coffee')}</SelectItem>
+                        <SelectItem value="Arabica">{t2('Cà phê Arabica', 'Arabica Coffee')}</SelectItem>
+                        <SelectItem value="Liberica">{t2('Cà phê Liberica', 'Liberica Coffee')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Coffee Variety Input */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Giống CP đầu vào', 'Coffee Variety Input')}</Label>
-                    <Input value={form.coffeeVarietyInput} onChange={(e) => setForm({ ...form, coffeeVarietyInput: e.target.value })} placeholder={t('Giống', 'Variety')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Giống CP đầu vào', 'Coffee Variety Input')}</Label>
+                    <Input value={form.coffeeVarietyInput} onChange={(e) => setForm({ ...form, coffeeVarietyInput: e.target.value })} placeholder={t2('Giống', 'Variety')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Input Quantity Kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Số lượng đầu vào (kg)', 'Input Quantity (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Số lượng đầu vào (kg)', 'Input Quantity (kg)')}</Label>
                     <Input type="number" step="0.1" value={form.inputQuantityKg} onChange={(e) => setForm({ ...form, inputQuantityKg: e.target.value })} placeholder="1000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Processing Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Phương pháp chế biến', 'Processing Method')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Phương pháp chế biến', 'Processing Method')}</Label>
                     <Select value={form.processingMethod} onValueChange={(v) => setForm({ ...form, processingMethod: v })}>
-                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t('Chọn PP', 'Select method')} /></SelectTrigger>
+                      <SelectTrigger className="rounded-xl border-input"><SelectValue placeholder={t2('Chọn PP', 'Select method')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="wet">{t('Ướt', 'Wet')}</SelectItem>
-                        <SelectItem value="dry">{t('Khô', 'Dry')}</SelectItem>
-                        <SelectItem value="honey">{t('Mật ong', 'Honey')}</SelectItem>
-                        <SelectItem value="natural">{t('Tự nhiên', 'Natural')}</SelectItem>
-                        <SelectItem value="semi-washed">{t('Bán rửa', 'Semi-washed')}</SelectItem>
+                        <SelectItem value="wet">{t2('Ướt', 'Wet')}</SelectItem>
+                        <SelectItem value="dry">{t2('Khô', 'Dry')}</SelectItem>
+                        <SelectItem value="honey">{t2('Mật ong', 'Honey')}</SelectItem>
+                        <SelectItem value="natural">{t2('Tự nhiên', 'Natural')}</SelectItem>
+                        <SelectItem value="semi-washed">{t2('Bán rửa', 'Semi-washed')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Target Output Product */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('SP đầu ra mục tiêu', 'Target Output Product')}</Label>
-                    <Input value={form.targetOutputProduct} onChange={(e) => setForm({ ...form, targetOutputProduct: e.target.value })} placeholder={t('Green bean', 'Green bean')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('SP đầu ra mục tiêu', 'Target Output Product')}</Label>
+                    <Input value={form.targetOutputProduct} onChange={(e) => setForm({ ...form, targetOutputProduct: e.target.value })} placeholder={t2('Green bean', 'Green bean')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Operator Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Người vận hành', 'Operator Name')}</Label>
-                    <Input value={form.operatorName} onChange={(e) => setForm({ ...form, operatorName: e.target.value })} placeholder={t('Nguyễn Văn A', 'Nguyen Van A')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Người vận hành', 'Operator Name')}</Label>
+                    <Input value={form.operatorName} onChange={(e) => setForm({ ...form, operatorName: e.target.value })} placeholder={t2('Nguyễn Văn A', 'Nguyen Van A')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Plant Facility Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nhà máy', 'Plant Facility')}</Label>
-                    <Input value={form.plantFacilityName} onChange={(e) => setForm({ ...form, plantFacilityName: e.target.value })} placeholder={t('Nhà máy ABC', 'Factory ABC')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Nhà máy', 'Plant Facility')}</Label>
+                    <Input value={form.plantFacilityName} onChange={(e) => setForm({ ...form, plantFacilityName: e.target.value })} placeholder={t2('Nhà máy ABC', 'Factory ABC')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Input Weight Kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('TL đầu vào (kg)', 'Input Weight (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('TL đầu vào (kg)', 'Input Weight (kg)')}</Label>
                     <Input type="number" step="0.1" value={form.inputWeightKg} onChange={(e) => setForm({ ...form, inputWeightKg: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Final Output Weight Kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('TL đầu ra (kg)', 'Output Weight (kg)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('TL đầu ra (kg)', 'Output Weight (kg)')}</Label>
                     <Input type="number" step="0.1" value={form.finalOutputWeightKg} onChange={(e) => setForm({ ...form, finalOutputWeightKg: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Overall Outturn */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tỷ lệ xuất (%)', 'Outturn (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tỷ lệ xuất (%)', 'Outturn (%)')}</Label>
                     <Input type="number" step="0.1" value={form.overallOutturn} onChange={(e) => setForm({ ...form, overallOutturn: e.target.value })} placeholder="18.5" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Total Processing Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổng chi phí (VND)', 'Total Cost (VND)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tổng chi phí (VND)', 'Total Cost (VND)')}</Label>
                     <Input type="number" step="1000" value={form.totalProcessingCost} onChange={(e) => setForm({ ...form, totalProcessingCost: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Cost Per Kg */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Chi phí/kg (VND)', 'Cost/kg (VND)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Chi phí/kg (VND)', 'Cost/kg (VND)')}</Label>
                     <Input type="number" step="100" value={form.costPerKg} onChange={(e) => setForm({ ...form, costPerKg: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Final Moisture Content */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Độ ẩm cuối (%)', 'Final Moisture (%)')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Độ ẩm cuối (%)', 'Final Moisture (%)')}</Label>
                     <Input type="number" step="0.1" value={form.finalMoistureContent} onChange={(e) => setForm({ ...form, finalMoistureContent: e.target.value })} placeholder="12.0" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Cup Score */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Điểm cupping', 'Cup Score')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Điểm cupping', 'Cup Score')}</Label>
                     <Input type="number" step="0.5" value={form.cupScore} onChange={(e) => setForm({ ...form, cupScore: e.target.value })} placeholder="82" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Cupping Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Ghi chú cupping', 'Cupping Notes')}</Label>
-                    <Textarea value={form.cuppingNotes} onChange={(e) => setForm({ ...form, cuppingNotes: e.target.value })} placeholder={t('Mô tả hương vị...', 'Describe flavor...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+                    <Label className="text-xs text-foreground">{t2('Ghi chú cupping', 'Cupping Notes')}</Label>
+                    <Textarea value={form.cuppingNotes} onChange={(e) => setForm({ ...form, cuppingNotes: e.target.value })} placeholder={t2('Mô tả hương vị...', 'Describe flavor...')} className="rounded-xl border-input focus:border-primary" rows={2} />
                   </div>
 
                   {/* QC Approved By */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('QC duyệt bởi', 'QC Approved By')}</Label>
+                    <Label className="text-xs text-foreground">{t2('QC duyệt bởi', 'QC Approved By')}</Label>
                     <Input value={form.qcApprovedBy} onChange={(e) => setForm({ ...form, qcApprovedBy: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* QC Approval Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày QC duyệt', 'QC Approval Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày QC duyệt', 'QC Approval Date')}</Label>
                     <Input type="date" value={form.qcApprovalDate} onChange={(e) => setForm({ ...form, qcApprovalDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                  <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">{t('Hủy', 'Cancel')}</Button>
+                  <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">{t2('Hủy', 'Cancel')}</Button>
                   <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
-                    {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</> : editingRecord ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')}
+                    {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Đang lưu...', 'Saving...')}</> : editingRecord ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')}
                   </Button>
                 </div>
               </form>
@@ -472,7 +472,7 @@ export default function ProcessingPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm chế biến...', 'Search processing...')}
+              placeholder={t2('Tìm kiếm chế biến...', 'Search processing...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -488,16 +488,16 @@ export default function ProcessingPage() {
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider w-8"></th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Mã lệnh', 'Job Order')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Mã lô', 'Batch Input')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('SL đầu vào', 'Input Qty')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('PP chế biến', 'Method')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('TL đầu ra', 'Output')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Xuất %', 'Outturn')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Cup Score', 'Cup Score')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('QC', 'QC')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Thao tác', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Mã lệnh', 'Job Order')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Mã lô', 'Batch Input')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('SL đầu vào', 'Input Qty')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('PP chế biến', 'Method')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('TL đầu ra', 'Output')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Xuất %', 'Outturn')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Cup Score', 'Cup Score')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('QC', 'QC')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -505,7 +505,7 @@ export default function ProcessingPage() {
                     <tr>
                       <td colSpan={11} className="text-center py-12 text-muted-foreground text-sm">
                         <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        {t('Không có bản ghi nào', 'No records found')}
+                        {t2('Không có bản ghi nào', 'No records found')}
                       </td>
                     </tr>
                   ) : (
@@ -568,13 +568,13 @@ export default function ProcessingPage() {
                                       <table className="w-full text-left">
                                         <thead>
                                           <tr className="bg-muted/50">
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('Giai đoạn', 'Stage')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('Ngày', 'Date')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('TL vào', 'In Wt')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('TL ra', 'Out Wt')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('Thời gian', 'Duration')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('Máy', 'Machine')}</th>
-                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t('QC', 'QC')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('Giai đoạn', 'Stage')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('Ngày', 'Date')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('TL vào', 'In Wt')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('TL ra', 'Out Wt')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('Thời gian', 'Duration')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('Máy', 'Machine')}</th>
+                                            <th className="px-3 py-2 text-[9px] font-bold text-muted-foreground uppercase">{t2('QC', 'QC')}</th>
                                           </tr>
                                         </thead>
                                         <tbody>
@@ -602,7 +602,7 @@ export default function ProcessingPage() {
                               {expandedRows.has(record.id) && record.processingStages.length === 0 && (
                                 <tr>
                                   <td colSpan={11} className="px-8 py-3 bg-muted/50 text-[10px] text-muted-foreground italic">
-                                    {t('Chưa có giai đoạn chế biến nào', 'No processing stages recorded')}
+                                    {t2('Chưa có giai đoạn chế biến nào', 'No processing stages recorded')}
                                   </td>
                                 </tr>
                               )}
@@ -639,17 +639,17 @@ export default function ProcessingPage() {
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-red-500" />
-              {t('Xác nhận xóa', 'Confirm Delete')}
+              {t2('Xác nhận xóa', 'Confirm Delete')}
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             {t(`Bạn có chắc muốn xóa lệnh "${deletingRecord?.jobOrderId || ''}"?`, `Are you sure you want to delete job order "${deletingRecord?.jobOrderId || ''}"?`)}
           </p>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">{t('Hủy', 'Cancel')}</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">{t2('Hủy', 'Cancel')}</Button>
             <Button onClick={handleDelete} disabled={submitting} className="bg-red-600 text-white rounded-xl hover:bg-red-700">
               {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              {t('Xóa', 'Delete')}
+              {t2('Xóa', 'Delete')}
             </Button>
           </div>
         </DialogContent>

@@ -8,6 +8,7 @@ import {
   Loader2, Download, Shield, Scan, Eye, Hash,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -55,7 +56,7 @@ const ENTITY_TYPES = [
 export default function QRVerifyPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
 
@@ -71,7 +72,6 @@ export default function QRVerifyPage() {
   const [generatedQR, setGeneratedQR] = useState<QRGenerateResult | null>(null)
   const [qrImageDataUrl, setQrImageDataUrl] = useState<string | null>(null)
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // Fetch entity options when entityType changes
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function QRVerifyPage() {
 
   const handleVerify = useCallback(async () => {
     if (!qrCodeInput.trim()) {
-      toast.error(t('Vui lòng nhập mã QR', 'Please enter a QR code'))
+      toast.error(t2('Vui lòng nhập mã QR', 'Please enter a QR code'))
       return
     }
     setLoading(true)
@@ -136,7 +136,7 @@ export default function QRVerifyPage() {
       } else {
         setVerifyResult({
           status: 'not_found',
-          message: data.error || t('Không thể xác minh', 'Unable to verify'),
+          message: data.error || t2('Không thể xác minh', 'Unable to verify'),
           qrCode: qrCodeInput.trim(),
           entityDetails: null,
           signatureValid: false,
@@ -144,7 +144,7 @@ export default function QRVerifyPage() {
         })
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setLoading(false)
     }
@@ -152,7 +152,7 @@ export default function QRVerifyPage() {
 
   const handleGenerate = useCallback(async () => {
     if (!entityType || !entityId) {
-      toast.error(t('Vui lòng chọn loại và ID thực thể', 'Please select entity type and ID'))
+      toast.error(t2('Vui lòng chọn loại và ID thực thể', 'Please select entity type and ID'))
       return
     }
     setGenerating(true)
@@ -167,7 +167,7 @@ export default function QRVerifyPage() {
       const data = await res.json()
       if (data.success) {
         setGeneratedQR(data.data)
-        toast.success(t('Tạo mã QR thành công!', 'QR code generated!'))
+        toast.success(t2('Tạo mã QR thành công!', 'QR code generated!'))
 
         // Generate QR code image using the qrcode library (client-side)
         const QRCode = (await import('qrcode')).default
@@ -178,10 +178,10 @@ export default function QRVerifyPage() {
         })
         setQrImageDataUrl(qrDataUrl)
       } else {
-        toast.error(data.error || t('Lỗi khi tạo mã QR', 'Error generating QR code'))
+        toast.error(data.error || t2('Lỗi khi tạo mã QR', 'Error generating QR code'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setGenerating(false)
     }
@@ -197,7 +197,7 @@ export default function QRVerifyPage() {
 
   if (status === 'loading') {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
@@ -205,7 +205,7 @@ export default function QRVerifyPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function QRVerifyPage() {
   if (status === 'unauthenticated') {
     router.push('/login')
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <Loader2 className="w-6 h-6 animate-spin text-foreground" />
         </div>
@@ -225,17 +225,17 @@ export default function QRVerifyPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <QrCode className="w-5 h-5 text-foreground" />
-              {t('Xác minh Mã QR', 'QR Code Verification')}
+              {t2('Xác minh Mã QR', 'QR Code Verification')}
             </h2>
             <p className="text-sm text-foreground">
-              {t('Xác minh tính toàn vẹn và tạo mã QR cho các thực thể', 'Verify integrity & generate QR codes for entities')}
+              {t2('Xác minh tính toàn vẹn và tạo mã QR cho các thực thể', 'Verify integrity & generate QR codes for entities')}
             </p>
           </div>
         </div>
@@ -249,14 +249,14 @@ export default function QRVerifyPage() {
                   <Scan className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">
-                  {t('Quét & Xác minh', 'Scan & Verify')}
+                  {t2('Quét & Xác minh', 'Scan & Verify')}
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-foreground">
-                    {t('Nhập mã QR', 'Enter QR Code')}
+                    {t2('Nhập mã QR', 'Enter QR Code')}
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -264,7 +264,7 @@ export default function QRVerifyPage() {
                       <Input
                         value={qrCodeInput}
                         onChange={(e) => setQrCodeInput(e.target.value)}
-                        placeholder={t('Dán hoặc nhập mã QR...', 'Paste or enter QR code...')}
+                        placeholder={t2('Dán hoặc nhập mã QR...', 'Paste or enter QR code...')}
                         className="pl-9 rounded-xl border-border focus:border-border font-mono text-xs"
                         onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
                       />
@@ -279,7 +279,7 @@ export default function QRVerifyPage() {
                       ) : (
                         <Shield className="w-4 h-4" />
                       )}
-                      {t('Xác minh', 'Verify')}
+                      {t2('Xác minh', 'Verify')}
                     </Button>
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default function QRVerifyPage() {
                               <CheckCircle2 className="w-6 h-6 text-green-600" />
                             </div>
                             <span className="text-sm font-bold text-green-800">
-                              {t('Hợp lệ — Chuỗi toàn vẹn', 'Valid — Chain Intact')}
+                              {t2('Hợp lệ — Chuỗi toàn vẹn', 'Valid — Chain Intact')}
                             </span>
                           </div>
                           <div className="space-y-1.5">
@@ -304,7 +304,7 @@ export default function QRVerifyPage() {
                               </Badge>
                               <Badge className="bg-green-100 text-green-700 text-[10px] border-0">
                                 <Shield className="w-3 h-3 mr-1" />
-                                {t('Chữ ký hợp lệ', 'Signature Valid')}
+                                {t2('Chữ ký hợp lệ', 'Signature Valid')}
                               </Badge>
                             </div>
                             {verifyResult.entityDetails && (
@@ -342,7 +342,7 @@ export default function QRVerifyPage() {
                               <XCircle className="w-6 h-6 text-red-600" />
                             </div>
                             <span className="text-sm font-bold text-red-800">
-                              {t('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
+                              {t2('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
                             </span>
                           </div>
                           <p className="text-xs text-red-700">
@@ -369,11 +369,11 @@ export default function QRVerifyPage() {
                               <AlertTriangle className="w-6 h-6 text-yellow-600" />
                             </div>
                             <span className="text-sm font-bold text-yellow-800">
-                              {t('Không tìm thấy', 'Not Found')}
+                              {t2('Không tìm thấy', 'Not Found')}
                             </span>
                           </div>
                           <p className="text-xs text-yellow-700">
-                            {t('Mã QR không tồn tại trong hệ thống. Vui lòng kiểm tra lại.', 'QR code not found in system. Please double check.')}
+                            {t2('Mã QR không tồn tại trong hệ thống. Vui lòng kiểm tra lại.', 'QR code not found in system. Please double check.')}
                           </p>
                         </div>
                       )}
@@ -391,7 +391,7 @@ export default function QRVerifyPage() {
                   <QrCode className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">
-                  {t('Tạo Mã QR', 'Generate QR Code')}
+                  {t2('Tạo Mã QR', 'Generate QR Code')}
                 </h3>
               </div>
 
@@ -399,11 +399,11 @@ export default function QRVerifyPage() {
                 {/* Entity Type */}
                 <div className="space-y-1.5">
                   <Label className="text-xs text-foreground">
-                    {t('Loại thực thể', 'Entity Type')}
+                    {t2('Loại thực thể', 'Entity Type')}
                   </Label>
                   <Select value={entityType} onValueChange={setEntityType}>
                     <SelectTrigger className="rounded-xl border-border">
-                      <SelectValue placeholder={t('Chọn loại...', 'Select type...')} />
+                      <SelectValue placeholder={t2('Chọn loại...', 'Select type...')} />
                     </SelectTrigger>
                     <SelectContent>
                       {ENTITY_TYPES.map((et) => (
@@ -418,17 +418,17 @@ export default function QRVerifyPage() {
                 {/* Entity ID */}
                 <div className="space-y-1.5">
                   <Label className="text-xs text-foreground">
-                    {t('Chọn thực thể', 'Select Entity')}
+                    {t2('Chọn thực thể', 'Select Entity')}
                   </Label>
                   {entityOptionsLoading ? (
                     <div className="flex items-center gap-2 text-xs text-foreground py-2">
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      {t('Đang tải...', 'Loading...')}
+                      {t2('Đang tải...', 'Loading...')}
                     </div>
                   ) : entityOptions.length > 0 ? (
                     <Select value={entityId} onValueChange={setEntityId}>
                       <SelectTrigger className="rounded-xl border-border">
-                        <SelectValue placeholder={t('Chọn...', 'Select...')} />
+                        <SelectValue placeholder={t2('Chọn...', 'Select...')} />
                       </SelectTrigger>
                       <SelectContent className="max-h-48">
                         {entityOptions.map((opt) => (
@@ -440,11 +440,11 @@ export default function QRVerifyPage() {
                     </Select>
                   ) : entityType ? (
                     <p className="text-xs text-foreground py-2">
-                      {t('Không có dữ liệu', 'No data available')}
+                      {t2('Không có dữ liệu', 'No data available')}
                     </p>
                   ) : (
                     <p className="text-xs text-foreground py-2">
-                      {t('Chọn loại thực thể trước', 'Select entity type first')}
+                      {t2('Chọn loại thực thể trước', 'Select entity type first')}
                     </p>
                   )}
                 </div>
@@ -458,12 +458,12 @@ export default function QRVerifyPage() {
                   {generating ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      {t('Đang tạo...', 'Generating...')}
+                      {t2('Đang tạo...', 'Generating...')}
                     </>
                   ) : (
                     <>
                       <QrCode className="w-4 h-4" />
-                      {t('Tạo Mã QR', 'Generate QR Code')}
+                      {t2('Tạo Mã QR', 'Generate QR Code')}
                     </>
                   )}
                 </Button>
@@ -478,7 +478,7 @@ export default function QRVerifyPage() {
                             <div className="bg-white rounded-xl p-3 shadow-sm">
                               <img
                                 src={qrImageDataUrl}
-                                alt="Generated QR Code"
+                                alt={t2('Mã QR đã tạo', 'Generated QR Code')}
                                 className="w-56 h-56"
                               />
                             </div>
@@ -488,19 +488,19 @@ export default function QRVerifyPage() {
                         {/* QR Code Text */}
                         <div className="bg-card/60 rounded-lg p-3 space-y-1.5">
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-foreground">{t('Mã QR', 'QR Code')}</span>
+                            <span className="text-foreground">{t2('Mã QR', 'QR Code')}</span>
                             <span className="text-foreground font-mono font-medium text-[10px] break-all text-right max-w-[200px]">
                               {generatedQR.qrCode}
                             </span>
                           </div>
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-foreground">HMAC</span>
+                            <span className="text-foreground">{t2('HMAC', 'HMAC')}</span>
                             <span className="text-foreground font-mono text-[10px] break-all text-right max-w-[200px]">
                               {generatedQR.hmacSignature.substring(0, 32)}...
                             </span>
                           </div>
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-foreground">{t('Payload', 'Payload')}</span>
+                            <span className="text-foreground">{t2('Payload', 'Payload')}</span>
                             <span className="text-foreground font-mono text-[10px]">{generatedQR.payload}</span>
                           </div>
                         </div>
@@ -513,7 +513,7 @@ export default function QRVerifyPage() {
                           size="sm"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          {t('Tải xuống QR', 'Download QR')}
+                          {t2('Tải xuống QR', 'Download QR')}
                         </Button>
                       </div>
                     </div>
@@ -531,7 +531,7 @@ export default function QRVerifyPage() {
                 <Hash className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-sm font-bold text-foreground">
-                {t('Chi tiết Xác minh HMAC', 'HMAC Verification Details')}
+                {t2('Chi tiết Xác minh HMAC', 'HMAC Verification Details')}
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -539,35 +539,35 @@ export default function QRVerifyPage() {
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-foreground" />
                   <span className="text-xs font-bold text-foreground">
-                    {t('Thuật toán', 'Algorithm')}
+                    {t2('Thuật toán', 'Algorithm')}
                   </span>
                 </div>
                 <p className="text-[11px] text-foreground">
                   HMAC-SHA256
                 </p>
                 <p className="text-[10px] text-foreground">
-                  {t('Ký mã QR bằng khóa bí mật để chống giả mạo', 'Signs QR codes with a secret key to prevent tampering')}
+                  {t2('Ký mã QR bằng khóa bí mật để chống giả mạo', 'Signs QR codes with a secret key to prevent tampering')}
                 </p>
               </div>
               <div className="rounded-xl bg-muted/80 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-foreground" />
                   <span className="text-xs font-bold text-foreground">
-                    {t('Quy trình xác minh', 'Verification Process')}
+                    {t2('Quy trình xác minh', 'Verification Process')}
                   </span>
                 </div>
                 <ol className="text-[10px] text-foreground space-y-1 list-decimal list-inside">
-                  <li>{t('Quét mã QR', 'Scan QR code')}</li>
-                  <li>{t('Truy xuất bản ghi HMAC', 'Retrieve HMAC record')}</li>
-                  <li>{t('Tái tính toán chữ ký', 'Recompute signature')}</li>
-                  <li>{t('So sánh an toàn thời gian', 'Timing-safe comparison')}</li>
+                  <li>{t2('Quét mã QR', 'Scan QR code')}</li>
+                  <li>{t2('Truy xuất bản ghi HMAC', 'Retrieve HMAC record')}</li>
+                  <li>{t2('Tái tính toán chữ ký', 'Recompute signature')}</li>
+                  <li>{t2('So sánh an toàn thời gian', 'Timing-safe comparison')}</li>
                 </ol>
               </div>
               <div className="rounded-xl bg-muted/80 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-foreground" />
                   <span className="text-xs font-bold text-foreground">
-                    {t('Bảo vệ', 'Protection')}
+                    {t2('Bảo vệ', 'Protection')}
                   </span>
                 </div>
                 <p className="text-[10px] text-foreground">

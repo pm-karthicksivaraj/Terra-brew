@@ -9,6 +9,7 @@ import {
   QrCode, Link2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -109,7 +110,7 @@ function truncateMiddle(str: string, maxLen: number): string {
 export default function NFCTagsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
 
   // List state
   const [records, setRecords] = useState<NFCRecord[]>([])
@@ -135,7 +136,6 @@ export default function NFCTagsPage() {
   const [verifying, setVerifying] = useState(false)
   const [verifyResult, setVerifyResult] = useState<NFCVerifyResult | null>(null)
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   // ─── Fetch NFC Tags ─────────────────────────────────────────────
 
@@ -228,7 +228,7 @@ export default function NFCTagsPage() {
   const handleBindSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!bindForm.entityType || !bindForm.entityId || !bindForm.nfcTagId.trim()) {
-      toast.error(t('Vui lòng điền đầy đủ thông tin', 'Please fill in all fields'))
+      toast.error(t2('Vui lòng điền đầy đủ thông tin', 'Please fill in all fields'))
       return
     }
 
@@ -245,15 +245,15 @@ export default function NFCTagsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Gắn NFC Tag thành công!', 'NFC Tag bound successfully!'))
+        toast.success(t2('Gắn NFC Tag thành công!', 'NFC Tag bound successfully!'))
         setDialogOpen(false)
         resetBindForm()
         fetchRecords()
       } else {
-        toast.error(data.error || t('Lỗi khi gắn NFC Tag', 'Error binding NFC Tag'))
+        toast.error(data.error || t2('Lỗi khi gắn NFC Tag', 'Error binding NFC Tag'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -261,7 +261,7 @@ export default function NFCTagsPage() {
 
   const handleVerify = useCallback(async () => {
     if (!verifyInput.trim()) {
-      toast.error(t('Vui lòng nhập NFC Tag ID', 'Please enter NFC Tag ID'))
+      toast.error(t2('Vui lòng nhập NFC Tag ID', 'Please enter NFC Tag ID'))
       return
     }
     setVerifying(true)
@@ -278,7 +278,7 @@ export default function NFCTagsPage() {
       } else {
         setVerifyResult({
           status: 'not_found',
-          message: data.error || t('Không thể xác minh', 'Unable to verify'),
+          message: data.error || t2('Không thể xác minh', 'Unable to verify'),
           qrCode: verifyInput.trim(),
           signatureValid: false,
           entityDetails: null,
@@ -286,7 +286,7 @@ export default function NFCTagsPage() {
         })
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setVerifying(false)
     }
@@ -308,7 +308,7 @@ export default function NFCTagsPage() {
       } else {
         setVerifyResult({
           status: 'not_found',
-          message: data.error || t('Không thể xác minh', 'Unable to verify'),
+          message: data.error || t2('Không thể xác minh', 'Unable to verify'),
           qrCode: nfcTagId,
           signatureValid: false,
           entityDetails: null,
@@ -316,7 +316,7 @@ export default function NFCTagsPage() {
         })
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setVerifying(false)
     }
@@ -328,7 +328,7 @@ export default function NFCTagsPage() {
 
   if (status === 'loading' || (loading && records.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
@@ -336,7 +336,7 @@ export default function NFCTagsPage() {
             </div>
             <div className="flex items-center gap-2 text-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -347,14 +347,14 @@ export default function NFCTagsPage() {
   // ─── Render ──────────────────────────────────────────────────────
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* ─── Header ─── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Nfc className="w-5 h-5 text-foreground" />
-              {t('Quản lý NFC Tags', 'NFC Tag Management')}
+              {t2('Quản lý NFC Tags', 'NFC Tag Management')}
             </h2>
             <p className="text-sm text-foreground">
               {t(
@@ -371,26 +371,26 @@ export default function NFCTagsPage() {
                 onClick={() => { resetBindForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Gắn NFC Tag', 'Bind NFC Tag')}
+                {t2('Gắn NFC Tag', 'Bind NFC Tag')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Nfc className="w-5 h-5" />
-                  {t('Gắn NFC Tag mới', 'Bind New NFC Tag')}
+                  {t2('Gắn NFC Tag mới', 'Bind New NFC Tag')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleBindSubmit} className="space-y-4">
                 {/* Entity Type */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-foreground">{t('Loại thực thể', 'Entity Type')} *</Label>
+                  <Label className="text-xs text-foreground">{t2('Loại thực thể', 'Entity Type')} *</Label>
                   <Select
                     value={bindForm.entityType}
                     onValueChange={(v) => setBindForm({ ...bindForm, entityType: v, entityId: '' })}
                   >
                     <SelectTrigger className="rounded-xl border-border">
-                      <SelectValue placeholder={t('Chọn loại thực thể...', 'Select entity type...')} />
+                      <SelectValue placeholder={t2('Chọn loại thực thể...', 'Select entity type...')} />
                     </SelectTrigger>
                     <SelectContent>
                       {ENTITY_TYPES.map((et) => (
@@ -404,16 +404,16 @@ export default function NFCTagsPage() {
 
                 {/* Entity ID */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-foreground">{t('Chọn thực thể', 'Select Entity')} *</Label>
+                  <Label className="text-xs text-foreground">{t2('Chọn thực thể', 'Select Entity')} *</Label>
                   {entityOptionsLoading ? (
                     <div className="flex items-center gap-2 text-xs text-foreground py-2">
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      {t('Đang tải...', 'Loading...')}
+                      {t2('Đang tải...', 'Loading...')}
                     </div>
                   ) : entityOptions.length > 0 ? (
                     <Select value={bindForm.entityId} onValueChange={(v) => setBindForm({ ...bindForm, entityId: v })}>
                       <SelectTrigger className="rounded-xl border-border">
-                        <SelectValue placeholder={t('Chọn...', 'Select...')} />
+                        <SelectValue placeholder={t2('Chọn...', 'Select...')} />
                       </SelectTrigger>
                       <SelectContent className="max-h-48">
                         {entityOptions.map((opt) => (
@@ -424,19 +424,19 @@ export default function NFCTagsPage() {
                       </SelectContent>
                     </Select>
                   ) : bindForm.entityType ? (
-                    <p className="text-xs text-foreground py-2">{t('Không có dữ liệu', 'No data available')}</p>
+                    <p className="text-xs text-foreground py-2">{t2('Không có dữ liệu', 'No data available')}</p>
                   ) : (
-                    <p className="text-xs text-foreground py-2">{t('Chọn loại thực thể trước', 'Select entity type first')}</p>
+                    <p className="text-xs text-foreground py-2">{t2('Chọn loại thực thể trước', 'Select entity type first')}</p>
                   )}
                 </div>
 
                 {/* NFC Tag ID */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-foreground">{t('Mã NFC Tag', 'NFC Tag ID')} *</Label>
+                  <Label className="text-xs text-foreground">{t2('Mã NFC Tag', 'NFC Tag ID')} *</Label>
                   <Input
                     value={bindForm.nfcTagId}
                     onChange={(e) => setBindForm({ ...bindForm, nfcTagId: e.target.value })}
-                    placeholder={t('Nhập mã NFC Tag vật lý...', 'Enter physical NFC Tag ID...')}
+                    placeholder={t2('Nhập mã NFC Tag vật lý...', 'Enter physical NFC Tag ID...')}
                     className="rounded-xl border-border focus:border-border font-mono"
                   />
                   <p className="text-[10px] text-foreground">
@@ -449,7 +449,7 @@ export default function NFCTagsPage() {
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetBindForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -457,8 +457,8 @@ export default function NFCTagsPage() {
                     className="btn-primary-gradient rounded-xl"
                   >
                     {submitting ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang gắn...', 'Binding...')}</>
-                    ) : t('Gắn Tag', 'Bind Tag')}
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Đang gắn...', 'Binding...')}</>
+                    ) : t2('Gắn Tag', 'Bind Tag')}
                   </Button>
                 </div>
               </form>
@@ -478,10 +478,10 @@ export default function NFCTagsPage() {
                   onValueChange={(v) => { setEntityTypeFilter(v); setPage(1) }}
                 >
                   <SelectTrigger className="rounded-xl border-border bg-background">
-                    <SelectValue placeholder={t('Lọc loại thực thể...', 'Filter entity type...')} />
+                    <SelectValue placeholder={t2('Lọc loại thực thể...', 'Filter entity type...')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t('Tất cả', 'All')}</SelectItem>
+                    <SelectItem value="all">{t2('Tất cả', 'All')}</SelectItem>
                     {ENTITY_TYPES.map((et) => (
                       <SelectItem key={et.value} value={et.value}>
                         {t(et.labelVi, et.labelEn)}
@@ -502,25 +502,25 @@ export default function NFCTagsPage() {
                   <thead>
                     <tr className="bg-muted border-b border-border">
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">
-                        {t('NFC Tag ID', 'NFC Tag ID')}
+                        {t2('NFC Tag ID', 'NFC Tag ID')}
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">
-                        {t('Loại thực thể', 'Entity Type')}
+                        {t2('Loại thực thể', 'Entity Type')}
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">
-                        {t('Mã thực thể', 'Entity ID')}
+                        {t2('Mã thực thể', 'Entity ID')}
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">
-                        {t('QR Code', 'QR Code')}
+                        {t2('QR Code', 'QR Code')}
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden lg:table-cell">
                         HMAC
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider hidden md:table-cell">
-                        {t('Ngày tạo', 'Created At')}
+                        {t2('Ngày tạo', 'Created At')}
                       </th>
                       <th className="px-4 py-3 text-[10px] font-bold text-foreground uppercase tracking-wider">
-                        {t('Thao tác', 'Actions')}
+                        {t2('Thao tác', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -529,7 +529,7 @@ export default function NFCTagsPage() {
                         <tr>
                           <td colSpan={7} className="text-center py-12 text-foreground text-sm">
                             <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            {t('Không có NFC Tag nào', 'No NFC tags found')}
+                            {t2('Không có NFC Tag nào', 'No NFC tags found')}
                           </td>
                         </tr>
                       ) : (
@@ -572,7 +572,7 @@ export default function NFCTagsPage() {
                                   size="sm"
                                   className="h-7 w-7 p-0 text-foreground hover:text-foreground"
                                   onClick={() => handleVerifyFromTable(tagId)}
-                                  title={t('Xác minh', 'Verify')}
+                                  title={t2('Xác minh', 'Verify')}
                                 >
                                   <Shield className="w-3.5 h-3.5" />
                                 </Button>
@@ -639,7 +639,7 @@ export default function NFCTagsPage() {
                   <Shield className="w-4 h-4 text-white" />
                 </div>
                 <h3 className="text-sm font-bold text-foreground">
-                  {t('Xác minh NFC', 'NFC Verification')}
+                  {t2('Xác minh NFC', 'NFC Verification')}
                 </h3>
               </div>
 
@@ -647,7 +647,7 @@ export default function NFCTagsPage() {
                 {/* Input */}
                 <div className="space-y-1.5">
                   <Label className="text-xs text-foreground">
-                    {t('Mã NFC Tag ID', 'NFC Tag ID')}
+                    {t2('Mã NFC Tag ID', 'NFC Tag ID')}
                   </Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -655,7 +655,7 @@ export default function NFCTagsPage() {
                       <Input
                         value={verifyInput}
                         onChange={(e) => setVerifyInput(e.target.value)}
-                        placeholder={t('Nhập NFC Tag ID...', 'Enter NFC Tag ID...')}
+                        placeholder={t2('Nhập NFC Tag ID...', 'Enter NFC Tag ID...')}
                         className="pl-9 rounded-xl border-border focus:border-border font-mono text-xs"
                         onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
                       />
@@ -670,7 +670,7 @@ export default function NFCTagsPage() {
                       ) : (
                         <Shield className="w-4 h-4" />
                       )}
-                      {t('Xác minh', 'Verify')}
+                      {t2('Xác minh', 'Verify')}
                     </Button>
                   </div>
                 </div>
@@ -686,7 +686,7 @@ export default function NFCTagsPage() {
                               <CheckCircle2 className="w-6 h-6 text-green-600" />
                             </div>
                             <span className="text-sm font-bold text-green-800">
-                              {t('Hợp lệ — Tag toàn vẹn', 'Valid — Tag Intact')}
+                              {t2('Hợp lệ — Tag toàn vẹn', 'Valid — Tag Intact')}
                             </span>
                           </div>
                           <div className="space-y-1.5">
@@ -696,7 +696,7 @@ export default function NFCTagsPage() {
                               </Badge>
                               <Badge className="bg-green-100 text-green-700 text-[10px] border-0">
                                 <Shield className="w-3 h-3 mr-1" />
-                                {t('Chữ ký hợp lệ', 'Signature Valid')}
+                                {t2('Chữ ký hợp lệ', 'Signature Valid')}
                               </Badge>
                               {verifyResult.isNFC && (
                                 <Badge className="bg-green-100 text-green-700 text-[10px] border-0">
@@ -744,7 +744,7 @@ export default function NFCTagsPage() {
                               <XCircle className="w-6 h-6 text-red-600" />
                             </div>
                             <span className="text-sm font-bold text-red-800">
-                              {t('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
+                              {t2('Không hợp lệ — Phát hiện giả mạo!', 'Invalid — Tampering Detected!')}
                             </span>
                           </div>
                           <p className="text-xs text-red-700">
@@ -773,7 +773,7 @@ export default function NFCTagsPage() {
                               <AlertTriangle className="w-6 h-6 text-yellow-600" />
                             </div>
                             <span className="text-sm font-bold text-yellow-800">
-                              {t('Không tìm thấy', 'Not Found')}
+                              {t2('Không tìm thấy', 'Not Found')}
                             </span>
                           </div>
                           <p className="text-xs text-yellow-700">
@@ -797,21 +797,21 @@ export default function NFCTagsPage() {
                     <QrCode className="w-3.5 h-3.5 text-white" />
                   </div>
                   <h4 className="text-xs font-bold text-foreground">
-                    {t('NFC vs QR Code', 'NFC vs QR Code')}
+                    {t2('NFC vs QR Code', 'NFC vs QR Code')}
                   </h4>
                 </div>
                 <div className="space-y-2 text-[10px] text-foreground">
                   <div className="flex items-start gap-2">
                     <Nfc className="w-3.5 h-3.5 text-foreground mt-0.5 shrink-0" />
-                    <p>{t('NFC Tags sử dụng chip vật lý, chống sao chép tốt hơn QR Code.', 'NFC Tags use physical chips, harder to copy than QR Codes.')}</p>
+                    <p>{t2('NFC Tags sử dụng chip vật lý, chống sao chép tốt hơn QR Code.', 'NFC Tags use physical chips, harder to copy than QR Codes.')}</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Shield className="w-3.5 h-3.5 text-foreground mt-0.5 shrink-0" />
-                    <p>{t('Mỗi NFC Tag được ký bằng HMAC-SHA256 để đảm bảo tính toàn vẹn.', 'Each NFC Tag is signed with HMAC-SHA256 to ensure integrity.')}</p>
+                    <p>{t2('Mỗi NFC Tag được ký bằng HMAC-SHA256 để đảm bảo tính toàn vẹn.', 'Each NFC Tag is signed with HMAC-SHA256 to ensure integrity.')}</p>
                   </div>
                   <div className="flex items-start gap-2">
                     <Link2 className="w-3.5 h-3.5 text-foreground mt-0.5 shrink-0" />
-                    <p>{t('NFC Tags được ghi vào chuỗi khối (hash chain) để truy xuất nguồn gốc.', 'NFC Tags are recorded in hash chain for traceability.')}</p>
+                    <p>{t2('NFC Tags được ghi vào chuỗi khối (hash chain) để truy xuất nguồn gốc.', 'NFC Tags are recorded in hash chain for traceability.')}</p>
                   </div>
                 </div>
               </Card>

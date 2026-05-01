@@ -30,8 +30,8 @@ export function ClientApp({ children }: { children: React.ReactNode }) {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          fontFamily: '"Space Mono", monospace',
-          color: '#6B4226',
+          fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+          color: '#0D9488',
         }}
       >
         <div style={{ textAlign: 'center' }}>

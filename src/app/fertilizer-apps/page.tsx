@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Coffee, Droplets, Search, Plus,
   ChevronLeft, ChevronRight, Loader2,
-  Pencil, Trash2, Leaf,
+  Pencil, Trash2, Eye, Leaf,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -58,7 +59,7 @@ interface FertilizerApp {
 export default function FertilizerAppsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [lang, setLang] = useState<'vi' | 'en'>('vi')
+  const { t, t2, lang } = useI18n()
   const [items, setItems] = useState<FertilizerApp[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -73,7 +74,6 @@ export default function FertilizerAppsPage() {
   const [farmers, setFarmers] = useState<FarmerOption[]>([])
   const [farmLands, setFarmLands] = useState<FarmLandOption[]>([])
 
-  const t = (vi: string, en: string) => lang === 'vi' ? vi : en
 
   const [form, setForm] = useState({
     farmerId: '',
@@ -203,7 +203,7 @@ export default function FertilizerAppsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.farmerId || !form.farmLandId) {
-      toast.error(t('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
+      toast.error(t2('Vui lòng điền các trường bắt buộc', 'Please fill required fields'))
       return
     }
     setSubmitting(true)
@@ -230,15 +230,15 @@ export default function FertilizerAppsPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success(editingItem ? t('Cập nhật thành công!', 'Updated successfully!') : t('Tạo phân bón thành công!', 'Fertilizer application created!'))
+        toast.success(editingItem ? t2('Cập nhật thành công!', 'Updated successfully!') : t2('Tạo phân bón thành công!', 'Fertilizer application created!'))
         setDialogOpen(false)
         resetForm()
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi lưu', 'Error saving'))
+        toast.error(data.error || t2('Lỗi khi lưu', 'Error saving'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     } finally {
       setSubmitting(false)
     }
@@ -249,13 +249,13 @@ export default function FertilizerAppsPage() {
       const res = await fetch(`/api/fertilizer-apps?id=${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (data.success) {
-        toast.success(t('Xóa thành công!', 'Deleted successfully!'))
+        toast.success(t2('Xóa thành công!', 'Deleted successfully!'))
         fetchItems()
       } else {
-        toast.error(data.error || t('Lỗi khi xóa', 'Error deleting'))
+        toast.error(data.error || t2('Lỗi khi xóa', 'Error deleting'))
       }
     } catch {
-      toast.error(t('Lỗi kết nối', 'Connection error'))
+      toast.error(t2('Lỗi kết nối', 'Connection error'))
     }
     setDeleteConfirm(null)
   }
@@ -264,7 +264,7 @@ export default function FertilizerAppsPage() {
 
   if (status === 'loading' || (loading && items.length === 0)) {
     return (
-      <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
@@ -272,7 +272,7 @@ export default function FertilizerAppsPage() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{t('Đang tải...', 'Loading...')}</span>
+              <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
           </div>
         </div>
@@ -281,14 +281,14 @@ export default function FertilizerAppsPage() {
   }
 
   return (
-    <DashboardShell lang={lang} onLangToggle={() => setLang(lang === 'vi' ? 'en' : 'vi')}>
+    <DashboardShell>
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
               <Droplets className="w-5 h-5 text-muted-foreground" />
-              {t('Quản lý Phân bón', 'Fertilizer Application Management')}
+              {t2('Quản lý Phân bón', 'Fertilizer Application Management')}
             </h2>
             <p className="text-sm text-muted-foreground">{t(`Tổng số: ${total} bản ghi`, `Total: ${total} records`)}</p>
           </div>
@@ -300,24 +300,24 @@ export default function FertilizerAppsPage() {
                 onClick={() => { resetForm(); setDialogOpen(true) }}
               >
                 <Plus className="w-4 h-4" />
-                {t('Thêm phân bón', 'Add Fertilizer App')}
+                {t2('Thêm phân bón', 'Add Fertilizer App')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
                 <DialogTitle className="text-foreground flex items-center gap-2">
                   <Droplets className="w-5 h-5" />
-                  {editingItem ? t('Sửa phân bón', 'Edit Fertilizer App') : t('Thêm phân bón mới', 'Add New Fertilizer App')}
+                  {editingItem ? t2('Sửa phân bón', 'Edit Fertilizer App') : t2('Thêm phân bón mới', 'Add New Fertilizer App')}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Farmer */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Nông dân', 'Farmer')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Nông dân', 'Farmer')} *</Label>
                     <Select value={form.farmerId} onValueChange={(v) => setForm({ ...form, farmerId: v, farmLandId: '' })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn nông dân', 'Select farmer')} />
+                        <SelectValue placeholder={t2('Chọn nông dân', 'Select farmer')} />
                       </SelectTrigger>
                       <SelectContent>
                         {farmers.map((f) => (
@@ -329,10 +329,10 @@ export default function FertilizerAppsPage() {
 
                   {/* Farm Land */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đất nông trại', 'Farm Land')} *</Label>
+                    <Label className="text-xs text-foreground">{t2('Đất nông trại', 'Farm Land')} *</Label>
                     <Select value={form.farmLandId} onValueChange={(v) => setForm({ ...form, farmLandId: v })} disabled={!form.farmerId}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn đất', 'Select farm land')} />
+                        <SelectValue placeholder={t2('Chọn đất', 'Select farm land')} />
                       </SelectTrigger>
                       <SelectContent>
                         {filteredFarmLands.map((fl) => (
@@ -344,125 +344,125 @@ export default function FertilizerAppsPage() {
 
                   {/* Application Date */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Ngày bón', 'Application Date')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Ngày bón', 'Application Date')}</Label>
                     <Input type="date" value={form.applicationDate} onChange={(e) => setForm({ ...form, applicationDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Fertilizer Type */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Loại phân bón', 'Fertilizer Type')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Loại phân bón', 'Fertilizer Type')}</Label>
                     <Select value={form.fertilizerType} onValueChange={(v) => setForm({ ...form, fertilizerType: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn loại', 'Select type')} />
+                        <SelectValue placeholder={t2('Chọn loại', 'Select type')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="organic">{t('Hữu cơ', 'Organic')}</SelectItem>
-                        <SelectItem value="inorganic">{t('Vô cơ', 'Inorganic')}</SelectItem>
-                        <SelectItem value="bio_fertilizer">{t('Vi sinh', 'Bio-fertilizer')}</SelectItem>
-                        <SelectItem value="foliar">{t('Phun lá', 'Foliar')}</SelectItem>
-                        <SelectItem value="compound">{t('Hỗn hợp', 'Compound')}</SelectItem>
+                        <SelectItem value="organic">{t2('Hữu cơ', 'Organic')}</SelectItem>
+                        <SelectItem value="inorganic">{t2('Vô cơ', 'Inorganic')}</SelectItem>
+                        <SelectItem value="bio_fertilizer">{t2('Vi sinh', 'Bio-fertilizer')}</SelectItem>
+                        <SelectItem value="foliar">{t2('Phun lá', 'Foliar')}</SelectItem>
+                        <SelectItem value="compound">{t2('Hỗn hợp', 'Compound')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Fertilizer Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tên phân bón', 'Fertilizer Name')}</Label>
-                    <Input value={form.fertilizerName} onChange={(e) => setForm({ ...form, fertilizerName: e.target.value })} placeholder={t('VD: NPK 16-16-8', 'e.g. NPK 16-16-8')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Tên phân bón', 'Fertilizer Name')}</Label>
+                    <Input value={form.fertilizerName} onChange={(e) => setForm({ ...form, fertilizerName: e.target.value })} placeholder={t2('VD: NPK 16-16-8', 'e.g. NPK 16-16-8')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Nutrient Content */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Thành phần DD', 'Nutrient Content')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Thành phần DD', 'Nutrient Content')}</Label>
                     <Input value={form.nutrientContent} onChange={(e) => setForm({ ...form, nutrientContent: e.target.value })} placeholder="N-P-K: 16-16-8" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Application Rate */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Liều lượng', 'Application Rate')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Liều lượng', 'Application Rate')}</Label>
                     <Input type="number" value={form.applicationRate} onChange={(e) => setForm({ ...form, applicationRate: e.target.value })} placeholder="250" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Unit */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đơn vị', 'Unit')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Đơn vị', 'Unit')}</Label>
                     <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn đơn vị', 'Select unit')} />
+                        <SelectValue placeholder={t2('Chọn đơn vị', 'Select unit')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="kg">{t('kg', 'kg')}</SelectItem>
-                        <SelectItem value="g">{t('g', 'g')}</SelectItem>
-                        <SelectItem value="liters">{t('Lít', 'Liters')}</SelectItem>
-                        <SelectItem value="ml">{t('ml', 'ml')}</SelectItem>
-                        <SelectItem value="bags">{t('Bao', 'Bags')}</SelectItem>
+                        <SelectItem value="kg">{t2('kg', 'kg')}</SelectItem>
+                        <SelectItem value="g">{t2('g', 'g')}</SelectItem>
+                        <SelectItem value="liters">{t2('Lít', 'Liters')}</SelectItem>
+                        <SelectItem value="ml">{t2('ml', 'ml')}</SelectItem>
+                        <SelectItem value="bags">{t2('Bao', 'Bags')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Total Quantity */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổng số lượng', 'Total Quantity')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tổng số lượng', 'Total Quantity')}</Label>
                     <Input type="number" value={form.totalQuantity} onChange={(e) => setForm({ ...form, totalQuantity: e.target.value })} placeholder="500" step="0.1" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Application Method */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('PP bón', 'Application Method')}</Label>
+                    <Label className="text-xs text-foreground">{t2('PP bón', 'Application Method')}</Label>
                     <Select value={form.applicationMethod} onValueChange={(v) => setForm({ ...form, applicationMethod: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn PP', 'Select method')} />
+                        <SelectValue placeholder={t2('Chọn PP', 'Select method')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="broadcasting">{t('Rải', 'Broadcasting')}</SelectItem>
-                        <SelectItem value="banding">{t('Băng', 'Banding')}</SelectItem>
-                        <SelectItem value="foliar_spray">{t('Phun lá', 'Foliar Spray')}</SelectItem>
-                        <SelectItem value="drip_fertigation">{t('Nhỏ giọt', 'Drip Fertigation')}</SelectItem>
-                        <SelectItem value="basal">{t('Bón lót', 'Basal')}</SelectItem>
-                        <SelectItem value="top_dressing">{t('Bón thúc', 'Top Dressing')}</SelectItem>
+                        <SelectItem value="broadcasting">{t2('Rải', 'Broadcasting')}</SelectItem>
+                        <SelectItem value="banding">{t2('Băng', 'Banding')}</SelectItem>
+                        <SelectItem value="foliar_spray">{t2('Phun lá', 'Foliar Spray')}</SelectItem>
+                        <SelectItem value="drip_fertigation">{t2('Nhỏ giọt', 'Drip Fertigation')}</SelectItem>
+                        <SelectItem value="basal">{t2('Bón lót', 'Basal')}</SelectItem>
+                        <SelectItem value="top_dressing">{t2('Bón thúc', 'Top Dressing')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Cost Per Unit */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Đơn giá', 'Cost Per Unit')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Đơn giá', 'Cost Per Unit')}</Label>
                     <Input type="number" value={form.costPerUnit} onChange={(e) => setForm({ ...form, costPerUnit: e.target.value })} placeholder="25000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Total Cost */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Tổng chi phí', 'Total Cost')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Tổng chi phí', 'Total Cost')}</Label>
                     <Input type="number" value={form.totalCost} onChange={(e) => setForm({ ...form, totalCost: e.target.value })} placeholder="12500000" className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Weather at Application */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Thời tiết khi bón', 'Weather at Application')}</Label>
+                    <Label className="text-xs text-foreground">{t2('Thời tiết khi bón', 'Weather at Application')}</Label>
                     <Select value={form.weatherAtApplication} onValueChange={(v) => setForm({ ...form, weatherAtApplication: v })}>
                       <SelectTrigger className="rounded-xl border-input">
-                        <SelectValue placeholder={t('Chọn thời tiết', 'Select weather')} />
+                        <SelectValue placeholder={t2('Chọn thời tiết', 'Select weather')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="sunny">{t('Nắng', 'Sunny')}</SelectItem>
-                        <SelectItem value="cloudy">{t('Nhiều mây', 'Cloudy')}</SelectItem>
-                        <SelectItem value="rainy">{t('Mưa', 'Rainy')}</SelectItem>
-                        <SelectItem value="dry">{t('Khô', 'Dry')}</SelectItem>
+                        <SelectItem value="sunny">{t2('Nắng', 'Sunny')}</SelectItem>
+                        <SelectItem value="cloudy">{t2('Nhiều mây', 'Cloudy')}</SelectItem>
+                        <SelectItem value="rainy">{t2('Mưa', 'Rainy')}</SelectItem>
+                        <SelectItem value="dry">{t2('Khô', 'Dry')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Applied By */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-foreground">{t('Người bón', 'Applied By')}</Label>
-                    <Input value={form.appliedBy} onChange={(e) => setForm({ ...form, appliedBy: e.target.value })} placeholder={t('Tên người thực hiện', 'Name of applicator')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Người bón', 'Applied By')}</Label>
+                    <Input value={form.appliedBy} onChange={(e) => setForm({ ...form, appliedBy: e.target.value })} placeholder={t2('Tên người thực hiện', 'Name of applicator')} className="rounded-xl border-input focus:border-primary" />
                   </div>
 
                   {/* Organic + Certification */}
                   <div className="space-y-3 md:col-span-2 border-t border-border pt-3">
                     <div className="flex items-center gap-2">
                       <Leaf className="w-4 h-4 text-green-600" />
-                      <Label className="text-xs font-semibold text-foreground">{t('Chứng nhận hữu cơ', 'Organic Certification')}</Label>
+                      <Label className="text-xs font-semibold text-foreground">{t2('Chứng nhận hữu cơ', 'Organic Certification')}</Label>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center gap-2">
@@ -471,10 +471,10 @@ export default function FertilizerAppsPage() {
                           checked={form.isOrganic}
                           onCheckedChange={(v) => setForm({ ...form, isOrganic: !!v })}
                         />
-                        <Label htmlFor="isOrganic" className="text-xs text-foreground">{t('Phân bón hữu cơ', 'Organic Fertilizer')}</Label>
+                        <Label htmlFor="isOrganic" className="text-xs text-foreground">{t2('Phân bón hữu cơ', 'Organic Fertilizer')}</Label>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs text-foreground">{t('Số chứng nhận', 'Certification Number')}</Label>
+                        <Label className="text-xs text-foreground">{t2('Số chứng nhận', 'Certification Number')}</Label>
                         <Input
                           value={form.certificationNumber}
                           onChange={(e) => setForm({ ...form, certificationNumber: e.target.value })}
@@ -488,21 +488,21 @@ export default function FertilizerAppsPage() {
 
                   {/* Notes */}
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs text-foreground">{t('Ghi chú', 'Notes')}</Label>
-                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-input focus:border-primary" />
+                    <Label className="text-xs text-foreground">{t2('Ghi chú', 'Notes')}</Label>
+                    <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t2('Ghi chú thêm', 'Additional notes')} className="rounded-xl border-input focus:border-primary" />
                   </div>
                 </div>
 
                 {/* Submit */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
                   <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">
-                    {t('Hủy', 'Cancel')}
+                    {t2('Hủy', 'Cancel')}
                   </Button>
                   <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
                     {submitting ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Đang lưu...', 'Saving...')}</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Đang lưu...', 'Saving...')}</>
                     ) : (
-                      editingItem ? t('Cập nhật', 'Update') : t('Tạo mới', 'Create')
+                      editingItem ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')
                     )}
                   </Button>
                 </div>
@@ -518,7 +518,7 @@ export default function FertilizerAppsPage() {
             <Input
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              placeholder={t('Tìm kiếm phân bón...', 'Search fertilizer apps...')}
+              placeholder={t2('Tìm kiếm phân bón...', 'Search fertilizer apps...')}
               className="pl-9 rounded-xl border-input focus:border-primary bg-background"
             />
           </div>
@@ -533,24 +533,24 @@ export default function FertilizerAppsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Nông dân', 'Farmer')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Nông trại', 'Farm Land')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Ngày', 'Date')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t('Loại', 'Type')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Tên PB', 'Name')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t('Liều lượng', 'Rate')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('SL', 'Quantity')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t('Tổng CP', 'Cost')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hữu cơ', 'Organic')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Trạng thái', 'Status')}</th>
-                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('Hành động', 'Actions')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Nông dân', 'Farmer')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Nông trại', 'Farm Land')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Ngày', 'Date')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Loại', 'Type')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Tên PB', 'Name')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Liều lượng', 'Rate')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('SL', 'Quantity')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:table-cell">{t2('Tổng CP', 'Cost')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Hữu cơ', 'Organic')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Hành động', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                     <tr>
                       <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground text-sm">
-                        {t('Không tìm thấy dữ liệu', 'No data found')}
+                        {t2('Không tìm thấy dữ liệu', 'No data found')}
                       </td>
                     </tr>
                   ) : (
@@ -575,29 +575,32 @@ export default function FertilizerAppsPage() {
                           {item.isOrganic ? (
                             <Badge className="bg-green-100 text-green-700 text-[10px] border-0">
                               <Leaf className="w-3 h-3 mr-1" />
-                              {t('Hữu cơ', 'Organic')}
+                              {t2('Hữu cơ', 'Organic')}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] text-border text-muted-foreground">{t('Không', 'No')}</Badge>
+                            <Badge variant="outline" className="text-[10px] text-border text-muted-foreground">{t2('Không', 'No')}</Badge>
                           )}
                         </td>
                         <td className="px-4 py-3">
                           <Badge className={`${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0`}>
-                            {item.isActive ? t('Hoạt động', 'Active') : t('Không HĐ', 'Inactive')}
+                            {item.isActive ? t2('Hoạt động', 'Active') : t2('Không HĐ', 'Inactive')}
                           </Badge>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/fertilizer-apps/${item.id}`)}>
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(item)}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             {deleteConfirm === item.id ? (
                               <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-red-600 text-[10px]" onClick={() => handleDelete(item.id)}>
-                                  {t('Xóa', 'Del')}
+                                  {t2('Xóa', 'Del')}
                                 </Button>
                                 <Button variant="ghost" size="sm" className="h-7 px-2 p-0 text-muted-foreground text-[10px]" onClick={() => setDeleteConfirm(null)}>
-                                  {t('Hủy', 'No')}
+                                  {t2('Hủy', 'No')}
                                 </Button>
                               </div>
                             ) : (
