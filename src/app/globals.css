@@ -200,6 +200,22 @@
   }
 }
 
+/* ── Button visibility fixes ── */
+/* Ensure ghost/outline buttons are always distinguishable as interactive elements */
+@layer components {
+  /* Ghost buttons: subtle ring/underline hint */
+  button[data-slot="button"].text-foreground,
+  button[data-slot="button"].text-muted-foreground {
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  /* Outline variant: ensure border is clearly visible in both themes */
+  button[data-slot="button"]:not(.bg-primary):not(.bg-destructive):not(.bg-secondary).border-border {
+    border-width: 1.5px;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
