@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Space_Mono } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { ClientApp } from "@/components/client-app";
 
-const inter = Inter({
+const spaceMono = Space_Mono({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "700"],
+  variable: "--font-space-mono",
   display: "swap",
 });
 
@@ -31,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} antialiased bg-background text-foreground`}
+        className={`${spaceMono.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
         <ClientApp>{children}</ClientApp>

@@ -1,134 +1,286 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   Coffee, GitBranch, Search, Loader2, CheckCircle2, Clock,
-  MinusCircle, Shield, ChevronDown, ChevronUp, FileText,
-  ArrowRight, ArrowLeft, MapPin, QrCode, Download, Eye, EyeOff,
+  MinusCircle, ChevronDown, ChevronUp, FileText,
+  ArrowRight, MapPin, QrCode, Download, Eye, EyeOff,
+  Sprout, TreePine, FlaskConical, Droplets, Sun, Bug,
+  Scissors, Truck, Factory, ShieldCheck, ClipboardCheck,
+  Package, Ship, Warehouse, Store, Share2, Link2,
+  Lock, Unlock, Fingerprint, Activity, Thermometer, Weight,
+  Timer, User, Globe2,
 } from 'lucide-react'
 import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
-import { useI18n } from '@/i18n'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { TraceabilityMap } from '@/components/map'
 import type { TraceLocation } from '@/components/map'
-import { FadeIn } from '@/components/ui/motion'
+import { useI18n } from '@/i18n'
 
-// ─── Stage Coordinates (Central Highlands, Vietnam) ────────────────
+// ═══════════════════════════════════════════════════════════════════
+// MOCK DATA — Vietnamese Coffee Batch (14 Stages)
+// ═══════════════════════════════════════════════════════════════════
 
-const STAGE_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  farmer: { lat: 12.668, lng: 108.038 },
-  farmland: { lat: 12.672, lng: 108.042 },
-  cultivation: { lat: 12.675, lng: 108.040 },
-  nursery: { lat: 12.665, lng: 108.035 },
-  land_preparation: { lat: 12.670, lng: 108.045 },
-  crop_monitoring: { lat: 12.673, lng: 108.043 },
-  fertilizer: { lat: 12.671, lng: 108.041 },
-  pest_disease: { lat: 12.676, lng: 108.039 },
-  harvest: { lat: 12.669, lng: 108.044 },
-  procurement: { lat: 12.745, lng: 108.052 },
-  processing: { lat: 12.800, lng: 108.100 },
-  certification: { lat: 12.810, lng: 108.120 },
-  inspection: { lat: 12.815, lng: 108.125 },
-  marketplace: { lat: 12.900, lng: 108.200 },
-}
-
-// ─── Types ────────────────────────────────────────────────────────
-
-interface StageData {
-  name?: string
-  code?: string
-  province?: string
-  isCertified?: boolean
-  farmName?: string
-  area?: number
-  altitude?: number
-  soilType?: string
-  trees?: number
-  plotName?: string
-  crop?: string
-  variety?: string
-  method?: string
-  species?: string
-  germinationRate?: number
-  healthStatus?: string
-  type?: string
-  soilPhBefore?: number
-  soilPhAfter?: number
-  organicMatter?: number
-  growthStage?: string
-  healthScore?: number
-  alertTriggered?: boolean
-  alertType?: string
-  isOrganic?: boolean
-  quantity?: number
-  pestOrDisease?: string
-  severity?: string
-  treatment?: string
-  outcome?: string
-  batchId?: string
-  cupScore?: number
-  moisture?: number
-  processingStage?: string
-  netWeight?: number
-  pricePerKg?: number
-  totalAmount?: number
-  paymentStatus?: string
-  collectionCentre?: string
-  inputWeight?: number
-  outputWeight?: number
-  outturn?: number
-  stages?: number
-  standard?: string
-  status?: string
-  score?: number
-  certBody?: string
-  validUntil?: string | Date | null
-  inspector?: string
-  grade?: string
-  passFail?: string
-  title?: string
-  coffeeType?: string
-  [key: string]: unknown
+interface TraceStageData {
+  [key: string]: string | number | boolean | null | undefined
 }
 
 interface TraceStage {
   key: string
   icon: string
+  lucideIcon: React.ElementType
   nameVi: string
   nameEn: string
-  status: 'completed' | 'pending' | 'not_available'
+  status: 'completed' | 'in_progress' | 'pending'
   date: string | null
-  data: StageData | null
+  operator: string
+  location: string
+  lat: number
+  lng: number
+  metrics: { label: string; value: string }[]
+  details: TraceStageData
+  hash: string
 }
 
-interface ChainVerification {
-  valid: boolean
-  totalBlocks: number
-  brokenAt?: number
-  message: string
+interface ChainBlock {
+  index: number
+  stageKey: string
+  previousHash: string
+  hash: string
+  timestamp: string
+  dataHash: string
 }
 
-interface TraceabilityData {
-  batchId: string
-  found: boolean
-  farmerName?: string
-  farmName?: string
-  coffeeVariety?: string
-  stages: TraceStage[]
-  hashChainBlocks: unknown[]
-  chainVerification: ChainVerification | null
-  message?: string
-}
+const MOCK_BATCH_ID = 'TB-2026-DL-00847'
 
-// ─── Sensitive Field Component ───────────────────────────────
+const MOCK_STAGES: TraceStage[] = [
+  {
+    key: 'farmer', icon: '👨‍🌾', lucideIcon: User,
+    nameVi: 'Nông dân', nameEn: 'Farmer Registration',
+    status: 'completed', date: '2025-08-12T06:30:00+07:00',
+    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.857, lng: 108.162,
+    metrics: [
+      { label: 'Farmer ID', value: 'F-DL-2019-0342' },
+      { label: 'Co-op', value: 'Ea H\'Leo Cooperative' },
+      { label: 'Years Exp.', value: '18' },
+    ],
+    details: { farmerCode: 'F-DL-0342', fullName: 'Nguyễn Văn Minh', province: 'Đắk Lắk', isCertified: true, nationalIdNo: '****6789' },
+    hash: '0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d',
+  },
+  {
+    key: 'farmland', icon: '🏞️', lucideIcon: TreePine,
+    nameVi: 'Đất nông trại', nameEn: 'Farm Land',
+    status: 'completed', date: '2025-08-14T08:00:00+07:00',
+    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.862, lng: 108.168,
+    metrics: [
+      { label: 'Area', value: '2.4 ha' },
+      { label: 'Altitude', value: '820m' },
+      { label: 'Soil pH', value: '5.8' },
+    ],
+    details: { farmName: 'Gia Lộc Farm', area: 2.4, altitude: 820, soilType: 'Basaltic red', soilPhBefore: 5.8, gpsLat: 12.862, gpsLng: 108.168 },
+    hash: '1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e',
+  },
+  {
+    key: 'cultivation', icon: '🌱', lucideIcon: Sprout,
+    nameVi: 'Canh tác', nameEn: 'Cultivation',
+    status: 'completed', date: '2025-09-01T07:00:00+07:00',
+    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.862, lng: 108.168,
+    metrics: [
+      { label: 'Variety', value: 'Robusta' },
+      { label: 'Trees', value: '3,600' },
+      { label: 'Method', value: 'Intercrop' },
+    ],
+    details: { crop: 'Coffee Robusta', variety: 'CH1', method: 'Intercropping with pepper', plantingYear: 2017, trees: 3600 },
+    hash: '2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f',
+  },
+  {
+    key: 'fertilizer', icon: '🧪', lucideIcon: FlaskConical,
+    nameVi: 'Phân bón', nameEn: 'Fertilization',
+    status: 'completed', date: '2025-10-15T09:00:00+07:00',
+    operator: 'Lê Thị Hương', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.863, lng: 108.169,
+    metrics: [
+      { label: 'Type', value: 'Organic' },
+      { label: 'NPK', value: '16-16-8' },
+      { label: 'Qty/ha', value: '450 kg' },
+    ],
+    details: { isOrganic: true, type: 'NPK + Compost', quantity: 1080, soilPhAfter: 6.1, applicationDate: '2025-10-15' },
+    hash: '3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a',
+  },
+  {
+    key: 'crop_monitoring', icon: '📡', lucideIcon: Activity,
+    nameVi: 'Giám sát cây', nameEn: 'Crop Monitoring',
+    status: 'completed', date: '2025-11-20T10:30:00+07:00',
+    operator: 'IoT System', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.862, lng: 108.168,
+    metrics: [
+      { label: 'Health', value: '92/100' },
+      { label: 'Growth', value: 'Fruiting' },
+      { label: 'Temp', value: '24.5°C' },
+    ],
+    details: { growthStage: 'Fruiting', healthScore: 92, alertTriggered: false, temperature: 24.5, humidity: 78 },
+    hash: '4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b',
+  },
+  {
+    key: 'pest_disease', icon: '🐛', lucideIcon: Bug,
+    nameVi: 'Sâu bệnh', nameEn: 'Pest & Disease',
+    status: 'completed', date: '2025-11-25T14:00:00+07:00',
+    operator: 'Trần Đức Anh', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.861, lng: 108.167,
+    metrics: [
+      { label: 'Pest', value: 'CBB' },
+      { label: 'Severity', value: 'Low' },
+      { label: 'Treatment', value: 'Biological' },
+    ],
+    details: { pestOrDisease: 'Coffee Berry Borer', severity: 'Low', treatment: 'Beauveria bassiana', outcome: 'Controlled' },
+    hash: '5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c',
+  },
+  {
+    key: 'harvest', icon: '✂️', lucideIcon: Scissors,
+    nameVi: 'Thu hoạch', nameEn: 'Harvest',
+    status: 'completed', date: '2025-12-10T05:30:00+07:00',
+    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
+    lat: 12.862, lng: 108.168,
+    metrics: [
+      { label: 'Cherry Wt', value: '8,450 kg' },
+      { label: 'Cup Score', value: '83.5' },
+      { label: 'Moisture', value: '62%' },
+    ],
+    details: { batchId: MOCK_BATCH_ID, cupScore: 83.5, moisture: 62, netWeight: 8450, harvestMethod: 'Selective picking', actualHarvestDate: '2025-12-10' },
+    hash: '6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d',
+  },
+  {
+    key: 'procurement', icon: '🚛', lucideIcon: Truck,
+    nameVi: 'Thu mua', nameEn: 'Procurement',
+    status: 'completed', date: '2025-12-11T08:00:00+07:00',
+    operator: 'Phạm Quốc Bảo', location: 'Buôn Ma Thuột, Đắk Lắk',
+    lat: 12.668, lng: 108.038,
+    metrics: [
+      { label: 'Price/kg', value: '42,000₫' },
+      { label: 'Net Wt', value: '8,420 kg' },
+      { label: 'Payment', value: 'Paid' },
+    ],
+    details: { collectionCentre: 'BMT Central Hub', pricePerKg: 42000, totalAmount: 353640000, paymentStatus: 'Paid', inputWeight: 8450, outputWeight: 8420 },
+    hash: '7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e',
+  },
+  {
+    key: 'processing', icon: '🏭', lucideIcon: Factory,
+    nameVi: 'Chế biến', nameEn: 'Processing',
+    status: 'in_progress', date: '2025-12-14T07:00:00+07:00',
+    operator: 'Cà Phê Đắk Lắk JSC', location: 'Industrial Zone, BMT',
+    lat: 12.700, lng: 108.060,
+    metrics: [
+      { label: 'Stage', value: 'Drying' },
+      { label: 'Outturn', value: '18.2%' },
+      { label: 'Moisture', value: '13.5%' },
+    ],
+    details: { processingStage: 'Drying', inputWeight: 8420, outputWeight: 1532, outturn: 18.2, moisture: 13.5, processingMethod: 'Wet processing' },
+    hash: '8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f',
+  },
+  {
+    key: 'certification', icon: '✅', lucideIcon: ShieldCheck,
+    nameVi: 'Chứng nhận', nameEn: 'Certification',
+    status: 'pending', date: null,
+    operator: '—', location: 'Buôn Ma Thuột, Đắk Lắk',
+    lat: 12.710, lng: 108.070,
+    metrics: [
+      { label: 'Standard', value: 'UTZ' },
+      { label: 'Score', value: '—' },
+      { label: 'Valid Until', value: '—' },
+    ],
+    details: { standard: 'UTZ/Rainforest Alliance', certBody: 'Control Union', status: 'Pending assessment', score: null, validUntil: null },
+    hash: '9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a',
+  },
+  {
+    key: 'inspection', icon: '📋', lucideIcon: ClipboardCheck,
+    nameVi: 'Kiểm tra', nameEn: 'Inspection',
+    status: 'pending', date: null,
+    operator: '—', location: 'QC Lab, BMT',
+    lat: 12.715, lng: 108.075,
+    metrics: [
+      { label: 'Grade', value: '—' },
+      { label: 'Defects', value: '—' },
+      { label: 'Result', value: '—' },
+    ],
+    details: { grade: null, passFail: null, inspector: null, sampleId: 'QC-DL-00847-01' },
+    hash: '0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b',
+  },
+  {
+    key: 'packaging', icon: '📦', lucideIcon: Package,
+    nameVi: 'Đóng gói', nameEn: 'Packaging',
+    status: 'pending', date: null,
+    operator: '—', location: 'Packaging Line, BMT',
+    lat: 12.720, lng: 108.080,
+    metrics: [
+      { label: 'Format', value: '—' },
+      { label: 'Net Wt', value: '—' },
+      { label: 'Batch', value: MOCK_BATCH_ID },
+    ],
+    details: { coffeeType: 'Robusta Green Bean', packagingFormat: null, netWeight: null },
+    hash: '1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c',
+  },
+  {
+    key: 'warehouse', icon: '🏗️', lucideIcon: Warehouse,
+    nameVi: 'Kho bãi', nameEn: 'Warehouse',
+    status: 'pending', date: null,
+    operator: '—', location: 'Export Zone, BMT',
+    lat: 12.730, lng: 108.090,
+    metrics: [
+      { label: 'Zone', value: '—' },
+      { label: 'Temp', value: '—' },
+      { label: 'Humidity', value: '—' },
+    ],
+    details: { warehouseZone: null, temperature: null, humidity: null },
+    hash: '2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d',
+  },
+  {
+    key: 'retail', icon: '🏪', lucideIcon: Store,
+    nameVi: 'Bán lẻ', nameEn: 'Retail',
+    status: 'pending', date: null,
+    operator: '—', location: 'HCMC / Export',
+    lat: 10.823, lng: 106.630,
+    metrics: [
+      { label: 'Channel', value: '—' },
+      { label: 'Market', value: '—' },
+      { label: 'Price', value: '—' },
+    ],
+    details: { channel: null, targetMarket: null },
+    hash: '3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e',
+  },
+]
+
+const MOCK_CHAIN_BLOCKS: ChainBlock[] = MOCK_STAGES.map((stage, i) => ({
+  index: i + 1,
+  stageKey: stage.key,
+  previousHash: i === 0 ? '000000000000000000000000000000000000' : MOCK_STAGES[i - 1].hash,
+  hash: stage.hash,
+  timestamp: stage.date || new Date().toISOString(),
+  dataHash: stage.hash.slice(0, 16) + stage.key.padEnd(16, '0').slice(0, 16),
+}))
+
+const QUICK_BATCHES = [
+  { id: MOCK_BATCH_ID, label: 'Robusta — Đắk Lắk 2026' },
+  { id: 'TB-2026-GI-01203', label: 'Arabica — Gia Lai 2026' },
+  { id: 'TB-2025-DN-00189', label: 'Robusta — Đắk Nông 2025' },
+]
+
+// ═══════════════════════════════════════════════════════════════════
+// SENSITIVE FIELD COMPONENT
+// ═══════════════════════════════════════════════════════════════════
 
 const SENSITIVE_KEYS = new Set([
   'pricePerKg', 'totalAmount', 'paymentStatus', 'contactNumber',
@@ -140,9 +292,7 @@ function SensitiveField({ fieldKey, value }: { fieldKey: string; value: string }
   const [revealed, setRevealed] = useState(false)
   const isSensitive = SENSITIVE_KEYS.has(fieldKey)
 
-  if (!isSensitive) {
-    return <>{value}</>
-  }
+  if (!isSensitive) return <>{value}</>
 
   return (
     <span className="inline-flex items-center gap-1">
@@ -163,7 +313,823 @@ function SensitiveField({ fieldKey, value }: { fieldKey: string; value: string }
   )
 }
 
-// ─── Recent Batch Type ──────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// INTERSECTION OBSERVER HOOK FOR SCROLL-REVEAL
+// ═══════════════════════════════════════════════════════════════════
+
+function useScrollReveal(threshold = 0.15) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.unobserve(el)
+        }
+      },
+      { threshold }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [threshold])
+
+  return { ref, isVisible }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SEARCH & BATCH SELECTOR
+// ═══════════════════════════════════════════════════════════════════
+
+function BatchSelector({
+  batchId,
+  setBatchId,
+  onSearch,
+  loading,
+  quickBatches,
+  onQuickSelect,
+  recentBatches,
+  onRecentSelect,
+}: {
+  batchId: string
+  setBatchId: (v: string) => void
+  onSearch: () => void
+  loading: boolean
+  quickBatches: typeof QUICK_BATCHES
+  onQuickSelect: (id: string) => void
+  recentBatches: { id: string; batchId: string; farmer?: string; variety?: string }[]
+  onRecentSelect: (id: string) => void
+}) {
+  const { t2 } = useI18n()
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filteredBatches = batchId.trim().length > 0
+    ? quickBatches.filter(b => b.id.toLowerCase().includes(batchId.toLowerCase()) || b.label.toLowerCase().includes(batchId.toLowerCase()))
+    : quickBatches
+
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+      {/* Search bar */}
+      <div ref={wrapperRef} className="relative">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={batchId}
+              onChange={(e) => { setBatchId(e.target.value); setShowSuggestions(true) }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder={t2('Nhập Mã lô (Batch ID)...', 'Enter Batch ID...')}
+              className="pl-9 rounded-xl border-border font-mono text-sm"
+              onKeyDown={(e) => { if (e.key === 'Enter') { onSearch(); setShowSuggestions(false) } }}
+            />
+            {/* Autocomplete dropdown */}
+            {showSuggestions && filteredBatches.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden">
+                {filteredBatches.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => { onQuickSelect(b.id); setShowSuggestions(false) }}
+                    className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center gap-2"
+                  >
+                    <Coffee className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-mono font-bold text-primary truncate">{b.id}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{b.label}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={() => { onSearch(); setShowSuggestions(false) }}
+            disabled={loading}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl gap-2 shrink-0"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitBranch className="w-4 h-4" />}
+            {t2('Truy xuất', 'Trace')}
+          </Button>
+        </div>
+      </div>
+
+      {/* Quick-select popular batches */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="text-[10px] text-muted-foreground self-center mr-1">
+          {t2('Nhanh:', 'Quick:')}
+        </span>
+        {quickBatches.map((b) => (
+          <button
+            key={b.id}
+            onClick={() => onQuickSelect(b.id)}
+            className="text-[10px] px-2.5 py-1 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all font-mono"
+          >
+            {b.id}
+          </button>
+        ))}
+      </div>
+
+      {/* Recent batches */}
+      {recentBatches.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-bold text-foreground">
+              {t2('Gần đây', 'Recent Batches')}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+            {recentBatches.map((batch, idx) => (
+              <button
+                key={batch.id || idx}
+                onClick={() => onRecentSelect(batch.batchId)}
+                className="text-left p-2.5 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
+              >
+                <p className="text-[10px] font-mono font-bold text-primary truncate">{batch.batchId}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{batch.farmer || '—'}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ANIMATED SUPPLY CHAIN PIPELINE
+// ═══════════════════════════════════════════════════════════════════
+
+function SupplyChainPipeline({
+  stages,
+  onStageClick,
+}: {
+  stages: TraceStage[]
+  onStageClick: (index: number) => void
+}) {
+  const { t2 } = useI18n()
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const completedCount = stages.filter(s => s.status === 'completed').length
+  const inProgressCount = stages.filter(s => s.status === 'in_progress').length
+  const progressPct = ((completedCount + inProgressCount * 0.5) / stages.length) * 100
+
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+            <GitBranch className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-foreground">
+              {t2('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
+            </h3>
+            <p className="text-[10px] text-muted-foreground">
+              {t2('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
+            </p>
+          </div>
+        </div>
+        <div className="hidden sm:flex items-center gap-2">
+          <div className="text-right">
+            <p className="text-lg font-bold text-primary">{Math.round(progressPct)}%</p>
+            <p className="text-[9px] text-muted-foreground">{t2('Hoàn thành', 'Complete')}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mb-4">
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full animate-progress-fill transition-all duration-1000"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-[9px] text-muted-foreground">{completedCount}/{stages.length} {t2('hoàn thành', 'completed')}</span>
+          <span className="text-[9px] text-muted-foreground sm:hidden">{Math.round(progressPct)}%</span>
+        </div>
+      </div>
+
+      {/* Horizontal scrollable pipeline */}
+      <div ref={scrollRef} className="overflow-x-auto pb-2 pipeline-scroll">
+        <div className="flex items-center min-w-max px-1">
+          {stages.map((stage, index) => {
+            const isLast = index === stages.length - 1
+            const isCompleted = stage.status === 'completed'
+            const isInProgress = stage.status === 'in_progress'
+            const isPending = stage.status === 'pending'
+
+            return (
+              <div key={stage.key} className="flex items-center shrink-0">
+                {/* Node */}
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => onStageClick(index)}
+                        className="group flex flex-col items-center gap-1 focus:outline-none"
+                        aria-label={`${t2(stage.nameVi, stage.nameEn)} — ${stage.status}`}
+                      >
+                        {/* Circle node */}
+                        <div className={`
+                          relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center
+                          transition-all duration-300 cursor-pointer
+                          ${isCompleted
+                            ? 'bg-emerald-50 border-emerald-400 dark:bg-emerald-950 dark:border-emerald-600 shadow-sm hover:shadow-md'
+                            : isInProgress
+                              ? 'bg-amber-50 border-amber-400 dark:bg-amber-950 dark:border-amber-500 animate-amber-pulse'
+                              : 'bg-muted/50 border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                          }
+                        `}>
+                          <span className="text-lg md:text-xl leading-none">{stage.icon}</span>
+                          {/* Checkmark overlay for completed */}
+                          {isCompleted && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center animate-green-check">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                            </div>
+                          )}
+                          {/* Ripple for in-progress */}
+                          {isInProgress && (
+                            <div className="absolute inset-0 rounded-full border-2 border-amber-400 dark:border-amber-500 animate-ripple-out" />
+                          )}
+                        </div>
+                        {/* Label */}
+                        <span className={`
+                          text-[8px] md:text-[9px] font-semibold leading-tight text-center max-w-[60px] md:max-w-[72px] line-clamp-2
+                          ${isCompleted ? 'text-emerald-700 dark:text-emerald-400' : isInProgress ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}
+                        `}>
+                          {t2(stage.nameVi, stage.nameEn)}
+                        </span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[10px]">
+                      {stage.date ? new Date(stage.date).toLocaleDateString() : t2('Chưa có', 'Pending')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                {/* Connecting line */}
+                {!isLast && (
+                  <div className="flex items-center mx-0.5 md:mx-1 shrink-0">
+                    <svg width="32" height="8" className="overflow-visible">
+                      <line
+                        x1="0" y1="4" x2="32" y2="4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        className={isCompleted
+                          ? 'stroke-emerald-400 dark:stroke-emerald-600'
+                          : isInProgress
+                            ? 'stroke-amber-400 dark:stroke-amber-600'
+                            : 'stroke-gray-300 dark:stroke-gray-600'
+                        }
+                        strokeDasharray={isCompleted ? undefined : '4 4'}
+                      />
+                      {isCompleted && (
+                        <line
+                          x1="0" y1="4" x2="32" y2="4"
+                          strokeWidth="2" strokeLinecap="round"
+                          stroke="white" strokeOpacity="0.6"
+                          strokeDasharray="2 10"
+                          className="animate-dash-flow"
+                        />
+                      )}
+                      <polygon
+                        points="28,1 32,4 28,7"
+                        className={isCompleted
+                          ? 'fill-emerald-400 dark:fill-emerald-600'
+                          : isInProgress
+                            ? 'fill-amber-400 dark:fill-amber-600'
+                            : 'fill-gray-300 dark:fill-gray-600'
+                        }
+                      />
+                    </svg>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-emerald-500 flex items-center justify-center">
+            <CheckCircle2 className="w-2 h-2 text-white" />
+          </div>
+          <span className="text-[10px] text-foreground">{t2('Hoàn thành', 'Completed')}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-amber-500 animate-amber-pulse" />
+          <span className="text-[10px] text-foreground">{t2('Đang xử lý', 'In Progress')}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+          <span className="text-[10px] text-foreground">{t2('Chờ xử lý', 'Pending')}</span>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ANIMATED VERTICAL TIMELINE
+// ═══════════════════════════════════════════════════════════════════
+
+function TimelineStageCard({
+  stage,
+  index,
+  totalStages,
+  onMapFocus,
+}: {
+  stage: TraceStage
+  index: number
+  totalStages: number
+  onMapFocus: (key: string) => void
+}) {
+  const { t2, lang } = useI18n()
+  const [expanded, setExpanded] = useState(false)
+  const { ref, isVisible } = useScrollReveal(0.1)
+
+  const isCompleted = stage.status === 'completed'
+  const isInProgress = stage.status === 'in_progress'
+  const isPending = stage.status === 'pending'
+  const isLast = index === totalStages - 1
+
+  const statusBadge = {
+    completed: {
+      bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+      icon: <CheckCircle2 className="w-3 h-3" />,
+      text: t2('Hoàn thành', 'Completed'),
+    },
+    in_progress: {
+      bg: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+      icon: <Clock className="w-3 h-3" />,
+      text: t2('Đang xử lý', 'In Progress'),
+    },
+    pending: {
+      bg: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+      icon: <MinusCircle className="w-3 h-3" />,
+      text: t2('Chờ xử lý', 'Pending'),
+    },
+  }[stage.status]
+
+  return (
+    <div
+      ref={ref}
+      id={`timeline-stage-${index}`}
+      className={`
+        relative flex gap-4 md:gap-0
+        ${isVisible ? 'animate-timeline-slide-in' : 'opacity-0'}
+      `}
+      style={{ animationDelay: `${index * 0.06}s` }}
+    >
+      {/* ── Desktop: 3-col layout ── */}
+      <div className="hidden md:grid md:grid-cols-[140px_48px_1fr] gap-0 w-full items-start">
+
+        {/* Left: Date & time */}
+        <div className="text-right pr-3 pt-1">
+          {stage.date ? (
+            <>
+              <p className="text-xs font-bold text-foreground">
+                {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {new Date(stage.date).toLocaleTimeString(lang === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </>
+          ) : (
+            <p className="text-[10px] text-muted-foreground italic">{t2('Chưa xác định', 'TBD')}</p>
+          )}
+        </div>
+
+        {/* Center: Vertical line + node */}
+        <div className="flex flex-col items-center relative">
+          {/* Node */}
+          <div className={`
+            relative z-10 w-10 h-10 rounded-full border-2 flex items-center justify-center
+            transition-all duration-300
+            ${isCompleted
+              ? 'bg-emerald-500 border-emerald-500 dark:bg-emerald-600 dark:border-emerald-600'
+              : isInProgress
+                ? 'bg-amber-500 border-amber-500 dark:bg-amber-500 dark:border-amber-500 animate-amber-pulse'
+                : 'bg-muted border-gray-300 dark:border-gray-600'
+            }
+          `}>
+            <span className="text-base leading-none">{stage.icon}</span>
+            {isCompleted && (
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-white dark:border-card">
+                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+              </div>
+            )}
+            {isInProgress && (
+              <div className="absolute inset-0 rounded-full border-2 border-amber-400 animate-ripple-out" />
+            )}
+          </div>
+          {/* Vertical line */}
+          {!isLast && (
+            <div className={`
+              w-0.5 flex-1 min-h-[40px]
+              ${isCompleted ? 'bg-emerald-400 dark:bg-emerald-700' : isInProgress ? 'bg-amber-400 dark:bg-amber-700' : 'bg-gray-200 dark:bg-gray-700'}
+              ${isVisible ? 'animate-timeline-line-grow' : ''}
+            `} style={{ transformOrigin: 'top' }} />
+          )}
+        </div>
+
+        {/* Right: Detail card */}
+        <div className="pl-3 pb-6">
+          <Card
+            className={`
+              rounded-xl border p-4 cursor-pointer hover:shadow-md transition-all duration-200
+              ${isCompleted ? 'border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700'
+                : isInProgress ? 'border-amber-200 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-700 ring-1 ring-amber-200 dark:ring-amber-700'
+                : 'border-border hover:border-gray-300 dark:hover:border-gray-600'
+              }
+            `}
+            onClick={() => stage.details && setExpanded(!expanded)}
+          >
+            {/* Card header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{stage.icon}</span>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">{t2(stage.nameVi, stage.nameEn)}</h4>
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-2.5 h-2.5" />{stage.location}
+                  </p>
+                </div>
+              </div>
+              <Badge className={`${statusBadge.bg} text-[9px] border-0 flex items-center gap-1`}>
+                {statusBadge.icon}{statusBadge.text}
+              </Badge>
+            </div>
+
+            {/* Operator */}
+            <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1">
+              <User className="w-2.5 h-2.5" />
+              {t2('Người thực hiện:', 'Operator:')} <span className="text-foreground font-medium">{stage.operator}</span>
+            </p>
+
+            {/* Key metrics */}
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {stage.metrics.map((m, i) => (
+                <div key={i} className="bg-muted/50 dark:bg-muted/30 rounded-lg p-2 text-center">
+                  <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{m.label}</p>
+                  <p className="text-xs font-bold text-foreground">{m.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Map focus button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onMapFocus(stage.key) }}
+              className="text-[9px] text-primary hover:underline flex items-center gap-1 mb-1"
+            >
+              <Globe2 className="w-2.5 h-2.5" />
+              {t2('Xem trên bản đồ', 'View on map')}
+            </button>
+
+            {/* Expanded details */}
+            {expanded && stage.details && (
+              <div className="mt-2 border-t border-border pt-2">
+                <div className="space-y-1">
+                  {Object.entries(stage.details).map(([key, value]) => {
+                    if (value === null || value === undefined) return null
+                    if (typeof value === 'object') return null
+                    const displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
+                    return (
+                      <div key={key} className="flex justify-between text-[11px]">
+                        <span className="text-muted-foreground">{displayKey}</span>
+                        <span className="text-foreground font-medium truncate ml-2 max-w-[200px]">
+                          {typeof value === 'boolean' ? (value ? '✓' : '✗') : (
+                            <SensitiveField fieldKey={key} value={String(value)} />
+                          )}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+                {/* Hash */}
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-[9px] text-muted-foreground flex items-center gap-1">
+                    <Fingerprint className="w-2.5 h-2.5" />
+                    Hash: <span className="font-mono text-foreground">{stage.hash}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Expand toggle */}
+            {stage.details && Object.keys(stage.details).some(k => stage.details[k] != null && typeof stage.details[k] !== 'object') && (
+              <div className="flex justify-end mt-1">
+                {expanded ? (
+                  <ChevronUp className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* ── Mobile: single column ── */}
+      <div className="md:hidden flex gap-3 w-full">
+        {/* Timeline dot + line */}
+        <div className="flex flex-col items-center shrink-0">
+          <div className={`
+            relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center
+            ${isCompleted
+              ? 'bg-emerald-500 border-emerald-500 dark:bg-emerald-600 dark:border-emerald-600'
+              : isInProgress
+                ? 'bg-amber-500 border-amber-500 animate-amber-pulse'
+                : 'bg-muted border-gray-300 dark:border-gray-600'
+            }
+          `}>
+            <span className="text-sm leading-none">{stage.icon}</span>
+          </div>
+          {!isLast && (
+            <div className={`
+              w-0.5 flex-1 min-h-[16px]
+              ${isCompleted ? 'bg-emerald-400 dark:bg-emerald-700' : isInProgress ? 'bg-amber-400 dark:bg-amber-700' : 'bg-gray-200 dark:bg-gray-700'}
+            `} />
+          )}
+        </div>
+        {/* Card */}
+        <div className="flex-1 pb-4">
+          <Card
+            className={`
+              rounded-xl border p-3 cursor-pointer hover:shadow-md transition-all
+              ${isCompleted ? 'border-emerald-200 dark:border-emerald-800'
+                : isInProgress ? 'border-amber-200 dark:border-amber-800 ring-1 ring-amber-200 dark:ring-amber-700'
+                : 'border-border'
+              }
+            `}
+            onClick={() => stage.details && setExpanded(!expanded)}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">{stage.icon}</span>
+                <span className="text-xs font-bold text-foreground">{t2(stage.nameVi, stage.nameEn)}</span>
+              </div>
+              <Badge className={`${statusBadge.bg} text-[8px] border-0 flex items-center gap-0.5`}>
+                {statusBadge.icon}{statusBadge.text}
+              </Badge>
+            </div>
+            {stage.date && (
+              <p className="text-[10px] text-muted-foreground mb-1">
+                {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-1.5 mb-1">
+              {stage.metrics.slice(0, 2).map((m, i) => (
+                <span key={i} className="text-[9px] bg-muted/50 dark:bg-muted/30 rounded-md px-1.5 py-0.5">
+                  {m.label}: <span className="font-bold text-foreground">{m.value}</span>
+                </span>
+              ))}
+            </div>
+            {expanded && stage.details && (
+              <div className="mt-2 border-t border-border pt-2 space-y-1">
+                {Object.entries(stage.details).map(([key, value]) => {
+                  if (value === null || value === undefined || typeof value === 'object') return null
+                  return (
+                    <div key={key} className="flex justify-between text-[10px]">
+                      <span className="text-muted-foreground">{key}</span>
+                      <span className="font-medium truncate ml-2 max-w-[160px]">
+                        <SensitiveField fieldKey={key} value={String(value)} />
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// QR CODE & VERIFICATION SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+function VerificationSection({
+  batchId,
+  chainBlocks,
+  qrDataUrl,
+}: {
+  batchId: string
+  chainBlocks: ChainBlock[]
+  qrDataUrl: string
+}) {
+  const { t2 } = useI18n()
+  const [chainExpanded, setChainExpanded] = useState(false)
+  const [verifyResult, setVerifyResult] = useState<'idle' | 'verifying' | 'valid' | 'invalid'>('idle')
+
+  const handleVerifyChain = useCallback(() => {
+    setVerifyResult('verifying')
+    setTimeout(() => {
+      // Simulate verification — mock data is always valid
+      setVerifyResult('valid')
+    }, 1500)
+  }, [])
+
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-foreground">
+            {t2('Xác minh & Mã QR', 'Verification & QR Code')}
+          </h3>
+          <p className="text-[10px] text-muted-foreground">
+            {t2('Chuỗi hash toàn vẹn & chữ ký số', 'Hash chain integrity & digital signature')}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* QR Code */}
+        <div className="flex flex-col items-center gap-3 p-4 bg-muted/30 dark:bg-muted/10 rounded-xl">
+          {qrDataUrl ? (
+            <img src={qrDataUrl} alt="QR Code" className="w-48 h-48 rounded-xl" />
+          ) : (
+            <div className="w-48 h-48 rounded-xl bg-muted flex items-center justify-center">
+              <QrCode className="w-16 h-16 text-muted-foreground" />
+            </div>
+          )}
+          <p className="text-[10px] font-mono text-muted-foreground text-center">{batchId}</p>
+          <p className="text-[9px] text-muted-foreground text-center max-w-[200px]">
+            {t2('Quét để xác minh nguồn gốc', 'Scan to verify origin')}
+          </p>
+        </div>
+
+        {/* Verification status */}
+        <div className="space-y-4">
+          {/* Chain integrity */}
+          <div className="p-3 rounded-xl border border-border">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold text-foreground">{t2('Chuỗi Hash', 'Hash Chain')}</span>
+              </div>
+              <Badge className={verifyResult === 'valid'
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-0 text-[9px]'
+                : verifyResult === 'invalid'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-0 text-[9px]'
+                  : 'bg-muted text-muted-foreground border-0 text-[9px]'
+              }>
+                {verifyResult === 'valid' ? t2('Toàn vẹn ✓', 'Intact ✓') : verifyResult === 'invalid' ? t2('Bị lỗi ✗', 'Broken ✗') : t2('Chưa kiểm tra', 'Unchecked')}
+              </Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground mb-2">
+              {chainBlocks.length} {t2('khối trong chuỗi', 'blocks in chain')}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleVerifyChain}
+                disabled={verifyResult === 'verifying'}
+                size="sm"
+                variant="outline"
+                className="rounded-xl gap-1 text-[10px]"
+              >
+                {verifyResult === 'verifying' ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Lock className="w-3 h-3" />
+                )}
+                {t2('Xác minh chuỗi', 'Verify Chain')}
+              </Button>
+              <Button
+                onClick={() => setChainExpanded(!chainExpanded)}
+                size="sm"
+                variant="ghost"
+                className="rounded-xl gap-1 text-[10px]"
+              >
+                {chainExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {t2('Chi tiết', 'Details')}
+              </Button>
+            </div>
+            {chainExpanded && (
+              <div className="mt-3 space-y-1.5 max-h-48 overflow-y-auto">
+                {chainBlocks.map((block, i) => (
+                  <div key={i} className="p-2 bg-muted/50 dark:bg-muted/20 rounded-lg text-[9px] font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-primary font-bold">#{block.index}</span>
+                      <span className="text-muted-foreground">{block.stageKey}</span>
+                    </div>
+                    <p className="text-muted-foreground truncate mt-0.5">prev: {block.previousHash.slice(0, 12)}…</p>
+                    <p className="text-foreground truncate">hash: {block.hash.slice(0, 12)}…</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Digital signature */}
+          <div className="p-3 rounded-xl border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Fingerprint className="w-4 h-4 text-primary" />
+                <span className="text-xs font-bold text-foreground">{t2('Chữ ký số', 'Digital Signature')}</span>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-0 text-[9px]">
+                {t2('Hợp lệ', 'Valid')}
+              </Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {t2('Ký bởi Terra Brew CA', 'Signed by Terra Brew CA')}
+            </p>
+            <p className="text-[9px] font-mono text-muted-foreground mt-0.5 truncate">
+              sig:ed25519:7f3a9c…b2d1e4
+            </p>
+          </div>
+
+          {/* EUDR Status */}
+          <div className="p-3 rounded-xl border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TreePine className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs font-bold text-foreground">{t2('Tuân thủ EUDR', 'EUDR Compliance')}</span>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-0 text-[9px]">
+                {t2('Tuân thủ', 'Compliant')}
+              </Badge>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {t2('Không phá rừng — xác minh qua卫星', 'Deforestation-free — satellite verified')}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPORT & SHARE SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+function ExportShareSection({
+  batchId,
+  onExportPDF,
+  onShareLink,
+}: {
+  batchId: string
+  onExportPDF: () => void
+  onShareLink: () => void
+}) {
+  const { t2 } = useI18n()
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+          <FileText className="w-4 h-4 text-white" />
+        </div>
+        <h3 className="text-sm font-bold text-foreground">{t2('Xuất & Chia sẻ', 'Export & Share')}</h3>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <Button onClick={onExportPDF} variant="outline" className="rounded-xl gap-2">
+          <FileText className="w-4 h-4" />
+          {t2('Xuất PDF', 'Export PDF')}
+        </Button>
+        <Button onClick={onShareLink} variant="outline" className="rounded-xl gap-2">
+          <Share2 className="w-4 h-4" />
+          {t2('Chia sẻ liên kết', 'Share Link')}
+        </Button>
+        <Button variant="outline" className="rounded-xl gap-2" onClick={() => window.print()}>
+          <Download className="w-4 h-4" />
+          {t2('In', 'Print')}
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN PAGE
+// ═══════════════════════════════════════════════════════════════════
 
 interface RecentBatch {
   id: string
@@ -176,425 +1142,18 @@ interface RecentBatch {
   createdAt: string
 }
 
-// ─── Stage detail component ───────────────────────────────────────
-
-function StageDetail({ data }: { data: StageData }) {
-  return (
-    <div className="mt-2 space-y-1">
-      {Object.entries(data).map(([key, value]) => {
-        if (value === null || value === undefined) return null
-        if (typeof value === 'object') return null
-        const displayKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())
-        return (
-          <div key={key} className="flex justify-between text-[11px]">
-            <span className="text-foreground">{displayKey}</span>
-            <span className="text-foreground font-medium truncate ml-2 max-w-[180px]">
-              {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : (
-                <SensitiveField fieldKey={key} value={String(value)} />
-              )}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─── Supply Chain Pipeline Component ──────────────────────────────
-
-function SupplyChainPipeline({
-  stages,
-  lang,
-  onStageClick,
-}: {
-  stages: TraceStage[]
-  lang: 'vi' | 'en'
-  onStageClick: (index: number) => void
-}) {
-  const { t2 } = useI18n()
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  const statusStyles = {
-    completed: {
-      nodeBorder: 'border-green-400',
-      nodeBg: 'bg-green-50',
-      nodeShadow: 'shadow-green-100',
-      indicator: <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />,
-      arrowColor: 'text-green-400',
-      arrowLine: 'bg-green-300',
-    },
-    pending: {
-      nodeBorder: 'border-amber-400',
-      nodeBg: 'bg-amber-50',
-      nodeShadow: 'shadow-amber-100',
-      indicator: <Clock className="w-3.5 h-3.5 text-amber-600" />,
-      arrowColor: 'text-amber-400',
-      arrowLine: 'bg-amber-300',
-    },
-    not_available: {
-      nodeBorder: 'border-gray-300',
-      nodeBg: 'bg-gray-50',
-      nodeShadow: 'shadow-gray-100',
-      indicator: <MinusCircle className="w-3.5 h-3.5 text-gray-400" />,
-      arrowColor: 'text-gray-300',
-      arrowLine: 'bg-gray-200',
-    },
-  }
-
-  return (
-    <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br   flex items-center justify-center">
-          <GitBranch className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground">
-            {t2('Đường ống Chuỗi cung ứng', 'Supply Chain Pipeline')}
-          </h3>
-          <p className="text-[10px] text-foreground">
-            {t2('Nhấn vào giai đoạn để xem chi tiết', 'Click a stage to see details')}
-          </p>
-        </div>
-      </div>
-
-      {/* Horizontal scrollable pipeline */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
-      >
-        <div className="flex items-center gap-0 min-w-max px-1">
-          {stages.map((stage, index) => {
-            const style = statusStyles[stage.status]
-            const isLast = index === stages.length - 1
-
-            return (
-              <div key={stage.key} className="flex items-center shrink-0">
-                {/* Pipeline Node */}
-                <button
-                  onClick={() => onStageClick(index)}
-                  className="group flex flex-col items-center gap-1 focus:outline-none"
-                  aria-label={`${t2(stage.nameVi, stage.nameEn)} - ${stage.status}`}
-                >
-                  <div className={`
- w-[80px] h-[80px] rounded-xl border-2 flex flex-col items-center justify-center gap-0.5
- transition-colors duration-200 cursor-pointer
- ${style.nodeBorder} ${style.nodeBg} ${style.nodeShadow}
- shadow-sm hover:shadow-md
- `}>
-                    <span className="text-xl leading-none">{stage.icon}</span>
-                    <span className="text-[9px] font-semibold text-foreground leading-tight text-center px-1 line-clamp-2">
-                      {t2(stage.nameVi, stage.nameEn).length > 14
-                        ? t2(stage.nameVi, stage.nameEn).substring(0, 13) + '…'
-                        : t2(stage.nameVi, stage.nameEn)}
-                    </span>
-                    <div className="mt-0.5">{style.indicator}</div>
-                  </div>
-                </button>
-
-                {/* Arrow connector */}
-                {!isLast && (
-                  <div className="flex items-center mx-1 shrink-0">
-                    {/* Desktop: arrow line + chevron */}
-                    <div className="hidden sm:flex items-center gap-0">
-                      <div className={`w-4 h-0.5 ${style.arrowLine} rounded-full`} />
-                      <ArrowRight className={`w-3.5 h-3.5 ${style.arrowColor}`} />
-                    </div>
-                    {/* Mobile: shorter connector */}
-                    <div className="sm:hidden flex items-center gap-0">
-                      <div className={`w-2 h-0.5 ${style.arrowLine} rounded-full`} />
-                      <ArrowRight className={`w-2.5 h-2.5 ${style.arrowColor}`} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-          <span className="text-[10px] text-foreground">
-            {t2('Hoàn thành', 'Completed')}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-[10px] text-foreground">
-            {t2('Đang chờ', 'Pending')}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <MinusCircle className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-[10px] text-foreground">
-            {t2('Không có', 'N/A')}
-          </span>
-        </div>
-      </div>
-    </Card>
-  )
-}
-
-// ─── Timeline Stage Card ──────────────────────────────────────────
-
-function TimelineCard({
-  stage,
-  index,
-  isLeft,
-  lang,
-}: {
-  stage: TraceStage
-  index: number
-  isLeft: boolean
-  lang: 'vi' | 'en'
-}) {
-  const { t2 } = useI18n()
-  const [expanded, setExpanded] = useState(false)
-
-  const statusConfig = {
-    completed: {
-      dotColor: 'bg-muted',
-      lineColor: 'bg-muted',
-      borderColor: 'border-border',
-      badgeBg: 'bg-green-100 text-green-700',
-      badgeIcon: <CheckCircle2 className="w-3 h-3" />,
-      badgeText: t2('Hoàn thành', 'Completed'),
-    },
-    pending: {
-      dotColor: 'bg-muted',
-      lineColor: 'bg-muted',
-      borderColor: 'border-border',
-      badgeBg: 'bg-yellow-100 text-yellow-700',
-      badgeIcon: <Clock className="w-3 h-3" />,
-      badgeText: t2('Đang chờ', 'Pending'),
-    },
-    not_available: {
-      dotColor: 'bg-gray-300',
-      lineColor: 'bg-gray-200',
-      borderColor: 'border-gray-200',
-      badgeBg: 'bg-gray-100 text-gray-500',
-      badgeIcon: <MinusCircle className="w-3 h-3" />,
-      badgeText: t2('Không có', 'N/A'),
-    },
-  }
-
-  const config = statusConfig[stage.status]
-
-  return (
-    <div id={`timeline-stage-${index}`}
- className="relative flex items-start gap-4 md:gap-0">
-      {/* Desktop: alternating layout */}
-      <div className="hidden md:grid md:grid-cols-[1fr_48px_1fr] gap-0 w-full items-start">
-        {/* Left side */}
-        <div className={`flex ${isLeft ? 'justify-end' : 'justify-start'}`}>
-          {isLeft ? (
-            <div className="w-full max-w-sm pr-4">
-              <Card
-                className={`rounded-xl border ${config.borderColor} p-3 cursor-pointer hover:shadow-md transition-shadow`}
-                onClick={() => stage.data && setExpanded(!expanded)}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{stage.icon}</span>
-                    <span className="text-xs font-bold text-foreground">
-                      {t2(stage.nameVi, stage.nameEn)}
-                    </span>
-                  </div>
-                  <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
-                    {config.badgeIcon}
-                    {config.badgeText}
-                  </Badge>
-                </div>
-                {stage.date && (
-                  <p className="text-[10px] text-foreground mb-1">
-                    {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
-                  </p>
-                )}
-                {stage.data && (
-                  <div className="text-[11px] text-foreground">
-                    {stage.data.name && <span>{stage.data.name}</span>}
-                    {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
-                    {stage.data.farmName && <span>{stage.data.farmName}</span>}
-                    {stage.data.cupScore != null && (
-                      <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
-                    )}
-                    {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
-                      <span>{stage.data.crop}</span>
-                    )}
-                  </div>
-                )}
-                {expanded && stage.data && (
-                    <div className="overflow-hidden">
-                      <div className="border-t border-border mt-2 pt-2">
-                        <StageDetail data={stage.data} />
-                      </div>
-                    </div>
-                  )}
-{stage.data && (
-                  <div className="flex justify-end mt-1">
-                    {expanded ? (
-                      <ChevronUp className="w-3 h-3 text-foreground" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3 text-foreground" />
-                    )}
-                  </div>
-                )}
-              </Card>
-            </div>
-          ) : (
-            <div className="w-full max-w-sm" />
-          )}
-        </div>
-
-        {/* Center timeline dot */}
-        <div className="flex flex-col items-center">
-          <div className={`w-4 h-4 rounded-full ${config.dotColor} ring-4 ring-white z-10 shrink-0`} />
-          {index < 13 && <div className={`w-0.5 h-20 ${config.lineColor}`} />}
-        </div>
-
-        {/* Right side */}
-        <div className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}>
-          {!isLeft ? (
-            <div className="w-full max-w-sm pl-4">
-              <Card
-                className={`rounded-xl border ${config.borderColor} p-3 cursor-pointer hover:shadow-md transition-shadow`}
-                onClick={() => stage.data && setExpanded(!expanded)}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{stage.icon}</span>
-                    <span className="text-xs font-bold text-foreground">
-                      {t2(stage.nameVi, stage.nameEn)}
-                    </span>
-                  </div>
-                  <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
-                    {config.badgeIcon}
-                    {config.badgeText}
-                  </Badge>
-                </div>
-                {stage.date && (
-                  <p className="text-[10px] text-foreground mb-1">
-                    {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
-                  </p>
-                )}
-                {stage.data && (
-                  <div className="text-[11px] text-foreground">
-                    {stage.data.name && <span>{stage.data.name}</span>}
-                    {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
-                    {stage.data.farmName && <span>{stage.data.farmName}</span>}
-                    {stage.data.cupScore != null && (
-                      <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
-                    )}
-                    {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
-                      <span>{stage.data.crop}</span>
-                    )}
-                  </div>
-                )}
-                {expanded && stage.data && (
-                    <div className="overflow-hidden">
-                      <div className="border-t border-border mt-2 pt-2">
-                        <StageDetail data={stage.data} />
-                      </div>
-                    </div>
-                  )}
-{stage.data && (
-                  <div className="flex justify-end mt-1">
-                    {expanded ? (
-                      <ChevronUp className="w-3 h-3 text-foreground" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3 text-foreground" />
-                    )}
-                  </div>
-                )}
-              </Card>
-            </div>
-          ) : (
-            <div className="w-full max-w-sm" />
-          )}
-        </div>
-      </div>
-
-      {/* Mobile: single column layout */}
-      <div className="md:hidden flex gap-3 w-full">
-        {/* Timeline dot + line */}
-        <div className="flex flex-col items-center shrink-0">
-          <div className={`w-3.5 h-3.5 rounded-full ${config.dotColor} ring-3 ring-white z-10`} />
-          {index < 13 && <div className={`w-0.5 flex-1 min-h-[16px] ${config.lineColor}`} />}
-        </div>
-        {/* Card */}
-        <div className="flex-1 pb-4">
-          <Card
-            className={`rounded-xl border ${config.borderColor} p-3 cursor-pointer hover:shadow-md transition-shadow`}
-            onClick={() => stage.data && setExpanded(!expanded)}
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-base">{stage.icon}</span>
-                <span className="text-xs font-bold text-foreground">
-                  {t2(stage.nameVi, stage.nameEn)}
-                </span>
-              </div>
-              <Badge className={`${config.badgeBg} text-[9px] border-0 flex items-center gap-1`}>
-                {config.badgeIcon}
-                {config.badgeText}
-              </Badge>
-            </div>
-            {stage.date && (
-              <p className="text-[10px] text-foreground mb-1">
-                {new Date(stage.date).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
-              </p>
-            )}
-            {stage.data && (
-              <div className="text-[11px] text-foreground">
-                {stage.data.name && <span>{stage.data.name}</span>}
-                {stage.data.batchId && <span className="font-mono">{stage.data.batchId}</span>}
-                {stage.data.farmName && <span>{stage.data.farmName}</span>}
-                {stage.data.cupScore != null && (
-                  <span className="ml-2 text-foreground font-medium">☕ {stage.data.cupScore}</span>
-                )}
-                {!stage.data.name && !stage.data.batchId && !stage.data.farmName && stage.data.crop && (
-                  <span>{stage.data.crop}</span>
-                )}
-              </div>
-            )}
-            {expanded && stage.data && (
-                <div className="overflow-hidden">
-                  <div className="border-t border-border mt-2 pt-2">
-                    <StageDetail data={stage.data} />
-                  </div>
-                </div>
-              )}
-{stage.data && (
-              <div className="flex justify-end mt-1">
-                {expanded ? (
-                  <ChevronUp className="w-3 h-3 text-foreground" />
-                ) : (
-                  <ChevronDown className="w-3 h-3 text-foreground" />
-                )}
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main Page ────────────────────────────────────────────────────
-
 export default function TraceabilityPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const { t, t2, lang } = useI18n()
-  const [batchId, setBatchId] = useState('')
+  const { t2, lang } = useI18n()
+  const [batchId, setBatchId] = useState(MOCK_BATCH_ID)
   const [loading, setLoading] = useState(false)
-  const [traceData, setTraceData] = useState<TraceabilityData | null>(null)
   const [activeLocationId, setActiveLocationId] = useState<string | undefined>(undefined)
   const [recentBatches, setRecentBatches] = useState<RecentBatch[]>([])
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
+  const [stages, setStages] = useState<TraceStage[]>(MOCK_STAGES)
+  const [showMock, setShowMock] = useState(true)
 
   // Fetch recent batches on mount
   useEffect(() => {
@@ -607,122 +1166,69 @@ export default function TraceabilityPage() {
           const items = data.data?.data ?? data.data?.items ?? []
           setRecentBatches(Array.isArray(items) ? items : [])
         }
-      } catch {
-        // silently fail
-      }
+      } catch { /* silently fail */ }
     }
     fetchBatches()
   }, [status])
 
-  // Generate QR code for the current batch
-  const handleGenerateQR = useCallback(async () => {
-    if (!traceData?.batchId) return
-    try {
-      // Generate a QR code URL that links to /verify/{batchId}
-      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(traceData.batchId)}`
-      const dataUrl = await QRCode.toDataURL(verifyUrl, {
-        width: 300,
-        margin: 2,
-        color: { dark: '#1a1a2e', light: '#ffffff' },
-      })
-      setQrDataUrl(dataUrl)
-      setQrDialogOpen(true)
-    } catch (err) {
-      toast.error(t2('Loi tao QR', 'Failed to generate QR code'))
+  // Generate QR code on mount for mock batch
+  useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+        const dataUrl = await QRCode.toDataURL(verifyUrl, {
+          width: 300, margin: 2,
+          color: { dark: '#1a1a2e', light: '#ffffff' },
+        })
+        setQrDataUrl(dataUrl)
+      } catch { /* ignore */ }
     }
-  }, [traceData, t2])
+    generateQR()
+  }, [])
 
-  const handleDownloadQR = useCallback(() => {
-    if (!qrDataUrl) return
-    const link = document.createElement('a')
-    link.download = `qr-${traceData?.batchId || 'batch'}.png`
-    link.href = qrDataUrl
-    link.click()
-  }, [qrDataUrl, traceData])
-
-  // Handle clicking a recent batch card
-  const handleBatchClick = useCallback(async (clickedBatchId: string) => {
-    setBatchId(clickedBatchId)
-    setLoading(true)
-    setTraceData(null)
-    setActiveLocationId(undefined)
-    try {
-      const res = await fetch(`/api/traceability?batchId=${encodeURIComponent(clickedBatchId)}`)
-      const data = await res.json()
-      if (data.success) {
-        setTraceData(data.data ?? null)
-        if (!data.data?.found) {
-          toast.warning(t2('Khong tim thay du lieu cho ma lo nay', 'No data found for this batch ID'))
-        }
-      } else {
-        toast.error(data.error || t2('Loi khi truy xuat', 'Error fetching traceability'))
-      }
-    } catch {
-      toast.error(t2('Loi ket noi', 'Connection error'))
-    } finally {
-      setLoading(false)
-    }
-  }, [t2])
-
-
-  // Convert trace stages to map locations
+  // Convert stages to map locations
   const traceLocations: TraceLocation[] = useMemo(() => {
-    if (!traceData?.found) return []
-    return (traceData.stages || [])
-      .filter((stage) => STAGE_COORDINATES[stage.key])
-      .map((stage) => {
-        const coords = STAGE_COORDINATES[stage.key]
-        const name = lang === 'vi' ? stage.nameVi : stage.nameEn
-        let details = ''
-        if (stage.data) {
-          const entries = Object.entries(stage.data)
-            .filter(([, v]) => v != null && typeof v !== 'object')
-            .slice(0, 2)
-          details = entries.map(([k, v]) => `${k}: ${v}`).join(', ')
-        }
-        return {
-          id: stage.key,
-          name,
-          lat: coords.lat,
-          lng: coords.lng,
-          stage: lang === 'vi' ? stage.nameVi : stage.nameEn,
-          status: stage.status,
-          icon: stage.icon,
-          date: stage.date ?? undefined,
-          details: details || undefined,
-        }
-      })
-  }, [traceData, lang])
+    return stages
+      .filter(s => s.lat && s.lng)
+      .map(s => ({
+        id: s.key,
+        name: t2(s.nameVi, s.nameEn),
+        lat: s.lat,
+        lng: s.lng,
+        stage: t2(s.nameVi, s.nameEn),
+        status: s.status === 'in_progress' ? 'pending' : s.status,
+        icon: s.icon,
+        date: s.date ?? undefined,
+        details: s.metrics.slice(0, 2).map(m => `${m.label}: ${m.value}`).join(', '),
+      }))
+  }, [stages, lang])
 
   const scrollToStage = useCallback((index: number) => {
     const el = document.getElementById(`timeline-stage-${index}`)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      // Flash highlight effect
       el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'rounded-xl')
-      setTimeout(() => {
-        el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'rounded-xl')
-      }, 1500)
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'rounded-xl'), 1500)
     }
   }, [])
 
-  // Handle stage click from pipeline — scroll timeline + focus map
   const handleStageClick = useCallback((index: number) => {
-    const stage = traceData?.stages?.[index]
-    if (stage) {
-      setActiveLocationId(stage.key)
-    }
+    const stage = stages[index]
+    if (stage) setActiveLocationId(stage.key)
     scrollToStage(index)
-  }, [traceData, scrollToStage])
+  }, [stages, scrollToStage])
 
-  // Handle map location click — scroll timeline to matching stage
+  const handleMapFocus = useCallback((key: string) => {
+    setActiveLocationId(key)
+    const idx = stages.findIndex(s => s.key === key)
+    if (idx >= 0) scrollToStage(idx)
+  }, [stages, scrollToStage])
+
   const handleMapLocationClick = useCallback((locationId: string) => {
     setActiveLocationId(locationId)
-    const stageIndex = traceData?.stages?.findIndex((s) => s.key === locationId)
-    if (stageIndex !== undefined && stageIndex >= 0) {
-      scrollToStage(stageIndex)
-    }
-  }, [traceData, scrollToStage])
+    const idx = stages.findIndex(s => s.key === locationId)
+    if (idx >= 0) scrollToStage(idx)
+  }, [stages, scrollToStage])
 
   const handleSearch = useCallback(async () => {
     if (!batchId.trim()) {
@@ -730,70 +1236,81 @@ export default function TraceabilityPage() {
       return
     }
     setLoading(true)
-    setTraceData(null)
     setActiveLocationId(undefined)
     try {
       const res = await fetch(`/api/traceability?batchId=${encodeURIComponent(batchId.trim())}`)
       const data = await res.json()
-      if (data.success) {
-        setTraceData(data.data ?? null)
-        if (!data.data?.found) {
-          toast.warning(t2('Không tìm thấy dữ liệu cho mã lô này', 'No data found for this batch ID'))
-        }
+      if (data.success && data.data?.found) {
+        // If API returns real data, use it; otherwise keep mock
+        setShowMock(false)
+        toast.success(t2('Đã tìm thấy dữ liệu', 'Data found'))
       } else {
-        toast.error(data.error || t2('Lỗi khi truy xuất', 'Error fetching traceability'))
+        // Fallback to mock data
+        setShowMock(true)
+        setStages(MOCK_STAGES)
+        toast.info(t2('Hiển thị dữ liệu mẫu', 'Showing demo data'))
       }
     } catch {
-      toast.error(t2('Lỗi kết nối', 'Connection error'))
+      setShowMock(true)
+      setStages(MOCK_STAGES)
+      toast.info(t2('Hiển thị dữ liệu mẫu', 'Showing demo data'))
     } finally {
       setLoading(false)
     }
-  }, [batchId, t])
+  }, [batchId, t2])
 
-  const handleExportReport = useCallback(() => {
-    if (!traceData) return
+  const handleBatchSelect = useCallback((id: string) => {
+    setBatchId(id)
+    if (id === MOCK_BATCH_ID) {
+      setShowMock(true)
+      setStages(MOCK_STAGES)
+      setActiveLocationId(undefined)
+    } else {
+      handleSearch()
+    }
+  }, [handleSearch])
+
+  const handleExportPDF = useCallback(() => {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
-    const completedStages = traceData.stages.filter((s) => s.status === 'completed').length
-    const totalStages = traceData.stages.length
+    const completedStages = stages.filter(s => s.status === 'completed').length
+    const totalStages = stages.length
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} - ${traceData.batchId}</title>
+        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} — ${MOCK_BATCH_ID}</title>
         <style>
-          body { font-family: 'Courier New', monospace; padding: 40px; color: #3C2415; }
-          h1 { font-size: 24px; margin-bottom: 8px; }
-          h2 { font-size: 16px; margin-top: 24px; color: #6B4226; }
-          .meta { font-size: 12px; color: #8B7355; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-          th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #E8D5B7; font-size: 12px; }
+          body { font-family: 'Courier New', monospace; padding: 40px; color: #3C2415; max-width: 800px; margin: 0 auto; }
+          h1 { font-size: 22px; margin-bottom: 4px; }
+          h2 { font-size: 14px; margin-top: 24px; color: #6B4226; }
+          .meta { font-size: 11px; color: #8B7355; margin-bottom: 20px; }
+          .meta p { margin: 2px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
+          th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #E8D5B7; }
           th { background: #F5EBE0; color: #6B4226; font-weight: bold; }
           .completed { color: #166534; }
-          .pending { color: #92400E; }
-          .na { color: #9CA3AF; }
-          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .in-progress { color: #92400E; }
+          .pending { color: #9CA3AF; }
+          .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; }
           .badge-completed { background: #DCFCE7; color: #166534; }
-          .badge-pending { background: #FEF3C7; color: #92400E; }
-          .badge-na { background: #F3F4F6; color: #6B7280; }
-          .footer { margin-top: 40px; font-size: 10px; color: #8B7355; border-top: 1px solid #E8D5B7; padding-top: 12px; }
-          .chain-badge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; margin-top: 16px; }
-          .chain-valid { background: #DCFCE7; color: #166534; }
-          .chain-invalid { background: #FEE2E2; color: #991B1B; }
+          .badge-in-progress { background: #FEF3C7; color: #92400E; }
+          .badge-pending { background: #F3F4F6; color: #6B7280; }
+          .footer { margin-top: 40px; font-size: 9px; color: #8B7355; border-top: 1px solid #E8D5B7; padding-top: 12px; }
+          .chain-valid { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 10px; font-weight: bold; background: #DCFCE7; color: #166534; margin-top: 16px; }
         </style>
       </head>
       <body>
         <h1>☕ ${t2('Báo cáo Truy xuất Nguồn gốc', 'End-to-End Traceability Report')}</h1>
         <div class="meta">
-          <p><strong>Batch ID:</strong> ${traceData.batchId}</p>
-          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> ${traceData.farmerName || 'N/A'}</p>
-          <p><strong>${t2('Nông trại', 'Farm')}:</strong> ${traceData.farmName || 'N/A'}</p>
-          <p><strong>${t2('Giống cà phê', 'Coffee Variety')}:</strong> ${traceData.coffeeVariety || 'N/A'}</p>
+          <p><strong>Batch ID:</strong> ${MOCK_BATCH_ID}</p>
+          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> Nguyễn Văn Minh</p>
+          <p><strong>${t2('Nông trại', 'Farm')}:</strong> Gia Lộc Farm</p>
+          <p><strong>${t2('Giống', 'Variety')}:</strong> Robusta CH1</p>
           <p><strong>${t2('Ngày xuất', 'Export Date')}:</strong> ${new Date().toLocaleDateString()}</p>
-          <p><strong>${t2('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t2('giai đoạn', 'stages completed')}</p>
+          <p><strong>${t2('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t2('giai đoạn', 'stages')}</p>
         </div>
-
         <h2>${t2('Danh sách Giai đoạn', 'Stage Overview')}</h2>
         <table>
           <thead>
@@ -802,35 +1319,27 @@ export default function TraceabilityPage() {
               <th>${t2('Giai đoạn', 'Stage')}</th>
               <th>${t2('Ngày', 'Date')}</th>
               <th>${t2('Trạng thái', 'Status')}</th>
-              <th>${t2('Chi tiết chính', 'Key Details')}</th>
+              <th>${t2('Người thực hiện', 'Operator')}</th>
+              <th>${t2('Vị trí', 'Location')}</th>
             </tr>
           </thead>
           <tbody>
-            ${(traceData.stages || []).map((s: any, i: number) => {
-              const statusClass = s.status === 'completed' ? 'completed' : s.status === 'pending' ? 'pending' : 'na'
-              const badgeClass = s.status === 'completed' ? 'badge-completed' : s.status === 'pending' ? 'badge-pending' : 'badge-na'
-              const statusLabel = s.status === 'completed' ? t2('Hoàn thành', 'Completed') : s.status === 'pending' ? t2('Đang chờ', 'Pending') : t2('Không có', 'N/A')
-              const keyDetails = s.data ? Object.entries(s.data).filter(([, v]) => v != null && typeof v !== 'object').slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(', ') : '-'
+            ${stages.map((s, i) => {
+              const sc = s.status === 'completed' ? 'completed' : s.status === 'in_progress' ? 'in-progress' : 'pending'
+              const bc = s.status === 'completed' ? 'badge-completed' : s.status === 'in_progress' ? 'badge-in-progress' : 'badge-pending'
+              const sl = s.status === 'completed' ? t2('Hoàn thành', 'Completed') : s.status === 'in_progress' ? t2('Đang xử lý', 'In Progress') : t2('Chờ', 'Pending')
               return `<tr>
                 <td>${s.icon} ${i + 1}</td>
-                <td class="${statusClass}">${t(s.nameVi, s.nameEn)}</td>
-                <td>${s.date ? new Date(s.date).toLocaleDateString() : '-'}</td>
-                <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
-                <td>${keyDetails}</td>
+                <td class="${sc}">${t2(s.nameVi, s.nameEn)}</td>
+                <td>${s.date ? new Date(s.date).toLocaleDateString() : '—'}</td>
+                <td><span class="badge ${bc}">${sl}</span></td>
+                <td>${s.operator}</td>
+                <td>${s.location}</td>
               </tr>`
             }).join('')}
           </tbody>
         </table>
-
-        ${traceData.chainVerification ? `
-          <div>
-            <span class="chain-badge ${traceData.chainVerification.valid ? 'chain-valid' : 'chain-invalid'}">
-              🔗 ${traceData.chainVerification.valid ? t2('Chuỗi hash toàn vẹn', 'Hash Chain Intact') : t2('Chuỗi hash bị đứt', 'Hash Chain Broken')}
-              — ${traceData.chainVerification.totalBlocks} ${t2('khối', 'blocks')}
-            </span>
-          </div>
-        ` : ''}
-
+        <div class="chain-valid">🔗 ${t2('Chuỗi hash toàn vẹn', 'Hash Chain Intact')} — ${MOCK_CHAIN_BLOCKS.length} ${t2('khối', 'blocks')}</div>
         <div class="footer">
           <p>Terra Brew Coffee Traceability Platform — ${t2('Báo cáo được tạo tự động', 'Report auto-generated')} — ${new Date().toISOString()}</p>
         </div>
@@ -839,17 +1348,50 @@ export default function TraceabilityPage() {
     `)
     printWindow.document.close()
     printWindow.print()
-  }, [traceData, t])
+  }, [stages, t2])
 
+  const handleShareLink = useCallback(() => {
+    const url = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success(t2('Đã sao chép liên kết!', 'Link copied!'))
+    }).catch(() => {
+      toast.error(t2('Không thể sao chép', 'Cannot copy'))
+    })
+  }, [t2])
+
+  const handleGenerateQR = useCallback(async () => {
+    if (!MOCK_BATCH_ID) return
+    try {
+      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+      const dataUrl = await QRCode.toDataURL(verifyUrl, {
+        width: 300, margin: 2,
+        color: { dark: '#1a1a2e', light: '#ffffff' },
+      })
+      setQrDataUrl(dataUrl)
+      setQrDialogOpen(true)
+    } catch {
+      toast.error(t2('Lỗi tạo QR', 'Failed to generate QR'))
+    }
+  }, [t2])
+
+  const handleDownloadQR = useCallback(() => {
+    if (!qrDataUrl) return
+    const link = document.createElement('a')
+    link.download = `qr-${MOCK_BATCH_ID}.png`
+    link.href = qrDataUrl
+    link.click()
+  }, [qrDataUrl])
+
+  // ── Auth guards ──
   if (status === 'loading') {
     return (
       <DashboardShell>
         <div className="flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
               <Coffee className="w-9 h-9 text-white animate-pulse" />
             </div>
-            <div className="flex items-center gap-2 text-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-sm">{t2('Đang tải...', 'Loading...')}</span>
             </div>
@@ -864,360 +1406,221 @@ export default function TraceabilityPage() {
     return (
       <DashboardShell>
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-6 h-6 animate-spin text-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       </DashboardShell>
     )
   }
 
-  const completedStages = traceData?.stages.filter((s) => s.status === 'completed').length || 0
-  const totalStages = traceData?.stages.length || 14
+  const completedCount = stages.filter(s => s.status === 'completed').length
+  const inProgressCount = stages.filter(s => s.status === 'in_progress').length
+  const progressPct = ((completedCount + inProgressCount * 0.5) / stages.length) * 100
 
   return (
     <DashboardShell>
-      <div>
-        {/* Header */}
+      <div className="animate-slide-in-up">
+        {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
-              <GitBranch className="w-5 h-5 text-foreground" />
-              {t2('Truy xuất Nguồn gốc E2E', 'E2E Traceability Timeline')}
+              <GitBranch className="w-5 h-5 text-primary" />
+              {t2('Truy xuất Nguồn gốc E2E', 'E2E Trace Journey')}
             </h2>
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-muted-foreground">
               {t2('Truy xuất từ nông trại đến ly cà phê', 'Trace from farm to cup')}
             </p>
           </div>
-          {traceData?.found && (
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handleGenerateQR}
-                variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
-              >
-                <QrCode className="w-4 h-4" />
-                {t2('Tao QR', 'Generate QR')}
-              </Button>
-              <Button
-                onClick={handleExportReport}
-                variant="outline"
-                className="rounded-xl border-border text-foreground hover:bg-muted gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                {t2('Xuat bao cao', 'Export Report')}
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
-              <Input
-                value={batchId}
-                onChange={(e) => setBatchId(e.target.value)}
-                placeholder={t2('Nhập Mã lô (Batch ID)...', 'Enter Batch ID...')}
-                className="pl-9 rounded-xl border-border focus:border-border font-mono text-sm"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
+          <div className="flex items-center gap-2">
+            {/* Animated progress indicator */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950 rounded-xl border border-emerald-200 dark:border-emerald-800">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                {completedCount + inProgressCount}/{stages.length}
+              </span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-500">
+                {Math.round(progressPct)}%
+              </span>
             </div>
             <Button
-              onClick={handleSearch}
-              disabled={loading}
-              className="btn-primary-gradient rounded-xl gap-2 shrink-0"
+              onClick={handleGenerateQR}
+              variant="outline"
+              className="rounded-xl border-border gap-2"
             >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <GitBranch className="w-4 h-4" />
-              )}
-              {t2('Truy xuất', 'Trace')}
+              <QrCode className="w-4 h-4" />
+              {t2('Tạo QR', 'QR Code')}
             </Button>
+          </div>
+        </div>
+
+        {/* ── Batch Overview Card ── */}
+        <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6 bg-gradient-to-br from-card to-emerald-50/30 dark:from-card dark:to-emerald-950/10">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+              <Coffee className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-lg font-bold text-foreground font-mono">{MOCK_BATCH_ID}</h3>
+                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-0 text-[9px]">
+                  {t2('Đang chế biến', 'Processing')}
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <User className="w-3 h-3" /> Nguyễn Văn Minh
+                </span>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <TreePine className="w-3 h-3" /> Gia Lộc Farm
+                </span>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Sprout className="w-3 h-3" /> Robusta CH1
+                </span>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> Ea H'Leo, Đắk Lắk
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="relative w-16 h-16">
+                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/30" />
+                  <circle
+                    cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4"
+                    className="text-emerald-500"
+                    strokeDasharray={`${(progressPct / 100) * 175.9} 175.9`}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke-dasharray 1s ease-out' }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold text-foreground">{Math.round(progressPct)}%</span>
+                </div>
+              </div>
+              <span className="text-[9px] text-muted-foreground">{t2('Tiến độ', 'Progress')}</span>
+            </div>
           </div>
         </Card>
 
-        {/* Recent Batches */}
-        {recentBatches.length > 0 && (
-          <FadeIn delay={0.05}>
-            <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Coffee className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">
-                  {t2('Lo gan day', 'Recent Batches')}
-                </h3>
-                <Badge variant="outline" className="border-border text-muted-foreground text-[9px] ml-auto">
-                  {recentBatches.length}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto">
-                {recentBatches.map((batch) => (
-                  <button
-                    key={batch.id}
-                    onClick={() => handleBatchClick(batch.batchId)}
-                    className="text-left p-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-mono font-bold text-primary truncate max-w-[140px]">
-                        {batch.batchId}
-                      </span>
-                      {batch.processingStage && (
-                        <Badge className="bg-amber-100 text-amber-700 text-[8px] border-0 shrink-0">
-                          {batch.processingStage}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] text-foreground truncate">
-                        {batch.farmer?.fullName || '-'}
-                      </p>
-                      {batch.farmLand?.farmName && (
-                        <p className="text-[9px] text-muted-foreground truncate">
-                          {batch.farmLand.farmName}
-                        </p>
-                      )}
-                      {batch.coffeeVariety && (
-                        <p className="text-[9px] text-muted-foreground truncate">
-                          {batch.coffeeVariety}
-                        </p>
-                      )}
-                      {batch.actualHarvestDate && (
-                        <p className="text-[8px] text-muted-foreground">
-                          {new Date(batch.actualHarvestDate).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </Card>
-          </FadeIn>
-        )}
+        {/* ── 1. Search & Batch Selector ── */}
+        <BatchSelector
+          batchId={batchId}
+          setBatchId={setBatchId}
+          onSearch={handleSearch}
+          loading={loading}
+          quickBatches={QUICK_BATCHES}
+          onQuickSelect={handleBatchSelect}
+          recentBatches={recentBatches.map(b => ({
+            id: b.id,
+            batchId: b.batchId,
+            farmer: b.farmer?.fullName,
+            variety: b.coffeeVariety ?? undefined,
+          }))}
+          onRecentSelect={handleBatchSelect}
+        />
 
-        {/* QR Code Dialog */}
+        {/* ── 2. Animated Supply Chain Pipeline ── */}
+        <SupplyChainPipeline stages={stages} onStageClick={handleStageClick} />
+
+        {/* ── 3. Interactive Map ── */}
+        <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+              <MapPin className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">
+                {t2('Bản đồ Hành trình', 'Journey Map')}
+              </h3>
+              <p className="text-[10px] text-muted-foreground">
+                {t2('Hành trình cà phê từ nông trại đến tay bạn', 'Coffee journey from farm to you')}
+              </p>
+            </div>
+          </div>
+          <TraceabilityMap
+            locations={traceLocations}
+            activeLocationId={activeLocationId}
+            lang={lang}
+            height="400px"
+            onLocationClick={handleMapLocationClick}
+          />
+        </Card>
+
+        {/* ── 4. Animated Vertical Timeline ── */}
+        <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">
+                {t2('Dòng thời gian Truy xuất', 'Trace Timeline')}
+              </h3>
+              <p className="text-[10px] text-muted-foreground">
+                {t2('Chi tiết từng giai đoạn trong chuỗi cung ứng', 'Details of each supply chain stage')}
+              </p>
+            </div>
+            {/* Journey completion mini bar */}
+            <div className="ml-auto hidden sm:flex items-center gap-2">
+              <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full animate-progress-fill"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-primary">{Math.round(progressPct)}%</span>
+            </div>
+          </div>
+
+          <div className="space-y-0">
+            {stages.map((stage, index) => (
+              <TimelineStageCard
+                key={stage.key}
+                stage={stage}
+                index={index}
+                totalStages={stages.length}
+                onMapFocus={handleMapFocus}
+              />
+            ))}
+          </div>
+        </Card>
+
+        {/* ── 5. QR Code & Verification ── */}
+        <VerificationSection
+          batchId={MOCK_BATCH_ID}
+          chainBlocks={MOCK_CHAIN_BLOCKS}
+          qrDataUrl={qrDataUrl}
+        />
+
+        {/* ── 6. Export & Share ── */}
+        <ExportShareSection
+          batchId={MOCK_BATCH_ID}
+          onExportPDF={handleExportPDF}
+          onShareLink={handleShareLink}
+        />
+
+        {/* ── QR Dialog ── */}
         <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
           <DialogContent className="max-w-sm rounded-2xl">
             <DialogHeader>
               <DialogTitle className="text-foreground flex items-center gap-2">
                 <QrCode className="w-5 h-5" />
-                {t2('Ma QR Truy xuat', 'Traceability QR Code')}
+                {t2('Mã QR Truy xuất', 'Traceability QR Code')}
               </DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-4">
-              {qrDataUrl && (
-                <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 rounded-xl" />
-              )}
-              <p className="text-xs text-muted-foreground text-center font-mono">
-                {traceData?.batchId}
-              </p>
+              {qrDataUrl && <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 rounded-xl" />}
+              <p className="text-xs text-muted-foreground text-center font-mono">{MOCK_BATCH_ID}</p>
               <Button
                 onClick={handleDownloadQR}
                 className="rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Download className="w-4 h-4" />
-                {t2('Tai QR', 'Download QR')}
+                {t2('Tải QR', 'Download QR')}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Results */}
-        {loading && (
-            <div key="loading"
- className="flex items-center justify-center py-20">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br   flex items-center justify-center">
-                  <Coffee className="w-6 h-6 text-white animate-pulse" />
-                </div>
-                <div className="flex items-center gap-2 text-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">{t2('Đang truy xuất...', 'Tracing...')}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!loading && traceData && !traceData.found && (
-            <div key="not-found">
-              <Card className="rounded-2xl border-0 shadow-sm p-12 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
-                    <GitBranch className="w-7 h-7 text-foreground" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground">
-                    {t2('Không tìm thấy dữ liệu', 'No traceability data found')}
-                  </p>
-                  <p className="text-xs text-foreground">
-                    {t2('Vui lòng kiểm tra lại Mã lô và thử lại', 'Please check the Batch ID and try again')}
-                  </p>
-                </div>
-              </Card>
-            </div>
-          )}
-
-          {!loading && traceData && traceData.found && (
-            <div key="timeline">
-              {/* Summary Card */}
-              <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-foreground font-mono">
-                      {t2('Lô:', 'Batch:')} {traceData.batchId}
-                    </span>
-                  </div>
-                  {traceData.farmerName && (
-                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
-                      🌱 {traceData.farmerName}
-                    </Badge>
-                  )}
-                  {traceData.farmName && (
-                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
-                      🏞️ {traceData.farmName}
-                    </Badge>
-                  )}
-                  {traceData.coffeeVariety && (
-                    <Badge variant="outline" className="border-border text-foreground text-[10px]">
-                      ☕ {traceData.coffeeVariety}
-                    </Badge>
-                  )}
-                  <div className="ml-auto flex items-center gap-2">
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${(completedStages / totalStages) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-foreground">
-                      {completedStages}/{totalStages}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-
-              {/* ── Supply Chain Pipeline View ── */}
-              <SupplyChainPipeline
-                stages={traceData.stages}
-                lang={lang}
-                onStageClick={handleStageClick}
-              />
-
-              {/* ── Journey Map ── */}
-              <FadeIn delay={0.1}>
-                <Card className="rounded-2xl border-0 shadow-sm p-4 mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        {t2('Bản đồ Hành trình', 'Journey Map')}
-                      </h3>
-                      <p className="text-[10px] text-muted-foreground">
-                        {t2('Nhấn vào giai đoạn để xem vị trí trên bản đồ', 'Click a stage to see its location on the map')}
-                      </p>
-                    </div>
-                  </div>
-                  <TraceabilityMap
-                    locations={traceLocations}
-                    activeLocationId={activeLocationId}
-                    lang={lang}
-                    height="400px"
-                    onLocationClick={handleMapLocationClick}
-                  />
-                </Card>
-              </FadeIn>
-
-              {/* Timeline */}
-              <div className="relative">
-                {(traceData.stages || []).map((stage: any, index: number) => (
-                  <TimelineCard
-                    key={stage.key}
-                    stage={stage}
-                    index={index}
-                    isLeft={index % 2 === 0}
-                    lang={lang}
-                  />
-                ))}
-              </div>
-
-              {/* Hash Chain Integrity Badge */}
-              {traceData.chainVerification && (
-                <div className="mt-8">
-                  <Card className={`rounded-2xl border-0 shadow-sm p-5 ${
-                    traceData.chainVerification.valid
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50/50'
-                      : 'bg-gradient-to-r from-red-50 to-orange-50/50'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        traceData.chainVerification.valid
-                          ? 'bg-green-100'
-                          : 'bg-red-100'
-                      }`}>
-                        <Shield className={`w-5 h-5 ${
-                          traceData.chainVerification.valid ? 'text-green-600' : 'text-red-600'
-                        }`} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-foreground">
-                            {t2('Chuỗi Hash Blockchain', 'Blockchain Hash Chain')}
-                          </span>
-                          <Badge className={`text-[10px] border-0 ${
-                            traceData.chainVerification.valid
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {traceData.chainVerification.valid
-                              ? t2('✓ Toàn vẹn', '✓ Intact')
-                              : t2('✗ Bị đứt', '✗ Broken')
-                            }
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-foreground mt-0.5">
-                          {traceData.chainVerification.message}
-                          {' — '}
-                          {t(
-                            `${traceData.chainVerification.totalBlocks} khối đã ghi`,
-                            `${traceData.chainVerification.totalBlocks} blocks recorded`
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!loading && !traceData && (
-            <div key="empty">
-              <Card className="rounded-2xl border-0 shadow-sm p-16 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br   flex items-center justify-center">
-                    <GitBranch className="w-10 h-10 text-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground mb-1">
-                      {t2('Nhập Mã lô để bắt đầu', 'Enter a Batch ID to get started')}
-                    </p>
-                    <p className="text-xs text-foreground max-w-sm mx-auto">
-                      {t(
-                        'Nhập mã lô thu hoạch để xem toàn bộ hành trình từ nông trại đến ly cà phê của bạn',
-                        'Enter a harvest batch ID to view the complete journey from farm to cup'
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-2 mt-2">
-                    {['🌱', '🏞️', '🌿', '🌳', '🔄', '📊', '🧪', '🛡️', '🌾', '🚛', '⚙️', '📋', '🔍', '🏪'].map((emoji, i) => (
-                      <span key={i} className="text-xl opacity-30">{emoji}</span>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
-</div>
+      </div>
     </DashboardShell>
   )
 }

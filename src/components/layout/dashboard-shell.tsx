@@ -180,7 +180,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const onLangToggle = () => setLang(lang === 'vi' ? 'en' : 'vi')
 
   // Compute margin-left: only on desktop, matches sidebar width
-  const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 256) : 0
+  const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 240) : 0
 
   // Before client mount, render a minimal shell that matches the server output.
   if (!mounted) {
