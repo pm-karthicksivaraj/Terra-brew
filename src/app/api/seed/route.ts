@@ -189,9 +189,32 @@ export async function POST() {
     ]
     const flRecords: Record<string, any> = {}
     for (const fld of farmLandDefs) {
-      const { key, farmerCode, ...farmLandData } = fld
+      const flKey = fld.key
+      const flFarmerCode = fld.farmerCode
       const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : keAdmin.id
-      flRecords[key] = await db.farmLand.create({ data: { ...farmLandData, farmerId: farmerRecords[farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
+      flRecords[flKey] = await db.farmLand.create({ data: {
+        tenantId: fld.tenantId,
+        farmName: fld.farmName,
+        plotBlockId: fld.plotBlockId,
+        totalLandHolding: fld.totalLandHolding,
+        altitude: fld.altitude,
+        soilType: fld.soilType,
+        latitude: fld.latitude,
+        longitude: fld.longitude,
+        noOfTrees: fld.noOfTrees,
+        estYield: fld.estYield,
+        farmerId: farmerRecords[flFarmerCode].id,
+        createdBy: adminId,
+        landOwnership: 'Owned',
+        childLabourPolicy: true,
+        minimumWageCompliance: true,
+        ppeAvailable: true,
+        isActive: true,
+        polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude),
+        boundaryArea: fld.totalLandHolding,
+        geoCenterLat: fld.latitude,
+        geoCenterLng: fld.longitude,
+      } as any })
     }
 
     // ═══ 9. Entity Relationships ═══

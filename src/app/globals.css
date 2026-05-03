@@ -3,105 +3,111 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ── Modern Professional Light Theme ── */
-  /* Clean white backgrounds, deep dark text, rich teal primary for excellent contrast */
+  /* ══ Terra Brew Coffee Brown Theme ══
+     Palette: #561C24 (deep maroon), #6D2932 (burgundy), #C7B7A3 (taupe), #E8D8C4 (cream)
+     Inspired by ColorHunt — warm, premium, coffee heritage feel */
 
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222 47% 11%);
+  --background: hsl(34 40% 96%);         /* #F8F3ED — warm cream white */
+  --foreground: hsl(350 44% 15%);        /* dark burgundy text */
 
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 11%);
+  --card: hsl(0 0% 100%);               /* pure white cards */
+  --card-foreground: hsl(350 44% 15%);
 
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
+  --popover-foreground: hsl(350 44% 15%);
 
-  /* Rich teal primary - VERY visible on white, professional and modern */
-  --primary: hsl(170 56% 36%);
-  --primary-foreground: hsl(0 0% 100%);
+  /* Primary: rich burgundy — the heart of the coffee brand */
+  --primary: hsl(350 44% 29%);           /* #6D2932 */
+  --primary-foreground: hsl(34 40% 96%); /* cream white on burgundy */
 
-  --secondary: hsl(220 14% 96%);
-  --secondary-foreground: hsl(222 47% 11%);
+  --secondary: hsl(34 24% 88%);          /* light taupe */
+  --secondary-foreground: hsl(350 44% 29%);
 
-  --muted: hsl(220 14% 96%);
-  --muted-foreground: hsl(220 9% 46%);
+  --muted: hsl(34 20% 92%);              /* very light warm gray */
+  --muted-foreground: hsl(350 20% 45%);  /* muted burgundy */
 
-  --accent: hsl(220 14% 92%);
-  --accent-foreground: hsl(222 47% 11%);
+  --accent: hsl(34 24% 78%);             /* warm taupe #C7B7A3 */
+  --accent-foreground: hsl(350 44% 15%);
 
-  --destructive: hsl(0 84% 60%);
+  --destructive: hsl(0 72% 50%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(220 13% 85%);
-  --input: hsl(220 13% 85%);
-  --ring: hsl(170 56% 36%);
+  --border: hsl(34 20% 85%);             /* warm light border */
+  --input: hsl(34 20% 85%);
+  --ring: hsl(350 44% 29%);              /* burgundy ring */
 
   --radius: 0.625rem;
 
-  /* Sidebar — clean professional tones */
-  --sidebar-background: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(222 47% 11%);
-  --sidebar-primary: hsl(170 56% 36%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(170 40% 94%);
-  --sidebar-accent-foreground: hsl(222 47% 11%);
-  --sidebar-border: hsl(220 13% 88%);
-  --sidebar-ring: hsl(170 56% 36%);
+  /* Sidebar — deep maroon for premium feel */
+  --sidebar-background: hsl(350 53% 22%); /* #561C24 deep maroon */
+  --sidebar-foreground: hsl(34 40% 92%);  /* warm cream text */
+  --sidebar-primary: hsl(34 40% 89%);     /* cream #E8D8C4 */
+  --sidebar-primary-foreground: hsl(350 53% 22%);
+  --sidebar-accent: hsl(350 40% 28%);     /* slightly lighter maroon */
+  --sidebar-accent-foreground: hsl(34 40% 92%);
+  --sidebar-border: hsl(350 40% 30%);     /* maroon border */
+  --sidebar-ring: hsl(34 24% 71%);        /* taupe ring */
 
-  --chart-1: hsl(170 56% 36%);
-  --chart-2: hsl(220 70% 50%);
-  --chart-3: hsl(38 92% 50%);
-  --chart-4: hsl(280 65% 58%);
-  --chart-5: hsl(0 84% 60%);
+  --chart-1: hsl(350 44% 29%);            /* burgundy */
+  --chart-2: hsl(34 60% 50%);             /* warm gold-brown */
+  --chart-3: hsl(350 53% 22%);            /* deep maroon */
+  --chart-4: hsl(34 24% 71%);             /* taupe */
+  --chart-5: hsl(0 72% 50%);              /* red */
+
+  /* Status colors — warm palette aligned */
+  --success: hsl(142 50% 40%);
+  --info: hsl(200 70% 50%);
+  --warning: hsl(34 90% 50%);
+  --danger: hsl(0 72% 50%);
 }
 
 .dark {
-  /* ── Modern Professional Dark Theme ── */
-  /* Deep slate backgrounds, bright text, vibrant teal primary that pops on dark */
+  /* ══ Terra Brew Dark Theme ══ */
 
-  --background: hsl(222 47% 6%);
-  --foreground: hsl(210 40% 98%);
+  --background: hsl(350 53% 8%);         /* very dark maroon */
+  --foreground: hsl(34 40% 92%);          /* warm cream */
 
-  --card: hsl(222 47% 9%);
-  --card-foreground: hsl(210 40% 98%);
+  --card: hsl(350 40% 12%);              /* dark burgundy card */
+  --card-foreground: hsl(34 40% 92%);
 
-  --popover: hsl(222 47% 9%);
-  --popover-foreground: hsl(210 40% 98%);
+  --popover: hsl(350 40% 12%);
+  --popover-foreground: hsl(34 40% 92%);
 
-  /* Bright teal primary - POPS on dark backgrounds, very high contrast */
-  --primary: hsl(170 70% 55%);
-  --primary-foreground: hsl(222 47% 6%);
+  /* Primary: brighter burgundy for dark mode */
+  --primary: hsl(350 50% 45%);            /* brighter burgundy */
+  --primary-foreground: hsl(34 40% 96%);
 
-  --secondary: hsl(222 40% 14%);
-  --secondary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(350 30% 18%);
+  --secondary-foreground: hsl(34 40% 92%);
 
-  --muted: hsl(222 33% 14%);
-  --muted-foreground: hsl(215 20% 65%);
+  --muted: hsl(350 25% 16%);
+  --muted-foreground: hsl(34 20% 60%);
 
-  --accent: hsl(222 40% 16%);
-  --accent-foreground: hsl(210 40% 98%);
+  --accent: hsl(350 30% 22%);
+  --accent-foreground: hsl(34 40% 92%);
 
   --destructive: hsl(0 72% 51%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(222 33% 18%);
-  --input: hsl(222 33% 18%);
-  --ring: hsl(170 70% 55%);
+  --border: hsl(350 25% 22%);
+  --input: hsl(350 25% 22%);
+  --ring: hsl(350 50% 45%);
 
-  /* Sidebar — deep slate */
-  --sidebar-background: hsl(222 47% 8%);
-  --sidebar-foreground: hsl(210 40% 98%);
-  --sidebar-primary: hsl(170 70% 55%);
-  --sidebar-primary-foreground: hsl(222 47% 6%);
-  --sidebar-accent: hsl(222 40% 14%);
-  --sidebar-accent-foreground: hsl(210 40% 98%);
-  --sidebar-border: hsl(222 33% 16%);
-  --sidebar-ring: hsl(170 70% 55%);
+  /* Sidebar — deep dark maroon */
+  --sidebar-background: hsl(350 53% 10%);
+  --sidebar-foreground: hsl(34 40% 92%);
+  --sidebar-primary: hsl(350 50% 45%);
+  --sidebar-primary-foreground: hsl(34 40% 96%);
+  --sidebar-accent: hsl(350 30% 18%);
+  --sidebar-accent-foreground: hsl(34 40% 92%);
+  --sidebar-border: hsl(350 25% 20%);
+  --sidebar-ring: hsl(350 50% 45%);
 
-  --chart-1: hsl(170 70% 55%);
-  --chart-2: hsl(217 91% 73%);
-  --chart-3: hsl(38 92% 50%);
-  --chart-4: hsl(280 65% 70%);
-  --chart-5: hsl(0 84% 65%);
+  --chart-1: hsl(350 50% 45%);
+  --chart-2: hsl(34 70% 60%);
+  --chart-3: hsl(350 53% 35%);
+  --chart-4: hsl(34 24% 71%);
+  --chart-5: hsl(0 72% 55%);
 }
 
 @theme inline {
@@ -144,17 +150,28 @@
   --font-sans: var(--font-space-mono);
   --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Coffee color scale — warm brown palette for login/theme pages */
-  --color-coffee-50: #faf6f1;
-  --color-coffee-100: #f0e6d6;
-  --color-coffee-200: #e0ccb0;
-  --color-coffee-300: #c9a97e;
-  --color-coffee-400: #b08850;
-  --color-coffee-500: #8b5a1e;
-  --color-coffee-600: #6d4516;
-  --color-coffee-700: #4e3010;
-  --color-coffee-800: #3a240b;
-  --color-coffee-900: #2a1a08;
+  /* Coffee color scale — warm brown palette for login/landing pages */
+  --color-coffee-50: #f8f3ed;
+  --color-coffee-100: #e8d8c4;
+  --color-coffee-200: #c7b7a3;
+  --color-coffee-300: #a89478;
+  --color-coffee-400: #8b7054;
+  --color-coffee-500: #6d2932;
+  --color-coffee-600: #5a2230;
+  --color-coffee-700: #561c24;
+  --color-coffee-800: #3d1419;
+  --color-coffee-900: #2a0e12;
+
+  /* Brand semantic colors */
+  --color-maroon: #561C24;
+  --color-burgundy: #6D2932;
+  --color-taupe: #C7B7A3;
+  --color-cream: #E8D8C4;
+  --color-gold: #ffc627;
+  --color-success: #78be20;
+  --color-info: #00a3e0;
+  --color-warning: #ff7f32;
+  --color-danger: #cc2f2f;
 }
 
 @layer base {
@@ -175,14 +192,12 @@
 
 /* ── Button visibility enhancements ── */
 @layer components {
-  /* Ghost buttons: subtle background so they're recognizable as buttons */
   button[data-slot="button"].text-foreground,
   button[data-slot="button"].text-muted-foreground {
     min-width: 32px;
     min-height: 32px;
   }
 
-  /* Outline variant: ensure border is clearly visible */
   button[data-slot="button"]:not(.bg-primary):not(.bg-destructive):not(.bg-secondary).border-border {
     border-width: 1.5px;
   }
@@ -197,17 +212,17 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 70%);
+  background: hsl(350 20% 70%);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(220 10% 50%);
+  background: hsl(350 30% 50%);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: hsl(222 33% 30%);
+  background: hsl(350 25% 30%);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: hsl(222 33% 40%);
+  background: hsl(350 30% 40%);
 }
 
 /* ── Animations ── */
@@ -278,13 +293,13 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(170 56% 36% / 0.4); }
-  50% { box-shadow: 0 0 0 8px hsl(170 56% 36% / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(350 44% 29% / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(350 44% 29% / 0); }
 }
 
 @keyframes pulse-glow-dark {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(170 70% 55% / 0.4); }
-  50% { box-shadow: 0 0 0 8px hsl(170 70% 55% / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(350 50% 45% / 0.4); }
+  50% { box-shadow: 0 0 0 8px hsl(350 50% 45% / 0); }
 }
 
 @keyframes slideInRight {
@@ -355,6 +370,34 @@
   to { transform: rotate(360deg); }
 }
 
+/* Landing page animations */
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroSlideLeft {
+  from { opacity: 0; transform: translateX(-60px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes heroSlideRight {
+  from { opacity: 0; transform: translateX(60px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes floatBean {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-20px) rotate(5deg); }
+  50% { transform: translateY(-10px) rotate(-3deg); }
+  75% { transform: translateY(-25px) rotate(2deg); }
+}
+
 /* ── Animation utility classes ── */
 .animate-shimmer {
   animation: shimmer 2s infinite;
@@ -387,10 +430,10 @@
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px hsl(170 56% 36% / 0.08);
+  box-shadow: 0 8px 25px hsl(350 44% 29% / 0.1);
 }
 .dark .card-hover:hover {
-  box-shadow: 0 8px 25px hsl(170 70% 55% / 0.06);
+  box-shadow: 0 8px 25px hsl(350 50% 45% / 0.08);
 }
 
 /* ── Table row hover ── */
@@ -398,10 +441,10 @@
   transition: background-color 0.15s ease;
 }
 .table-row-hover:hover {
-  background-color: hsl(220 14% 96%);
+  background-color: hsl(34 24% 92%);
 }
 .dark .table-row-hover:hover {
-  background-color: hsl(222 33% 14%);
+  background-color: hsl(350 25% 16%);
 }
 
 /* ── Focus ring ── */
@@ -441,13 +484,13 @@
 }
 
 @keyframes amberPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(217, 119, 6, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(109, 41, 50, 0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(109, 41, 50, 0); }
 }
 
 @keyframes amberPulseDark {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
-  50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(175, 80, 95, 0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(175, 80, 95, 0); }
 }
 
 @keyframes greenCheckPop {
@@ -539,9 +582,9 @@
   height: 4px;
 }
 .pipeline-scroll::-webkit-scrollbar-thumb {
-  background: hsl(220 10% 75%);
+  background: hsl(350 20% 75%);
   border-radius: 2px;
 }
 .dark .pipeline-scroll::-webkit-scrollbar-thumb {
-  background: hsl(222 33% 25%);
+  background: hsl(350 25% 25%);
 }

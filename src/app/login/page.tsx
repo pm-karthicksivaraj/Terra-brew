@@ -152,8 +152,8 @@ export default function LoginPage() {
   // Don't render any DOM until client-side mounted to prevent removeChild
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-coffee-900">
-        <div className="flex flex-col items-center gap-3 text-coffee-400">
+      <div className="min-h-screen flex items-center justify-center bg-[#561C24]">
+        <div className="flex flex-col items-center gap-3 text-[#C7B7A3]">
           <Coffee className="w-8 h-8 animate-pulse" />
           <span className="text-sm">Loading...</span>
         </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-coffee-800 via-coffee-900 to-stone-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#561C24] via-[#6D2932] to-[#3d1419]" />
 
       {/* Floating particles — pure CSS */}
       {particles.map((p, i) => (
@@ -176,7 +176,7 @@ export default function LoginPage() {
             height: p.height,
             left: `${p.left}%`,
             top: `${p.top}%`,
-            background: `rgba(212, 165, 116, ${p.opacity})`,
+            background: `rgba(199, 183, 163, ${p.opacity})`,
             animation: `loginFloat ${p.duration}s ease-in-out ${p.delay}s infinite`,
           }}
         />
@@ -186,7 +186,7 @@ export default function LoginPage() {
       <div
         className="absolute w-[500px] h-[500px] rounded-full opacity-10 blur-3xl pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, #d4a574, transparent)',
+          background: 'radial-gradient(circle, #C7B7A3, transparent)',
           top: '-10%',
           right: '-10%',
           animation: 'loginPulse 10s ease-in-out infinite',
@@ -195,7 +195,7 @@ export default function LoginPage() {
       <div
         className="absolute w-[400px] h-[400px] rounded-full opacity-10 blur-3xl pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, #8b5a1e, transparent)',
+          background: 'radial-gradient(circle, #6D2932, transparent)',
           bottom: '-5%',
           left: '-5%',
           animation: 'loginPulse 12s ease-in-out infinite',
@@ -207,19 +207,19 @@ export default function LoginPage() {
         className="relative z-10 w-full max-w-md mx-4"
         style={{ animation: 'loginFadeUp 0.6s ease-out 0.2s both' }}
       >
-        <Card className="bg-white/95 backdrop-blur-xl border-coffee-200/30 shadow-2xl shadow-black/20 rounded-2xl overflow-hidden">
+        <Card className="bg-white/95 backdrop-blur-xl border-[#C7B7A3]/30 shadow-2xl shadow-black/20 rounded-2xl overflow-hidden">
           <CardHeader className="pb-2 pt-8 px-8">
             <div
               className="flex flex-col items-center mb-4"
               style={{ animation: 'loginScaleIn 0.5s ease-out 0.4s both' }}
             >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-coffee-500 to-coffee-800 flex items-center justify-center shadow-lg shadow-coffee-400/30 mb-4">
-                <Coffee className="w-9 h-9 text-white" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6D2932] to-[#561C24] flex items-center justify-center shadow-lg shadow-[#6D2932]/30 mb-4">
+                <Coffee className="w-9 h-9 text-[#E8D8C4]" />
               </div>
-              <h1 className="text-2xl font-bold text-coffee-900" style={{ fontFamily: 'Space Mono, monospace' }}>
+              <h1 className="text-2xl font-bold text-[#561C24]" style={{ fontFamily: 'Space Mono, monospace' }}>
                 Terra Brew
               </h1>
-              <p className="text-coffee-500 text-sm mt-1">
+              <p className="text-[#6D2932]/70 text-sm mt-1">
                 {step === 'credentials'
                   ? t2('Đăng nhập vào Nền tảng', 'Sign in to Platform')
                   : t2('Chọn Tổ chức', 'Select Organization')
@@ -233,7 +233,7 @@ export default function LoginPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
-                className="gap-1.5 text-coffee-500 hover:text-coffee-800 hover:bg-coffee-50 text-xs"
+                className="gap-1.5 text-[#6D2932] hover:text-[#561C24] hover:bg-[#E8D8C4]/40 text-xs"
               >
                 <Globe className="w-3.5 h-3.5" />
                 {lang === 'vi' ? 'English' : 'Tiếng Việt'}
@@ -247,7 +247,7 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-coffee-700 text-xs font-medium">
+                  <Label htmlFor="email" className="text-[#561C24] text-xs font-medium">
                     Email
                   </Label>
                   <Input
@@ -256,14 +256,14 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t2('Nhập email của bạn', 'Enter your email')}
-                    className="bg-coffee-50/50 border-coffee-200 focus:border-coffee-500 focus:ring-coffee-500/20 rounded-xl h-11 text-sm"
+                    className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-11 text-sm"
                     required
                   />
                 </div>
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-coffee-700 text-xs font-medium">
+                  <Label htmlFor="password" className="text-[#561C24] text-xs font-medium">
                     {t2('Mật khẩu', 'Password')}
                   </Label>
                   <div className="relative">
@@ -273,13 +273,13 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="bg-coffee-50/50 border-coffee-200 focus:border-coffee-500 focus:ring-coffee-500/20 rounded-xl h-11 text-sm pr-10"
+                      className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-11 text-sm pr-10"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-coffee-400 hover:text-coffee-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6D2932]/60 hover:text-[#561C24]"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -295,16 +295,16 @@ export default function LoginPage() {
                 )}
 
                 {/* Demo info */}
-                <div className="bg-coffee-50 border border-coffee-200/50 rounded-xl p-3 text-xs text-coffee-600">
+                <div className="bg-[#E8D8C4]/30 border border-[#C7B7A3]/50 rounded-xl p-3 text-xs text-[#6D2932]">
                   <p className="font-medium mb-1">{t2('Tài khoản demo đã được điền sẵn', 'Demo credentials pre-filled')}</p>
-                  <p className="text-coffee-500">admin@metrang-coffee.terrabrew.com / Admin@2024</p>
+                  <p className="text-[#6D2932]/70">admin@metrang-coffee.terrabrew.com / Admin@2024</p>
                 </div>
 
                 {/* Submit Button */}
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-coffee-600 to-coffee-800 hover:from-coffee-700 hover:to-coffee-900 text-white h-11 rounded-xl shadow-lg shadow-coffee-400/20 transition-all duration-300 hover:shadow-xl text-sm font-medium"
+                  className="w-full bg-gradient-to-r from-[#6D2932] to-[#561C24] hover:from-[#561C24] hover:to-[#3d1419] text-[#E8D8C4] h-11 rounded-xl shadow-lg shadow-[#6D2932]/20 transition-all duration-300 hover:shadow-xl text-sm font-medium"
                 >
                   {loading ? (
                     <>
@@ -319,7 +319,7 @@ export default function LoginPage() {
             ) : (
               /* ───── Step 2: Select Organization ───── */
               <div className="space-y-4">
-                <p className="text-coffee-600 text-sm text-center">
+                <p className="text-[#6D2932] text-sm text-center">
                   {t2(
                     'Email của bạn thuộc nhiều tổ chức. Vui lòng chọn:',
                     'Your email belongs to multiple organizations. Please select one:'
@@ -346,36 +346,36 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => handleSelectTenant(tenant.tenantId)}
                         disabled={loading}
-                        className="w-full text-left p-4 rounded-xl border border-coffee-200/60 bg-coffee-50/40 hover:bg-coffee-100/60 hover:border-coffee-400/40 transition-all duration-200 group disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full text-left p-4 rounded-xl border border-[#C7B7A3]/60 bg-[#E8D8C4]/30 hover:bg-[#C7B7A3]/30 hover:border-[#6D2932]/40 transition-all duration-200 group disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-coffee-400 to-coffee-700 flex items-center justify-center text-lg shrink-0 shadow-sm">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6D2932] to-[#561C24] flex items-center justify-center text-lg shrink-0 shadow-sm">
                             {icon}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <Building2 className="w-3.5 h-3.5 text-coffee-400 shrink-0" />
-                              <span className="font-semibold text-coffee-900 text-sm truncate">
+                              <Building2 className="w-3.5 h-3.5 text-[#6D2932]/60 shrink-0" />
+                              <span className="font-semibold text-[#561C24] text-sm truncate">
                                 {tenant.tenantName}
                               </span>
                             </div>
                             <div className="flex items-center gap-1.5 mt-1.5">
-                              <span className="text-xs text-coffee-500 bg-coffee-100 px-2 py-0.5 rounded-md">
+                              <span className="text-xs text-[#6D2932]/70 bg-[#C7B7A3]/30 px-2 py-0.5 rounded-md">
                                 {typeLabel}
                               </span>
-                              <span className="flex items-center gap-1 text-xs text-coffee-400">
+                              <span className="flex items-center gap-1 text-xs text-[#6D2932]/60">
                                 <MapPin className="w-3 h-3" />
                                 {tenant.country}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 mt-1.5 text-xs text-coffee-400">
+                            <div className="flex items-center gap-2 mt-1.5 text-xs text-[#6D2932]/60">
                               <span>{tenant.currency}</span>
                               <span>·</span>
                               <span>{tenant.language}</span>
                             </div>
                           </div>
                           {loading && (
-                            <Loader2 className="w-4 h-4 animate-spin text-coffee-500 shrink-0 mt-1" />
+                            <Loader2 className="w-4 h-4 animate-spin text-[#6D2932]/70 shrink-0 mt-1" />
                           )}
                         </div>
                       </button>
@@ -388,7 +388,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleBackToLogin}
                   disabled={loading}
-                  className="flex items-center gap-1.5 text-coffee-500 hover:text-coffee-700 text-sm transition-colors w-full justify-center pt-1"
+                  className="flex items-center gap-1.5 text-[#6D2932]/70 hover:text-[#561C24] text-sm transition-colors w-full justify-center pt-1"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   {t2('Quay lại đăng nhập', 'Back to login')}
@@ -414,7 +414,7 @@ export default function LoginPage() {
                         toast.error(t2('Lỗi khi tải dữ liệu mẫu', 'Error loading sample data'))
                       }
                     }}
-                    className="text-xs text-coffee-500 hover:text-coffee-700 underline underline-offset-2 transition-colors"
+                    className="text-xs text-[#6D2932]/70 hover:text-[#561C24] underline underline-offset-2 transition-colors"
                   >
                     {t2('Tải dữ liệu mẫu (Đầy đủ)', 'Load Sample Data (Full Pipeline)')}
                   </button>
@@ -423,7 +423,7 @@ export default function LoginPage() {
                 <div className="mt-3 text-center">
                   <button
                     onClick={() => window.location.href = '/super-admin'}
-                    className="text-xs text-coffee-400 hover:text-coffee-600 transition-colors"
+                    className="text-xs text-[#6D2932]/60 hover:text-[#561C24] transition-colors"
                   >
                     {t2('Đăng nhập Quản trị nền tảng →', 'Platform Admin Login →')}
                   </button>
@@ -434,7 +434,7 @@ export default function LoginPage() {
         </Card>
 
         {/* Bottom text */}
-        <p className="text-center text-coffee-400/60 text-xs mt-6">
+        <p className="text-center text-[#C7B7A3]/60 text-xs mt-6">
           © 2024 Terra Brew — {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
         </p>
       </div>
