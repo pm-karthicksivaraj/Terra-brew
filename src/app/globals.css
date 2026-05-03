@@ -588,3 +588,14 @@
 .dark .pipeline-scroll::-webkit-scrollbar-thumb {
   background: hsl(350 25% 25%);
 }
+
+/* ── Coffee Price Ticker Animation ── */
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pause ticker on hover */
+.ticker-container:hover .ticker-scroll {
+  animation-play-state: paused;
+}

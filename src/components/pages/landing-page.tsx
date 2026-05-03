@@ -11,6 +11,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/i18n'
+import dynamic from 'next/dynamic'
+
+const CoffeePriceTicker = dynamic(() => import('@/components/landing/coffee-price-ticker'), { ssr: false })
 
 // Deterministic pseudo-random to avoid SSR/client mismatch
 function seededRandom(seed: number): number {
@@ -57,7 +60,7 @@ export default function LandingPage() {
 
   const securityFeatures = [
     { icon: Lock, title: 'AES-256 Encryption', desc: 'All sensitive data encrypted at rest and in transit using military-grade AES-256 encryption standard. Database-level encryption, TLS 1.3 for all API communications, and encrypted backup storage ensure your coffee supply chain data remains confidential.' },
-    { icon: KeyRound, title: 'Role-Based Access Control', desc: 'Granular 7-role RBAC system with entity-type permissions. Producers see farms, exporters see trade, certification bodies see audits — zero cross-tenant data leakage. Each role has precisely scoped access to only the modules and data relevant to their function.' },
+    { icon: KeyRound, title: 'Role-Based Access Control', desc: 'Granular 8-role RBAC system with entity-type permissions. Producers see farms, exporters see trade, buyers see marketplace, certification bodies see audits — zero cross-tenant data leakage. Each role has precisely scoped access to only the modules and data relevant to their function.' },
     { icon: Database, title: 'Tenant Data Isolation', desc: 'Strict multi-tenant architecture where each organization operates in complete data isolation. No shared databases, no shared schemas. Tenant-scoped queries enforced at the ORM layer ensure that your supply chain data is never accessible to other organizations on the platform.' },
     { icon: Link2, title: 'Blockchain Immutability', desc: 'Hash-chain blocks cryptographically link every supply chain event. Any tampering attempt is immediately detectable and traceable. Each block references the previous block\'s hash, creating an unbreakable chain of custody from farm to cup that regulators and buyers can verify independently.' },
     { icon: Server, title: 'SOC 2 Compliant Infrastructure', desc: 'Hosted on enterprise-grade cloud infrastructure with regular security audits, penetration testing, and 99.9% uptime SLA. Automated vulnerability scanning, intrusion detection systems, and incident response protocols protect your data around the clock.' },
@@ -131,6 +134,9 @@ export default function LandingPage() {
             </Button>
           </div>
         </header>
+
+        {/* ═══ Coffee Price Ticker ═══ */}
+        <CoffeePriceTicker />
 
         {/* ═══ Hero Section ═══ */}
         <section className="flex flex-col items-center justify-center px-6 py-16 md:py-24 text-center">

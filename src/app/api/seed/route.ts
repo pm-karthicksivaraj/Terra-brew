@@ -125,6 +125,8 @@ export async function POST() {
       { email: 'admin@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Admin', role: 'tenant_admin', tenantSlug: 'euro-coffee-imports' },
       { email: 'trader@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Trader', role: 'trader', tenantSlug: 'euro-coffee-imports' },
       { email: 'operations@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Ops', role: 'operations_manager', tenantSlug: 'euro-coffee-imports' },
+      { email: 'buyer@euro-coffee-imports.terrabrew.com', name: 'Hans Müller — Buyer', role: 'buyer', tenantSlug: 'euro-coffee-imports' },
+      { email: 'buyer2@euro-coffee-imports.terrabrew.com', name: 'Pierre Dupont — Buyer', role: 'buyer', tenantSlug: 'euro-coffee-imports' },
       { email: 'admin@sgs-inspection.terrabrew.com', name: 'SGS Admin', role: 'tenant_admin', tenantSlug: 'sgs-inspection' },
       { email: 'inspector@sgs-inspection.terrabrew.com', name: 'SGS Inspector', role: 'quality_controller', tenantSlug: 'sgs-inspection' },
     ]
@@ -252,7 +254,7 @@ export async function POST() {
     // ═══ Return credentials ═══
     return NextResponse.json({
       success: true,
-      message: 'Multi-tenant seed complete! 6 tenants, 15 users, 9 farmers across 4 countries.',
+      message: 'Multi-tenant seed complete! 6 tenants, 17 users (incl. 2 buyers), 9 farmers across 4 countries.',
       tenants: tenantDefs.map(t => ({ slug: t.slug, name: t.name, entityType: t.entityType, country: t.country, currency: t.currency, language: t.language })),
       credentials: userDefs.map(u => ({
         email: u.email,

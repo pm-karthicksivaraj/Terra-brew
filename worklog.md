@@ -1,39 +1,25 @@
 ---
-Task ID: 1
+Task ID: 1-7
 Agent: Main Agent
-Task: Apply comprehensive SEO audit to Terra Brew landing page
+Task: Add buyer role + global coffee price ticker to Terra Brew
 
 Work Log:
-- Verified seed script fix was already applied (lines 191-217 properly destructure key/farmerCode)
-- Verified coffee brown ColorHunt theme already applied in globals.css
-- Verified Space Mono font already configured in layout.tsx
-- Updated layout.tsx metadata: SEO-optimized title, description with high-traffic keywords, expanded keywords array, openGraph with image/canonical URL, Twitter card, robots with googleBot, alternates/canonical
-- Added JSON-LD structured data (SoftwareApplication schema) to layout.tsx head
-- Added FAQPage JSON-LD schema with 5 EUDR/coffee traceability questions for "People Also Ask" targeting
-- Rewrote landing-page.tsx with all 14 SEO text updates from audit:
-  - Badge: "#1 Coffee Traceability & EUDR Compliance Software"
-  - H1: "Coffee Traceability Software — Farm to Cup | EUDR Compliant"
-  - Hero subheading with "coffee supply chain management" and "EUDR compliant" keywords
-  - Features section: "Coffee Supply Chain Software Features"
-  - All 8 feature card headings SEO-optimized (e.g. "Farm-to-Cup Coffee Traceability Software", "EUDR Compliance Software & Due Diligence Automation")
-  - Stakeholder section: "Coffee Supply Chain Software for Every Stakeholder"
-  - All 4 stakeholder headings SEO-optimized with keyword-rich titles
-  - Security section: "Enterprise-Grade Coffee Supply Chain Data Security"
-  - Architecture section: "Multi-Entity Coffee Supply Chain Architecture"
-  - CTA: "Ready to Digitize Your Coffee Supply Chain with EUDR-Compliant Traceability?"
-  - Footer: "Coffee Traceability Software · EUDR Compliance Platform · Blockchain Supply Chain · Farm to Cup"
-- Added new Global Reach section with country-specific SEO keywords (Vietnam, Brazil, Ethiopia, Kenya)
-- Added interactive FAQ section with 5 questions targeting featured snippet rankings
-- Enhanced all description paragraphs with keyword density and depth
-- Updated robots.txt with sitemap reference and disallow rules for internal pages
-- Created sitemap.ts with dynamic sitemap generation (8 URLs including future SEO landing pages)
-- TypeScript compilation passes with no errors
-- Dev server starts cleanly with no errors
+- Added `buyer` to TenantRole type in module-config.ts
+- Added buyer role labels: en: 'Buyer', vi: 'Người mua', pt: 'Comprador', am: 'ገዢ', sw: 'Mnunuzi'
+- Added `buyer` access level to all 34 module roleAccess entries
+- Buyer gets: full access to dashboard, marketplace, RFQ, trading-desk, buyers, trace-journey; view access to analytics, compliance, certifications, shipments, logistics, blockchain; hidden from farm ops, users, api-settings
+- Created /api/coffee-prices/route.ts — simulated commodity price API with 8 coffee contracts (ICE Coffee C Arabica, London Robusta, Vietnam Robusta Grade 2, Brazil Santos NY2, Ethiopia Yirgacheffe Washed, Kenya AA Top, Colombia Excelso EP, ICCO Composite)
+- Created CoffeePriceTicker component with scrolling marquee, green TrendingUp for price hikes, red TrendingDown for price drops, live indicator dot, hover-to-pause
+- Added tickerScroll CSS animation to globals.css with pause-on-hover
+- Integrated CoffeePriceTicker into landing page (dynamic import, placed between header and hero section)
+- Updated schema User model role comment to include buyer
+- Added 2 buyer users to seed script: buyer@euro-coffee-imports (Hans Müller), buyer2@euro-coffee-imports (Pierre Dupont)
+- Updated security section description from "7-role" to "8-role RBAC system"
+- TypeScript compilation passes with zero errors
 
 Stage Summary:
-- All 14 SEO text updates from audit applied to landing page
-- 2 new sections added: Global Reach (country-specific keywords) and FAQ (People Also Ask targeting)
-- Full JSON-LD structured data added (SoftwareApplication + FAQPage schemas)
-- Metadata fully optimized: title, description, keywords, OpenGraph, Twitter, canonical URL, robots
-- robots.txt and sitemap.ts added for crawlability
-- All changes compile cleanly, dev server starts without errors
+- 8 roles now: tenant_admin, operations_manager, field_officer, quality_controller, trader, finance_manager, buyer, viewer
+- Coffee price ticker shows 8 global coffee contracts with real-time simulated prices
+- Green ▲ arrow for price increases, Red ▼ arrow for price decreases
+- Ticker auto-refreshes every 60 seconds, pauses on hover
+- 2 buyer users added to seed data for testing

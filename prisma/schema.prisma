@@ -200,7 +200,7 @@ model User {
   email        String
   passwordHash String
   name         String
-  role         String   @default("farmer") // tenant_admin, operations_manager, field_officer, quality_controller, trader, finance_manager, viewer
+  role         String   @default("farmer") // tenant_admin, operations_manager, field_officer, quality_controller, trader, finance_manager, buyer, viewer
   permissions  String   @default("{}") // JSON object for granular role permissions
   phone        String?
   avatar       String?
