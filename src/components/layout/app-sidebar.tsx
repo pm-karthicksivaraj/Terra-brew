@@ -8,21 +8,68 @@ import {
   TreePine, Tractor, Activity, FlaskConical, Shield,
   Wheat, Truck, Factory,
   Award, ClipboardCheck, FileText, Store,
-  UserCog, Link2, QrCode, GitBranch, Nfc,
-  Coffee, ChevronLeft, ChevronRight, Globe, ChevronDown,
-  Droplets, Beaker, Waves, Sun, Hammer, Filter, Flame,
-  Package, Ship, Warehouse as WarehouseIcon, Truck as TruckIcon, Store as StoreIcon,
-  ShieldCheck, FileCheck, CreditCard, Key, Thermometer,
-  TrendingUp, Anchor, Satellite, ShoppingBag,
-  Radio, CheckSquare, Truck as TruckIcon2,
+  UserCog, Coffee, ChevronLeft, ChevronRight, Globe, ChevronDown,
+  CreditCard,
+  TrendingUp, Ship,
+  Radio, CheckCircle,
+  LayoutDashboard, FileQuestion, Container, FileOutput,
+  UserCheck, Route, Link as LinkIcon, Webhook,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import {
+  getGroupedNavigation,
+  ENTITY_TYPE_LABELS,
+  ROLE_LABELS,
+  type EntityType,
+  type TenantRole,
+  type ModuleDef,
+} from '@/lib/module-config'
+
+// ─── Icon lookup ──────────────────────────────────────────────────
+
+const LUCIDE_ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  BarChart3,
+  Users,
+  MapPin,
+  Sprout,
+  TreePine,
+  Tractor,
+  Activity,
+  FlaskConical,
+  Shield,
+  Wheat,
+  Truck,
+  Factory,
+  ClipboardCheck,
+  CheckCircle,
+  Award,
+  Store,
+  FileQuestion,
+  FileText,
+  TrendingUp,
+  Ship,
+  Container,
+  FileOutput,
+  UserCheck,
+  Route,
+  CreditCard,
+  UserCog,
+  Radio,
+  Link: LinkIcon,
+  Webhook,
+}
+
+function getIcon(iconName: string): LucideIcon {
+  return LUCIDE_ICON_MAP[iconName] ?? BarChart3
+}
 
 // ─── Navigation types ────────────────────────────────────────────
 
@@ -31,122 +78,16 @@ interface NavItem {
   labelVi: string
   href: string
   icon: LucideIcon
+  color: string
 }
 
-interface NavGroup {
+interface NavGroupRender {
+  id: string
   title: string
   titleVi: string
   items: NavItem[]
-  defaultOpen?: boolean
+  defaultOpen: boolean
 }
-
-// ─── Navigation definition ───────────────────────────────────────
-
-const NAVIGATION: NavGroup[] = [
-  {
-    title: 'Core',
-    titleVi: 'Chính',
-    defaultOpen: true,
-    items: [
-      { label: 'Dashboard', labelVi: 'Bảng điều khiển', href: '/dashboard', icon: BarChart3 },
-      { label: 'Farmers', labelVi: 'Nông dân', href: '/farmers', icon: Users },
-      { label: 'Farm Lands', labelVi: 'Đất nông trại', href: '/farmlands', icon: MapPin },
-      { label: 'Cultivations', labelVi: 'Canh tác', href: '/cultivations', icon: Sprout },
-    ],
-  },
-  {
-    title: 'Farm Management',
-    titleVi: 'Quản lý nông trại',
-    defaultOpen: false,
-    items: [
-      { label: 'Nurseries', labelVi: 'Vườn ươm', href: '/nurseries', icon: TreePine },
-      { label: 'Land Preparation', labelVi: 'Chuẩn bị đất', href: '/land-preparations', icon: Tractor },
-      { label: 'Crop Monitoring', labelVi: 'Giám sát cây trồng', href: '/crop-monitorings', icon: Activity },
-      { label: 'Fertilizer', labelVi: 'Phân bón', href: '/fertilizer-apps', icon: FlaskConical },
-      { label: 'Pest & Disease', labelVi: 'Sâu bệnh', href: '/pest-disease', icon: Shield },
-    ],
-  },
-  {
-    title: 'Supply Chain',
-    titleVi: 'Chuỗi cung ứng',
-    defaultOpen: true,
-    items: [
-      { label: 'Harvest', labelVi: 'Thu hoạch', href: '/harvest', icon: Wheat },
-      { label: 'Procurement', labelVi: 'Thu mua', href: '/procurement', icon: Truck },
-      { label: 'Processing', labelVi: 'Chế biến', href: '/processing', icon: Factory },
-      { label: 'Processing Wizard', labelVi: 'Tạo lệnh CB 7 bước', href: '/processing/wizard', icon: Factory },
-      { label: 'Track Journey', labelVi: 'Truy xuất hành trình', href: '/traceability', icon: GitBranch },
-    ],
-  },
-  {
-    title: 'Processing Stages',
-    titleVi: 'Các bước chế biến',
-    defaultOpen: false,
-    items: [
-      { label: 'Pulping', labelVi: 'Xoác', href: '/processing/stages/pulping', icon: Droplets },
-      { label: 'Fermentation', labelVi: 'Lên men', href: '/processing/stages/fermentation', icon: Beaker },
-      { label: 'Washing', labelVi: 'Rửa', href: '/processing/stages/washing', icon: Waves },
-      { label: 'Drying', labelVi: 'Sấy', href: '/processing/stages/drying', icon: Sun },
-      { label: 'Hulling', labelVi: 'Bạt vỏ', href: '/processing/stages/hulling', icon: Hammer },
-      { label: 'Sorting/Grading', labelVi: 'Phân loại', href: '/processing/stages/sorting', icon: Filter },
-      { label: 'Roasting', labelVi: 'Rang', href: '/processing/stages/roasting', icon: Flame },
-      { label: 'Packaging', labelVi: 'Đóng gói', href: '/processing/stages/packaging', icon: Package },
-      { label: 'Export', labelVi: 'Xuất khẩu', href: '/processing/stages/export', icon: Ship },
-      { label: 'Warehouse', labelVi: 'Kho bãi', href: '/processing/stages/warehouse', icon: WarehouseIcon },
-      { label: 'Distribution', labelVi: 'Phân phối', href: '/processing/stages/distribution', icon: TruckIcon },
-      { label: 'Retail', labelVi: 'Bán lẻ', href: '/processing/stages/retail', icon: StoreIcon },
-    ],
-  },
-  {
-    title: 'EUDR & Compliance',
-    titleVi: 'EUDR & Tuân thủ',
-    defaultOpen: true,
-    items: [
-      { label: 'EUDR Compliance', labelVi: 'Tuân thủ EUDR', href: '/eudr-compliance', icon: Shield },
-      { label: 'Deforestation', labelVi: 'Rủi ro phá rừng', href: '/deforestation', icon: TreePine },
-      { label: 'Certifications', labelVi: 'Chứng nhận', href: '/cert-assessments', icon: Award },
-      { label: 'Inspections', labelVi: 'Kiểm tra', href: '/coffee-inspections', icon: ClipboardCheck },
-      { label: 'QC Verification', labelVi: 'Kiểm định CL', href: '/qc-verifications', icon: CheckSquare },
-    ],
-  },
-  {
-    title: 'B2B & Trade',
-    titleVi: 'B2B & Thương mại',
-    defaultOpen: false,
-    items: [
-      { label: 'Export Documents', labelVi: 'Tài liệu xuất khẩu', href: '/export-docs', icon: FileText },
-      { label: 'Shipments', labelVi: 'Lô hàng', href: '/shipments', icon: Ship },
-      { label: 'Buyers', labelVi: 'Người mua', href: '/buyers', icon: Users },
-      { label: 'Trading Desk', labelVi: 'Sàn giao dịch', href: '/trading-desk', icon: TrendingUp },
-      { label: 'Smart Contracts', labelVi: 'HĐ thông minh', href: '/smart-contracts', icon: FileText },
-      { label: 'Marketplace', labelVi: 'Thị trường', href: '/marketplace', icon: Store },
-      { label: 'Compliance Market', labelVi: 'Thị trường tuân thủ', href: '/compliance-marketplace', icon: Store },
-    ],
-  },
-  {
-    title: 'Platform',
-    titleVi: 'Nền tảng',
-    defaultOpen: false,
-    items: [
-      { label: 'Analytics', labelVi: 'Phân tích', href: '/analytics', icon: BarChart3 },
-      { label: 'API & Webhooks', labelVi: 'API & Webhooks', href: '/api-settings', icon: Key },
-      { label: 'IoT Sensors', labelVi: 'Cảm biến IoT', href: '/iot-sensors', icon: Radio },
-      { label: 'Logistics', labelVi: 'Vận tải & Hải quan', href: '/logistics', icon: TruckIcon2 },
-      { label: 'Blockchain', labelVi: 'Blockchain', href: '/blockchain', icon: Link2 },
-    ],
-  },
-  {
-    title: 'System',
-    titleVi: 'Hệ thống',
-    defaultOpen: false,
-    items: [
-      { label: 'Users & Roles', labelVi: 'Người dùng & Vai trò', href: '/users', icon: UserCog },
-      { label: 'Billing', labelVi: 'Thanh toán', href: '/billing', icon: CreditCard },
-      { label: 'QR Verify', labelVi: 'Xác minh QR', href: '/qr-verify', icon: QrCode },
-      { label: 'NFC Tags', labelVi: 'NFC Tags', href: '/nfc-tags', icon: Nfc },
-    ],
-  },
-]
 
 // ─── Sub-components ───────────────────────────────────────────────
 
@@ -160,7 +101,7 @@ function NavItemLink({
   item: NavItem
   collapsed: boolean
   isActive: boolean
-  lang: 'vi' | 'en'
+  lang: string
   onClick?: () => void
 }) {
   const label = lang === 'vi' ? item.labelVi : item.label
@@ -205,6 +146,7 @@ function SidebarContent({
   collapsed,
   tenantName,
   userRole,
+  entityType,
   lang,
   onLangToggle,
   onNavClick,
@@ -212,15 +154,38 @@ function SidebarContent({
   collapsed: boolean
   tenantName: string
   userRole: string
-  lang: 'vi' | 'en'
+  entityType: string
+  lang: string
   onLangToggle: () => void
   onNavClick?: () => void
 }) {
   const pathname = usePathname()
+
+  // Build dynamic navigation based on entity type and role
+  const navigation = useMemo<NavGroupRender[]>(() => {
+    const et = (entityType || 'producer') as EntityType
+    const role = (userRole || 'viewer') as TenantRole
+    const grouped = getGroupedNavigation(et, role)
+
+    return grouped.map(group => ({
+      id: group.id,
+      title: group.label,
+      titleVi: group.labelVi,
+      defaultOpen: group.defaultOpen,
+      items: group.items.map((mod: ModuleDef) => ({
+        label: mod.label,
+        labelVi: mod.labelVi,
+        href: mod.href,
+        icon: getIcon(mod.icon),
+        color: mod.color,
+      })),
+    }))
+  }, [entityType, userRole])
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
-    NAVIGATION.forEach((group) => {
-      initial[group.title] = group.defaultOpen ?? false
+    navigation.forEach((group) => {
+      initial[group.id] = group.defaultOpen ?? false
     })
     return initial
   })
@@ -233,9 +198,13 @@ function SidebarContent({
     [pathname]
   )
 
-  const toggleGroup = (title: string) => {
-    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }))
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }))
   }
+
+  // Resolve labels for badges
+  const entityTypeLabel = ENTITY_TYPE_LABELS[(entityType || 'producer') as EntityType]
+  const roleLabel = ROLE_LABELS[(userRole || 'viewer') as TenantRole]
 
   return (
     <div className="flex flex-col h-full">
@@ -248,7 +217,24 @@ function SidebarContent({
           {!collapsed && (
             <div className="overflow-hidden">
               <p className="text-sm font-bold text-sidebar-foreground truncate">{tenantName || 'Terra Brew'}</p>
-              <p className="text-[10px] text-sidebar-foreground/60 truncate uppercase tracking-wider">{userRole?.replace('_', ' ')}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {entityTypeLabel && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary capitalize"
+                  >
+                    {lang === 'vi' ? entityTypeLabel.vi : entityTypeLabel.en}
+                  </Badge>
+                )}
+                {roleLabel && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[9px] px-1.5 py-0 h-4 capitalize"
+                  >
+                    {lang === 'vi' ? roleLabel.vi : roleLabel.en}
+                  </Badge>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -259,12 +245,12 @@ function SidebarContent({
       {/* Navigation - scrollable */}
       <ScrollArea className="flex-1 px-2 overflow-y-auto">
         <div className="py-2 space-y-1">
-          {NAVIGATION.map((group) => {
-            const isGroupOpen = openGroups[group.title] ?? false
+          {navigation.map((group) => {
+            const isGroupOpen = openGroups[group.id] ?? false
             const hasActiveItem = group.items.some((item) => isActive(item.href))
 
             return (
-              <div key={group.title}>
+              <div key={group.id}>
                 {collapsed ? (
                   /* Collapsed: just show icons */
                   <div className="space-y-0.5">
@@ -287,7 +273,7 @@ function SidebarContent({
                   /* Expanded: collapsible groups */
                   <div className="mb-1">
                     <button
-                      onClick={() => toggleGroup(group.title)}
+                      onClick={() => toggleGroup(group.id)}
                       className={cn(
                         'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors',
                         hasActiveItem
@@ -363,7 +349,8 @@ interface AppSidebarProps {
   onToggleCollapse: () => void
   tenantName: string
   userRole: string
-  lang: 'vi' | 'en'
+  entityType: string  // from session
+  lang: string
   onLangToggle: () => void
   mobileOpen: boolean
   onMobileOpenChange: (open: boolean) => void
@@ -374,6 +361,7 @@ export function AppSidebar({
   onToggleCollapse,
   tenantName,
   userRole,
+  entityType,
   lang,
   onLangToggle,
   mobileOpen,
@@ -392,6 +380,7 @@ export function AppSidebar({
           collapsed={collapsed}
           tenantName={tenantName}
           userRole={userRole}
+          entityType={entityType}
           lang={lang}
           onLangToggle={onLangToggle}
         />
@@ -419,6 +408,7 @@ export function AppSidebar({
             collapsed={false}
             tenantName={tenantName}
             userRole={userRole}
+            entityType={entityType}
             lang={lang}
             onLangToggle={onLangToggle}
             onNavClick={() => onMobileOpenChange(false)}

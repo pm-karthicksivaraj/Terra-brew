@@ -61,6 +61,7 @@ export const authOptions: NextAuthOptions = {
           tenantId: tenant.id,
           tenantSlug: tenant.slug,
           tenantName: tenant.name,
+          entityType: tenant.entityType,
           currency: tenant.currency,
           currencySymbol: tenant.currencySymbol,
           language: tenant.language,
@@ -113,6 +114,7 @@ export const authOptions: NextAuthOptions = {
         token.tenantId = (user as any).tenantId
         token.tenantSlug = (user as any).tenantSlug
         token.tenantName = (user as any).tenantName
+        token.entityType = (user as any).entityType
         token.currency = (user as any).currency
         token.currencySymbol = (user as any).currencySymbol
         token.language = (user as any).language
@@ -127,6 +129,7 @@ export const authOptions: NextAuthOptions = {
         ;(session.user as any).tenantId = token.tenantId
         ;(session.user as any).tenantSlug = token.tenantSlug
         ;(session.user as any).tenantName = token.tenantName
+        ;(session.user as any).entityType = token.entityType
         ;(session.user as any).currency = token.currency
         ;(session.user as any).currencySymbol = token.currencySymbol
         ;(session.user as any).language = token.language
@@ -159,6 +162,7 @@ declare module 'next-auth' {
       tenantId?: string
       tenantSlug?: string
       tenantName?: string
+      entityType?: string
       currency?: string
       currencySymbol?: string
       language?: string
@@ -174,6 +178,7 @@ declare module 'next-auth/jwt' {
     tenantId?: string
     tenantSlug?: string
     tenantName?: string
+    entityType?: string
     currency?: string
     currencySymbol?: string
     language?: string

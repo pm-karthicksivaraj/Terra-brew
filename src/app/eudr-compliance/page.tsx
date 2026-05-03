@@ -924,7 +924,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
 
       {/* Create/Edit Wizard Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-mono">{editingId ? 'Edit' : 'Create'} EUDR Compliance Record</DialogTitle>
           </DialogHeader>
@@ -934,7 +934,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-mono flex items-center gap-2">
               <Shield className="w-4 h-4" /> {detailItem?.complianceId}
@@ -1154,7 +1154,7 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
 
       {/* Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-mono">Create Deforestation Assessment</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
@@ -1274,7 +1274,7 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
 
       {/* Detail Dialog */}
       <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-mono">Assessment Details — {detailItem?.farmLandId}</DialogTitle></DialogHeader>
           {detailItem && (
             <div className="space-y-4 py-2">
@@ -1463,7 +1463,7 @@ function DDSTab({ ddsRecords, complianceRecords }: { ddsRecords: DDSRecord[]; co
 
       {/* Create DDS Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-mono">Create Due Diligence Statement</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">

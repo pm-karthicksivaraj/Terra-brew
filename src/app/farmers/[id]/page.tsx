@@ -991,7 +991,7 @@ export default function FarmerDetailPage() {
                 </div>
 
                 {/* Cultivations */}
-                {fl.cultivations.length > 0 && (
+                {fl.cultivations?.length > 0 && (
                   <div className="mt-5">
                     <h4 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-2">
                       <Sprout className="w-3.5 h-3.5 text-coffee-500" />

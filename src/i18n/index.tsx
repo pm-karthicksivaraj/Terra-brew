@@ -2,17 +2,21 @@
 
 import { useState, useCallback, useEffect, createContext, useContext, type ReactNode } from 'react'
 import type { Locale } from './config'
-import { DEFAULT_LOCALE, getByPath } from './config'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, getByPath } from './config'
 
 // ─── Translation dictionaries ────────────────────────────────────
 // We import the JSON files directly. Next.js handles JSON imports natively.
 
 import viMessages from './vi.json'
 import enMessages from './en.json'
+import ptMessages from './pt.json'
+import amMessages from './am.json'
 
 const MESSAGES: Record<Locale, Record<string, unknown>> = {
   vi: viMessages,
   en: enMessages,
+  pt: ptMessages,
+  am: amMessages,
 }
 
 // ─── Context ─────────────────────────────────────────────────────
@@ -41,7 +45,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('terra-brew-lang') as Locale | null
-      if (saved && (saved === 'vi' || saved === 'en')) {
+      if (saved && (saved === 'vi' || saved === 'en' || saved === 'pt' || saved === 'am')) {
         setLangState(saved)
       }
     } catch {
@@ -61,10 +65,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const t = useCallback((key: string, fallback?: string): string => {
     const result = getByPath(MESSAGES[lang], key)
     if (result !== key) return result
-    // Fallback: try the other language
-    const otherLang: Locale = lang === 'vi' ? 'en' : 'vi'
-    const otherResult = getByPath(MESSAGES[otherLang], key)
-    if (otherResult !== key) return otherResult
+    // Fallback: try other languages in order
+    const otherLangs: Locale[] = (SUPPORTED_LOCALES as readonly Locale[]).filter(l => l !== lang)
+    for (const otherLang of otherLangs) {
+      const otherResult = getByPath(MESSAGES[otherLang], key)
+      if (otherResult !== key) return otherResult
+    }
     // Final fallback: use provided fallback or the key
     return fallback || key
   }, [lang])

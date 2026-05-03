@@ -31,7 +31,7 @@ interface FarmLandMapProps {
   onPolygonDrawn?: (coordinates: PolygonCoordinate[]) => void
   onPolygonDelete?: (id: string) => void
   onSave?: (polygons: FarmLandPolygon[]) => void
-  lang?: 'vi' | 'en'
+  lang?: string
   height?: string
 }
 

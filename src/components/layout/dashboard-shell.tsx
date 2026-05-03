@@ -75,6 +75,9 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   'iot-sensors': { en: 'IoT Sensors', vi: 'Cảm biến IoT' },
   analytics: { en: 'Analytics', vi: 'Phân tích' },
   logistics: { en: 'Logistics', vi: 'Logistics' },
+  rfq: { en: 'RFQ Management', vi: 'Quản lý RFQ' },
+  inspections: { en: 'Inspection Service', vi: 'Dịch vụ kiểm tra' },
+  'product-monitoring': { en: 'Product Monitoring', vi: 'Giám sát sản phẩm' },
   'compliance-marketplace': { en: 'Compliance Marketplace', vi: 'Thị trường Tuân thủ' },
   billing: { en: 'Billing', vi: 'Thanh toán' },
   'api-settings': { en: 'API Settings', vi: 'Cài đặt API' },
@@ -117,7 +120,7 @@ function useIsDesktop(breakpoint = 1024): boolean {
 interface DashboardShellProps {
   children: ReactNode
   /** @deprecated Use useI18n() hook instead — lang is now managed globally */
-  lang?: 'vi' | 'en'
+  lang?: string
   /** @deprecated Use useI18n() hook instead — lang is now managed globally */
   onLangToggle?: () => void
 }
@@ -176,8 +179,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const tenantName = session?.user?.tenantName || 'Terra Brew'
   const userName = session?.user?.name || 'User'
   const userRole = session?.user?.role || ''
+  const entityType = session?.user?.entityType || 'producer'
 
-  const onLangToggle = () => setLang(lang === 'vi' ? 'en' : 'vi')
+  const onLangToggle = () => {
+    const locales: string[] = ['vi', 'en', 'pt', 'am']
+    const idx = locales.indexOf(lang)
+    setLang(locales[(idx + 1) % locales.length] as any)
+  }
 
   // Compute margin-left: only on desktop, matches sidebar width
   const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 240) : 0
@@ -213,6 +221,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
         onToggleCollapse={handleToggleCollapse}
         tenantName={tenantName}
         userRole={userRole}
+        entityType={entityType}
         lang={lang}
         onLangToggle={onLangToggle}
         mobileOpen={mobileOpen}

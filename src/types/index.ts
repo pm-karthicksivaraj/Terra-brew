@@ -18,6 +18,7 @@ export interface AuthenticatedUser {
   tenantId?: string
   tenantSlug?: string
   tenantName?: string
+  entityType?: string
   currency?: string
   currencySymbol?: string
   language?: string

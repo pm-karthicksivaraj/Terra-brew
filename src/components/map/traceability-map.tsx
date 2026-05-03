@@ -23,7 +23,7 @@ interface TraceabilityMapProps {
   /** Active/selected location ID */
   activeLocationId?: string
   /** Language */
-  lang?: 'vi' | 'en'
+  lang?: string
   /** Map height */
   height?: string
   /** On location click */

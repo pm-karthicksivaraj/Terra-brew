@@ -1,181 +1,475 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Truck, Ship, Anchor, FileCheck, MapPin, Plus, Loader2, Package, Clock, ArrowRight, Globe, Container } from 'lucide-react'
+import { Container, Plus, ArrowRight, Ship, MapPin, Package, CheckCircle2, Loader2 } from 'lucide-react'
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard, hoverScale } from '@/components/ui/motion'
+import { useI18n } from '@/i18n'
 
+// ─── Status colors ──────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
-  planned: 'bg-gray-100 text-gray-800 border-gray-200',
-  booked: 'bg-blue-100 text-blue-800 border-blue-200',
-  in_transit: 'bg-orange-100 text-orange-800 border-orange-200',
+  draft: 'bg-gray-100 text-gray-800 border-gray-200',
+  confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+  in_transit: 'bg-amber-100 text-amber-800 border-amber-200',
   arrived: 'bg-teal-100 text-teal-800 border-teal-200',
   delivered: 'bg-green-100 text-green-800 border-green-200',
   cancelled: 'bg-red-100 text-red-800 border-red-200',
 }
 
-const TIMELINE_STEPS = ['planned', 'booked', 'in_transit', 'arrived', 'delivered']
+const STATUS_FLOW = ['draft', 'confirmed', 'in_transit', 'arrived', 'delivered']
 
-interface LogisticsShipment {
-  id: string
-  shipmentId?: string
-  status: string
-  originCountry?: string
-  destinationCountry?: string
-  portOfLoading?: string
-  portOfDischarge?: string
-  vesselName?: string
-  containerNumber?: string
-  freightForwarder?: string
-  customsBroker?: string
-  estimatedDeparture?: string
-  estimatedArrival?: string
-  totalWeightKg?: number
-  commodity?: string
-  createdAt: string
-  trackingUpdates?: { status: string; timestamp: string; location?: string; note?: string }[]
+// ─── Port data ──────────────────────────────────────────────────
+const PORTS_BY_COUNTRY: Record<string, { code: string; name: string }[]> = {
+  Vietnam: [
+    { code: 'VNSGN', name: 'Cat Lai, Ho Chi Minh City' },
+    { code: 'VNHPH', name: 'Hai Phong' },
+    { code: 'VNDAD', name: 'Tien Sa, Da Nang' },
+    { code: 'VNNTR', name: 'Nha Trang' },
+    { code: 'VNCLI', name: 'Cai Lan' },
+  ],
+  Indonesia: [
+    { code: 'IDJKT', name: 'Tanjung Priok, Jakarta' },
+    { code: 'IDSUB', name: 'Tanjung Perak, Surabaya' },
+    { code: 'IDBLW', name: 'Belawan, Medan' },
+    { code: 'IDMKS', name: 'Makassar' },
+  ],
+  Ethiopia: [
+    { code: 'ETADD', name: 'Modjo, Addis Ababa (dry)' },
+    { code: 'ETDJB', name: 'Djibouti Port (transit)' },
+  ],
+  Germany: [
+    { code: 'DEHAM', name: 'Hamburg' },
+    { code: 'DEBRV', name: 'Bremerhaven' },
+    { code: 'DEWVN', name: 'Wilhelmshaven' },
+  ],
+  USA: [
+    { code: 'USLAX', name: 'Los Angeles' },
+    { code: 'USNYC', name: 'New York / New Jersey' },
+    { code: 'USSAV', name: 'Savannah' },
+    { code: 'USOAK', name: 'Oakland' },
+    { code: 'USHOU', name: 'Houston' },
+  ],
+  Italy: [
+    { code: 'ITGOA', name: 'Genoa' },
+    { code: 'ITNAP', name: 'Naples' },
+    { code: 'ITTRS', name: 'Trieste' },
+  ],
+  Japan: [
+    { code: 'JPYOK', name: 'Yokohama' },
+    { code: 'JPTYO', name: 'Tokyo' },
+    { code: 'JPKOB', name: 'Kobe' },
+  ],
+  Netherlands: [
+    { code: 'NLRTM', name: 'Rotterdam' },
+    { code: 'NLAMS', name: 'Amsterdam' },
+  ],
+  'South Korea': [
+    { code: 'KRPUS', name: 'Busan' },
+    { code: 'KRINC', name: 'Incheon' },
+  ],
 }
 
-export default function LogisticsPage() {
+// ─── Mock bookings ──────────────────────────────────────────────
+const MOCK_BOOKINGS = [
+  {
+    id: 'BK-2024-001',
+    type: 'FCL',
+    origin: 'Cat Lai, HCMC',
+    originCode: 'VNSGN',
+    destination: 'Hamburg',
+    destinationCode: 'DEHAM',
+    etd: '2024-12-05',
+    eta: '2025-01-18',
+    status: 'in_transit',
+    rate: 2850,
+    currency: 'USD',
+    commodity: 'Robusta Green Beans',
+    containerType: "20'GP",
+    containerCount: 3,
+    weight: 54000,
+  },
+  {
+    id: 'BK-2024-002',
+    type: 'FCL',
+    origin: 'Cat Lai, HCMC',
+    originCode: 'VNSGN',
+    destination: 'Genoa',
+    destinationCode: 'ITGOA',
+    etd: '2024-12-12',
+    eta: '2025-01-25',
+    status: 'confirmed',
+    rate: 3120,
+    currency: 'USD',
+    commodity: 'Arabica Specialty SHB',
+    containerType: "20'GP",
+    containerCount: 1,
+    weight: 18000,
+  },
+  {
+    id: 'BK-2024-003',
+    type: 'LCL',
+    origin: 'Hai Phong',
+    originCode: 'VNHPH',
+    destination: 'Los Angeles',
+    destinationCode: 'USLAX',
+    etd: '2024-12-20',
+    eta: '2025-02-05',
+    status: 'draft',
+    rate: 1680,
+    currency: 'USD',
+    commodity: 'Arabica Excelsa Blend',
+    containerType: 'LCL',
+    containerCount: 0,
+    weight: 8000,
+  },
+  {
+    id: 'BK-2024-004',
+    type: 'FCL',
+    origin: 'Tanjung Priok, Jakarta',
+    originCode: 'IDJKT',
+    destination: 'Yokohama',
+    destinationCode: 'JPYOK',
+    etd: '2024-11-28',
+    eta: '2024-12-18',
+    status: 'arrived',
+    rate: 2200,
+    currency: 'USD',
+    commodity: 'Arabica Wet-Hulled',
+    containerType: "20'GP",
+    containerCount: 1,
+    weight: 12000,
+  },
+  {
+    id: 'BK-2024-005',
+    type: 'FCL',
+    origin: 'Cat Lai, HCMC',
+    originCode: 'VNSGN',
+    destination: 'Rotterdam',
+    destinationCode: 'NLRTM',
+    etd: '2024-10-15',
+    eta: '2024-11-28',
+    status: 'delivered',
+    rate: 2780,
+    currency: 'USD',
+    commodity: 'Robusta Screen 16+',
+    containerType: "40'HC",
+    containerCount: 2,
+    weight: 48000,
+  },
+  {
+    id: 'BK-2024-006',
+    type: 'FCL',
+    origin: 'Cat Lai, HCMC',
+    originCode: 'VNSGN',
+    destination: 'Savannah',
+    destinationCode: 'USSAV',
+    etd: '2024-11-10',
+    eta: '2024-12-25',
+    status: 'cancelled',
+    rate: 3650,
+    currency: 'USD',
+    commodity: 'Robusta Grade 2',
+    containerType: "20'GP",
+    containerCount: 2,
+    weight: 36000,
+  },
+]
+
+// ─── Form state ─────────────────────────────────────────────────
+interface BookingForm {
+  originCountry: string
+  originPort: string
+  destinationCountry: string
+  destinationPort: string
+  commodity: string
+  weight: string
+  volume: string
+  containerType: string
+  containerCount: string
+  hsCategory: string
+  incoterms: string
+  specialRequirements: string
+}
+
+const INITIAL_FORM: BookingForm = {
+  originCountry: 'Vietnam',
+  originPort: '',
+  destinationCountry: 'Germany',
+  destinationPort: '',
+  commodity: 'Coffee (Green Beans)',
+  weight: '',
+  volume: '',
+  containerType: "20'GP",
+  containerCount: '1',
+  hsCategory: '0901',
+  incoterms: 'FOB',
+  specialRequirements: '',
+}
+
+export default function LogisticsBookingPage() {
   const { data: session } = useSession()
-  const [shipments, setShipments] = useState<LogisticsShipment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const { t2 } = useI18n()
+  const [bookings] = useState(MOCK_BOOKINGS)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [detailItem, setDetailItem] = useState<LogisticsShipment | null>(null)
-  const [form, setForm] = useState<any>({ status: 'planned', commodity: 'coffee' })
+  const [form, setForm] = useState<BookingForm>({ ...INITIAL_FORM })
+  const [wizardStep, setWizardStep] = useState(0)
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter)
-      const res = await fetch(`/api/shipments?${params}`)
-      const data = await res.json()
-      if (data.success) setShipments(data.data?.data || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [statusFilter])
+  const stats = useMemo(() => ({
+    total: bookings.length,
+    inTransit: bookings.filter(b => b.status === 'in_transit').length,
+    delivered: bookings.filter(b => b.status === 'delivered').length,
+    totalSpend: bookings.filter(b => b.status !== 'cancelled').reduce((sum, b) => sum + b.rate, 0),
+  }), [bookings])
 
-  useEffect(() => { loadData() }, [loadData])
+  const filtered = useMemo(() => {
+    if (statusFilter === 'all') return bookings
+    return bookings.filter(b => b.status === statusFilter)
+  }, [bookings, statusFilter])
 
-  const stats = {
-    total: shipments.length,
-    inTransit: shipments.filter(s => s.status === 'in_transit').length,
-    delivered: shipments.filter(s => s.status === 'delivered').length,
-    planned: shipments.filter(s => s.status === 'planned').length,
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0 }).format(amount)
   }
 
-  function getTimelineProgress(status: string): number {
-    const idx = TIMELINE_STEPS.indexOf(status)
-    return idx >= 0 ? idx + 1 : 0
-  }
+  const WIZARD_STEPS = [
+    { label: t2('Xuất phát', 'Origin'), icon: MapPin },
+    { label: t2('Đích', 'Destination'), icon: ArrowRight },
+    { label: t2('Hàng hóa', 'Load Details'), icon: Package },
+    { label: t2('Phân loại', 'Classification'), icon: CheckCircle2 },
+  ]
 
-  async function handleCreate() {
-    try {
-      const res = await fetch('/api/shipments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        setDialogOpen(false)
-        setForm({ status: 'planned', commodity: 'coffee' })
-        loadData()
-      }
-    } catch (e) { console.error(e) }
-  }
-
-  // Generate mock tracking updates for timeline view
-  function getTrackingUpdates(shipment: LogisticsShipment) {
-    const progress = getTimelineProgress(shipment.status)
-    const updates = TIMELINE_STEPS.slice(0, progress).map((step, idx) => ({
-      status: step,
-      timestamp: shipment.estimatedDeparture ? new Date(new Date(shipment.estimatedDeparture).getTime() + idx * 86400000 * 3).toISOString() : new Date(Date.now() - (progress - idx) * 86400000 * 3).toISOString(),
-      location: idx === 0 ? shipment.portOfLoading || shipment.originCountry || 'Origin' : idx === progress - 1 ? shipment.portOfDischarge || shipment.destinationCountry || 'Destination' : 'In transit',
-      note: `Status updated to ${step.replace('_', ' ')}`,
-    }))
-    return updates.reverse()
-  }
+  const originPorts = PORTS_BY_COUNTRY[form.originCountry] || []
+  const destPorts = PORTS_BY_COUNTRY[form.destinationCountry] || []
 
   return (
     <DashboardShell>
       <div className="space-y-6">
+        {/* Header */}
         <FadeIn>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Anchor className="w-6 h-6 text-primary" /> Logistics Integration Hub
+              <h1 className="text-2xl font-bold font-mono flex items-center gap-2">
+                <Container className="w-6 h-6 text-primary" />
+                {t2('Đặt Logistics', 'Logistics Booking')}
               </h1>
-              <p className="text-sm text-muted-foreground">Freight forwarding, customs, and shipment management</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t2('Đặt vận chuyển container và tìm giá cước tốt nhất', 'Book container shipments and find the best freight rates')}
+              </p>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild><Button className="gap-2"><Plus className="w-4 h-4" /> New Logistics Entry</Button></DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader><DialogTitle>Create Logistics Entry</DialogTitle></DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-sm font-medium">Origin</label><Input placeholder="VN" value={form.originCountry || ''} onChange={e => setForm({ ...form, originCountry: e.target.value })} /></div>
-                    <div className="space-y-2"><label className="text-sm font-medium">Destination</label><Input placeholder="DE" value={form.destinationCountry || ''} onChange={e => setForm({ ...form, destinationCountry: e.target.value })} /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-sm font-medium">Port of Loading</label><Input placeholder="HCM" value={form.portOfLoading || ''} onChange={e => setForm({ ...form, portOfLoading: e.target.value })} /></div>
-                    <div className="space-y-2"><label className="text-sm font-medium">Port of Discharge</label><Input placeholder="HAM" value={form.portOfDischarge || ''} onChange={e => setForm({ ...form, portOfDischarge: e.target.value })} /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-sm font-medium">Vessel Name</label><Input placeholder="MSC Fantasia" value={form.vesselName || ''} onChange={e => setForm({ ...form, vesselName: e.target.value })} /></div>
-                    <div className="space-y-2"><label className="text-sm font-medium">Container #</label><Input placeholder="MSCU1234567" value={form.containerNumber || ''} onChange={e => setForm({ ...form, containerNumber: e.target.value })} /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-sm font-medium">Freight Forwarder</label><Input placeholder="Kuehne+Nagel" value={form.freightForwarder || ''} onChange={e => setForm({ ...form, freightForwarder: e.target.value })} /></div>
-                    <div className="space-y-2"><label className="text-sm font-medium">Customs Broker</label><Input placeholder="Broker name" value={form.customsBroker || ''} onChange={e => setForm({ ...form, customsBroker: e.target.value })} /></div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2"><label className="text-sm font-medium">Weight (kg)</label><Input type="number" placeholder="18000" value={form.totalWeightKg || ''} onChange={e => setForm({ ...form, totalWeightKg: parseFloat(e.target.value) || null })} /></div>
-                    <div className="space-y-2"><label className="text-sm font-medium">Commodity</label>
-                      <Select value={form.commodity || 'coffee'} onValueChange={v => setForm({ ...form, commodity: v })}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { setWizardStep(0); setForm({ ...INITIAL_FORM }) } }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 font-mono">
+                  <Plus className="w-4 h-4" />
+                  {t2('Đặt mới', 'New Booking')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl">
+                <DialogHeader>
+                  <DialogTitle className="font-mono">{t2('Đặt Logistics Mới', 'New Logistics Booking')}</DialogTitle>
+                </DialogHeader>
+
+                {/* Wizard steps */}
+                <div className="flex items-center gap-2 py-2">
+                  {WIZARD_STEPS.map((step, idx) => (
+                    <div key={idx} className="flex items-center gap-2 flex-1">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${wizardStep === idx ? 'bg-primary text-primary-foreground' : wizardStep > idx ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-muted text-muted-foreground'}`}>
+                        <step.icon className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{step.label}</span>
+                        <span className="sm:hidden">{idx + 1}</span>
+                      </div>
+                      {idx < WIZARD_STEPS.length - 1 && <div className="h-px flex-1 bg-border" />}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tab 1: Origin */}
+                {wizardStep === 0 && (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Quốc gia xuất phát', 'Origin Country')}</Label>
+                      <Select value={form.originCountry} onValueChange={v => setForm({ ...form, originCountry: v, originPort: '' })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="coffee">Coffee</SelectItem>
-                          <SelectItem value="cocoa">Cocoa</SelectItem>
-                          <SelectItem value="palm_oil">Palm Oil</SelectItem>
+                          {Object.keys(PORTS_BY_COUNTRY).map(country => (
+                            <SelectItem key={country} value={country}>{country}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Cảng xuất phát', 'Origin Port')}</Label>
+                      <Select value={form.originPort} onValueChange={v => setForm({ ...form, originPort: v })}>
+                        <SelectTrigger><SelectValue placeholder={t2('Chọn cảng...', 'Select port...')} /></SelectTrigger>
+                        <SelectContent>
+                          {originPorts.map(port => (
+                            <SelectItem key={port.code} value={port.code}>
+                              <span className="font-mono text-xs mr-2">{port.code}</span> {port.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                  <Button onClick={handleCreate} className="w-full">Create Logistics Entry</Button>
-                </div>
+                )}
+
+                {/* Tab 2: Destination */}
+                {wizardStep === 1 && (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Quốc gia đích', 'Destination Country')}</Label>
+                      <Select value={form.destinationCountry} onValueChange={v => setForm({ ...form, destinationCountry: v, destinationPort: '' })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(PORTS_BY_COUNTRY).map(country => (
+                            <SelectItem key={country} value={country}>{country}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Cảng đích', 'Destination Port')}</Label>
+                      <Select value={form.destinationPort} onValueChange={v => setForm({ ...form, destinationPort: v })}>
+                        <SelectTrigger><SelectValue placeholder={t2('Chọn cảng...', 'Select port...')} /></SelectTrigger>
+                        <SelectContent>
+                          {destPorts.map(port => (
+                            <SelectItem key={port.code} value={port.code}>
+                              <span className="font-mono text-xs mr-2">{port.code}</span> {port.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: Load Details */}
+                {wizardStep === 2 && (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Hàng hóa', 'Commodity')}</Label>
+                      <Select value={form.commodity} onValueChange={v => setForm({ ...form, commodity: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Coffee (Green Beans)">Coffee (Green Beans)</SelectItem>
+                          <SelectItem value="Coffee (Roasted)">Coffee (Roasted)</SelectItem>
+                          <SelectItem value="Coffee (Ground)">Coffee (Ground)</SelectItem>
+                          <SelectItem value="Cocoa Beans">Cocoa Beans</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Trọng lượng (kg)', 'Weight (kg)')}</Label>
+                        <Input type="number" placeholder="18000" value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Thể tích (m³)', 'Volume (m³)')}</Label>
+                        <Input type="number" placeholder="28" value={form.volume} onChange={e => setForm({ ...form, volume: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Loại container', 'Container Type')}</Label>
+                        <Select value={form.containerType} onValueChange={v => setForm({ ...form, containerType: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="20'GP">20&apos;GP (Standard)</SelectItem>
+                            <SelectItem value="40'GP">40&apos;GP (Standard)</SelectItem>
+                            <SelectItem value="40'HC">40&apos;HC (High Cube)</SelectItem>
+                            <SelectItem value="LCL">LCL (Less than Container)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Số lượng container', 'Container Count')}</Label>
+                        <Input type="number" placeholder="1" value={form.containerCount} onChange={e => setForm({ ...form, containerCount: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 4: Goods Classification */}
+                {wizardStep === 3 && (
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Danh mục HS Code', 'HS Code Category')}</Label>
+                        <Select value={form.hsCategory} onValueChange={v => setForm({ ...form, hsCategory: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0901">0901 — Coffee</SelectItem>
+                            <SelectItem value="0902">0902 — Tea</SelectItem>
+                            <SelectItem value="1801">1801 — Cocoa beans</SelectItem>
+                            <SelectItem value="1802">1802 — Cocoa shells</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs">{t2('Incoterms', 'Incoterms')}</Label>
+                        <Select value={form.incoterms} onValueChange={v => setForm({ ...form, incoterms: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FOB">FOB</SelectItem>
+                            <SelectItem value="CIF">CIF</SelectItem>
+                            <SelectItem value="CFR">CFR</SelectItem>
+                            <SelectItem value="EXW">EXW</SelectItem>
+                            <SelectItem value="FCA">FCA</SelectItem>
+                            <SelectItem value="DDP">DDP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-mono text-xs">{t2('Yêu cầu đặc biệt', 'Special Requirements')}</Label>
+                      <Input placeholder="Ventilation required, food-grade only, etc." value={form.specialRequirements} onChange={e => setForm({ ...form, specialRequirements: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter className="flex-row gap-2">
+                  {wizardStep > 0 && (
+                    <Button variant="outline" onClick={() => setWizardStep(wizardStep - 1)} className="font-mono">
+                      {t2('Quay lại', 'Back')}
+                    </Button>
+                  )}
+                  {wizardStep < 3 ? (
+                    <Button onClick={() => setWizardStep(wizardStep + 1)} className="font-mono">
+                      {t2('Tiếp theo', 'Next')}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => { setDialogOpen(false); setWizardStep(0); setForm({ ...INITIAL_FORM }) }} className="font-mono">
+                      {t2('Xác nhận Đặt chỗ', 'Confirm Booking')}
+                    </Button>
+                  )}
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </FadeIn>
 
-        {/* Summary Cards */}
+        {/* Stats Row */}
         <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Shipments', value: stats.total, icon: Ship, bg: 'bg-primary/10', color: 'text-primary' },
-            { label: 'In Transit', value: stats.inTransit, icon: Truck, bg: 'bg-orange-100', color: 'text-orange-600' },
-            { label: 'Delivered', value: stats.delivered, icon: FileCheck, bg: 'bg-green-100', color: 'text-green-600' },
-            { label: 'Planned', value: stats.planned, icon: Anchor, bg: 'bg-gray-100', color: 'text-gray-600' },
+            { label: t2('Tổng đặt chỗ', 'Total Bookings'), value: stats.total, bg: 'bg-primary/10', color: 'text-primary' },
+            { label: t2('Đang vận chuyển', 'In Transit'), value: stats.inTransit, bg: 'bg-amber-100 dark:bg-amber-900', color: 'text-amber-600 dark:text-amber-300' },
+            { label: t2('Đã giao', 'Delivered'), value: stats.delivered, bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
+            { label: t2('Tổng chi phí', 'Total Spend'), value: formatCurrency(stats.totalSpend, 'USD'), bg: 'bg-teal-100 dark:bg-teal-900', color: 'text-teal-600 dark:text-teal-300' },
           ].map((card) => (
             <StaggerItem key={card.label}>
               <MotionCard {...hoverScale} className="rounded-xl border shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${card.bg}`}><card.icon className={`w-5 h-5 ${card.color}`} /></div>
-                    <div><p className="text-2xl font-bold">{card.value}</p><p className="text-xs text-muted-foreground">{card.label}</p></div>
-                  </div>
+                  <p className="text-2xl font-bold font-mono">{card.value}</p>
+                  <p className="text-xs text-muted-foreground">{card.label}</p>
                 </CardContent>
               </MotionCard>
             </StaggerItem>
@@ -186,130 +480,86 @@ export default function LogisticsPage() {
         <FadeIn delay={0.1}>
           <div className="flex gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder={t2('Tất cả trạng thái', 'All Statuses')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {Object.keys(STATUS_COLORS).map(s => <SelectItem key={s} value={s} className="capitalize">{s.replace('_', ' ')}</SelectItem>)}
+                <SelectItem value="all">{t2('Tất cả', 'All')}</SelectItem>
+                {Object.keys(STATUS_COLORS).map(s => (
+                  <SelectItem key={s} value={s} className="capitalize">{s.replace('_', ' ')}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </FadeIn>
 
-        {/* Shipment Cards with Logistics Details */}
-        {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
-        ) : shipments.length === 0 ? (
-          <FadeIn>
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Anchor className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                <p>No shipments found</p>
-              </CardContent>
-            </Card>
-          </FadeIn>
-        ) : (
-          <StaggerContainer className="grid md:grid-cols-2 gap-4">
-            {shipments.map((s) => {
-              const trackingUpdates = getTrackingUpdates(s)
-              return (
-                <StaggerItem key={s.id}>
-                  <MotionCard {...hoverScale} className="rounded-xl border shadow-sm cursor-pointer" onClick={() => setDetailItem(s)}>
-                    <CardContent className="p-5 space-y-4">
-                      {/* Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium text-sm">{s.shipmentId || s.id.slice(0, 8)}</span>
-                        </div>
-                        <Badge className={`${STATUS_COLORS[s.status] || ''} border text-xs capitalize`}>{s.status?.replace('_', ' ')}</Badge>
-                      </div>
-
-                      {/* Route */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <Globe className="w-4 h-4 text-muted-foreground" />
-                        <span>{s.portOfLoading || s.originCountry || '?'}</span>
-                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                        <span>{s.portOfDischarge || s.destinationCountry || '?'}</span>
-                      </div>
-
-                      {/* Logistics Details */}
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {s.vesselName && <div className="flex items-center gap-1"><Ship className="w-3 h-3 text-muted-foreground" />{s.vesselName}</div>}
-                        {s.containerNumber && <div className="flex items-center gap-1"><Package className="w-3 h-3 text-muted-foreground" /><span className="font-mono">{s.containerNumber}</span></div>}
-                        {s.freightForwarder && <div className="flex items-center gap-1"><Truck className="w-3 h-3 text-muted-foreground" />{s.freightForwarder}</div>}
-                        {s.customsBroker && <div className="flex items-center gap-1"><FileCheck className="w-3 h-3 text-muted-foreground" />{s.customsBroker}</div>}
-                      </div>
-
-                      {/* Timeline Progress Bar */}
-                      <div className="flex items-center gap-1">
-                        {TIMELINE_STEPS.map((step, idx) => {
-                          const progress = getTimelineProgress(s.status)
-                          const isActive = idx < progress
-                          return <div key={step} className={`h-1.5 flex-1 rounded-full ${isActive ? 'bg-green-500' : 'bg-muted'}`} />
-                        })}
-                      </div>
-
-                      {/* Latest Tracking Update */}
-                      {trackingUpdates.length > 0 && (
-                        <div className="flex items-start gap-2 p-2 bg-muted/50 rounded-lg">
-                          <Clock className="w-3 h-3 mt-0.5 text-muted-foreground" />
-                          <div>
-                            <p className="text-xs font-medium">{trackingUpdates[0].note}</p>
-                            <p className="text-[10px] text-muted-foreground">{new Date(trackingUpdates[0].timestamp).toLocaleString()} · {trackingUpdates[0].location}</p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </MotionCard>
-                </StaggerItem>
-              )
-            })}
-          </StaggerContainer>
-        )}
-
-        {/* Detail Dialog with Timeline */}
-        <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Logistics Details</DialogTitle></DialogHeader>
-            {detailItem && (
-              <div className="space-y-4 py-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{detailItem.shipmentId || detailItem.id.slice(0, 8)}</span>
-                  <Badge className={`${STATUS_COLORS[detailItem.status]} border capitalize`}>{detailItem.status?.replace('_', ' ')}</Badge>
-                </div>
-
-                {/* Tracking Timeline */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium flex items-center gap-1"><Clock className="w-4 h-4" /> Tracking Timeline</h4>
-                  {getTrackingUpdates(detailItem).map((update, idx) => (
-                    <div key={idx} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full ${idx === 0 ? 'bg-primary ring-2 ring-primary/30' : 'bg-green-500'}`} />
-                        {idx < getTrackingUpdates(detailItem).length - 1 && <div className="w-0.5 h-8 bg-green-200" />}
-                      </div>
-                      <div className="pb-3">
-                        <p className="text-sm font-medium capitalize">{update.status.replace('_', ' ')}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(update.timestamp).toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">{update.location}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm border-t pt-4">
-                  <div><span className="text-muted-foreground">Route:</span><p>{detailItem.originCountry || '?'} → {detailItem.destinationCountry || '?'}</p></div>
-                  <div><span className="text-muted-foreground">Weight:</span><p>{detailItem.totalWeightKg ? `${detailItem.totalWeightKg.toLocaleString()} kg` : '—'}</p></div>
-                  <div><span className="text-muted-foreground">Vessel:</span><p>{detailItem.vesselName || '—'}</p></div>
-                  <div><span className="text-muted-foreground">Container:</span><p className="font-mono text-xs">{detailItem.containerNumber || '—'}</p></div>
-                  <div><span className="text-muted-foreground">Forwarder:</span><p>{detailItem.freightForwarder || '—'}</p></div>
-                  <div><span className="text-muted-foreground">Customs Broker:</span><p>{detailItem.customsBroker || '—'}</p></div>
-                  <div><span className="text-muted-foreground">ETD:</span><p>{detailItem.estimatedDeparture ? new Date(detailItem.estimatedDeparture).toLocaleDateString() : '—'}</p></div>
-                  <div><span className="text-muted-foreground">ETA:</span><p>{detailItem.estimatedArrival ? new Date(detailItem.estimatedArrival).toLocaleDateString() : '—'}</p></div>
-                </div>
+        {/* Booking Results Table */}
+        <FadeIn delay={0.2}>
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-mono">{t2('Mã đặt chỗ', 'Booking ID')}</TableHead>
+                      <TableHead className="font-mono">{t2('Loại', 'Type')}</TableHead>
+                      <TableHead className="font-mono">{t2('Tuyến đường', 'Route')}</TableHead>
+                      <TableHead className="font-mono">ETD</TableHead>
+                      <TableHead className="font-mono">ETA</TableHead>
+                      <TableHead className="font-mono">{t2('Trạng thái', 'Status')}</TableHead>
+                      <TableHead className="font-mono">{t2('Cước', 'Rate')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                          <Ship className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                          <p>{t2('Không tìm thấy đặt chỗ', 'No bookings found')}</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : filtered.map((bk) => {
+                      const progress = STATUS_FLOW.indexOf(bk.status) + 1
+                      return (
+                        <TableRow key={bk.id} className="group hover:bg-muted/50 transition-colors">
+                          <TableCell className="font-medium font-mono text-xs">{bk.id}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs font-mono">{bk.type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <span className="font-mono text-muted-foreground">{bk.originCode}</span>
+                              <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                              <span className="font-mono text-muted-foreground">{bk.destinationCode}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+                              <span>{bk.origin}</span>
+                              <ArrowRight className="w-2 h-2" />
+                              <span>{bk.destination}</span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="flex items-center gap-0.5 mt-1.5">
+                              {STATUS_FLOW.map((step, idx) => (
+                                <div
+                                  key={step}
+                                  className={`h-1 flex-1 rounded-full ${idx < progress ? 'bg-green-500' : 'bg-muted'}`}
+                                />
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">{bk.etd}</TableCell>
+                          <TableCell className="text-xs font-mono">{bk.eta}</TableCell>
+                          <TableCell>
+                            <Badge className={`${STATUS_COLORS[bk.status]} border text-xs capitalize`}>{bk.status.replace('_', ' ')}</Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm font-medium">{formatCurrency(bk.rate, bk.currency)}</TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+        </FadeIn>
       </div>
     </DashboardShell>
   )

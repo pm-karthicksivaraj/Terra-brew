@@ -63,6 +63,7 @@ model Tenant {
   whiteLabelDomain       String?
   whiteLabelConfig       String?  // JSON for white-label settings
   commodityTypes         String   @default("[\"coffee\"]") // JSON array: coffee, cocoa, palm_oil, soy
+  entityType             String   @default("producer") // producer, aggregator, exporter, importer, certification_body, laboratory
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -105,6 +106,16 @@ model Tenant {
   iotSensors             IoTSensor[]
   qcVerifications        QcVerification[]
   analyticsReports       AnalyticsReport[]
+  rfqs                  RFQ[]
+  rfqResponses          RFQResponse[]
+  escrowTransactions    EscrowTransaction[]
+  inspectionRequests    InspectionRequest[]
+  productMonitorings    ProductMonitoring[]
+  logisticBookings      LogisticBooking[]
+  crossBorderTransactions CrossBorderTransaction[]
+  entityRelationshipsFrom EntityRelationship[] @relation("EntityFrom")
+  entityRelationshipsTo   EntityRelationship[] @relation("EntityTo")
+  tenantModules          TenantModule[]
 }
 
 model PlatformSetting {
@@ -189,7 +200,8 @@ model User {
   email        String
   passwordHash String
   name         String
-  role         String   @default("farmer")
+  role         String   @default("farmer") // tenant_admin, operations_manager, field_officer, quality_controller, trader, finance_manager, viewer
+  permissions  String   @default("{}") // JSON object for granular role permissions
   phone        String?
   avatar       String?
   isActive     Boolean  @default(true)
@@ -200,6 +212,7 @@ model User {
   tenant Tenant @relation(fields: [tenantId], references: [id])
   @@unique([email, tenantId])
   @@index([tenantId])
+  @@index([tenantId, role])
 }
 
 model Farmer {
@@ -254,6 +267,16 @@ model Farmer {
   healthInsurance         Boolean  @default(false)
   smartphoneOwnership     Boolean  @default(false)
   gapTrainingAttended     Boolean  @default(false)
+  bankName                String?
+  bankBranch              String?
+  bankAddress             String?
+  accountType             String?   // savings, checking, current
+  accountNumber           String?
+  accountHolderName       String?
+  sortCodeSwift           String?
+  mobileMoneyProvider     String?
+  mobileMoneyNumber       String?
+  paymentPreference       String?   // bank_transfer, mobile_money, cash, check
   isActive                Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
@@ -1424,4 +1447,329 @@ model AnalyticsReport {
   tenant Tenant @relation(fields: [tenantId], references: [id])
   @@index([tenantId])
   @@index([tenantId, reportType])
+}
+
+// ════════════════════════════════════════════════════════════════
+// MULTI-ENTITY RELATIONSHIP MODELS
+// ════════════════════════════════════════════════════════════════
+
+model EntityRelationship {
+  id               String   @id @default(cuid())
+  fromEntityId     String   // Tenant.id of the source entity
+  toEntityId       String   // Tenant.id of the target entity
+  relationshipType String   // supply, buy, certify, inspect, aggregate, export, import
+  status           String   @default("active") // active, inactive, suspended
+  metadata         String?  // JSON string for terms/config
+  startDate        DateTime?
+  endDate          DateTime?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  fromEntity Tenant @relation("EntityFrom", fields: [fromEntityId], references: [id])
+  toEntity   Tenant @relation("EntityTo", fields: [toEntityId], references: [id])
+  @@unique([fromEntityId, toEntityId, relationshipType])
+  @@index([fromEntityId])
+  @@index([toEntityId])
+  @@index([relationshipType])
+  @@index([status])
+  @@index([fromEntityId, relationshipType])
+  @@index([toEntityId, relationshipType])
+}
+
+model TenantModule {
+  id            String    @id @default(cuid())
+  tenantId      String
+  moduleSlug    String    // References Module.slug
+  isEnabled     Boolean   @default(true)
+  configuredBy  String?   // Who configured it
+  configuredAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, moduleSlug])
+  @@index([tenantId])
+  @@index([moduleSlug])
+  @@index([tenantId, isEnabled])
+}
+
+// ════════════════════════════════════════════════════════════════
+// B2B TRADE & LOGISTICS MODELS
+// ════════════════════════════════════════════════════════════════
+
+model RFQ {
+  id                String   @id @default(cuid())
+  tenantId          String
+  createdBy         String?
+  rfqId             String?   // Auto-generated: RFQ-2024-001
+  title             String
+  description       String?
+  commodity         String    // coffee, cocoa, etc.
+  variety           String?
+  grade             String?
+  quantityKg        Float?
+  targetPricePerKg  Float?
+  currency          String?
+  deliveryLocation  String?
+  deliveryDateFrom  DateTime?
+  deliveryDateTo    DateTime?
+  incoterms         String?   // FOB, CIF, EXW, DAP, etc.
+  originCountry     String?
+  destinationCountry String?
+  certifications    String?   // JSON array of required certs
+  processingMethod  String?   // washed, natural, honey
+  cupScoreMin       Float?
+  status            String    @default("draft") // draft, published, responded, awarded, cancelled, expired
+  publishedAt       DateTime?
+  closesAt          DateTime?
+  awardedToResponseId String?
+  metadata          String?   // JSON
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id])
+  responses  RFQResponse[]
+  @@unique([tenantId, rfqId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([commodity])
+}
+
+model RFQResponse {
+  id              String   @id @default(cuid())
+  rfqId           String
+  tenantId        String   // The responding entity's tenant
+  createdBy       String?
+  responseId      String?
+  quotedPricePerKg Float?
+  currency        String?
+  availableQtyKg  Float?
+  deliveryDate    DateTime?
+  validityUntil   DateTime?
+  grade           String?
+  cupScore        Float?
+  certifications  String?   // JSON
+  notes           String?
+  terms           String?
+  status          String    @default("submitted") // submitted, shortlisted, accepted, rejected, withdrawn
+  metadata        String?   // JSON
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  rfq    RFQ    @relation(fields: [rfqId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, responseId])
+  @@index([rfqId])
+  @@index([tenantId])
+  @@index([rfqId, status])
+}
+
+model EscrowTransaction {
+  id                String   @id @default(cuid())
+  tenantId          String
+  createdBy         String?
+  escrowId          String?   // Auto-generated
+  rfqId             String?
+  buyerTenantId     String?
+  sellerTenantId    String?
+  amount            Float?
+  currency          String?
+  status            String    @default("initiated") // initiated, funded, inspection_scheduled, inspection_complete, release_approved, released, dispute_raised, refunded, cancelled
+  fundingSource     String?
+  fundedAt          DateTime?
+  inspectionRequestedAt DateTime?
+  inspectionCompletedAt DateTime?
+  releaseApprovedAt DateTime?
+  releasedAt        DateTime?
+  disputeRaisedAt   DateTime?
+  disputeReason     String?
+  refundedAt        DateTime?
+  milestoneTerms    String?   // JSON for milestone-based releases
+  notes             String?
+  metadata          String?   // JSON
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, escrowId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([buyerTenantId])
+  @@index([sellerTenantId])
+}
+
+model InspectionRequest {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  createdBy           String?
+  requestId           String?    // Auto-generated
+  inspectionType      String     // pre_shipment, during_production, final, container_loading
+  inspectionLevel     String?    // S-3, G-I, G-II
+  commodity           String?
+  quantity            Float?
+  unit                String?
+  supplierName        String?
+  supplierAddress     String?
+  inspectionLocation  String?
+  country             String?
+  requestedDateFrom   DateTime?
+  requestedDateTo     DateTime?
+  actualDate          DateTime?
+  inspectorName       String?
+  inspectorCompany    String?
+  status              String     @default("requested") // requested, scheduled, in_progress, completed, cancelled
+  findings            String?    // JSON
+  reportUrl           String?
+  passFail            String?    // pass, fail, conditional
+  notes               String?
+  amount              Float?
+  currency            String?
+  paymentStatus       String?    // pending, paid
+  metadata            String?    // JSON
+  isActive            Boolean    @default(true)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, requestId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([inspectionType])
+}
+
+model ProductMonitoring {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  createdBy           String?
+  monitoringId        String?    // Auto-generated
+  monitoringType      String     // production_progress, on_site_verification, quality_check, shipment_monitoring
+  productName         String?
+  batchId             String?
+  orderRef            String?
+  factoryName         String?
+  factoryAddress      String?
+  country             String?
+  scheduledDate       DateTime?
+  actualDate          DateTime?
+  inspectorName       String?
+  status              String     @default("scheduled") // scheduled, in_progress, completed, cancelled
+  quantityOrdered     Float?
+  quantityProduced    Float?
+  quantityPassed      Float?
+  quantityFailed      Float?
+  packingStatus       String?    // conform, non_conform
+  shippingMarkStatus  String?    // conform, non_conform
+  labellingStatus     String?    // conform, non_conform
+  findings            String?    // JSON
+  reportUrl           String?
+  notes               String?
+  amount              Float?
+  currency            String?
+  paymentStatus       String?
+  metadata            String?    // JSON
+  isActive            Boolean    @default(true)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, monitoringId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([monitoringType])
+}
+
+model LogisticBooking {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  createdBy           String?
+  bookingId           String?    // Auto-generated
+  bookingType         String?    // sea_freight, air_freight, land_transport, rail
+  originCountry       String?
+  originPort          String?
+  destinationCountry  String?
+  destinationPort     String?
+  commodity           String?
+  commodityCategory   String?    // per HS code classification
+  totalWeightKg       Float?
+  totalVolumeCbm      Float?
+  containerType       String?    // 20ft, 40ft, 40ft_hc, lcl
+  containerCount      Int?
+  shippingLine        String?
+  vesselName          String?
+  voyageNumber        String?
+  etd                 DateTime?  // estimated time of departure
+  atd                 DateTime?  // actual time of departure
+  eta                 DateTime?  // estimated time of arrival
+  ata                 DateTime?  // actual time of arrival
+  freightRate         Float?
+  currency            String?
+  freightType         String?    // fcl, lcl
+  incoterms           String?    // FOB, CIF, EXW, etc.
+  bookingStatus       String     @default("draft") // draft, confirmed, in_transit, arrived, delivered, cancelled
+  trackingUrl         String?
+  blNumber            String?
+  notes               String?
+  metadata            String?    // JSON
+  isActive            Boolean    @default(true)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, bookingId])
+  @@index([tenantId])
+  @@index([tenantId, bookingStatus])
+  @@index([originCountry])
+  @@index([destinationCountry])
+}
+
+model CrossBorderTransaction {
+  id                    String   @id @default(cuid())
+  tenantId              String
+  createdBy             String?
+  transactionId         String?    // Auto-generated
+  tradeType             String?    // export, import
+  buyerTenantId         String?
+  sellerTenantId        String?
+  commodity             String?
+  quantityKg            Float?
+  unitPricePerKg        Float?
+  totalValue            Float?
+  currency              String?
+  incoterms             String?
+  originCountry         String?
+  destinationCountry    String?
+  portOfLoading         String?
+  portOfDischarge       String?
+  contractRef           String?
+  rfqRef                String?
+  escrowRef             String?
+  shipmentRef           String?
+  eudrDdsRef            String?
+  phytoCertRef          String?
+  cooRef                String?    // Certificate of Origin
+  customsStatus         String?    @default("pending") // pending, submitted, cleared, held, rejected
+  customsClearedAt      DateTime?
+  paymentStatus         String?    @default("pending") // pending, escrow_funded, partial_paid, paid, refunded
+  paymentDate           DateTime?
+  documentationStatus   String?    @default("pending") // pending, partial, complete, verified
+  complianceStatus      String?    @default("pending") // pending, eudr_compliant, non_compliant, exempt
+  status                String     @default("initiated") // initiated, documented, in_transit, customs_clearance, delivered, completed, disputed, cancelled
+  notes                 String?
+  metadata              String?    // JSON
+  isActive              Boolean    @default(true)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  @@unique([tenantId, transactionId])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([buyerTenantId])
+  @@index([sellerTenantId])
+  @@index([customsStatus])
+  @@index([complianceStatus])
 }
