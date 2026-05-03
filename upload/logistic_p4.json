@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The Logistic Service page contains two distinct sections for shipping configuration, each with the heading **\"What are you shipping?\"** (accompanied by an info icon). Below is a detailed breakdown of all elements:\n\n\n### **Top Section: Loose Cargo Configuration**\n1. **Shipping Type Tabs**  \n   - Two tabs:  \n     - `Loose Cargo` (selected, orange icon + text)  \n     - `Containers` (unselected, gray icon + text)  \n\n2. **Calculation Method Radio Buttons**  \n   - `Calculate by unit type` (unselected, empty circle)  \n   - `Calculate by total shipment` (selected, filled orange circle)  \n\n3. **Info Alert Box**  \n   - Blue info icon + text: *\"Calculating by total shipment is less accurate and therefore more likely to incur an additional charge for inaccurate or oversized dimensions.\"*  \n\n4. **Input Fields (3-column layout)**  \n   - **# of units**:  \n     - Label: `# of units`  \n     - Input field: `1` (with up/down arrows for increment/decrement)  \n   - **Total volume**:  \n     - Label: `Total volume`  \n     - Input field: Empty (placeholder)  \n     - Dropdown: `CBM` (selected)  \n     - Red \"Required\" text below the field  \n   - **Total weight**:  \n     - Label: `Total weight`  \n     - Input field: `0`  \n     - Dropdown: `KG` (selected)  \n     - Red \"Required\" text below the field  \n\n5. **Action Button**  \n   - `Confirm` (light orange, rounded rectangle)  \n\n\n### **Bottom Section: Containers Configuration**\n1. **Shipping Type Tabs**  \n   - Two tabs:  \n     - `Loose Cargo` (unselected, gray icon + text)  \n     - `Containers` (selected, blue icon + text)  \n\n2. **Info Alert Box**  \n   - Blue info icon + text: *\"Containers can be shipped to or from a business address only if there is a loading dock.\"*  \n\n3. **Input Fields (2-column layout)**  \n   - **# of units**:  \n     - Label: `# of units`  \n     - Input field: `1` (with up/down arrows)  \n   - **Container type**:  \n     - Label: `Container type`  \n     - Four buttons (only one selectable):  \n       - `20'` (unselected, white background)  \n       - `40'` (selected, light blue background)  \n       - `40'HC` (unselected, white background)  \n       - `45'HC` (unselected, white background)  \n\n4. **Checkbox**  \n   - `Overweight` (unselected, empty square)  \n\n5. **Action Buttons**  \n   - `+ Add Another Load` (white background, blue border, rounded rectangle)  \n   - `Confirm` (blue background, white text, rounded rectangle)  \n\n\n### **Visual & Layout Notes**  \n- Sections are separated by whitespace.  \n- Info icons (blue circles with \"i\") accompany both \"What are you shipping?\" headings.  \n- \"Required\" text is red and underlines input fields that must be filled.  \n- Buttons use contrasting colors (orange for top \"Confirm,\" blue for bottom \"Confirm\" and \"Add Another Load\") to indicate primary actions.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789257,
+  "id": "2026050314204085cee5a5db8948c0",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026050314204085cee5a5db8948c0",
+  "usage": {
+    "completion_tokens": 708,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2621,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 3329
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The page is a \"Product Monitoring Services\" page with a clean, text-heavy layout. Here's a detailed breakdown of all elements:\n\n\n### **1. Header Section**\n- **Title**: \"Product Monitoring Services\" (centered, bold, black text).\n\n\n### **2. Main Functions Section**\n- **Heading**: \"What are the main functions of the Production Monitoring Service?\" (black text, left-aligned).\n- **Intro Text**: \"The Production Monitoring Service has three main functions, including:\" (black text, left-aligned).\n- **Numbered List (3 Functions)**:\n  1. \"Following up on the production progress to reduce the risk of cargo delay;\" (black text, left-aligned).\n  2. \"Verifying product details according to the PI including the name, quantity, shipping marks, packaging and inner carton markings; and\" (black text, left-aligned).\n  3. \"Providing detailed product photos for your reference.\" (black text, left-aligned).\n- **Note**: \"Note: Evaluating the quality of goods is not covered under the Production Monitoring Service. It is recommended that you purchase Hero.Market’s Inspection Service if you want the quality of goods to be checked.\" (black text, left-aligned).\n\n\n### **3. Service Details and Cost Section**\n- **Heading**: \"Service Details and Cost\" (centered, bold, black text).\n- **Service Card (White Background, Rounded Corners)**:\n  - **Left Column**:\n    - **Title**: \"Production Monitoring\" (bold, black text).\n    - **Description**: \"Provides ongoing tracking and reporting of production progress.\" (gray text).\n    - **Tags (3 Small, Orange Backgrounds)**:\n      - \"Low-cost pricing\" (white text).\n      - \"Fast service\" (white text).\n      - \"Detailed report\" (white text).\n    - **Bullet Points (3 Items)**:\n      - \"Keep up-to-date on production\" (black text, bullet icon).\n      - \"Reduce risk of order delays\" (black text, bullet icon).\n      - \"View product details before shipment\" (black text, bullet icon).\n  - **Right Column**:\n    - **Price**: \"USD 48.00\" (orange text, bold).\n    - **Subsection: Monitoring**:\n      - **Row 1**: \"Call to confirm production status\" (left) | \"Periodic phone call\" (right, gray text).\n    - **Subsection: On-site check (one visit)**:\n      - **Row 1**: \"Quantity check\" (left) | \"All cartons\" (right, gray text).\n      - **Row 2**: \"Visual check\" (left) | \"1 pc/item\" (right, gray text).\n      - **Row 3**: \"Packaging, shipping mark and inner carton marking checks\" (left) | \"1 carton/item\" (right, gray text).\n\n\n### **4. Report Section**\n- **Heading**: \"Report\" (centered, bold, black text).\n\n\n### **5. General Information Section**\n- **Heading**: \"General Information\" (bold, black text, left-aligned).\n- **Report Preview (White Background, Rounded Corners)**:\n  - **Top Header**: \"GENERAL INFORMATION\" (bold, black text, left-aligned).\n  - **Watermark**: Repeated \"SAMPLE REPORT\" (light gray, diagonal, across the entire preview).\n  - **Left Side**: Small image (placeholder, likely a product or factory photo).\n  - **Right Side (Table Format)**:\n    - **Row 1**: \"Supplier\" (label) | \"XinBaoCeShiZhangHao-2\" (value).\n    - **Row 2**: \"Buyer\" (label) | \"liha qeeqwxkkkkd11118#\" (value).\n    - **Row 3**: \"Planned Finish Date\" (label) | \"2020-04-26\" (value).\n    - **Row 4**: \"Actual Finish Date\" (label) | \"2020-04-26\" (value).\n    - **Row 5**: \"TA Order Number\" (label) | \"2568431050#\" (value, partially redacted with a black bar).\n    - **Row 6**: \"Report Number\" (label) | \"QA-2790530\" (value).\n    - **Row 7**: \"Report Date\" (label) | \"2020-04-25\" (value).\n\n\n### **Overall Layout**\n- The page uses a clean, minimalistic design with ample white space.\n- Sections are separated by headings and spacing.\n- Text is primarily black (for headings and body) with orange used for the price and tags.\n- The report preview includes a watermark to indicate it is a sample.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789345,
+  "id": "20260503142201f856d685e6be4f7b",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260503142201f856d685e6be4f7b",
+  "usage": {
+    "completion_tokens": 1008,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2624,
+    "prompt_tokens_details": {
+      "cached_tokens": 24
+    },
+    "total_tokens": 3632
+  }
+}

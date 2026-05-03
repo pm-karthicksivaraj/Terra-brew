@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The image shows a **Logistic Service page** with two main sections: *Shipping Destination* and *Load Details*, designed for configuring shipment parameters. Below is a detailed breakdown of all UI elements:\n\n\n### **1. Shipping Destination Section**  \n- **Header**:  \n  - Text: *\"Where are you shipping to?\"* (with an info icon ⓘ to the right).  \n\n- **Form Fields (3 columns)**:  \n  - **Type** (left column):  \n    - Dropdown menu (currently open, showing options) with the selected value *\"Fulfillment center\"* (highlighted in orange).  \n    - Dropdown options (with icons):  \n      - Port/Airport (🚢 icon)  \n      - Warehouse (📦 icon)  \n      - Fulfillment center (🏭 icon, selected)  \n      - Business address (🏢 icon)  \n      - Residential address (🏠 icon)  \n      - Last mile delivery warehousing (📦 icon)  \n  - **Country** (middle column):  \n    - Dropdown menu with the selected value *\"United States\"* (flag icon 🇺🇸 to the left).  \n  - **Address** (right column):  \n    - Text input field with placeholder text *\"Breinigsville Road, Breini...\"* (truncated).  \n\n- **Action Button**:  \n  - Orange button labeled *\"Confirm\"* (right-aligned).  \n\n\n### **2. Load Section**  \n- **Header**:  \n  - Text: *\"Load\"* (section title).  \n\n- **Subsection: \"What are you shipping?\"** (with info icon ⓘ):  \n  - **Tab Navigation**:  \n    - Two tabs: *\"Loose Cargo\"* (selected, orange text + underline) and *\"Containers\"* (gray text).  \n  - **Calculation Options** (radio buttons):  \n    - *\"Calculate by unit type\"* (selected, orange radio button)  \n    - *\"Calculate by total shipment\"* (unselected, gray radio button)  \n\n- **Package Type & Units**:  \n  - **Package type** (left label):  \n    - Two buttons: *\"Pallets\"* (selected, orange background) and *\"Boxes/Crates\"* (gray background).  \n  - **# of units** (right label):  \n    - Numeric input field with value *\"1\"* (default).  \n    - Up/down arrows (spinner) for incrementing/decrementing the value.  \n\n- **Pallet Type**:  \n  - Dropdown menu with the selected value *\"48\" × 40\"\"* (default pallet size).  \n\n- **Dimensions & Weight (Per Unit)**:  \n  - **Height (per unit)**:  \n    - Text input field with value *\"1\"*.  \n    - Unit dropdown (selected: *\"CM\"*).  \n    - Red text label: *\"Required\"* (below the field).  \n  - **Weight (Per unit)**:  \n    - Text input field (empty).  \n    - Unit dropdown (selected: *\"KG\"*).  \n    - Red text label: *\"Required\"* (below the field).  \n\n- **Action Buttons (bottom)**:  \n  - Orange button: *\"+ Add Another Load\"* (to add more shipment entries).  \n  - Beige button: *\"Confirm\"* (to finalize load details).  \n\n\n### **Additional UI Elements**  \n- **Scroll Bar**: A vertical scroll bar on the right side of the \"Load\" section (indicates more content below).  \n- **Background Text/Links** (partially visible):  \n  - Phrases like *\"easy\"*, *\"ipment, stay up-to-date on your bills\"*, *\"n more\"*, *\"Based in the US\"*, *\"generous credit\"*, *\"Contact support\"* (likely footer or sidebar content, not part of the main form).  \n\n\n### **Visual Style**  \n- **Colors**: Orange for primary actions (buttons, selected tabs/fields), gray for inactive elements, red for required field labels.  \n- **Icons**: Used to clarify dropdown options (e.g., 🏭 for fulfillment center, 🚢 for port/airport) and tabs (📦 for loose cargo).  \n- **Layout**: Clean, grid-based form with clear sectioning (shipping destination vs. load details) for intuitive data entry.  \n\n\nThis page is designed to collect critical shipment information (destination, cargo type, dimensions, weight) for logistics planning, with validation (required fields) and options to add multiple loads.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789215,
+  "id": "20260503141946e7fb8248a768410b",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260503141946e7fb8248a768410b",
+  "usage": {
+    "completion_tokens": 933,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2621,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 3554
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The image displays a minimalistic page with the following elements:  \n\n- **Text Label**: At the top, there is a plain text label reading *\"Sample 3 :\"* (with a space after the colon).  \n- **Hyperlink**: Directly below the label, there is a blue, underlined hyperlink with the URL: `https://drive.google.com/file/d/157Jppv4e_9QpQ7agpirB9Md0oxJlmUzG/view?usp=share_link`. This link appears to be a Google Drive file-sharing link.  \n\nThe page has no other visible content, such as form fields, additional labels, or sections. The background is white, and the text/hyperlink are centered or left-aligned (depending on the page layout) with ample whitespace around them.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789445,
+  "id": "20260503142356d24d6071ce994cc6",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260503142356d24d6071ce994cc6",
+  "usage": {
+    "completion_tokens": 170,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2614,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 2784
+  }
+}

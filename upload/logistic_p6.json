@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The Logistic Service page contains the following UI elements and content:  \n\n### 1. Instructional Text (Top Section)  \nA light gray background text box with black text:  \n*“Select a goods type based on the attributes of your product. For items such as apparel, mugs, furniture, simply select general goods.”*  \n\n\n### 2. Goods Type Selection Section  \nA vertical list of **radio button options** (or selectable items) for goods type, with the first option highlighted:  \n- **“General goods”** (first item):  \n  - Left side: Text “General goods” in orange, accompanied by a small black circle with a white number “1” (likely an indicator of selection status or count).  \n  - Right side: A checked orange checkbox (✓) next to the text “General goods” (confirming this option is selected).  \n- Subsequent options (unselected, gray text):  \n  - “Batteries”  \n  - “Magnetic goods”  \n  - “Powders”  \n  - “Liquids”  \n  - “Special goods”  \n\n\n### 3. Action Buttons (Bottom of Selection Section)  \nTwo buttons aligned horizontally:  \n- **“Clear all”**: Plain text button (black text, no background color, likely a secondary action).  \n- **“Confirm”**: Orange background button with white text (primary action button).  \n\n\n### 4. Explanatory Text (Below Buttons)  \nBlack text on a white background:  \n*“If the Buyer search for any request means he will get the details like this”*  \n\n\n### Overall Layout & Style  \n- The page uses a clean, minimalistic design with a white background.  \n- The goods type selection area is contained in a light gray box, separating it from the rest of the content.  \n- Buttons are styled for clear visual hierarchy (orange for primary action, plain text for secondary).  \n- Text is legible, with the selected “General goods” option distinguished by orange text and a checked checkbox.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789290,
+  "id": "202605031421208a42c0edc3d44546",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202605031421208a42c0edc3d44546",
+  "usage": {
+    "completion_tokens": 425,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2621,
+    "prompt_tokens_details": {
+      "cached_tokens": 34
+    },
+    "total_tokens": 3046
+  }
+}

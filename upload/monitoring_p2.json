@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The image displays a **Product Monitoring Service** status report page with the following elements:\n\n### Header Section\n- **Title**: \"Overall Status\" (top-left, plain text)\n\n### Main Content Area (contained within a light gray background box)\n- **Section Header**: \"OVERALL RESULT SUMMARY\" (bold, uppercase, left-aligned)\n\n#### Left Panel: Overall Result\n- **Label**: \"Overall Result\" (bold)\n- **Visual Indicator**: A green circular icon with a white checkmark (✓) inside\n- **Status Text**: \"Confirmed\" (green text, centered below the icon)\n\n#### Right Panel: Check Sections\n- **Section Header**: \"Check Sections\" (bold)\n- **List of Check Items** (each with a circular icon and status):\n  1. **Quantity**  \n     - Icon: Circle with dot (●)  \n     - Status: \"Confirmed\" (green text)\n  2. **Packing**  \n     - Icon: Circle with dot (●)  \n     - Status: \"Confirmed\" (green text)\n  3. **Shipping Mark**  \n     - Icon: Circle with dot (●)  \n     - Status: \"Confirmed\" (green text)\n  4. **Additional Items**  \n     - Icon: Circle with dot (●)  \n     - Status: \"Confirmed\" (green text)\n  5. **Remarks**  \n     - Icon: Circle with dot (●)  \n     - Status: \"On-site inspection of the quantity and size of products are consistent with PI.\" (black text, descriptive note)\n\n#### Footer Text (bottom-left of the gray box)\n- \"Should you have any questions, please contact supplier or email to [redacted]\" (black text, with the email address partially obscured by a red rectangle)\n\n### Background & Watermark\n- The entire page has a **light gray background** with a repeated, semi-transparent watermark text: \"SAMPLE REPORT\" (gray, diagonal orientation, covering the entire visible area).\n\n### UI Element Summary\n- **Text Elements**: Headers, labels, status text, and descriptive remarks.\n- **Icons**: Green checkmark (overall status) and circular dots (check items).\n- **Status Indicators**: Green \"Confirmed\" text for all check items (except Remarks, which has a descriptive note).\n- **Redaction**: Email address partially hidden with a red rectangle.\n- **Layout**: Two-column structure (Overall Result on left, Check Sections on right) within a bordered gray box.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789366,
+  "id": "202605031422313bfd208ce110419c",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202605031422313bfd208ce110419c",
+  "usage": {
+    "completion_tokens": 518,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2635,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 3153
+  }
+}

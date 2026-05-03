@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The Logistic Service page contains the following UI elements, text, and sections:  \n\n### 1. Header Section  \n- **Title**: “Goods” (bold, top - most text).  \n- **Sub - title**: “Option : 1” (directly below “Goods”).  \n\n\n### 2. “Tell us about your goods” Section  \n- **Section Title**: “Tell us about your goods” (bold, centered under “Option : 1”).  \n\n#### Form Fields & Labels:  \n- **“Goods value” Field**:  \n  - Label: “Goods value” (with a small “?” icon, likely for a tooltip).  \n  - Input Field: A rectangular text input box (empty, for entering a value).  \n  - Currency Dropdown: A dropdown menu with “USD” selected (arrow icon on the right, indicating it can be expanded to change currency).  \n\n- **Checkbox**:  \n  - Label: “Shipment contains hazardous goods” (text next to an empty checkbox).  \n\n- **“Are your goods ready?” Field**:  \n  - Label: “Are your goods ready?” (with a small “?” icon, likely for a tooltip).  \n  - Dropdown Menu:  \n    - Placeholder/Default Text: “Select timeframe” (displayed in an orange - bordered rectangular box, indicating it is active/focused).  \n    - Dropdown Options (visible when expanded):  \n      - “Yes, my goods are ready”  \n      - “Will be ready within two weeks”  \n      - “Will be ready in more than two weeks”  \n\n\n### 3. “Option : 2” Section  \n- **Title**: “Option : 2” (bold, below the “Option : 1” section).  \n- **Description**: “Admin will map what are the general goods, special goods etc.,” (plain text, explaining the purpose of Option 2).  \n\n\n### Visual & Layout Details  \n- The page has a clean, minimalistic design with a white background.  \n- Form elements (input, dropdown, checkbox) are aligned vertically under their respective labels.  \n- The dropdown for “Are your goods ready?” has an orange border, highlighting it as the active/focused element.  \n- All text is in a standard, readable font (likely sans - serif), with section titles in bold for emphasis.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789276,
+  "id": "202605031421022931c6da2cf74199",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202605031421022931c6da2cf74199",
+  "usage": {
+    "completion_tokens": 483,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2621,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 3104
+  }
+}

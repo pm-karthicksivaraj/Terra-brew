@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "This is a logistics/shipping search results page with the following detailed elements:\n\n**Header Section:**\n- Title: \"Search shipping rates\" \n- Subtitle: \"Worldwide coverage · Intelligent experiences · Transparent rates\"\n- Search form with 4 input fields:\n  - Origin: \"Shanghai (CN) | 200000\" with \"Door to door\" label\n  - Destination: \"Dubai (AE)\" with \"Door to door\" label  \n  - Load: \"Total: 2.50 CBM | 1000KG | 20 b...\" with \"Door to door\" label\n  - Goods: \"General goods\" with \"Door to door\" label\n- Orange search button with magnifying glass icon\n\n**Navigation Tabs:**\n- \"Search\" (active, black background)\n- \"Order\"\n- \"Pickup\" \n- \"Payment\"\n- \"Shipping\"\n- \"Delivery\"\n\n**Filters Sidebar (Left):**\n- Title: \"Filters\"\n- \"Sort by\" section:\n  - Radio button \"Cheapest\" (selected)\n  - Radio button \"Fastest\"\n- \"Freight forwarders\" section:\n  - Checkbox \"TWTH\" (selected)\n- \"Shipping methods\" section:\n  - Checkbox \"Express\" (selected)\n\n**Results Section:**\n- Two sorting options: \"Cheapest\" (USD 14342.39, Est. 11-15 business days) and \"Fastest\" (USD 14342.39, Est. 11-15 business days)\n\n**Shipping Options:**\n\n1. **Available Option:**\n   - Route: \"China (CN) | 200000 → United Arab Emirates (AE)\"\n   - Carrier: \"TWTH\" with logo\n   - \"Chat now\" link\n   - Service: \"Express\"\n   - Type: \"Door to door\"\n   - Delivery: \"Est. 11-15 business days\"\n   - Price: \"USD 14342.39\" with dropdown arrow\n   - Orange \"Place order\" button\n\n2. **Unavailable Options (with error messages):**\n   - Multiple TWTH Express options with message: \"The chargeable weight of each package should be under or equal to 70 KG.\"\n   - TWTH LCL + Trucking with message: \"Sorry, we do not support shipping for the country you entered. Please make changes and try again. Select at least one type of goods\"\n   - CoL LCL + Express options with messages about package weight limits (40 KG)\n   - Fleopard LCL + Trucking with country support message\n   - Additional CoL LCL + Express options with weight limit messages\n\n**Messenger Widget:**\n- Appears in bottom right with \"Messenger\" label and notification badge\n\nThe page shows shipping solutions from Shanghai to Dubai with various carriers, services, and error messages indicating unavailable options due to weight or country restrictions.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789311,
+  "id": "202605031421360c3d6707e7b84d27",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202605031421360c3d6707e7b84d27",
+  "usage": {
+    "completion_tokens": 599,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2633,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 3232
+  }
+}

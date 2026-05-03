@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The Logistic Service page is a shipping details form with the following elements:  \n\n### Header Section  \n- **Title**: \"What are you shipping?\" (with a help icon ⓘ to the right).  \n\n\n### Shipping Type Tabs  \nTwo toggleable tabs for cargo type:  \n- **\"Loose Cargo\"** (selected, highlighted with an orange box icon and orange text).  \n- **\"Containers\"** (unselected, with a container icon and gray text).  \n\n\n### Calculation Method Radio Buttons  \nTwo options for calculating shipping:  \n- **\"Calculate by unit type\"** (selected, filled orange radio button).  \n- **\"Calculate by total shipment\"** (unselected, empty radio button).  \n\n\n### Info Banner  \nA blue-bordered info box with an info icon (ℹ️) and text: *\"If your supplier is palletizing the goods, search by pallets not boxes to avoid adjustments and extra charges.\"*  \n\n\n### Package Type & Units Section  \n- **Label**: \"Package type\" (left-aligned).  \n- **Two buttons**:  \n  - \"Pallets\" (unselected, gray background).  \n  - \"Boxes/Crates\" (selected, orange background).  \n- **Label**: \"# of units\" (right-aligned).  \n- **Input field**: A numeric input with value \"1\", accompanied by up/down arrow buttons for increment/decrement.  \n\n\n### Dimensions Section  \n- **Label**: \"Dimensions (L×W×H per unit)\" (left-aligned).  \n- **Three input fields** (for Length, Width, Height):  \n  - First field: Value \"1\".  \n  - Second field: Placeholder \"W\".  \n  - Third field: Value \"1\".  \n- **Dropdown**: \"CM\" (selected, for unit of measurement).  \n- **Required indicators**: Red \"Required\" text below each input field.  \n\n\n### Weight Section  \n- **Label**: \"Weight (Per unit)\" (right-aligned).  \n- **Input field**: Empty text box.  \n- **Dropdown**: \"KG\" (selected, for unit of measurement).  \n- **Required indicator**: Red \"Required\" text below the input.  \n\n\n### Action Buttons (Bottom)  \n- **\"+ Add Another Load\"**: Orange-outlined button (for adding additional shipping loads).  \n- **\"Confirm\"**: Orange-filled button (to submit the form).  \n\n\n### Visual Style  \n- Clean, minimalistic design with a white background.  \n- Orange used for selected states, highlights, and primary actions.  \n- Red for \"Required\" field indicators.  \n- Gray for unselected elements and secondary text.  \n- A vertical scrollbar on the right (indicating more content below).",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1777789235,
+  "id": "202605031420205cd7112a96ef4c41",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202605031420205cd7112a96ef4c41",
+  "usage": {
+    "completion_tokens": 555,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2621,
+    "prompt_tokens_details": {
+      "cached_tokens": 34
+    },
+    "total_tokens": 3176
+  }
+}
