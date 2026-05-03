@@ -1,533 +1,245 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { hashPassword, computeDataHash, computeBlockHash } from '@/lib/crypto'
+import { hashPassword } from '@/lib/crypto'
 
-export const maxDuration = 60 // Allow up to 60 seconds for seed
+export const maxDuration = 60
 
-export async function POST(req: Request) {
+function makePolygonGeoJson(lat: number, lng: number): string {
+  const d = 0.0009
+  return JSON.stringify({ type: 'Polygon', coordinates: [[[lng-d,lat-d],[lng+d,lat-d],[lng+d,lat+d],[lng-d,lat+d],[lng-d,lat-d]]] })
+}
+
+export async function POST() {
   try {
-    // 1. Create Platform Super Admin (idempotent)
-    const platformEmail = process.env.PLATFORM_ADMIN_EMAIL || 'admin@terrabrew.platform'
-    const existingPlatform = await db.platformUser.findUnique({ where: { email: platformEmail } })
-    if (!existingPlatform) {
-      const hash = await hashPassword(process.env.PLATFORM_ADMIN_PASSWORD || 'Admin@2024')
-      await db.platformUser.create({ data: { email: platformEmail, passwordHash: hash, name: 'Platform Admin', role: 'super_admin' } })
+    const PWD = await hashPassword('Admin@2024')
+
+    // ═══ 1. Clear existing data (reverse dependency order) ═══
+    const delModels = [
+      'crossBorderTransaction', 'logisticBooking', 'productMonitoring', 'inspectionRequest',
+      'escrowTransaction', 'rfqResponse', 'rfq', 'trackingUpdate', 'tradingContract',
+      'buyer', 'shipment', 'exportDocument', 'eudrCompliance', 'deforestationAssessment',
+      'apiKey', 'webhookEndpoint', 'complianceBooking', 'iotSensor', 'qcVerification',
+      'analyticsReport', 'auditLog', 'qrVerification', 'hashChainBlock',
+      'soilAnalysis', 'saleTransaction', 'marketplaceListing', 'smartContract',
+      'coffeeInspection', 'certAssessment', 'processingStageRecord', 'processingJobOrder',
+      'procurementRecord', 'collectionCentre', 'harvestTraceability',
+      'pestDiseaseManagement', 'fertilizerApplication', 'cropMonitoring',
+      'landPreparation', 'nursery', 'cultivation', 'farmLand', 'farmer',
+      'tenantModule', 'entityRelationship', 'subscription',
+      'user', 'tenant',
+    ]
+    for (const model of delModels) {
+      try { await (db as any)[model].deleteMany() } catch {}
+    }
+    // Platform users & modules stay
+    console.log('[Seed v2] Cleared existing data')
+
+    // ═══ 2. Platform Admin ═══
+    const pEmail = 'admin@terrabrew.platform'
+    const existingP = await db.platformUser.findUnique({ where: { email: pEmail } })
+    if (!existingP) {
+      await db.platformUser.create({ data: { email: pEmail, passwordHash: PWD, name: 'Platform Admin', role: 'super_admin' } })
     }
 
-    // 2. Ensure modules exist
+    // ═══ 3. Modules ═══
     const moduleDefs = [
+      { slug: 'dashboard', name: 'Dashboard', category: 'core', icon: 'LayoutDashboard', color: '#059669' },
+      { slug: 'analytics', name: 'Analytics & Reports', category: 'core', icon: 'BarChart3', color: '#2563eb' },
       { slug: 'farmers', name: 'Farmer Management', category: 'core', icon: 'Users', color: '#059669' },
       { slug: 'farmlands', name: 'Farm Land Management', category: 'core', icon: 'MapPin', color: '#d97706' },
       { slug: 'cultivations', name: 'Cultivation Management', category: 'core', icon: 'Sprout', color: '#2563eb' },
       { slug: 'nurseries', name: 'Nursery Management', category: 'core', icon: 'TreePine', color: '#7c3aed' },
       { slug: 'land-preparations', name: 'Land Preparation', category: 'core', icon: 'Tractor', color: '#0891b2' },
-      { slug: 'crop-monitorings', name: 'Crop Monitoring & Alerts', category: 'core', icon: 'Activity', color: '#db2777' },
+      { slug: 'crop-monitorings', name: 'Crop Monitoring', category: 'core', icon: 'Activity', color: '#db2777' },
       { slug: 'fertilizer-apps', name: 'Fertilizer Management', category: 'core', icon: 'FlaskConical', color: '#65a30d' },
-      { slug: 'pest-disease-mgmts', name: 'Pest & Disease Management', category: 'core', icon: 'Shield', color: '#dc2626' },
+      { slug: 'pest-disease-mgmts', name: 'Pest & Disease', category: 'core', icon: 'Shield', color: '#dc2626' },
       { slug: 'harvest-traceabilities', name: 'Harvest Traceability', category: 'core', icon: 'Wheat', color: '#b45309' },
-      { slug: 'procurement', name: 'Procurement & Collection', category: 'premium', icon: 'Truck', color: '#4f46e5' },
+      { slug: 'procurement', name: 'Procurement', category: 'premium', icon: 'Truck', color: '#4f46e5' },
       { slug: 'processing', name: 'Processing Pipeline', category: 'premium', icon: 'Factory', color: '#0d9488' },
       { slug: 'cert-assessments', name: 'Certification Assessment', category: 'compliance', icon: 'Award', color: '#be185d' },
-      { slug: 'coffee-inspections', name: 'Coffee Inspection & Audit', category: 'compliance', icon: 'ClipboardCheck', color: '#9333ea' },
-      { slug: 'smart-contracts', name: 'Smart Contracts', category: 'premium', icon: 'FileText', color: '#0369a1' },
-      { slug: 'marketplace', name: 'Marketplace & Sales', category: 'premium', icon: 'Store', color: '#ea580c' },
+      { slug: 'coffee-inspections', name: 'Coffee Inspection', category: 'compliance', icon: 'ClipboardCheck', color: '#9333ea' },
+      { slug: 'qc-verifications', name: 'QC Verifications', category: 'compliance', icon: 'CheckCircle', color: '#059669' },
+      { slug: 'eudr-compliance', name: 'EUDR Compliance', category: 'compliance', icon: 'Shield', color: '#dc2626' },
+      { slug: 'deforestation', name: 'Deforestation Monitoring', category: 'compliance', icon: 'TreePine', color: '#059669' },
+      { slug: 'marketplace', name: 'Marketplace', category: 'premium', icon: 'Store', color: '#ea580c' },
+      { slug: 'rfq', name: 'RFQ Management', category: 'trade', icon: 'FileQuestion', color: '#7c3aed' },
+      { slug: 'inspections', name: 'Inspection Service', category: 'trade', icon: 'ClipboardCheck', color: '#9333ea' },
+      { slug: 'product-monitoring', name: 'Product Monitoring', category: 'trade', icon: 'Activity', color: '#0d9488' },
+      { slug: 'smart-contracts', name: 'Smart Contracts', category: 'trade', icon: 'FileText', color: '#0369a1' },
+      { slug: 'trading-desk', name: 'Trading Desk', category: 'trade', icon: 'TrendingUp', color: '#0d9488' },
+      { slug: 'shipments', name: 'Shipments', category: 'trade', icon: 'Ship', color: '#2563eb' },
+      { slug: 'logistics', name: 'Logistics Booking', category: 'trade', icon: 'Container', color: '#4f46e5' },
+      { slug: 'export-docs', name: 'Export Documents', category: 'trade', icon: 'FileOutput', color: '#0891b2' },
+      { slug: 'buyers', name: 'Buyers', category: 'trade', icon: 'UserCheck', color: '#65a30d' },
+      { slug: 'trace-journey', name: 'Trace Journey', category: 'core', icon: 'Route', color: '#7c3aed' },
+      { slug: 'billing', name: 'Billing', category: 'finance', icon: 'CreditCard', color: '#be185d' },
+      { slug: 'users', name: 'Users', category: 'admin', icon: 'UserCog', color: '#6366f1' },
+      { slug: 'iot-sensors', name: 'IoT Sensors', category: 'system', icon: 'Radio', color: '#0891b2' },
+      { slug: 'blockchain', name: 'Blockchain', category: 'system', icon: 'Link', color: '#7c3aed' },
+      { slug: 'api-settings', name: 'API & Webhooks', category: 'system', icon: 'Webhook', color: '#6366f1' },
     ]
-    for (const mod of moduleDefs) {
-      await db.module.upsert({ where: { slug: mod.slug }, update: mod, create: mod })
+    for (const m of moduleDefs) { await db.module.upsert({ where: { slug: m.slug }, update: m, create: m }) }
+
+    // ═══ 4. Tenants ═══
+    const tenantDefs = [
+      { slug: 'metrang-coffee', name: 'Metrang Coffee', legalName: 'Công ty TNHH Metrang Coffee', entityType: 'producer', country: 'VN', currency: 'VND', currencySymbol: '₫', language: 'vi', timezone: 'Asia/Ho_Chi_Minh', locale: 'vi-VN', dateFormat: 'DD/MM/YYYY', region: 'Southeast Asia', supportedLanguages: '["vi","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Organic","Fair Trade","UTZ"]', plan: 'professional', maxUsers: 25, maxFarmers: 1000, commodityTypes: '["coffee"]' },
+      { slug: 'cooxupe', name: 'Cooxupé', legalName: 'Cooperativa Regional de Cafeicultores em Guaxupé', entityType: 'aggregator', country: 'BR', currency: 'BRL', currencySymbol: 'R$', language: 'pt', timezone: 'America/Sao_Paulo', locale: 'pt-BR', dateFormat: 'DD/MM/YYYY', region: 'South America', supportedLanguages: '["pt","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Rainforest Alliance","UTZ","Fair Trade"]', plan: 'professional', maxUsers: 50, maxFarmers: 5000, commodityTypes: '["coffee"]' },
+      { slug: 'yirgacheffe-union', name: 'Yirgacheffe Union', legalName: 'Yirgacheffe Coffee Farmers Cooperative Union', entityType: 'producer', country: 'ET', currency: 'ETB', currencySymbol: 'Br', language: 'am', timezone: 'Africa/Addis_Ababa', locale: 'am-ET', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["am","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Organic","Fair Trade"]', plan: 'starter', maxUsers: 15, maxFarmers: 2000, commodityTypes: '["coffee"]' },
+      { slug: 'othaya-cooperative', name: 'Othaya Cooperative', legalName: 'Othaya Farmers Cooperative Society Ltd', entityType: 'producer', country: 'KE', currency: 'KES', currencySymbol: 'KSh', language: 'sw', timezone: 'Africa/Nairobi', locale: 'sw-KE', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["sw","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Fair Trade","Rainforest Alliance"]', plan: 'starter', maxUsers: 10, maxFarmers: 1500, commodityTypes: '["coffee"]' },
+      { slug: 'euro-coffee-imports', name: 'Euro Coffee Imports', legalName: 'Euro Coffee Imports B.V.', entityType: 'exporter', country: 'NL', currency: 'EUR', currencySymbol: '€', language: 'en', timezone: 'Europe/Amsterdam', locale: 'en-IE', dateFormat: 'DD/MM/YYYY', region: 'Europe', supportedLanguages: '["en","nl"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '[]', plan: 'professional', maxUsers: 20, maxFarmers: 0, commodityTypes: '["coffee"]' },
+      { slug: 'sgs-inspection', name: 'SGS Inspection', legalName: 'SGS Société Générale de Surveillance SA', entityType: 'certification_body', country: 'CH', currency: 'CHF', currencySymbol: 'CHF', language: 'en', timezone: 'Europe/Zurich', locale: 'de-CH', dateFormat: 'DD.MM.YYYY', region: 'Europe', supportedLanguages: '["en","de","fr"]', measurementUnit: 'metric', eudrCompliant: false, certifications: '[]', plan: 'starter', maxUsers: 10, maxFarmers: 0, commodityTypes: '["coffee","cocoa","soy"]' },
+    ]
+    const tenants: Record<string, any> = {}
+    for (const td of tenantDefs) {
+      tenants[td.slug] = await db.tenant.create({ data: td as any })
     }
 
-    // 3. Create Metrang Coffee Tenant (idempotent)
-    const tenantSlug = 'metrang-coffee'
-    let tenant = await db.tenant.findUnique({ where: { slug: tenantSlug } })
-
-    if (!tenant) {
-      tenant = await db.tenant.create({
-        data: {
-          slug: tenantSlug,
-          name: 'Metrang Coffee',
-          legalName: 'Công ty TNHH Metrang Coffee',
-          currency: 'VND',
-          currencySymbol: '₫',
-          language: 'vi',
-          timezone: 'Asia/Ho_Chi_Minh',
-          dateFormat: 'DD/MM/YYYY',
-          country: 'VN',
-          eudrCompliant: true,
-          certifications: JSON.stringify(['Organic', 'Fair Trade', 'UTZ']),
-          plan: 'professional',
-          maxUsers: 25,
-          maxFarmers: 1000,
-          enabledModules: JSON.stringify(Object.fromEntries(moduleDefs.map(m => [m.slug, true]))),
-        },
-      })
+    // ═══ 5. TenantModules ═══
+    const moduleByEntity: Record<string, string[]> = {
+      producer: ['dashboard','analytics','farmers','farmlands','cultivations','nurseries','land-preparations','crop-monitorings','fertilizer-apps','pest-disease-mgmts','harvest-traceabilities','procurement','eudr-compliance','cert-assessments','deforestation','marketplace','trace-journey','billing','users'],
+      aggregator: ['dashboard','analytics','harvest-traceabilities','procurement','processing','coffee-inspections','qc-verifications','eudr-compliance','cert-assessments','marketplace','rfq','inspections','product-monitoring','smart-contracts','trading-desk','shipments','logistics','buyers','trace-journey','iot-sensors','blockchain','billing','users'],
+      exporter: ['dashboard','analytics','eudr-compliance','marketplace','rfq','inspections','product-monitoring','smart-contracts','trading-desk','shipments','logistics','export-docs','buyers','trace-journey','blockchain','billing','users'],
+      importer: ['dashboard','analytics','eudr-compliance','marketplace','rfq','smart-contracts','trading-desk','shipments','logistics','buyers','trace-journey','blockchain','billing','users'],
+      certification_body: ['dashboard','analytics','coffee-inspections','inspections','cert-assessments','eudr-compliance','deforestation','billing','users'],
+      laboratory: ['dashboard','analytics','coffee-inspections','qc-verifications','billing','users'],
+    }
+    for (const [slug, tenant] of Object.entries(tenants)) {
+      const mods = moduleByEntity[tenant.entityType] || []
+      for (const modSlug of mods) {
+        await db.tenantModule.create({ data: { tenantId: tenant.id, moduleSlug: modSlug, isEnabled: true } })
+      }
     }
 
-    // Check if data already seeded
-    const existingFarmers = await db.farmer.count({ where: { tenantId: tenant.id } })
-    if (existingFarmers > 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'Metrang Coffee tenant already seeded',
-        tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name },
-        adminEmail: `admin@${tenantSlug}.terrabrew.com`,
-        adminPassword: 'Admin@2024',
-      })
+    // ═══ 6. Users ═══
+    const userDefs = [
+      { email: 'admin@metrang-coffee.terrabrew.com', name: 'Metrang Admin', role: 'tenant_admin', tenantSlug: 'metrang-coffee' },
+      { email: 'field_officer@metrang-coffee.terrabrew.com', name: 'Cán bộ hiện trường', role: 'field_officer', tenantSlug: 'metrang-coffee' },
+      { email: 'viewer@metrang-coffee.terrabrew.com', name: 'Viewer', role: 'viewer', tenantSlug: 'metrang-coffee' },
+      { email: 'admin@cooxupe.terrabrew.com', name: 'Administrador Cooxupé', role: 'tenant_admin', tenantSlug: 'cooxupe' },
+      { email: 'operations@cooxupe.terrabrew.com', name: 'Gerente de Operações', role: 'operations_manager', tenantSlug: 'cooxupe' },
+      { email: 'trader@cooxupe.terrabrew.com', name: 'Trader Cooxupé', role: 'trader', tenantSlug: 'cooxupe' },
+      { email: 'admin@yirgacheffe-union.terrabrew.com', name: 'Union Admin', role: 'tenant_admin', tenantSlug: 'yirgacheffe-union' },
+      { email: 'field_officer@yirgacheffe-union.terrabrew.com', name: 'Field Officer', role: 'field_officer', tenantSlug: 'yirgacheffe-union' },
+      { email: 'admin@othaya-cooperative.terrabrew.com', name: 'Othaya Admin', role: 'tenant_admin', tenantSlug: 'othaya-cooperative' },
+      { email: 'field_officer@othaya-cooperative.terrabrew.com', name: 'Othaya Field Officer', role: 'field_officer', tenantSlug: 'othaya-cooperative' },
+      { email: 'admin@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Admin', role: 'tenant_admin', tenantSlug: 'euro-coffee-imports' },
+      { email: 'trader@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Trader', role: 'trader', tenantSlug: 'euro-coffee-imports' },
+      { email: 'operations@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Ops', role: 'operations_manager', tenantSlug: 'euro-coffee-imports' },
+      { email: 'admin@sgs-inspection.terrabrew.com', name: 'SGS Admin', role: 'tenant_admin', tenantSlug: 'sgs-inspection' },
+      { email: 'inspector@sgs-inspection.terrabrew.com', name: 'SGS Inspector', role: 'quality_controller', tenantSlug: 'sgs-inspection' },
+    ]
+    const users: Record<string, any> = {}
+    for (const ud of userDefs) {
+      const tid = tenants[ud.tenantSlug].id
+      users[ud.email] = await db.user.create({ data: { email: ud.email, passwordHash: PWD, name: ud.name, role: ud.role, tenantId: tid } })
     }
 
-    // 4. Create Tenant Admin
-    const adminEmail = `admin@${tenantSlug}.terrabrew.com`
-    const adminHash = await hashPassword('Admin@2024')
-    const adminUser = await db.user.create({
-      data: { email: adminEmail, passwordHash: adminHash, name: 'Quản trị viên Metrang', role: 'tenant_admin', tenantId: tenant.id },
-    })
+    // ═══ 7. Farmers (per tenant, country-specific) ═══
+    const vnTid = tenants['metrang-coffee'].id
+    const brTid = tenants['cooxupe'].id
+    const etTid = tenants['yirgacheffe-union'].id
+    const keTid = tenants['othaya-cooperative'].id
+    const nlTid = tenants['euro-coffee-imports'].id
+    const vnAdmin = users['admin@metrang-coffee.terrabrew.com']
+    const brAdmin = users['admin@cooxupe.terrabrew.com']
+    const etAdmin = users['admin@yirgacheffe-union.terrabrew.com']
+    const keAdmin = users['admin@othaya-cooperative.terrabrew.com']
+    const nlAdmin = users['admin@euro-coffee-imports.terrabrew.com']
 
-    const BATCH_PREFIX = 'TB'
-    const uid = () => Math.random().toString(36).substring(2, 8).toUpperCase()
+    // Vietnam farmers
+    const vnFarmers = [
+      { farmerCode: 'FRM-VN-001', fullName: 'Nguyễn Văn Thanh', firstName: 'Thanh', lastName: 'Nguyễn', contactNumber: '0912345678', gender: 'Nam', country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam', village: "Buôn K'Mang", latitude: 12.668, longitude: 108.038, nationalIdType: 'CCCD', nationalIdNo: '795284610382', isCertified: true, certificationType: 'Cá nhân', cooperative: 'Hợp tác xã Cà phê Ea Tam', yearsOfFarmingExperience: 12, creditScore: 82, bankName: 'Vietcombank', bankBranch: 'Cư Mgar', accountNumber: '0912345678901', accountHolderName: 'Nguyễn Văn Thanh', sortCodeSwift: 'BFTVVNVX', paymentPreference: 'bank_transfer' },
+      { farmerCode: 'FRM-VN-002', fullName: 'Trần Thị Hoa', firstName: 'Hoa', lastName: 'Trần', contactNumber: '0923456789', gender: 'Nữ', country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Drăng', village: 'Ea Pok', latitude: 12.692, longitude: 108.055, nationalIdType: 'CCCD', nationalIdNo: '794827364518', isCertified: true, certificationType: 'Tập thể', cooperative: 'Nông trại Hữu cơ Ea Drăng', yearsOfFarmingExperience: 8, creditScore: 76, bankName: 'Agribank', bankBranch: 'Ea Drăng', accountNumber: '1209234567890', accountHolderName: 'Trần Thị Hoa', sortCodeSwift: 'VBAZVNVX', paymentPreference: 'bank_transfer' },
+      { farmerCode: 'FRM-VN-003', fullName: 'Lê Văn Minh', firstName: 'Minh', lastName: 'Lê', contactNumber: '0934567890', gender: 'Nam', country: 'Việt Nam', province: 'Đắk Lắk', district: "M'Drak", commune: "M'Drak", village: 'Buôn Jol', latitude: 12.695, longitude: 108.050, nationalIdType: 'CCCD', nationalIdNo: '796135820497', isCertified: true, certificationType: 'Cá nhân', cooperative: "Hợp tác xã Cà phê M'Drak", yearsOfFarmingExperience: 18, creditScore: 90, bankName: 'BIDV', bankBranch: "M'Drak", accountNumber: '2340934567890', accountHolderName: 'Lê Văn Minh', sortCodeSwift: 'BIDVVNVX', paymentPreference: 'bank_transfer' },
+    ]
+    // Brazil farmers
+    const brFarmers = [
+      { farmerCode: 'FRM-BR-001', fullName: 'João Silva', firstName: 'João', lastName: 'Silva', contactNumber: '+5535991234567', gender: 'Masculino', country: 'Brasil', province: 'Minas Gerais', district: 'Guaxupé', commune: 'Guaxupé', village: 'Fazenda São José', latitude: -21.307, longitude: -46.718, nationalIdType: 'CPF', nationalIdNo: '123.456.789-00', isCertified: true, certificationType: 'Coletiva', cooperative: 'Cooxupé', yearsOfFarmingExperience: 22, creditScore: 88, bankName: 'Banco do Brasil', bankBranch: 'Guaxupé', accountNumber: '0012345678', accountHolderName: 'João Silva', sortCodeSwift: 'BRASBRRJ', paymentPreference: 'bank_transfer' },
+      { farmerCode: 'FRM-BR-002', fullName: 'Maria Oliveira', firstName: 'Maria', lastName: 'Oliveira', contactNumber: '+5535992345678', gender: 'Feminino', country: 'Brasil', province: 'Minas Gerais', district: 'São Sebastião do Paraíso', commune: 'Paraíso', village: 'Sítio Boa Vista', latitude: -20.916, longitude: -47.124, nationalIdType: 'CPF', nationalIdNo: '234.567.890-11', isCertified: true, certificationType: 'Individual', cooperative: 'Cooxupé', yearsOfFarmingExperience: 15, creditScore: 82, bankName: 'Itaú', bankBranch: 'São Sebastião do Paraíso', accountNumber: '0023456789', accountHolderName: 'Maria Oliveira', sortCodeSwift: 'ITAUUBR', paymentPreference: 'bank_transfer' },
+    ]
+    // Ethiopia farmers
+    const etFarmers = [
+      { farmerCode: 'FRM-ET-001', fullName: 'Abebe Tadesse', firstName: 'Abebe', lastName: 'Tadesse', contactNumber: '+251912345678', gender: 'Male', country: 'Ethiopia', province: 'Gedeo', district: 'Yirgacheffe', commune: 'Kochere', village: 'Biloya', latitude: 6.162, longitude: 38.202, nationalIdType: 'Kebele ID', nationalIdNo: 'ET-YG-4582', isCertified: true, certificationType: 'Cooperative', cooperative: 'Yirgacheffe Union', yearsOfFarmingExperience: 15, creditScore: 78, bankName: 'Commercial Bank of Ethiopia', bankBranch: 'Yirgacheffe', accountNumber: '0123456789', accountHolderName: 'Abebe Tadesse', sortCodeSwift: 'CBETETAA', paymentPreference: 'bank_transfer' },
+      { farmerCode: 'FRM-ET-002', fullName: 'Tigist Haile', firstName: 'Tigist', lastName: 'Haile', contactNumber: '+251923456789', gender: 'Female', country: 'Ethiopia', province: 'Gedeo', district: 'Yirgacheffe', commune: 'Wenago', village: 'Chelbesa', latitude: 6.185, longitude: 38.215, nationalIdType: 'Kebele ID', nationalIdNo: 'ET-YG-6734', isCertified: true, certificationType: 'Cooperative', cooperative: 'Yirgacheffe Union', yearsOfFarmingExperience: 10, creditScore: 72, mobileMoneyProvider: 'telebirr', mobileMoneyNumber: '+251923456789', paymentPreference: 'mobile_money' },
+    ]
+    // Kenya farmers
+    const keFarmers = [
+      { farmerCode: 'FRM-KE-001', fullName: 'Kamau Ndirangu', firstName: 'Kamau', lastName: 'Ndirangu', contactNumber: '+254723456789', gender: 'Male', country: 'Kenya', province: 'Central', district: 'Nyeri', commune: 'Othaya', village: 'Gathaithi', latitude: -0.420, longitude: 36.951, nationalIdType: 'National ID', nationalIdNo: 'KE-28473950', isCertified: true, certificationType: 'Cooperative', cooperative: 'Othaya Farmers Cooperative Society', yearsOfFarmingExperience: 10, creditScore: 85, bankName: 'Kenya Commercial Bank', bankBranch: 'Othaya', accountNumber: '0345678901', accountHolderName: 'Kamau Ndirangu', sortCodeSwift: 'KCABKENX', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'M-Pesa', mobileMoneyNumber: '+254723456789' },
+      { farmerCode: 'FRM-KE-002', fullName: 'Wanjiku Kamau', firstName: 'Wanjiku', lastName: 'Kamau', contactNumber: '+254734567890', gender: 'Female', country: 'Kenya', province: 'Central', district: 'Nyeri', commune: 'Othaya', village: 'Kamoko', latitude: -0.430, longitude: 36.940, nationalIdType: 'National ID', nationalIdNo: 'KE-39584061', isCertified: true, certificationType: 'Cooperative', cooperative: 'Othaya Farmers Cooperative Society', yearsOfFarmingExperience: 12, creditScore: 79, mobileMoneyProvider: 'M-Pesa', mobileMoneyNumber: '+254734567890', paymentPreference: 'mobile_money' },
+    ]
 
-    // 5. Create Farmers
-    const farmer1 = await db.farmer.create({ data: {
-      tenantId: tenant.id, createdBy: adminUser.id,
-      farmerCode: `FRM-${uid()}`, enrollmentPlace: 'Tại nhà nông dân',
-      isCertified: true, certificationType: 'Cá nhân', yearOfICS: '2022', cooperative: 'Hợp tác xã Cà phê Ea Tam',
-      fullName: 'Nguyễn Văn Thanh', firstName: 'Thanh', lastName: 'Nguyễn',
-      contactNumber: '0912345678', gender: 'Nam', dob: new Date('1985-03-15'),
-      education: 'Trung học', maritalStatus: 'Đã kết hôn', spouseName: 'Trần Thị Mai',
-      noOfFamilyMembers: 4, country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar',
-      commune: 'Ea Tam', village: "Buôn K'Mang", zipCode: '630000',
-      latitude: 12.668, longitude: 108.038,
-      housingOwnership: 'Sở hữu', houseType: 'Nhà gạch', smartphoneOwnership: true,
-      loanTaken: false, nationalIdType: 'CCCD', nationalIdNo: '795284610382',
-      lifeInsurance: true, healthInsurance: true, creditScore: 82,
-      yearsOfFarmingExperience: 12, isActive: true,
-    }})
-
-    const farmer2 = await db.farmer.create({ data: {
-      tenantId: tenant.id, createdBy: adminUser.id,
-      farmerCode: `FRM-${uid()}`, enrollmentPlace: 'Văn phòng HTX',
-      isCertified: true, certificationType: 'Tập thể', yearOfICS: '2023', cooperative: 'Nông trại Hữu cơ Ea Drăng',
-      fullName: 'Trần Thị Hoa', firstName: 'Hoa', lastName: 'Trần',
-      contactNumber: '0923456789', gender: 'Nữ', dob: new Date('1990-07-22'),
-      education: 'Tiểu học', maritalStatus: 'Đã kết hôn', spouseName: 'Lê Văn Đức',
-      noOfFamilyMembers: 5, country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar',
-      commune: 'Ea Drăng', village: 'Ea Pok', zipCode: '630000',
-      latitude: 12.692, longitude: 108.055,
-      housingOwnership: 'Thuê', houseType: 'Nhà gỗ', smartphoneOwnership: true,
-      loanTaken: true, loanTakenFrom: 'Vietcombank', loanAmount: 30000000, loanPurpose: 'Mở rộng nông trại',
-      loanInterest: 7.5, loanSecurity: true, nationalIdType: 'CCCD', nationalIdNo: '794827364518',
-      cropInsurance: true, healthInsurance: true, creditScore: 76,
-      yearsOfFarmingExperience: 8, gapTrainingAttended: true, isActive: true,
-    }})
-
-    // 6. Farm Lands
-    const farmLand1 = await db.farmLand.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, createdBy: adminUser.id,
-      farmName: "Nông trại Tây Nguyên Thanh", plotBlockId: 'TB-PLT-001',
-      totalLandHolding: 2.5, altitude: 850, agroEcologicalZone: 'Tây Nguyên',
-      latitude: 12.668, longitude: 108.038, landOwnership: 'Sở hữu',
-      soilType: 'Ferralitic', irrigationSource: 'Tưới tiêu', irrigationType: 'Nhỏ giọt',
-      noOfTrees: 2800, shadeTreeSpecies: 'Đậu cô nong, Keo dậu', shadeTreeDensity: 400,
-      fullTimeWorkers: 2, partTimeWorkers: 1, seasonalWorkers: 3, familyWorkers: 2,
-      childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true,
-      estYield: 3500, conversionCertType: 'Hữu cơ', currentConversionStatus: 'Đã chứng nhận',
-      fertilityStatus: 'Tốt', waterSource: 'Giếng khoan', powerSource: 'Điện lưới',
-      isActive: true,
-    }})
-
-    const farmLand2 = await db.farmLand.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, createdBy: adminUser.id,
-      farmName: "Vườn Hữu cơ Hoa", plotBlockId: 'TB-PLT-002',
-      totalLandHolding: 1.8, altitude: 920, agroEcologicalZone: 'Tây Nguyên',
-      latitude: 12.692, longitude: 108.055, landOwnership: 'Thuê',
-      soilType: 'Núi lửa', irrigationSource: 'Tự nhiên', irrigationType: 'Phun mưa',
-      noOfTrees: 2000, shadeTreeSpecies: 'Gliricidia, Inga', shadeTreeDensity: 350,
-      fullTimeWorkers: 1, partTimeWorkers: 2, seasonalWorkers: 4, familyWorkers: 3,
-      childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true,
-      estYield: 2800, conversionCertType: 'Hữu cơ + Thương mại Công bằng',
-      currentConversionStatus: 'Đã chứng nhận',
-      fertilityStatus: 'Rất tốt', waterSource: 'Sông', powerSource: 'Điện mặt trời + Lưới',
-      isActive: true,
-    }})
-
-    // 7. Cultivations
-    const cultivation1 = await db.cultivation.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id, createdBy: adminUser.id,
-      farmPlotName: 'Lô Robusta A1', plotBlockId: 'TB-PLT-001-A1',
-      cropCategory: 'Vụ chính', intercroppingSpecies: 'Tiêu, Bơ',
-      harvestSeason: 'Tháng 11/2024 - Tháng 1/2025',
-      cultivatedCrop: 'Cà phê Robusta', cropVariety: 'Chari', coffeeSpecies: 'Coffea canephora',
-      cultivationArea: 2.0, plantingSpacing: 3.0, treeDensity: 1400,
-      sowingDate: new Date('2020-06-15'), estYield: '3500 kg/ha',
-      intendedProcessingMethod: 'Rửa', irrigationMethod: 'Nhỏ giọt', shadeCover: 25,
-      latitude: 12.668, longitude: 108.038,
-      seedSource: 'Tự giữ (cây giống chứng nhận)', isSeedTreated: true,
-      treatmentDetails: 'Phủ Trichoderma', seedType: 'Chứng nhận 1',
-      seedQuantity: 3000, seedPrice: 5000, seedCost: 15000000,
-      isActive: true,
-    }})
-
-    const cultivation2 = await db.cultivation.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id, createdBy: adminUser.id,
-      farmPlotName: 'Lô Arabica B1', plotBlockId: 'TB-PLT-002-B1',
-      cropCategory: 'Vụ chính', intercroppingSpecies: 'Chuối, Macadamia',
-      harvestSeason: 'Tháng 10/2024 - Tháng 12/2024',
-      cultivatedCrop: 'Cà phê Arabica', cropVariety: 'Catimor', coffeeSpecies: 'Coffea arabica',
-      cultivationArea: 1.5, plantingSpacing: 2.5, treeDensity: 1600,
-      sowingDate: new Date('2019-09-10'), estYield: '2800 kg/ha',
-      intendedProcessingMethod: 'Tự nhiên', irrigationMethod: 'Phun mưa', shadeCover: 30,
-      latitude: 12.692, longitude: 108.055,
-      seedSource: 'Vườn ươm - Trung tâm giống Ea Drăng', isSeedTreated: true,
-      seedType: 'Cải tiến', seedQuantity: 2400, seedPrice: 8000, seedCost: 19200000,
-      isActive: true,
-    }})
-
-    // 8. Harvest Traceability
-    const batchId1 = `${BATCH_PREFIX}-BATCH-2024-001`
-    const batchId2 = `${BATCH_PREFIX}-BATCH-2024-002`
-
-    await db.harvestTraceability.create({ data: {
-      tenantId: tenant.id, cultivationId: cultivation1.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      plannedHarvestDate: new Date('2024-11-01'), plotBlockId: 'TB-PLT-001-A1',
-      coffeeVariety: 'Chari (Robusta)', estimatedYield: '3500 kg',
-      actualHarvestDate: new Date('2024-11-10'), harvestMethod: 'Chọn hái',
-      cherryRipeness: 92.0, harvestLabourCost: 3500000,
-      sampleWeight: 5.0, sampleArea: 0.01, sampleYield: 500, estimatedYieldPerHa: 3500,
-      processingMethod: 'Rửa', dryingMethod: 'Giường nâng (African)', dryingDurationDays: 14,
-      targetMoisture: 11.0, moistureContent: 10.8, defectiveBeans: 2.1, foreignMatter: 0.05,
-      cupScore: 82.5, batchId: batchId1, coffeeVarietyAtBatch: 'Chari (Robusta)',
-      processingStage: 'Đã thu hoạch', batchTimestamp: new Date('2024-11-10T07:30:00'),
-      location: "Nông trại Thanh, Ea Tam, Cư Mgar", actor: 'Nguyễn Văn Thanh',
-      batchNotes: 'Chất lượng hái chọn tốt, độ chín xuất sắc', isActive: true,
-    }})
-
-    await db.harvestTraceability.create({ data: {
-      tenantId: tenant.id, cultivationId: cultivation2.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
-      plannedHarvestDate: new Date('2024-10-15'), plotBlockId: 'TB-PLT-002-B1',
-      coffeeVariety: 'Catimor (Arabica)', estimatedYield: '2800 kg',
-      actualHarvestDate: new Date('2024-10-20'), harvestMethod: 'Chọn hái',
-      cherryRipeness: 95.0, harvestLabourCost: 2800000,
-      sampleWeight: 4.5, sampleArea: 0.01, sampleYield: 450, estimatedYieldPerHa: 2800,
-      processingMethod: 'Tự nhiên', dryingMethod: 'Giường nâng (nhà kính)', dryingDurationDays: 21,
-      targetMoisture: 11.5, moistureContent: 11.2, defectiveBeans: 1.5, foreignMatter: 0.02,
-      cupScore: 85.0, batchId: batchId2, coffeeVarietyAtBatch: 'Catimor (Arabica)',
-      processingStage: 'Đã thu hoạch', batchTimestamp: new Date('2024-10-20T06:45:00'),
-      location: "Vườn Hoa, Ea Drang, Cư Mgar", actor: 'Trần Thị Hoa',
-      batchNotes: 'Hạt Arabica chất lượng cao, chế biến tự nhiên', isActive: true,
-    }})
-
-    // 9. Blockchain Hash Chain blocks
-    for (const { batchId, stage, data } of [
-      { batchId: batchId1, stage: 'HARVEST', data: { farmer: farmer1.fullName, date: '2024-11-10', method: 'Selective Picking', weight: 3200 } },
-      { batchId: batchId2, stage: 'HARVEST', data: { farmer: farmer2.fullName, date: '2024-10-20', method: 'Selective Picking', weight: 2500 } },
-    ]) {
-      const dataStr = JSON.stringify(data)
-      const dataHash = computeDataHash(dataStr)
-      const previousHash = '0'.repeat(64)
-      const timestamp = new Date().toISOString()
-      const blockHash = computeBlockHash(dataHash, previousHash, timestamp)
-      await db.hashChainBlock.create({
-        data: { tenantId: tenant.id, batchId, blockIndex: 0, stage, data: dataStr, dataHash, previousHash, blockHash, timestamp: new Date(timestamp) },
-      })
+    const allFarmerDefs = [
+      ...vnFarmers.map(f => ({ ...f, tenantId: vnTid, createdBy: vnAdmin.id, isActive: true, enrollmentDate: new Date(), smartphoneOwnership: true, healthInsurance: true })),
+      ...brFarmers.map(f => ({ ...f, tenantId: brTid, createdBy: brAdmin.id, isActive: true, enrollmentDate: new Date(), smartphoneOwnership: true, healthInsurance: true })),
+      ...etFarmers.map(f => ({ ...f, tenantId: etTid, createdBy: etAdmin.id, isActive: true, enrollmentDate: new Date(), smartphoneOwnership: true, healthInsurance: true })),
+      ...keFarmers.map(f => ({ ...f, tenantId: keTid, createdBy: keAdmin.id, isActive: true, enrollmentDate: new Date(), smartphoneOwnership: true, healthInsurance: true })),
+    ]
+    const farmerRecords: Record<string, any> = {}
+    for (const fd of allFarmerDefs) {
+      farmerRecords[fd.farmerCode!] = await db.farmer.create({ data: fd as any })
     }
 
-    // 10. Collection Centres
-    const cc1 = await db.collectionCentre.create({ data: {
-      tenantId: tenant.id, centreId: 'CC-EATAM-001', centreName: 'Trạm thu mua Ea Tam',
-      centreGpsLat: 12.670, centreGpsLng: 108.042,
-      province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam',
-      managerName: 'Võ Văn Em', contactNumber: '0977112233',
-      storageCapacityKg: 15000, scaleType: 'Cân kỹ thuật số (500kg)', isActive: true,
-    }})
+    // ═══ 8. FarmLands ═══
+    const farmLandDefs = [
+      { key: 'VN-PLT-001', tenantId: vnTid, farmerCode: 'FRM-VN-001', farmName: "Nông trại Tây Nguyên Thanh", plotBlockId: 'TB-VN-PLT-001', totalLandHolding: 2.5, altitude: 850, soilType: 'Ferralitic', latitude: 12.668, longitude: 108.038, noOfTrees: 2800, estYield: 3500 },
+      { key: 'VN-PLT-002', tenantId: vnTid, farmerCode: 'FRM-VN-002', farmName: "Vườn Hữu cơ Hoa", plotBlockId: 'TB-VN-PLT-002', totalLandHolding: 1.8, altitude: 920, soilType: 'Núi lửa', latitude: 12.692, longitude: 108.055, noOfTrees: 2000, estYield: 2800 },
+      { key: 'BR-PLT-001', tenantId: brTid, farmerCode: 'FRM-BR-001', farmName: 'Fazenda São José', plotBlockId: 'TB-BR-PLT-001', totalLandHolding: 8.0, altitude: 950, soilType: 'Latossolo Vermelho', latitude: -21.307, longitude: -46.718, noOfTrees: 24000, estYield: 12000 },
+      { key: 'ET-PLT-001', tenantId: etTid, farmerCode: 'FRM-ET-001', farmName: 'Yirgacheffe Biloya Garden', plotBlockId: 'TB-ET-PLT-001', totalLandHolding: 1.5, altitude: 1850, soilType: 'Nitisol', latitude: 6.162, longitude: 38.202, noOfTrees: 1800, estYield: 2200 },
+      { key: 'KE-PLT-001', tenantId: keTid, farmerCode: 'FRM-KE-001', farmName: 'Gathaithi Estate', plotBlockId: 'TB-KE-PLT-001', totalLandHolding: 2.0, altitude: 1680, soilType: 'Volcanic Loam', latitude: -0.420, longitude: 36.951, noOfTrees: 2200, estYield: 2600 },
+    ]
+    const flRecords: Record<string, any> = {}
+    for (const fld of farmLandDefs) {
+      const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : keAdmin.id
+      flRecords[fld.key] = await db.farmLand.create({ data: { ...fld, farmerId: farmerRecords[fld.farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
+    }
 
-    // 11. Procurement Records
-    await db.procurementRecord.create({ data: {
-      tenantId: tenant.id, collectionCentreId: cc1.id,
-      cultivationId: cultivation1.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      procurementId: `PROC-${uid()}`, procurementDate: new Date('2024-11-11'),
-      batchId: batchId1, coffeeType: 'Cherry', coffeeVariety: 'Chari (Robusta)',
-      grossWeight: 3350, tareWeight: 150, netWeight: 3200,
-      moistureContentAtGate: 52.0, adjustedNetWeight: 3200,
-      cherryRipenessGrade: 'A (92% đỏ)', defects: 2.1,
-      purchasePricePerKg: 8500, totalPurchaseAmount: 27200000,
-      priceBasis: 'Cherry, trọng lượng ướt', certPremiumApplied: 500,
-      paymentMethod: 'Chuyển khoản', paymentStatus: 'Completed',
-      paymentDate: new Date('2024-11-13'), isActive: true,
-    }})
+    // ═══ 9. Entity Relationships ═══
+    const relDefs = [
+      { from: 'metrang-coffee', to: 'euro-coffee-imports', type: 'export' },
+      { from: 'cooxupe', to: 'euro-coffee-imports', type: 'export' },
+      { from: 'yirgacheffe-union', to: 'euro-coffee-imports', type: 'export' },
+      { from: 'othaya-cooperative', to: 'euro-coffee-imports', type: 'export' },
+      { from: 'sgs-inspection', to: 'metrang-coffee', type: 'certify' },
+      { from: 'sgs-inspection', to: 'cooxupe', type: 'inspect' },
+    ]
+    for (const rd of relDefs) {
+      await db.entityRelationship.create({ data: { fromEntityId: tenants[rd.from].id, toEntityId: tenants[rd.to].id, relationshipType: rd.type, status: 'active', startDate: new Date() } })
+    }
 
-    // 12. Processing Job Order
-    const jobOrder1 = await db.processingJobOrder.create({ data: {
-      tenantId: tenant.id, jobOrderId: `JOB-${BATCH_PREFIX}-001`,
-      processingDate: new Date('2024-11-13'), batchIdInput: batchId1,
-      coffeeTypeInput: 'Cherry', coffeeVarietyInput: 'Chari (Robusta)',
-      inputQuantityKg: 3185, processingMethod: 'Rửa',
-      targetOutputProduct: 'Hạt xanh (Robusta)', operatorName: 'Võ Minh Trí',
-      plantFacilityName: 'Nhà máy chế biến Terra Brew',
-      inputWeightKg: 3185, finalOutputWeightKg: 640, overallOutturn: 20.1,
-      totalProcessingCost: 35000000, costPerKg: 54687,
-      finalMoistureContent: 10.8, cupScore: 82.5,
-      cuppingNotes: 'Vị sạch, body trung bình, ghi chú sô cô la và hạt, độ chua thấp',
-      qcApprovedBy: 'Nguyễn Thị Lan (Quản lý QC)', qcApprovalDate: new Date('2024-12-07'),
-      isActive: true,
-    }})
+    // ═══ 10. Buyers for Euro Coffee ═══
+    await db.buyer.create({ data: { companyName: 'Kaffeerösterei Berlin GmbH', contactPerson: 'Hans Müller', email: 'hans@kaffeerosterei.de', country: 'Germany', city: 'Berlin', taxId: 'DE123456789', euRegistration: true, tenantId: nlTid, createdBy: nlAdmin.id, isActive: true } })
+    await db.buyer.create({ data: { companyName: 'Cafés Spécialisés Paris SAS', contactPerson: 'Pierre Dupont', email: 'pierre@cafes-specialises.fr', country: 'France', city: 'Paris', taxId: 'FR987654321', euRegistration: true, tenantId: nlTid, createdBy: nlAdmin.id, isActive: true } })
 
-    // 13-22: Create remaining records (nurseries, land prep, crop monitoring, fertilizer, pest, cert, inspection, smart contracts, marketplace, processing stages)
-    // These are less critical but add demo value
+    // ═══ 11. EUDR Compliance ═══
+    const eudrDefs = [
+      { tenantId: vnTid, complianceId: 'EUDR-VN-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-VN-001', flKey: 'VN-PLT-001' },
+      { tenantId: vnTid, complianceId: 'EUDR-VN-2024-002', status: 'in_review', riskLevel: 'medium', farmerCode: 'FRM-VN-002', flKey: 'VN-PLT-002' },
+      { tenantId: brTid, complianceId: 'EUDR-BR-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-BR-001', flKey: 'BR-PLT-001' },
+      { tenantId: etTid, complianceId: 'EUDR-ET-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-ET-001', flKey: 'ET-PLT-001' },
+      { tenantId: keTid, complianceId: 'EUDR-KE-2024-001', status: 'pending', riskLevel: 'medium', farmerCode: 'FRM-KE-001', flKey: 'KE-PLT-001' },
+    ]
+    for (const ed of eudrDefs) {
+      if (farmerRecords[ed.farmerCode] && flRecords[ed.flKey]) {
+        const adminId = ed.tenantId === vnTid ? vnAdmin.id : ed.tenantId === brTid ? brAdmin.id : ed.tenantId === etTid ? etAdmin.id : keAdmin.id
+        await db.eudrCompliance.create({ data: { tenantId: ed.tenantId, complianceId: ed.complianceId, status: ed.status, riskLevel: ed.riskLevel, farmerId: farmerRecords[ed.farmerCode].id, farmLandId: flRecords[ed.flKey].id, createdBy: adminId, geolocationLat: farmerRecords[ed.farmerCode].latitude, geolocationLng: farmerRecords[ed.farmerCode].longitude, validFrom: new Date('2024-01-01'), validUntil: new Date('2025-12-31'), isActive: true } as any })
+      }
+    }
 
-    await db.nursery.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, createdBy: adminUser.id,
-      nurseryName: 'Vườn ươm Ea Tam', nurseryCode: 'NS-EATAM-001',
-      location: 'Ea Tam, Cư Mgar, Đắk Lắk', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam',
-      latitude: 12.670, longitude: 108.040, nurseryType: 'Hạt giống', capacity: 50000, currentStock: 35000,
-      species: 'Coffea canephora', variety: 'Chari', seedSource: 'Vườn giống chứng nhận Ea Drăng',
-      plantingDate: new Date('2024-06-01'), expectedReadyDate: new Date('2024-12-01'),
-      germinationRate: 92.5, survivalRate: 88.0, healthStatus: 'Tốt - không dấu hiệu bệnh',
-      notes: 'Cây giống Robusta Chari thế hệ F1, đã xử lý Trichoderma', isActive: true,
-    }})
-    await db.nursery.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, createdBy: adminUser.id,
-      nurseryName: 'Vườn ươm Hữu cơ Ea Drăng', nurseryCode: 'NS-EADRANG-001',
-      location: 'Ea Drăng, Cư Mgar, Đắk Lắk', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Drăng',
-      latitude: 12.694, longitude: 108.057, nurseryType: 'Cây giống', capacity: 30000, currentStock: 18000,
-      species: 'Coffea arabica', variety: 'Catimor', seedSource: 'Viện Khoa học Kỹ thuật Nông lâm nghiệp Tây Nguyên',
-      plantingDate: new Date('2024-07-15'), expectedReadyDate: new Date('2025-01-15'),
-      germinationRate: 89.0, survivalRate: 85.5, healthStatus: 'Khá - một số cây bị rệp sáp nhẹ',
-      notes: 'Cây giống Arabica Catimor, tiêu chuẩn hữu cơ', isActive: true,
-    }})
-
-    await db.landPreparation.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id, createdBy: adminUser.id,
-      preparationDate: new Date('2024-04-10'), preparationType: 'Làm đất vụ mới',
-      method: 'Cày xới thủ công + hữu cơ', equipmentUsed: 'Cuốc, xẻng, máy cày mini',
-      laborCount: 4, laborCost: 2400000, materialsUsed: 'Phân chuồng 2 tấn, vôi bột 50kg, Trichoderma 5kg',
-      materialCost: 3500000, totalCost: 5900000, soilPhBefore: 5.2, soilPhAfter: 5.8, organicMatterPct: 3.8,
-      notes: 'Đã bón lót phân chuồng ủ hoai mục, điều chỉnh pH bằng vôi', isActive: true,
-    }})
-    await db.landPreparation.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id, createdBy: adminUser.id,
-      preparationDate: new Date('2024-03-25'), preparationType: 'Bổ sung dinh dưỡng',
-      method: 'Bón hữu cơ + che phủ', equipmentUsed: 'Xe cút kút, cuốc',
-      laborCount: 3, laborCost: 1800000, materialsUsed: 'Phân gà ủ 1.5 tấn, mùn cọ 500kg, nấm đối kháng 3kg',
-      materialCost: 2800000, totalCost: 4600000, soilPhBefore: 5.5, soilPhAfter: 6.0, organicMatterPct: 4.2,
-      notes: 'Bổ sung hữu cơ theo tiêu chuẩn UTZ, che phủ bằng mùn cọ giữ ẩm', isActive: true,
-    }})
-
-    await db.cropMonitoring.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      cultivationId: cultivation1.id, createdBy: adminUser.id,
-      monitoringDate: new Date('2024-09-15'), monitoringType: 'Kiểm tra định kỳ',
-      growthStage: 'Phát triển trái', plantHeight: 2.1, canopyDiameter: 1.5,
-      leafColor: 'Xanh đậm', healthScore: 88.0, pestPressure: 'Thấp', diseaseSymptoms: 'Không phát hiện',
-      weatherCondition: 'Nắng xen mưa', temperature: 26.5, rainfall: 180, humidity: 78.0, soilMoisture: 42.0,
-      alertTriggered: false, notes: 'Cây phát triển tốt, trái đang chuyển màu, dự kiến thu hoạch đầu tháng 11', isActive: true,
-    }})
-    await db.cropMonitoring.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
-      cultivationId: cultivation2.id, createdBy: adminUser.id,
-      monitoringDate: new Date('2024-09-20'), monitoringType: 'Kiểm tra sau mưa',
-      growthStage: 'Chín trái', plantHeight: 1.8, canopyDiameter: 1.3,
-      leafColor: 'Xanh vàng nhẹ', healthScore: 72.0, pestPressure: 'Trung bình', diseaseSymptoms: 'Gỉ sắt nhẹ trên lá già',
-      weatherCondition: 'Mưa liên tục', temperature: 23.0, rainfall: 350, humidity: 88.0, soilMoisture: 65.0,
-      alertTriggered: true, alertType: 'Bệnh nấm', alertSeverity: 'Trung bình',
-      remedialAction: 'Phun thuốc BIO-FOX (nấm đối kháng), cắt tỉa lá bệnh',
-      notes: 'Gỉ sắt phát triển do ẩm độ cao sau mưa dài, cần theo dõi thêm', isActive: true,
-    }})
-
-    await db.fertilizerApplication.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      cultivationId: cultivation1.id, createdBy: adminUser.id,
-      applicationDate: new Date('2024-08-05'), fertilizerType: 'Hữu cơ', fertilizerName: 'Phân chuồng ủ hoai',
-      nutrientContent: 'NPK 2-1-2 + vi sinh vật', applicationRate: 2.0, unit: 'tấn/ha', totalQuantity: 4.0,
-      applicationMethod: 'Bón gốc - rải vòng tán cây', costPerUnit: 800000, totalCost: 3200000,
-      weatherAtApplication: 'Nắng nhẹ, đất ẩm vừa', appliedBy: 'Nguyễn Văn Thanh',
-      isOrganic: true, certificationNumber: 'ORG-DL-2024-0456',
-      notes: 'Bón thúc trái giai đoạn phát triển, kết hợp tưới nhỏ giọt', isActive: true,
-    }})
-    await db.fertilizerApplication.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
-      cultivationId: cultivation2.id, createdBy: adminUser.id,
-      applicationDate: new Date('2024-07-20'), fertilizerType: 'Hữu cơ sinh học', fertilizerName: 'Nấm Trichoderma + Phân gà ủ',
-      nutrientContent: 'NPK 3-2-3 + nấm đối kháng', applicationRate: 1.5, unit: 'tấn/ha', totalQuantity: 2.25,
-      applicationMethod: 'Bón gốc + xịt lá', costPerUnit: 1200000, totalCost: 2700000,
-      weatherAtApplication: 'Trời mát, sau mưa', appliedBy: 'Trần Thị Hoa',
-      isOrganic: true, certificationNumber: 'ORG-DL-2024-0457',
-      notes: 'Phun Trichoderma phòng bệnh gỉ sắt, bón gốc phân gà ủ kết hợp mùn cọ', isActive: true,
-    }})
-
-    await db.pestDiseaseManagement.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
-      cultivationId: cultivation2.id, createdBy: adminUser.id,
-      detectionDate: new Date('2024-09-22'), pestOrDisease: 'Gỉ sắt (Coffee Leaf Rust)',
-      type: 'Bệnh nấm', severity: 'Trung bình', affectedArea: 0.6, affectedTrees: 180,
-      symptoms: 'Đốm vàng cam dưới lá, lá rụng sớm, trái nhỏ',
-      treatmentMethod: 'Sinh học + cơ học', treatmentProduct: 'BIO-FOX (Trichoderma harzianum)',
-      dosage: '5g/lít nước, phun ướt đều 2 mặt lá', applicationDate: new Date('2024-09-24'),
-      followUpDate: new Date('2024-10-08'), outcome: 'Đang theo dõi - giảm 40% triệu chứng sau 2 tuần',
-      cost: 850000, preventionMeasures: 'Tỉa cành thông thoáng, bón Kali tăng sức kháng, che phủ giữ ẩm ổn định',
-      notes: 'Phun lần 1 ngày 24/9, lịch phun lại sau 14 ngày. Tránh phun khi mưa', isActive: true,
-    }})
-    await db.pestDiseaseManagement.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      cultivationId: cultivation1.id, createdBy: adminUser.id,
-      detectionDate: new Date('2024-08-15'), pestOrDisease: 'Rệp sáp bột hồng (Pink Mealybug)',
-      type: 'Sâu bệnh', severity: 'Thấp', affectedArea: 0.2, affectedTrees: 35,
-      symptoms: 'Túi sáp trắng ở kẽ cành, chồi non cong queo',
-      treatmentMethod: 'Sinh học', treatmentProduct: 'Rệp đối kháng Cryptolaemus montrouzieri + rửa bằng áp lực nước',
-      dosage: '50 bọ rệp/100 cây, xịt nước áp lực 1 lần/tuần', applicationDate: new Date('2024-08-18'),
-      followUpDate: new Date('2024-09-01'), outcome: 'Kiểm soát tốt - giảm 85% quần thể rệp sau 2 tuần',
-      cost: 450000, preventionMeasures: 'Bảo tồn kiến vàng tự nhiên, cắt tỉa cành rụng, kiểm tra định kỳ',
-      notes: 'Bọ rệp đối kháng phát huy hiệu quả tốt trong điều kiện Tây Nguyên', isActive: true,
-    }})
-
-    await db.certAssessment.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id, createdBy: adminUser.id,
-      assessmentId: 'CERT-2024-ORG-001', assessmentDate: new Date('2024-06-15'),
-      certificationStandard: 'Organic (Hữu cơ)', certifyingBody: 'Control Union Certifications Việt Nam',
-      assessmentType: 'Đánh giá tái chứng nhận', scope: 'Sản xuất cà phê hữu cơ - 2.5 ha tại Ea Tam',
-      status: 'Đạt', score: 92.0, maxScore: 100.0,
-      findings: 'Tuân thủ tốt quy chuẩn hữu cơ. Tài liệu ghi chép đầy đủ. Khoảng cách an toàn với vùng lân cận đạt yêu cầu.',
-      nonConformities: 'Nhà kho phụ tùng cần tách riêng khu vực hóa sinh',
-      correctiveActions: 'Xây vách ngăn nhà kho trước 30/07/2024',
-      validFrom: new Date('2024-07-01'), validUntil: new Date('2025-06-30'),
-      certificateNumber: 'ORG-VN-2024-CU0583', notes: 'Chứng nhận hữu cơ năm thứ 3 liên tục', isActive: true,
-    }})
-    await db.certAssessment.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id, createdBy: adminUser.id,
-      assessmentId: 'CERT-2024-FT-002', assessmentDate: new Date('2024-05-20'),
-      certificationStandard: 'Fair Trade (Thương mại Công bằng)', certifyingBody: 'FLO-CERT GmbH',
-      assessmentType: 'Đánh giá chứng nhận mới', scope: 'Thương mại công bằng - 1.8 ha tại Ea Drăng',
-      status: 'Đạt', score: 87.5, maxScore: 100.0,
-      findings: 'Đáp ứng tiêu chuẩn thương mại công bằng. Quy trình giao dịch minh bạch.',
-      nonConformities: 'Cần bổ sung bảng tuyên truyền quyền lao động bằng tiếng dân tộc',
-      correctiveActions: 'In ấn và treo bảng tuyên truyền trước 15/06/2024',
-      validFrom: new Date('2024-06-01'), validUntil: new Date('2025-05-31'),
-      certificateNumber: 'FT-VN-2024-ED0217', notes: 'Chứng nhận Fair Trade lần đầu', isActive: true,
-    }})
-
-    await db.coffeeInspection.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, farmLandId: farmLand1.id,
-      batchId: batchId1, createdBy: adminUser.id,
-      inspectionId: 'INSP-2024-RB-001', inspectionDate: new Date('2024-11-15'),
-      inspectorName: 'Nguyễn Thị Lan', inspectorCertNo: 'QC-VN-2024-0142',
-      inspectionType: 'Kiểm định chất lượng đầu vào', inspectionStandard: 'TCVN 4193:2014',
-      sampleSize: 0.3, moistureContent: 10.8, defectCount: 8.0, foreignMatter: 0.05,
-      screenSize: 'Screen 16+', color: 'Xanh lam tinh khiết', aroma: 'Thơm nhẹ, sô cô la',
-      taste: 'Đắng nhẹ, body trung bình', body: 'Trung bình', acidity: 'Thấp', aftertaste: 'Hạt dẻ, caramel',
-      cupScore: 82.5, overallGrade: 'Grade 1 - Xuất khẩu', passFail: 'Pass', isActive: true,
-    }})
-    await db.coffeeInspection.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, farmLandId: farmLand2.id,
-      batchId: batchId2, createdBy: adminUser.id,
-      inspectionId: 'INSP-2024-AR-001', inspectionDate: new Date('2024-10-25'),
-      inspectorName: 'Nguyễn Thị Lan', inspectorCertNo: 'QC-VN-2024-0142',
-      inspectionType: 'Kiểm định chất lượng đặc sản', inspectionStandard: 'SCA Protocol',
-      sampleSize: 0.35, moistureContent: 11.2, defectCount: 3.0, foreignMatter: 0.02,
-      screenSize: 'Screen 15+', color: 'Xanh lục đều', aroma: 'Hoa nhài, trái cây nhiệt đới',
-      taste: 'Chua thanh, ngọt hậu', body: 'Nhẹ đến trung bình', acidity: 'Cao, tinh tế', aftertaste: 'Trái cây, mật ong',
-      cupScore: 85.0, overallGrade: 'Specialty Grade', passFail: 'Pass', isActive: true,
-    }})
-
-    await db.smartContract.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, buyerId: 'BUYER-INT-001', createdBy: adminUser.id,
-      contractId: 'SC-2024-VN-RB-001', contractType: 'Hợp đồng mua bán',
-      title: 'Hợp đồng cung ứng cà phê Robusta xanh 2024-2025',
-      description: 'Hợp đồng mua bán cà phê Robusta Chari xanh Grade 1 cho thị trường Nhật Bản',
-      partyA: 'Hợp tác xã Cà phê Ea Tam', partyB: 'Tokyo Coffee Trading Co., Ltd.',
-      quantityKg: 5000, pricePerKg: 55000, totalValue: 275000000, currency: 'VND',
-      deliveryDate: new Date('2025-01-15'), deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
-      qualityGrade: 'Grade 1 - Xuất khẩu', terms: 'Thanh toán 30% trước, 70% sau khi nhận hàng. Giao FOB Cát Lái.',
-      status: 'Đang thực hiện', signedByA: true, signedByB: true,
-      signedDateA: new Date('2024-10-01'), signedDateB: new Date('2024-10-05'),
-      effectiveDate: new Date('2024-10-10'), expiryDate: new Date('2025-03-31'),
-      notes: 'Hợp đồng có điều khoản bảo vệ giá - giá sàn 48,000 VND/kg.', isActive: true,
-    }})
-    await db.smartContract.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, buyerId: 'BUYER-INT-002', createdBy: adminUser.id,
-      contractId: 'SC-2024-VN-AR-002', contractType: 'Hợp đồng đặc sản',
-      title: 'Hợp đồng cung ứng cà phê Arabica đặc sản 2024',
-      description: 'Hợp đồng mua bán cà phê Arabica Catimor đặc sản cho thị trường Hàn Quốc',
-      partyA: 'Nông trại Hữu cơ Ea Drăng', partyB: 'Seoul Specialty Roasters Inc.',
-      quantityKg: 2000, pricePerKg: 120000, totalValue: 240000000, currency: 'VND',
-      deliveryDate: new Date('2024-12-20'), deliveryLocation: 'Cảng Cát Lái, TP. Hồ Chí Minh',
-      qualityGrade: 'Specialty Grade, cup score >= 84', terms: 'Thanh toán 100% bằng LC không hủy ngang.',
-      status: 'Chờ ký bên A', signedByA: false, signedByB: true, signedDateB: new Date('2024-11-01'),
-      effectiveDate: new Date('2024-11-15'), expiryDate: new Date('2025-02-28'),
-      notes: 'Hợp đồng đặc sản giá cao, yêu cầu cup score tối thiểu 84.', isActive: true,
-    }})
-
-    await db.marketplaceListing.create({ data: {
-      tenantId: tenant.id, farmerId: farmer1.id, createdBy: adminUser.id,
-      listingId: 'MKT-2024-RB-001', title: 'Cà phê Robusta Chari xanh Grade 1 - Hữu cơ',
-      description: 'Cà phê Robusta Chari xanh Grade 1 chứng nhận hữu cơ, vụ 2024.',
-      coffeeType: 'Robusta', coffeeVariety: 'Chari', grade: 'Grade 1',
-      quantityKg: 3000, pricePerKg: 55000, totalValue: 165000000, currency: 'VND',
-      origin: 'Ea Tam, Cư Mgar, Đắk Lắk', processingMethod: 'Rửa (Washed)', cupScore: 82.5,
-      certifications: 'Organic, UTZ', harvestYear: '2024', availability: 'Có sẵn',
-      listingStatus: 'Đang bán', listingDate: new Date('2024-11-20'), expiryDate: new Date('2025-05-31'), isActive: true,
-    }})
-    await db.marketplaceListing.create({ data: {
-      tenantId: tenant.id, farmerId: farmer2.id, createdBy: adminUser.id,
-      listingId: 'MKT-2024-AR-001', title: 'Cà phê Arabica Catimor Natural Specialty',
-      description: 'Cà phê Arabica Catimor chế biến tự nhiên đặc sản, cup score 85.',
-      coffeeType: 'Arabica', coffeeVariety: 'Catimor', grade: 'Specialty',
-      quantityKg: 1500, pricePerKg: 120000, totalValue: 180000000, currency: 'VND',
-      origin: 'Ea Drăng, Cư Mgar, Đắk Lắk', processingMethod: 'Tự nhiên (Natural)', cupScore: 85.0,
-      certifications: 'Organic, Fair Trade', harvestYear: '2024', availability: 'Đặt trước',
-      listingStatus: 'Đang bán', listingDate: new Date('2024-10-28'), expiryDate: new Date('2025-04-30'), isActive: true,
-    }})
-
-    // Processing Stage Records
-    await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Phân loại & Làm sạch',
-      stageDate: new Date('2024-11-13'), inputWeight: 3200, outputWeight: 3185,
-      durationMinutes: 120, temperature: 25.0, humidity: 72.0,
-      machineUsed: 'Máy phân loại quang học + sàng rung', operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true, notes: 'Loại bỏ quả đen, quả xanh, cành lá.', isActive: true,
-    }})
-    await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Bóc vỏ & Lên men',
-      stageDate: new Date('2024-11-14'), inputWeight: 3185, outputWeight: 850,
-      durationMinutes: 1440, temperature: 28.0, humidity: 80.0,
-      machineUsed: 'Máy bóc vỏ cà phê Penagos 2500 + bể lên men', operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true, notes: 'Lên men ướt 24 giờ, rửa sạch nhớt.', isActive: true,
-    }})
-    await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Sấy',
-      stageDate: new Date('2024-11-15'), inputWeight: 850, outputWeight: 660,
-      durationMinutes: 20160, temperature: 35.0, humidity: 45.0,
-      machineUsed: 'Giường nâng African bed + nhà kính', operatorName: 'Lê Văn Hùng',
-      qualityCheckPassed: true, notes: 'Sấy tự nhiên 14 ngày, đạt độ ẩm mục tiêu 10.8%.', isActive: true,
-    }})
-    await db.processingStageRecord.create({ data: {
-      tenantId: tenant.id, jobOrderId: jobOrder1.id, stageType: 'Bóc lụa & Phân loại cuối',
-      stageDate: new Date('2024-11-29'), inputWeight: 660, outputWeight: 640,
-      durationMinutes: 240, temperature: 22.0, humidity: 55.0,
-      machineUsed: 'Máy bóc lụa CCI + máy phân loại kích thước', operatorName: 'Võ Minh Trí',
-      qualityCheckPassed: true, notes: 'Green bean Grade 1, Screen 16+.', isActive: true,
-    }})
-
-    // Audit log
-    await db.auditLog.create({ data: {
-      tenantId: tenant.id, userId: adminUser.id, action: 'CREATE',
-      entity: 'Tenant', entityId: tenant.id,
-      details: JSON.stringify({ message: 'Seeded Metrang Coffee tenant with full demo data' }),
-    }})
-
+    // ═══ Return credentials ═══
     return NextResponse.json({
       success: true,
-      message: 'Metrang Coffee tenant seeded successfully with full Vietnamese demo data',
-      tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name, currency: 'VND', language: 'vi' },
-      adminEmail,
-      adminPassword: 'Admin@2024',
-      stats: {
-        farmers: 2, farmLands: 2, cultivations: 2, harvestRecords: 2,
-        procurementRecords: 1, processingOrders: 1,
-        nurseries: 2, landPreparations: 2, cropMonitorings: 2,
-        fertilizerApplications: 2, pestDiseaseManagements: 2,
-        certAssessments: 2, coffeeInspections: 2, smartContracts: 2,
-        marketplaceListings: 2, processingStageRecords: 4,
-      },
+      message: 'Multi-tenant seed complete! 6 tenants, 15 users, 9 farmers across 4 countries.',
+      tenants: tenantDefs.map(t => ({ slug: t.slug, name: t.name, entityType: t.entityType, country: t.country, currency: t.currency, language: t.language })),
+      credentials: userDefs.map(u => ({
+        email: u.email,
+        role: u.role,
+        entityType: tenants[u.tenantSlug].entityType,
+        tenant: tenants[u.tenantSlug].name,
+      })),
+      password: 'Admin@2024',
     })
   } catch (e: any) {
-    console.error('[Seed] Error:', e)
+    console.error('[Seed v2] Error:', e)
     return NextResponse.json({ success: false, error: e.message }, { status: 500 })
   }
 }

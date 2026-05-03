@@ -209,11 +209,15 @@ export default function LoginPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')}
+                onClick={() => {
+                  const locales: string[] = ['vi', 'en', 'pt', 'am']
+                  const idx = locales.indexOf(lang)
+                  setLang(locales[(idx + 1) % locales.length] as any)
+                }}
                 className="gap-1.5 text-coffee-500 hover:text-coffee-800 hover:bg-coffee-50 text-xs"
               >
                 <Globe className="w-3.5 h-3.5" />
-                {lang === 'vi' ? 'English' : 'Tiếng Việt'}
+                {lang === 'vi' ? 'English' : lang === 'en' ? 'Português' : lang === 'pt' ? 'አማርኛ' : 'Tiếng Việt'}
               </Button>
             </div>
           </CardHeader>
@@ -271,10 +275,33 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Demo info */}
+                {/* Demo accounts */}
                 <div className="bg-coffee-50 border border-coffee-200/50 rounded-xl p-3 text-xs text-coffee-600">
-                  <p className="font-medium mb-1">{t2('Tài khoản demo đã được điền sẵn', 'Demo credentials pre-filled')}</p>
-                  <p className="text-coffee-500">admin@metrang-coffee.terrabrew.com / Admin@2024</p>
+                  <p className="font-medium mb-2">{t2('Tài khoản demo', 'Demo Accounts')} <span className="text-coffee-400">(Admin@2024)</span></p>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {[
+                      { email: 'admin@metrang-coffee.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Vietnam' },
+                      { email: 'admin@cooxupe.terrabrew.com', type: 'Aggregator', icon: '📦', country: 'Brazil' },
+                      { email: 'admin@yirgacheffe-union.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Ethiopia' },
+                      { email: 'admin@othaya-cooperative.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Kenya' },
+                      { email: 'admin@euro-coffee-imports.terrabrew.com', type: 'Exporter', icon: '🚢', country: 'Netherlands' },
+                      { email: 'trader@euro-coffee-imports.terrabrew.com', type: 'Trader', icon: '📊', country: 'Netherlands' },
+                      { email: 'admin@sgs-inspection.terrabrew.com', type: 'Cert Body', icon: '✅', country: 'Switzerland' },
+                    ].map((acct) => (
+                      <button
+                        key={acct.email}
+                        type="button"
+                        onClick={() => { setEmail(acct.email); setPassword('Admin@2024') }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-coffee-100 transition-colors text-left group"
+                      >
+                        <span className="text-sm">{acct.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-coffee-700 truncate group-hover:text-coffee-900 font-mono text-[10px]">{acct.email}</p>
+                          <p className="text-coffee-400 text-[9px]">{acct.type} · {acct.country}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Submit Button */}
