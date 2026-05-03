@@ -10,10 +10,10 @@
  *   <p>{t('auth.signIn')}</p>  → "Đăng nhập" or "Sign In"
  */
 
-export type Locale = 'vi' | 'en' | 'pt' | 'am'
+export type Locale = 'vi' | 'en' | 'pt' | 'am' | 'sw'
 
 export const DEFAULT_LOCALE: Locale = 'vi'
-export const SUPPORTED_LOCALES: Locale[] = ['vi', 'en', 'pt', 'am']
+export const SUPPORTED_LOCALES: Locale[] = ['vi', 'en', 'pt', 'am', 'sw']
 
 /**
  * Get a nested value from an object using dot notation.

@@ -47,24 +47,24 @@ export const NAV_GROUPS: NavGroup[] = [
 ]
 
 // Entity type labels for UI
-export const ENTITY_TYPE_LABELS: Record<EntityType, { en: string; vi: string; icon: string }> = {
-  producer: { en: 'Coffee Producer', vi: 'Nhà sản xuất cà phê', icon: '🏭' },
-  aggregator: { en: 'Aggregator / Processor', vi: 'Tập hợp / Chế biến', icon: '📦' },
-  exporter: { en: 'Exporter', vi: 'Nhà xuất khẩu', icon: '🚢' },
-  importer: { en: 'Importer', vi: 'Nhà nhập khẩu', icon: '🏛️' },
-  certification_body: { en: 'Certification Body', vi: 'Tổ chức chứng nhận', icon: '✅' },
-  laboratory: { en: 'Laboratory', vi: 'Phòng thí nghiệm', icon: '🔬' },
+export const ENTITY_TYPE_LABELS: Record<EntityType, { en: string; vi: string; pt: string; am: string; sw: string; icon: string }> = {
+  producer: { en: 'Coffee Producer', vi: 'Nhà sản xuất cà phê', pt: 'Produtor de Café', am: 'የቡና አምራች', sw: 'Mzalishaji wa Kahawa', icon: '🏭' },
+  aggregator: { en: 'Aggregator / Processor', vi: 'Tập hợp / Chế biến', pt: 'Agregador / Processador', am: 'ሰብሳቢ / አገግሞ አዘጋጅ', sw: 'Mkusanyaji / Mchakataji', icon: '📦' },
+  exporter: { en: 'Exporter', vi: 'Nhà xuất khẩu', pt: 'Exportador', am: 'ላኪ', sw: 'Mtoaji wa Nje', icon: '🚢' },
+  importer: { en: 'Importer', vi: 'Nhà nhập khẩu', pt: 'Importador', am: 'ተቀባይ', sw: 'Mpokeaji wa Nje', icon: '🏛️' },
+  certification_body: { en: 'Certification Body', vi: 'Tổ chức chứng nhận', pt: 'Organismo de Certificação', am: 'የሰርተፍኬት አስተዳዳሪ', sw: 'Chombo cha Cheti', icon: '✅' },
+  laboratory: { en: 'Laboratory', vi: 'Phòng thí nghiệm', pt: 'Laboratório', am: 'የሙያ ፈተና ቤት', sw: 'Maabara', icon: '🔬' },
 }
 
 // Role labels for UI
-export const ROLE_LABELS: Record<TenantRole, { en: string; vi: string }> = {
-  tenant_admin: { en: 'Administrator', vi: 'Quản trị viên' },
-  operations_manager: { en: 'Operations Manager', vi: 'Quản lý vận hành' },
-  field_officer: { en: 'Field Officer', vi: 'Cán bộ hiện trường' },
-  quality_controller: { en: 'Quality Controller', vi: 'Kiểm soát chất lượng' },
-  trader: { en: 'Trader', vi: 'Thương nhân' },
-  finance_manager: { en: 'Finance Manager', vi: 'Quản lý tài chính' },
-  viewer: { en: 'Viewer', vi: 'Người xem' },
+export const ROLE_LABELS: Record<TenantRole, { en: string; vi: string; pt: string; am: string; sw: string }> = {
+  tenant_admin: { en: 'Administrator', vi: 'Quản trị viên', pt: 'Administrador', am: 'አስተዳዳሪ', sw: 'Msimamizi' },
+  operations_manager: { en: 'Operations Manager', vi: 'Quản lý vận hành', pt: 'Gerente de Operações', am: 'የኦፕሬሽን ሥራ አስኪያጅ', sw: 'Meneja wa Uendeshaji' },
+  field_officer: { en: 'Field Officer', vi: 'Cán bộ hiện trường', pt: 'Agente de Campo', am: 'የመስክ ባለሙያ', sw: 'Afisa wa Uga' },
+  quality_controller: { en: 'Quality Controller', vi: 'Kiểm soát chất lượng', pt: 'Controlador de Qualidade', am: 'የጥራት መቆጣጠሪያ', sw: 'Mkidhibiti Ubora' },
+  trader: { en: 'Trader', vi: 'Thương nhân', pt: 'Trader', am: 'ነጋዴ', sw: 'Mfanyabiashara' },
+  finance_manager: { en: 'Finance Manager', vi: 'Quản lý tài chính', pt: 'Gerente Financeiro', am: 'የገንዘብ ሥራ አስኪያጅ', sw: 'Meneja wa Fedha' },
+  viewer: { en: 'Viewer', vi: 'Người xem', pt: 'Visualizador', am: 'መመልከቻ', sw: 'Mtazamaji' },
 }
 
 export const MODULES: ModuleDef[] = [
@@ -322,10 +322,10 @@ export function getGroupedNavigation(entityType: EntityType, role: TenantRole) {
 /**
  * Get the display label for an entity type in the given language.
  */
-export function getEntityTypeLabel(entityType: string, lang: 'vi' | 'en' = 'en'): string {
+export function getEntityTypeLabel(entityType: string, lang: 'vi' | 'en' | 'pt' | 'am' | 'sw' = 'en'): string {
   const labels = ENTITY_TYPE_LABELS[entityType as EntityType]
   if (!labels) return entityType
-  return lang === 'vi' ? labels.vi : labels.en
+  return (labels as any)[lang] || labels.en
 }
 
 /**

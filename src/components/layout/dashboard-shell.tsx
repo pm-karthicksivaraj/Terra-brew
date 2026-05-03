@@ -182,7 +182,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const entityType = session?.user?.entityType || 'producer'
 
   const onLangToggle = () => {
-    const locales: string[] = ['vi', 'en', 'pt', 'am']
+    const locales: string[] = ['vi', 'en', 'pt', 'am', 'sw']
     const idx = locales.indexOf(lang)
     setLang(locales[(idx + 1) % locales.length] as any)
   }
@@ -298,7 +298,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 className="gap-1 text-muted-foreground hover:text-foreground text-xs rounded-xl"
               >
                 <Globe className="w-3.5 h-3.5" />
-                {lang === 'vi' ? 'EN' : 'VI'}
+                {lang.toUpperCase()}
               </Button>
 
               {/* User dropdown */}

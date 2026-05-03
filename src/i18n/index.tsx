@@ -11,12 +11,14 @@ import viMessages from './vi.json'
 import enMessages from './en.json'
 import ptMessages from './pt.json'
 import amMessages from './am.json'
+import swMessages from './sw.json'
 
 const MESSAGES: Record<Locale, Record<string, unknown>> = {
   vi: viMessages,
   en: enMessages,
   pt: ptMessages,
   am: amMessages,
+  sw: swMessages,
 }
 
 // ─── Context ─────────────────────────────────────────────────────
@@ -45,7 +47,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('terra-brew-lang') as Locale | null
-      if (saved && (saved === 'vi' || saved === 'en' || saved === 'pt' || saved === 'am')) {
+      if (saved && (saved === 'vi' || saved === 'en' || saved === 'pt' || saved === 'am' || saved === 'sw')) {
         setLangState(saved)
       }
     } catch {

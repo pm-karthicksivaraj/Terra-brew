@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n'
 import {
   getGroupedNavigation,
   ENTITY_TYPE_LABELS,
@@ -104,7 +105,7 @@ function NavItemLink({
   lang: string
   onClick?: () => void
 }) {
-  const label = lang === 'vi' ? item.labelVi : item.label
+  const label = item.label  // Already resolved to current locale in SidebarContent
   const Icon = item.icon
 
   const linkContent = (
@@ -160,6 +161,7 @@ function SidebarContent({
   onNavClick?: () => void
 }) {
   const pathname = usePathname()
+  const { t } = useI18n()
 
   // Build dynamic navigation based on entity type and role
   const navigation = useMemo<NavGroupRender[]>(() => {
@@ -167,20 +169,47 @@ function SidebarContent({
     const role = (userRole || 'viewer') as TenantRole
     const grouped = getGroupedNavigation(et, role)
 
+    // Map module slugs to i18n nav keys
+    const slugToNavKey: Record<string, string> = {
+      'dashboard': 'nav.dashboard', 'farmers': 'nav.farmers', 'farmlands': 'nav.farmlands',
+      'cultivations': 'nav.cultivations', 'nurseries': 'nav.nurseries',
+      'land-preparations': 'nav.landPreparations', 'crop-monitorings': 'nav.cropMonitorings',
+      'fertilizer-apps': 'nav.fertilizerApps', 'pest-disease-mgmts': 'nav.pestDiseaseMgmts',
+      'harvest-traceabilities': 'nav.harvestTraceabilities', 'procurement': 'nav.procurement',
+      'processing': 'nav.processing', 'coffee-inspections': 'nav.coffeeInspections',
+      'qc-verifications': 'nav.coffeeInspections', 'eudr-compliance': 'nav.traceability',
+      'cert-assessments': 'nav.certAssessments', 'deforestation': 'nav.cropMonitorings',
+      'marketplace': 'nav.marketplace', 'rfq': 'nav.procurement',
+      'inspections': 'nav.coffeeInspections', 'product-monitoring': 'nav.cropMonitorings',
+      'smart-contracts': 'nav.smartContracts', 'trading-desk': 'nav.marketplace',
+      'shipments': 'nav.procurementTransports', 'logistics': 'nav.procurementTransports',
+      'export-docs': 'nav.export', 'buyers': 'nav.procurement',
+      'trace-journey': 'nav.traceability', 'billing': 'nav.settings',
+      'users': 'nav.users', 'iot-sensors': 'nav.cropMonitorings',
+      'blockchain': 'nav.smartContracts', 'api-settings': 'nav.settings',
+      'analytics': 'nav.reports',
+    }
+
     return grouped.map(group => ({
       id: group.id,
       title: group.label,
       titleVi: group.labelVi,
       defaultOpen: group.defaultOpen,
-      items: group.items.map((mod: ModuleDef) => ({
-        label: mod.label,
-        labelVi: mod.labelVi,
-        href: mod.href,
-        icon: getIcon(mod.icon),
-        color: mod.color,
-      })),
+      items: group.items.map((mod: ModuleDef) => {
+        const navKey = slugToNavKey[mod.slug]
+        const i18nLabel = navKey ? t(navKey) : undefined
+        // Use i18n label if available and not just the key itself, otherwise fall back
+        const resolvedLabel = (i18nLabel && !i18nLabel.includes('.')) ? i18nLabel : (lang === 'vi' ? mod.labelVi : mod.label)
+        return {
+          label: resolvedLabel,
+          labelVi: mod.labelVi,
+          href: mod.href,
+          icon: getIcon(mod.icon),
+          color: mod.color,
+        }
+      }),
     }))
-  }, [entityType, userRole])
+  }, [entityType, userRole, lang, t])
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -223,7 +252,7 @@ function SidebarContent({
                     variant="outline"
                     className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary capitalize"
                   >
-                    {lang === 'vi' ? entityTypeLabel.vi : entityTypeLabel.en}
+                    {(entityTypeLabel as any)[lang] || entityTypeLabel.en}
                   </Badge>
                 )}
                 {roleLabel && (
@@ -231,7 +260,7 @@ function SidebarContent({
                     variant="secondary"
                     className="text-[9px] px-1.5 py-0 h-4 capitalize"
                   >
-                    {lang === 'vi' ? roleLabel.vi : roleLabel.en}
+                    {(roleLabel as any)[lang] || roleLabel.en}
                   </Badge>
                 )}
               </div>
@@ -281,7 +310,7 @@ function SidebarContent({
                           : 'text-sidebar-foreground/40 hover:text-sidebar-foreground/60'
                       )}
                     >
-                      <span>{lang === 'vi' ? group.titleVi : group.title}</span>
+                      <span>{lang === 'vi' ? group.titleVi : lang === 'en' ? group.title : t('nav.' + group.id) !== 'nav.' + group.id ? t('nav.' + group.id) : group.title}</span>
                       <ChevronDown
                         className={cn(
                           'w-3 h-3 transition-transform duration-200',
@@ -328,12 +357,12 @@ function SidebarContent({
           <Globe className="w-4 h-4 shrink-0" />
           {!collapsed && (
             <span className="overflow-hidden whitespace-nowrap">
-              {lang === 'vi' ? 'English' : 'Tiếng Việt'}
+              {lang === 'vi' ? 'English' : lang === 'en' ? 'Português' : lang === 'pt' ? 'አማርኛ' : lang === 'am' ? 'Kiswahili' : 'Tiếng Việt'}
             </span>
           )}
           {!collapsed && (
             <span className="ml-auto text-[10px] font-bold text-sidebar-foreground/50">
-              {lang === 'vi' ? 'VI' : 'EN'}
+              {lang.toUpperCase()}
             </span>
           )}
         </Button>

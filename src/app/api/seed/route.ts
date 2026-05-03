@@ -189,8 +189,9 @@ export async function POST() {
     ]
     const flRecords: Record<string, any> = {}
     for (const fld of farmLandDefs) {
+      const { key, farmerCode, ...farmLandData } = fld
       const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : keAdmin.id
-      flRecords[fld.key] = await db.farmLand.create({ data: { ...fld, farmerId: farmerRecords[fld.farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
+      flRecords[key] = await db.farmLand.create({ data: { ...farmLandData, farmerId: farmerRecords[farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
     }
 
     // ═══ 9. Entity Relationships ═══
