@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -130,6 +130,23 @@ model PlatformSetting {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   @@unique([category, key])
+}
+
+model PriceTicker {
+  id            String   @id @default(cuid())
+  commodity     String   // e.g. "Robusta", "Arabica", "C-Price ICE"
+  price         Float
+  currency      String   @default("USD")
+  change        Float    @default(0)
+  changePercent Float    @default(0)
+  unit          String   @default("per lb")
+  source        String?  // e.g. "ICE Futures", "LIFFE"
+  high52w       Float?
+  low52w        Float?
+  lastUpdated   DateTime @default(now())
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Subscription {

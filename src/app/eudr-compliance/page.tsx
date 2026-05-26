@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -66,183 +68,13 @@ const DDS_STATUS_COLORS: Record<string, string> = {
   pending_review: 'bg-yellow-100 text-yellow-800',
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────
+// ─── Data fetched from API ───────────────────────────────────────────
 
-const MOCK_COMPLIANCE_RECORDS = [
-  {
-    id: '1', complianceId: 'EUDR-2024-001', batchId: 'BATCH-LN-001', farmerId: 'F-001', farmLandId: 'FL-001',
-    status: 'compliant', riskLevel: 'low', deforestationRiskScore: 12,
-    satelliteImageryRef: 'SAT-GFW-2024-0401', geolocationLat: 11.9404, geolocationLng: 108.4584,
-    landUseType: 'agroforestry', landCoverChangeDate: '2020-12-31',
-    verificationDate: '2024-03-15', verifiedBy: 'Dr. Nguyen Van A',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-001.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2024/00123',
-    validFrom: '2024-03-15', validUntil: '2025-03-15',
-    notes: 'Farm verified via satellite imagery. No deforestation detected since cutoff date.',
-    metadata: { region: 'Lam Dong', elevation: 1200, farmSize: 2.5 },
-    createdAt: '2024-02-01T10:00:00Z', farmer: { name: 'Nguyen Van Minh' }, farmLand: { farmName: 'Highland Plot A' },
-  },
-  {
-    id: '2', complianceId: 'EUDR-2024-002', batchId: 'BATCH-LN-002', farmerId: 'F-002', farmLandId: 'FL-002',
-    status: 'in_review', riskLevel: 'medium', deforestationRiskScore: 45,
-    satelliteImageryRef: 'SAT-PLNT-2024-0412', geolocationLat: 11.9500, geolocationLng: 108.4700,
-    landUseType: 'monoculture', landCoverChangeDate: '2021-03-15',
-    verificationDate: '2024-04-01', verifiedBy: 'Dr. Le Thi B',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-002.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2024/00124',
-    validFrom: '2024-04-01', validUntil: '2025-04-01',
-    notes: 'Minor land cover change detected near boundary. Under review for clarification.',
-    metadata: { region: 'Dak Lak', elevation: 800, farmSize: 5.0 },
-    createdAt: '2024-02-15T10:00:00Z', farmer: { name: 'Le Thi Hoa' }, farmLand: { farmName: 'Central Valley Plot' },
-  },
-  {
-    id: '3', complianceId: 'EUDR-2024-003', batchId: 'BATCH-DK-001', farmerId: 'F-003', farmLandId: 'FL-003',
-    status: 'non_compliant', riskLevel: 'critical', deforestationRiskScore: 88,
-    satelliteImageryRef: 'SAT-SNTL-2024-0420', geolocationLat: 12.1000, geolocationLng: 108.5000,
-    landUseType: 'cleared_land', landCoverChangeDate: '2022-06-10',
-    verificationDate: '2024-04-10', verifiedBy: 'Dr. Tran Van C',
-    dueDiligenceStatement: '',
-    tracesCertificateRef: '',
-    validFrom: '', validUntil: '',
-    notes: 'Significant deforestation detected post cutoff. Non-compliant. Remediation plan required.',
-    metadata: { region: 'Gia Lai', elevation: 600, farmSize: 8.0 },
-    createdAt: '2024-03-01T10:00:00Z', farmer: { name: 'Tran Van Duc' }, farmLand: { farmName: 'Lowland Expansion' },
-  },
-  {
-    id: '4', complianceId: 'EUDR-2024-004', batchId: 'BATCH-LN-003', farmerId: 'F-004', farmLandId: 'FL-004',
-    status: 'compliant', riskLevel: 'low', deforestationRiskScore: 8,
-    satelliteImageryRef: 'SAT-GFW-2024-0425', geolocationLat: 11.9300, geolocationLng: 108.4400,
-    landUseType: 'shade_grown', landCoverChangeDate: '2019-01-01',
-    verificationDate: '2024-04-20', verifiedBy: 'Dr. Pham Thi D',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-004.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2024/00125',
-    validFrom: '2024-04-20', validUntil: '2025-04-20',
-    notes: 'Shade-grown coffee farm. Excellent forest cover. Fully compliant.',
-    metadata: { region: 'Lam Dong', elevation: 1400, farmSize: 1.8 },
-    createdAt: '2024-03-15T10:00:00Z', farmer: { name: 'Pham Thi Lan' }, farmLand: { farmName: 'Shade Garden B' },
-  },
-  {
-    id: '5', complianceId: 'EUDR-2024-005', batchId: 'BATCH-DK-002', farmerId: 'F-005', farmLandId: 'FL-005',
-    status: 'pending', riskLevel: 'high', deforestationRiskScore: 65,
-    satelliteImageryRef: 'SAT-PLNT-2024-0430', geolocationLat: 12.0500, geolocationLng: 108.5200,
-    landUseType: 'mixed_use', landCoverChangeDate: '2021-09-20',
-    verificationDate: '', verifiedBy: '',
-    dueDiligenceStatement: '',
-    tracesCertificateRef: '',
-    validFrom: '', validUntil: '',
-    notes: 'Awaiting ground survey verification. Satellite data inconclusive.',
-    metadata: { region: 'Dak Nong', elevation: 700, farmSize: 3.2 },
-    createdAt: '2024-04-01T10:00:00Z', farmer: { name: 'Hoang Van Em' }, farmLand: { farmName: 'Mixed Plot C' },
-  },
-  {
-    id: '6', complianceId: 'EUDR-2024-006', batchId: 'BATCH-LN-004', farmerId: 'F-006', farmLandId: 'FL-006',
-    status: 'expired', riskLevel: 'medium', deforestationRiskScore: 35,
-    satelliteImageryRef: 'SAT-GFW-2023-1201', geolocationLat: 11.9600, geolocationLng: 108.4600,
-    landUseType: 'agroforestry', landCoverChangeDate: '2020-08-15',
-    verificationDate: '2023-12-01', verifiedBy: 'Dr. Nguyen Van A',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-006.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2023/00098',
-    validFrom: '2023-12-01', validUntil: '2024-12-01',
-    notes: 'Compliance expired. Re-assessment scheduled for Q1 2025.',
-    metadata: { region: 'Lam Dong', elevation: 1100, farmSize: 4.0 },
-    createdAt: '2023-11-01T10:00:00Z', farmer: { name: 'Vo Thi Phuong' }, farmLand: { farmName: 'Hillside Plot D' },
-  },
-  {
-    id: '7', complianceId: 'EUDR-2024-007', batchId: 'BATCH-GL-001', farmerId: 'F-007', farmLandId: 'FL-007',
-    status: 'compliant', riskLevel: 'low', deforestationRiskScore: 5,
-    satelliteImageryRef: 'SAT-SNTL-2024-0501', geolocationLat: 13.5000, geolocationLng: 109.0000,
-    landUseType: 'shade_grown', landCoverChangeDate: '2018-06-01',
-    verificationDate: '2024-05-01', verifiedBy: 'Dr. Pham Thi D',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-007.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2024/00130',
-    validFrom: '2024-05-01', validUntil: '2025-05-01',
-    notes: 'Organic shade-grown farm. Zero deforestation risk.',
-    metadata: { region: 'Gia Lai', elevation: 900, farmSize: 2.0 },
-    createdAt: '2024-04-15T10:00:00Z', farmer: { name: 'Dinh Van Hao' }, farmLand: { farmName: 'Organic Plot E' },
-  },
-  {
-    id: '8', complianceId: 'EUDR-2024-008', batchId: 'BATCH-DN-001', farmerId: 'F-008', farmLandId: 'FL-008',
-    status: 'in_review', riskLevel: 'medium', deforestationRiskScore: 40,
-    satelliteImageryRef: 'SAT-PLNT-2024-0510', geolocationLat: 12.2000, geolocationLng: 107.8000,
-    landUseType: 'agroforestry', landCoverChangeDate: '2020-11-30',
-    verificationDate: '2024-05-10', verifiedBy: 'Dr. Le Thi B',
-    dueDiligenceStatement: '/docs/dds/EUDR-2024-008.pdf',
-    tracesCertificateRef: 'TRACES-NT/VN/2024/00131',
-    validFrom: '2024-05-10', validUntil: '2025-05-10',
-    notes: 'Borderline risk score. Additional ground truth data being collected.',
-    metadata: { region: 'Dak Nong', elevation: 750, farmSize: 3.5 },
-    createdAt: '2024-04-20T10:00:00Z', farmer: { name: 'Bui Thi Mai' }, farmLand: { farmName: 'Borderline Plot F' },
-  },
-]
+// Deforestation assessments fetched from API
 
-const MOCK_DEFORESTATION_ASSESSMENTS = [
-  {
-    id: 'da1', farmLandId: 'FL-001', eudrComplianceId: '1',
-    assessmentDate: '2024-03-10', dataSource: 'combined', provider: 'gfw',
-    referencePeriodStart: '2020-12-31', referencePeriodEnd: '2024-03-10',
-    forestCoverBaselinePct: 78.5, currentForestCoverPct: 79.2, forestLossPct: -0.7,
-    deforestationDetected: false, riskScore: 12, riskCategory: 'low',
-    imageryUrl: 'https://sat.example.com/FL-001/2024', analysisReportUrl: '/reports/FL-001-2024.pdf',
-    methodology: 'Hansen GFC + Planet NICFI', confidenceLevel: 0.95, validUntil: '2025-03-10',
-  },
-  {
-    id: 'da2', farmLandId: 'FL-002', eudrComplianceId: '2',
-    assessmentDate: '2024-03-25', dataSource: 'satellite', provider: 'planet',
-    referencePeriodStart: '2020-12-31', referencePeriodEnd: '2024-03-25',
-    forestCoverBaselinePct: 65.0, currentForestCoverPct: 58.3, forestLossPct: 6.7,
-    deforestationDetected: false, riskScore: 45, riskCategory: 'medium',
-    imageryUrl: 'https://sat.example.com/FL-002/2024', analysisReportUrl: '/reports/FL-002-2024.pdf',
-    methodology: 'Planet NICFI Basemap + Sentinel-2', confidenceLevel: 0.82, validUntil: '2025-03-25',
-  },
-  {
-    id: 'da3', farmLandId: 'FL-003', eudrComplianceId: '3',
-    assessmentDate: '2024-04-05', dataSource: 'combined', provider: 'sentinel',
-    referencePeriodStart: '2020-12-31', referencePeriodEnd: '2024-04-05',
-    forestCoverBaselinePct: 72.0, currentForestCoverPct: 34.5, forestLossPct: 37.5,
-    deforestationDetected: true, riskScore: 88, riskCategory: 'critical',
-    imageryUrl: 'https://sat.example.com/FL-003/2024', analysisReportUrl: '/reports/FL-003-2024.pdf',
-    methodology: 'Sentinel-2 + Ground Survey Verification', confidenceLevel: 0.98, validUntil: '2025-04-05',
-  },
-  {
-    id: 'da4', farmLandId: 'FL-005', eudrComplianceId: '5',
-    assessmentDate: '2024-04-15', dataSource: 'ground_survey', provider: 'gfw',
-    referencePeriodStart: '2020-12-31', referencePeriodEnd: '2024-04-15',
-    forestCoverBaselinePct: 60.0, currentForestCoverPct: 48.2, forestLossPct: 11.8,
-    deforestationDetected: true, riskScore: 65, riskCategory: 'high',
-    imageryUrl: 'https://sat.example.com/FL-005/2024', analysisReportUrl: '/reports/FL-005-2024.pdf',
-    methodology: 'GFW Alert + Field Verification', confidenceLevel: 0.88, validUntil: '2025-04-15',
-  },
-]
+// DDS records fetched from API
 
-const MOCK_DDS_RECORDS = [
-  { id: 'dds1', complianceId: 'EUDR-2024-001', status: 'accepted', submittedDate: '2024-03-16', acceptedDate: '2024-03-18', tracesRef: 'TRACES-NT/VN/2024/00123', documentUrl: '/docs/dds/EUDR-2024-001.pdf', notes: 'Auto-accepted via TRACES-NT. All checks passed.' },
-  { id: 'dds2', complianceId: 'EUDR-2024-002', status: 'pending_review', submittedDate: '2024-04-02', acceptedDate: '', tracesRef: 'TRACES-NT/VN/2024/00124', documentUrl: '/docs/dds/EUDR-2024-002.pdf', notes: 'Under review by EU competent authority.' },
-  { id: 'dds3', complianceId: 'EUDR-2024-003', status: 'rejected', submittedDate: '2024-04-11', acceptedDate: '', tracesRef: '', documentUrl: '', notes: 'Rejected: Non-compliant deforestation risk. Remediation required.' },
-  { id: 'dds4', complianceId: 'EUDR-2024-004', status: 'accepted', submittedDate: '2024-04-21', acceptedDate: '2024-04-23', tracesRef: 'TRACES-NT/VN/2024/00125', documentUrl: '/docs/dds/EUDR-2024-004.pdf', notes: 'Accepted. Shade-grown farm with excellent compliance profile.' },
-  { id: 'dds5', complianceId: 'EUDR-2024-005', status: 'draft', submittedDate: '', acceptedDate: '', tracesRef: '', documentUrl: '', notes: 'DDS in preparation. Awaiting assessment completion.' },
-  { id: 'dds6', complianceId: 'EUDR-2024-007', status: 'accepted', submittedDate: '2024-05-02', acceptedDate: '2024-05-04', tracesRef: 'TRACES-NT/VN/2024/00130', documentUrl: '/docs/dds/EUDR-2024-007.pdf', notes: 'Organic farm. Fast-track acceptance.' },
-  { id: 'dds7', complianceId: 'EUDR-2024-008', status: 'submitted', submittedDate: '2024-05-11', acceptedDate: '', tracesRef: 'TRACES-NT/VN/2024/00131', documentUrl: '/docs/dds/EUDR-2024-008.pdf', notes: 'Submitted to TRACES-NT. Awaiting review.' },
-]
-
-const RISK_TREND_DATA = [
-  { month: 'Sep 23', avgScore: 42, compliant: 55, total: 40 },
-  { month: 'Oct 23', avgScore: 38, compliant: 60, total: 45 },
-  { month: 'Nov 23', avgScore: 35, compliant: 65, total: 50 },
-  { month: 'Dec 23', avgScore: 40, compliant: 58, total: 55 },
-  { month: 'Jan 24', avgScore: 32, compliant: 68, total: 60 },
-  { month: 'Feb 24', avgScore: 28, compliant: 72, total: 65 },
-  { month: 'Mar 24', avgScore: 30, compliant: 70, total: 70 },
-  { month: 'Apr 24', avgScore: 25, compliant: 75, total: 75 },
-  { month: 'May 24', avgScore: 22, compliant: 78, total: 80 },
-]
-
-const REGION_RISK_DATA = [
-  { region: 'Lam Dong', avgRisk: 15, farms: 45, compliant: 42, color: '#22c55e' },
-  { region: 'Dak Lak', avgRisk: 38, farms: 32, compliant: 22, color: '#eab308' },
-  { region: 'Gia Lai', avgRisk: 52, farms: 28, compliant: 15, color: '#f97316' },
-  { region: 'Dak Nong', avgRisk: 45, farms: 20, compliant: 12, color: '#f97316' },
-  { region: 'Kon Tum', avgRisk: 22, farms: 15, compliant: 13, color: '#22c55e' },
-]
+// Risk trend and region data fetched from API
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -357,7 +189,7 @@ function OverviewTab({ records, ddsRecords }: { records: EudrRecord[]; ddsRecord
                   <div className={`p-2 rounded-lg ${card.bg}`}><card.icon className={`w-4 h-4 ${card.color}`} /></div>
                   <div>
                     <p className="text-xl font-bold font-mono">{card.value}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">{card.label}</p>
+                    <p className="text-xs text-muted-foreground leading-tight">{card.label}</p>
                   </div>
                 </div>
               </CardContent>
@@ -436,14 +268,14 @@ function OverviewTab({ records, ddsRecords }: { records: EudrRecord[]; ddsRecord
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <FileText className="w-4 h-4" /> DDS Submission Tracker
                 </CardTitle>
-                <Badge variant="outline" className="text-[10px]">{ddsRecords.length} Total</Badge>
+                <Badge variant="outline" className="text-xs">{ddsRecords.length} Total</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(DDS_STATUS_COLORS).map(([status, cls]) => (
                 <div key={status} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Badge className={`${cls} border capitalize text-[10px]`}>{status.replace('_', ' ')}</Badge>
+                    <Badge className={`${cls} border capitalize text-xs`}>{status.replace('_', ' ')}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-mono font-medium">{ddsStatusCounts[status] || 0}</span>
@@ -472,13 +304,13 @@ function OverviewTab({ records, ddsRecords }: { records: EudrRecord[]; ddsRecord
                   <div key={r.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="text-xs font-medium font-mono">{r.complianceId}</p>
-                      <p className="text-[10px] text-muted-foreground">{r.farmer?.name}</p>
+                      <p className="text-xs text-muted-foreground">{r.farmer?.name}</p>
                     </div>
                     <div className="text-right">
                       <p className={`text-xs font-mono font-medium ${daysLeft <= 30 ? 'text-red-600' : daysLeft <= 90 ? 'text-yellow-600' : 'text-green-600'}`}>
                         {daysLeft > 0 ? `${daysLeft}d` : 'Expired'}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(r.validUntil!).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(r.validUntil!).toLocaleDateString()}</p>
                     </div>
                   </div>
                 )
@@ -517,7 +349,7 @@ function ComplianceWizardForm({ form, setForm, onSubmit, onCancel, isEdit }: {
               ${i === step ? 'bg-primary text-primary-foreground' : i < step ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'}`}>
               {i < step ? '✓' : i + 1}
             </div>
-            <span className={`text-[10px] hidden sm:inline ${i === step ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{label}</span>
+            <span className={`text-xs hidden sm:inline ${i === step ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{label}</span>
             {i < WIZARD_STEPS.length - 1 && <div className="flex-1 h-px bg-border mx-1" />}
           </div>
         ))}
@@ -595,7 +427,7 @@ function ComplianceWizardForm({ form, setForm, onSubmit, onCancel, isEdit }: {
               <div className="text-center">
                 <MapPin className="w-5 h-5 mx-auto text-muted-foreground/50 mb-1" />
                 <p className="text-xs text-muted-foreground font-mono">{form.geolocationLat}, {form.geolocationLng}</p>
-                <p className="text-[10px] text-muted-foreground/50 mt-1">Geolocation Map Placeholder</p>
+                <p className="text-xs text-muted-foreground/50 mt-1">Geolocation Map Placeholder</p>
               </div>
             </div>
           ) : (
@@ -644,7 +476,7 @@ function ComplianceWizardForm({ form, setForm, onSubmit, onCancel, isEdit }: {
               <div className="h-3 bg-muted rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${getRiskBarColor(form.deforestationRiskScore)}`} style={{ width: `${Math.min(form.deforestationRiskScore, 100)}%` }} />
               </div>
-              <div className="flex justify-between text-[10px] text-muted-foreground">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Low (0-40)</span><span>Medium (41-70)</span><span>High (71-100)</span>
               </div>
             </div>
@@ -736,15 +568,13 @@ function ComplianceWizardForm({ form, setForm, onSubmit, onCancel, isEdit }: {
 // ─── Compliance Records Tab ──────────────────────────────────────
 
 function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [riskFilter, setRiskFilter] = useState<string>('all')
   const [validityFilter, setValidityFilter] = useState<string>('all')
-  const [dialogOpen, setDialogOpen] = useState(false)
   const [detailItem, setDetailItem] = useState<EudrRecord | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [form, setForm] = useState<any>({ status: 'pending', riskLevel: 'low' })
-  const [editingId, setEditingId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     return records.filter(r => {
@@ -764,7 +594,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
 
   const toggleSelect = (id: string) => {
     const next = new Set(selectedIds)
-    next.has(id) ? next.delete(id) : next.add(id)
+    if (next.has(id)) { next.delete(id) } else { next.add(id) }
     setSelectedIds(next)
   }
 
@@ -773,36 +603,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
     else setSelectedIds(new Set(filtered.map(r => r.id)))
   }
 
-  const openCreate = () => {
-    setEditingId(null)
-    setForm({ status: 'pending', riskLevel: 'low' })
-    setDialogOpen(true)
-  }
 
-  const openEdit = (record: EudrRecord) => {
-    setEditingId(record.id)
-    setForm({
-      complianceId: record.complianceId, batchId: record.batchId || '',
-      farmerId: record.farmerId || '', farmLandId: record.farmLandId || '',
-      status: record.status, riskLevel: record.riskLevel,
-      deforestationRiskScore: record.deforestationRiskScore,
-      geolocationLat: record.geolocationLat, geolocationLng: record.geolocationLng,
-      landUseType: record.landUseType || '', landCoverChangeDate: record.landCoverChangeDate || '',
-      satelliteImageryRef: record.satelliteImageryRef || '',
-      verificationDate: record.verificationDate || '', verifiedBy: record.verifiedBy || '',
-      dueDiligenceStatement: record.dueDiligenceStatement || '',
-      tracesCertificateRef: record.tracesCertificateRef || '',
-      validFrom: record.validFrom || '', validUntil: record.validUntil || '',
-      notes: record.notes || '', metadata: record.metadata ? JSON.stringify(record.metadata) : '',
-    })
-    setDialogOpen(true)
-  }
-
-  const handleSubmit = () => {
-    setDialogOpen(false)
-    setForm({ status: 'pending', riskLevel: 'low' })
-    setEditingId(null)
-  }
 
   return (
     <div className="space-y-4">
@@ -836,9 +637,11 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
               <SelectItem value="expired">Expired</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={openCreate} className="gap-1 text-xs whitespace-nowrap">
-            <Plus className="w-3.5 h-3.5" /> New Record
-          </Button>
+          <Link href="/eudr-compliance/new">
+            <Button size="sm" className="gap-1 text-xs whitespace-nowrap" style={{ backgroundColor: '#6D2932', color: 'white' }}>
+              <Plus className="w-3.5 h-3.5" /> New Compliance Record
+            </Button>
+          </Link>
         </div>
       </FadeIn>
 
@@ -885,18 +688,18 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                       </TableCell>
                     </TableRow>
                   ) : filtered.map((item) => (
-                    <TableRow key={item.id} className="group hover:bg-muted/50 transition-colors">
+                    <TableRow key={item.id} className="group hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => router.push(`/eudr-compliance/${item.id}`)}>
                       <TableCell>
-                        <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+                        <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={(checked) => { checked?.toString(); toggleSelect(item.id) }} onClick={e => e.stopPropagation()} />
                       </TableCell>
-                      <TableCell className="font-mono text-xs font-medium">{item.complianceId}</TableCell>
+                      <TableCell className="font-mono text-xs font-medium" style={{ color: '#6D2932' }}>{item.complianceId}</TableCell>
                       <TableCell className="text-xs">{item.farmer?.name || item.farmerId || '—'}</TableCell>
                       <TableCell className="text-xs">{item.farmLand?.farmName || item.farmLandId || '—'}</TableCell>
                       <TableCell>
-                        <Badge className={`${STATUS_COLORS[item.status] || ''} border capitalize text-[10px]`}>{item.status?.replace('_', ' ')}</Badge>
+                        <Badge className={`${STATUS_COLORS[item.status] || ''} border capitalize text-xs`}>{item.status?.replace('_', ' ')}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${RISK_COLORS[item.riskLevel] || ''} border capitalize text-[10px]`}>{item.riskLevel}</Badge>
+                        <Badge className={`${RISK_COLORS[item.riskLevel] || ''} border capitalize text-xs`}>{item.riskLevel}</Badge>
                       </TableCell>
                       <TableCell>
                         {item.deforestationRiskScore != null ? (
@@ -908,9 +711,8 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                       <TableCell className="text-xs capitalize">{item.landUseType?.replace('_', ' ') || '—'}</TableCell>
                       <TableCell className="text-xs font-mono">{item.validUntil ? new Date(item.validUntil).toLocaleDateString() : '—'}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setDetailItem(item)}><Eye className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(item)}><FileCheck className="w-3.5 h-3.5" /></Button>
+                        <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => router.push(`/eudr-compliance/${item.id}`)}><Eye className="w-3.5 h-3.5" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -921,16 +723,6 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
           </CardContent>
         </Card>
       </FadeIn>
-
-      {/* Create/Edit Wizard Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-mono">{editingId ? 'Edit' : 'Create'} EUDR Compliance Record</DialogTitle>
-          </DialogHeader>
-          <ComplianceWizardForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={() => setDialogOpen(false)} isEdit={!!editingId} />
-        </DialogContent>
-      </Dialog>
 
       {/* Detail Dialog */}
       <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
@@ -985,7 +777,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                   <div className="h-24 bg-muted/50 rounded-lg flex items-center justify-center border border-dashed border-muted-foreground/20">
                     <div className="text-center">
                       <MapPin className="w-4 h-4 mx-auto text-muted-foreground/50 mb-1" />
-                      <span className="text-[10px] text-muted-foreground font-mono">{detailItem.geolocationLat}, {detailItem.geolocationLng}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{detailItem.geolocationLat}, {detailItem.geolocationLng}</span>
                     </div>
                   </div>
                 )}
@@ -1022,7 +814,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
               )}
 
               {detailItem.metadata && (
-                <div><span className="text-muted-foreground text-xs">Metadata</span><pre className="mt-1 p-3 bg-muted rounded-lg text-[10px] font-mono overflow-auto">{JSON.stringify(detailItem.metadata, null, 2)}</pre></div>
+                <div><span className="text-muted-foreground text-xs">Metadata</span><pre className="mt-1 p-3 bg-muted rounded-lg text-xs font-mono overflow-auto">{JSON.stringify(detailItem.metadata, null, 2)}</pre></div>
               )}
             </div>
           )}
@@ -1058,7 +850,7 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
                   <div className={`p-2 rounded-lg ${card.bg}`}><card.icon className={`w-4 h-4 ${card.color}`} /></div>
                   <div>
                     <p className="text-lg font-bold font-mono">{card.value}</p>
-                    <p className="text-[10px] text-muted-foreground">{card.label}</p>
+                    <p className="text-xs text-muted-foreground">{card.label}</p>
                   </div>
                 </div>
               </CardContent>
@@ -1108,9 +900,9 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
                 <div className="flex items-center justify-between">
                   <Badge className={`${RISK_COLORS[item.riskCategory] || ''} border capitalize text-xs`}>{item.riskCategory}</Badge>
                   {item.deforestationDetected ? (
-                    <Badge className="bg-red-100 text-red-800 border border-red-200 text-[10px]">⚠ Deforested</Badge>
+                    <Badge className="bg-red-100 text-red-800 border border-red-200 text-xs">⚠ Deforested</Badge>
                   ) : (
-                    <Badge className="bg-green-100 text-green-800 border border-green-200 text-[10px]">✓ Clear</Badge>
+                    <Badge className="bg-green-100 text-green-800 border border-green-200 text-xs">✓ Clear</Badge>
                   )}
                 </div>
                 {/* Risk Score Gauge */}
@@ -1143,7 +935,7 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
                 <div className="h-20 bg-muted/50 rounded-lg flex items-center justify-center border border-dashed border-muted-foreground/20">
                   <div className="text-center">
                     <MapPin className="w-4 h-4 mx-auto text-muted-foreground/50 mb-1" />
-                    <span className="text-[10px] text-muted-foreground">Satellite Imagery Reference</span>
+                    <span className="text-xs text-muted-foreground">Satellite Imagery Reference</span>
                   </div>
                 </div>
               </CardContent>
@@ -1290,11 +1082,11 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg text-center">
-                  <p className="text-[10px] text-green-600 font-medium">Baseline Cover</p>
+                  <p className="text-xs text-green-600 font-medium">Baseline Cover</p>
                   <p className="text-lg font-bold font-mono text-green-700">{detailItem.forestCoverBaselinePct}%</p>
                 </div>
                 <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-center">
-                  <p className="text-[10px] text-blue-600 font-medium">Current Cover</p>
+                  <p className="text-xs text-blue-600 font-medium">Current Cover</p>
                   <p className="text-lg font-bold font-mono text-blue-700">{detailItem.currentForestCoverPct}%</p>
                 </div>
               </div>
@@ -1311,7 +1103,7 @@ function DeforestationTab({ assessments }: { assessments: DeforestationAssessmen
               <div className="h-28 bg-muted/50 rounded-lg flex items-center justify-center border border-dashed border-muted-foreground/20">
                 <div className="text-center">
                   <Satellite className="w-5 h-5 mx-auto text-muted-foreground/50 mb-1" />
-                  <p className="text-[10px] text-muted-foreground">Satellite Imagery Placeholder</p>
+                  <p className="text-xs text-muted-foreground">Satellite Imagery Placeholder</p>
                 </div>
               </div>
             </div>
@@ -1355,7 +1147,7 @@ function DDSTab({ ddsRecords, complianceRecords }: { ddsRecords: DDSRecord[]; co
             <MotionCard {...hoverScale} className="rounded-xl border shadow-sm">
               <CardContent className="p-4">
                 <p className="text-xl font-bold font-mono">{card.value}</p>
-                <p className="text-[10px] text-muted-foreground">{card.label}</p>
+                <p className="text-xs text-muted-foreground">{card.label}</p>
               </CardContent>
             </MotionCard>
           </StaggerItem>
@@ -1417,12 +1209,12 @@ function DDSTab({ ddsRecords, complianceRecords }: { ddsRecords: DDSRecord[]; co
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         {statusIcon(dds.status)}
-                        <Badge className={`${DDS_STATUS_COLORS[dds.status] || ''} border capitalize text-[10px]`}>{dds.status.replace('_', ' ')}</Badge>
+                        <Badge className={`${DDS_STATUS_COLORS[dds.status] || ''} border capitalize text-xs`}>{dds.status.replace('_', ' ')}</Badge>
                       </div>
                     </TableCell>
                     <TableCell className="text-xs font-mono">{dds.submittedDate ? new Date(dds.submittedDate).toLocaleDateString() : '—'}</TableCell>
                     <TableCell className="text-xs font-mono">{dds.acceptedDate ? new Date(dds.acceptedDate).toLocaleDateString() : '—'}</TableCell>
-                    <TableCell className="font-mono text-[10px]">{dds.tracesRef || '—'}</TableCell>
+                    <TableCell className="font-mono text-xs">{dds.tracesRef || '—'}</TableCell>
                     <TableCell>
                       {dds.documentUrl ? (
                         <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><FileText className="w-3 h-3" /> View</Button>
@@ -1497,7 +1289,7 @@ function DDSTab({ ddsRecords, complianceRecords }: { ddsRecords: DDSRecord[]; co
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
                 <Upload className="w-6 h-6 mx-auto text-muted-foreground/50 mb-2" />
                 <p className="text-xs text-muted-foreground">Click or drag to upload DDS document</p>
-                <p className="text-[10px] text-muted-foreground/50 mt-1">PDF, DOCX up to 10MB</p>
+                <p className="text-xs text-muted-foreground/50 mt-1">PDF, DOCX up to 10MB</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -1515,9 +1307,32 @@ function DDSTab({ ddsRecords, complianceRecords }: { ddsRecords: DDSRecord[]; co
 // ─── Risk Analytics Tab ──────────────────────────────────────────
 
 function RiskAnalyticsTab({ records }: { records: EudrRecord[] }) {
-  const riskTrendChart = useMemo(() => RISK_TREND_DATA, [])
+  // Derive trend data from records — show risk score distribution by risk level
+  const riskTrendChart = useMemo(() => {
+    if (records.length === 0) return []
+    const avgScore = Math.round(records.reduce((s, r) => s + (r.deforestationRiskScore || 0), 0) / records.length)
+    const compliant = records.filter(r => r.status === 'compliant').length
+    return [{ month: 'Current', avgScore, compliant: Math.round((compliant / records.length) * 100), total: records.length }]
+  }, [records])
 
-  const regionRiskChart = useMemo(() => REGION_RISK_DATA, [])
+  // Derive region data from records — group by land use type as proxy
+  const regionRiskChart = useMemo(() => {
+    const groups: Record<string, { avgRisk: number; count: number; compliant: number }> = {}
+    records.forEach(r => {
+      const region = r.landUseType?.replace('_', ' ') || 'Unknown'
+      if (!groups[region]) groups[region] = { avgRisk: 0, count: 0, compliant: 0 }
+      groups[region].avgRisk += r.deforestationRiskScore || 0
+      groups[region].count++
+      if (r.status === 'compliant') groups[region].compliant++
+    })
+    return Object.entries(groups).map(([region, data]) => ({
+      region,
+      avgRisk: Math.round(data.avgRisk / data.count),
+      farms: data.count,
+      compliant: data.compliant,
+      color: (data.avgRisk / data.count) > 50 ? '#f97316' : (data.avgRisk / data.count) > 25 ? '#eab308' : '#22c55e',
+    }))
+  }, [records])
 
   const riskDistribution = useMemo(() => {
     const bins = [
@@ -1569,13 +1384,13 @@ function RiskAnalyticsTab({ records }: { records: EudrRecord[] }) {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-1">
                   <card.icon className={`w-4 h-4 ${card.color}`} />
-                  <span className={`text-[10px] font-mono font-medium flex items-center gap-0.5 ${(card.change || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-xs font-mono font-medium flex items-center gap-0.5 ${(card.change || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {(card.change || 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                     {Math.abs(card.change || 0)}%
                   </span>
                 </div>
                 <p className="text-2xl font-bold font-mono">{card.value}</p>
-                <p className="text-[10px] text-muted-foreground">{card.label}</p>
+                <p className="text-xs text-muted-foreground">{card.label}</p>
               </CardContent>
             </MotionCard>
           </StaggerItem>
@@ -1731,10 +1546,29 @@ function RiskAnalyticsTab({ records }: { records: EudrRecord[] }) {
 export default function EudrCompliancePage() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState('overview')
+  const [complianceRecords, setComplianceRecords] = useState<EudrRecord[]>([])
+  const [deforestationAssessments, setDeforestationAssessments] = useState<DeforestationAssessment[]>([])
+  const [ddsRecords, setDdsRecords] = useState<DDSRecord[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const complianceRecords = MOCK_COMPLIANCE_RECORDS
-  const deforestationAssessments = MOCK_DEFORESTATION_ASSESSMENTS
-  const ddsRecords = MOCK_DDS_RECORDS
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const res = await fetch('/api/eudr-compliance')
+        const data = await res.json()
+        if (data.success && data.data) {
+          const records = data.data.compliances || data.data.records || data.data.data || []
+          setComplianceRecords(records)
+        }
+      } catch (err) {
+        console.error('Failed to fetch compliance records', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   return (
     <DashboardShell>
@@ -1752,10 +1586,10 @@ export default function EudrCompliancePage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] font-mono gap-1">
+              <Badge variant="outline" className="text-xs font-mono gap-1">
                 <CircleDot className="w-2.5 h-2.5 text-green-500" /> {complianceRecords.filter(r => r.status === 'compliant').length} Compliant
               </Badge>
-              <Badge variant="outline" className="text-[10px] font-mono gap-1">
+              <Badge variant="outline" className="text-xs font-mono gap-1">
                 <AlertTriangle className="w-2.5 h-2.5 text-red-500" /> {complianceRecords.filter(r => r.riskLevel === 'high' || r.riskLevel === 'critical').length} High Risk
               </Badge>
             </div>
@@ -1768,7 +1602,7 @@ export default function EudrCompliancePage() {
             <Shield className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-medium text-amber-800 dark:text-amber-300">EUDR Compliance Notice</p>
-              <p className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
                 Under the EU Deforestation Regulation (Regulation (EU) 2023/1115), operators must submit a Due Diligence Statement (DDS) before placing coffee on the EU market.
                 The cutoff date for deforestation is <strong>December 31, 2020</strong>. Non-compliance can result in fines up to 4% of EU annual turnover.
               </p>

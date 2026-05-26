@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import QRCode from 'qrcode'
+import dynamic from 'next/dynamic'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import {
@@ -30,7 +32,13 @@ import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { SensitiveField } from '@/components/ui/sensitive-field'
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard, SlideIn } from '@/components/ui/motion'
 
-// ─── Mock Data ──────────────────────────────────────────────────────
+// Dynamic import for map — SSR must be disabled for Leaflet
+const FarmerLandMap = dynamic(
+  () => import('@/components/map/eudr-location-map').then(mod => ({ default: mod.EudrLocationMap })),
+  { ssr: false, loading: () => <div className="h-[250px] bg-muted animate-pulse rounded-xl" /> }
+)
+
+// ─── Data Types ──────────────────────────────────────────────────────
 
 interface FarmLandDetail {
   id: string
@@ -41,6 +49,8 @@ interface FarmLandDetail {
   elevation: number
   irrigationMethod: string
   gpsPolygon: string
+  latitude: number
+  longitude: number
   primaryCrop: string
   secondaryCrop: string | null
   cultivations: CultivationDetail[]
@@ -137,7 +147,7 @@ interface FarmerDetailFull {
   contactNumber: string
   email: string
   gender: string
-  age: number
+  age: number | null
   dob: string
   nationalIdType: string
   nationalIdNo: string
@@ -145,28 +155,28 @@ interface FarmerDetailFull {
   education: string
   maritalStatus: string
   spouseName: string
-  noOfFamilyMembers: number
+  noOfFamilyMembers: number | null
   housingOwnership: string
   houseType: string
-  yearsOfFarmingExperience: number
+  yearsOfFarmingExperience: number | null
   country: string
   province: string
   district: string
   commune: string
   village: string
   zipCode: string
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   isCertified: boolean
   certificationType: string
   yearOfICS: string
   cooperative: string
-  creditScore: number
+  creditScore: number | null
   loanTaken: boolean
   loanTakenFrom: string
-  loanAmount: number
+  loanAmount: number | null
   loanPurpose: string
-  loanInterest: number
+  loanInterest: number | null
   loanSecurity: boolean
   cropInsurance: boolean
   lifeInsurance: boolean
@@ -194,304 +204,6 @@ interface FarmerDetailFull {
   verifications: VerificationRecord[]
 }
 
-const MOCK_FARMER: FarmerDetailFull = {
-  id: 'farmer-001',
-  farmerCode: 'TB-ĐL-2024-0347',
-  fullName: 'Nguyễn Văn Minh',
-  firstName: 'Minh',
-  lastName: 'Nguyễn',
-  middleName: 'Văn',
-  contactNumber: '+84 912 345 678',
-  email: 'nguyenvanminh@cooperatives.vn',
-  gender: 'Male',
-  age: 47,
-  dob: '1978-03-15',
-  nationalIdType: 'CCCD',
-  nationalIdNo: '038201001234',
-  ekycConsent: true,
-  education: 'Secondary School',
-  maritalStatus: 'Married',
-  spouseName: 'Trần Thị Hoa',
-  noOfFamilyMembers: 5,
-  housingOwnership: 'Owned',
-  houseType: 'Concrete',
-  yearsOfFarmingExperience: 22,
-  country: 'Vietnam',
-  province: 'Đắk Lắk',
-  district: 'Ea H\'Leo',
-  commune: 'Ea Sol',
-  village: 'Buôn Ea Sol',
-  zipCode: '63000',
-  latitude: 12.8456,
-  longitude: 108.3412,
-  isCertified: true,
-  certificationType: '4C / UTZ',
-  yearOfICS: '2019',
-  cooperative: 'Terra Brew Ea Sol Cooperative',
-  creditScore: 78,
-  loanTaken: true,
-  loanTakenFrom: 'Vietnam Bank for Agriculture',
-  loanAmount: 50000000,
-  loanPurpose: 'Farm expansion & equipment',
-  loanInterest: 6.5,
-  loanSecurity: true,
-  cropInsurance: true,
-  lifeInsurance: true,
-  healthInsurance: true,
-  smartphoneOwnership: true,
-  gapTrainingAttended: true,
-  enrollmentDate: '2021-06-15',
-  enrollmentPlace: 'Ea Sol Commune Office',
-  isActive: true,
-  eudrCompliant: true,
-  createdAt: '2021-06-15T08:30:00Z',
-  updatedAt: '2025-11-20T14:22:00Z',
-  _count: {
-    farmLands: 2,
-    cultivations: 3,
-    harvestTraceabilities: 12,
-  },
-  farmLands: [
-    {
-      id: 'fl-001',
-      farmName: 'Ea Sol Plot A',
-      plotBlockId: 'ES-A-001',
-      totalLandHolding: 2.5,
-      soilType: 'Basaltic red soil (Ferrasols)',
-      elevation: 485,
-      irrigationMethod: 'Rainfed with drip supplement',
-      gpsPolygon: '12.8456,108.3412;12.8468,108.3420;12.8470,108.3405;12.8458,108.3398',
-      primaryCrop: 'Robusta Coffee',
-      secondaryCrop: 'Black Pepper',
-      cultivations: [
-        {
-          id: 'cult-001',
-          cropName: 'Robusta Coffee',
-          variety: 'Chari (CR3)',
-          areaPlanted: 2.0,
-          plantingDate: '2018-04-01',
-          expectedHarvestDate: '2025-11-30',
-          status: 'Active',
-        },
-        {
-          id: 'cult-002',
-          cropName: 'Black Pepper',
-          variety: 'Vinh Linh',
-          areaPlanted: 0.5,
-          plantingDate: '2020-06-15',
-          expectedHarvestDate: '2026-02-28',
-          status: 'Active',
-        },
-      ],
-    },
-    {
-      id: 'fl-002',
-      farmName: 'Ea Sol Plot B — Highland',
-      plotBlockId: 'ES-B-002',
-      totalLandHolding: 1.8,
-      soilType: 'Sandy loam',
-      elevation: 620,
-      irrigationMethod: 'Rainfed',
-      gpsPolygon: '12.8520,108.3450;12.8532,108.3462;12.8535,108.3445;12.8522,108.3438',
-      primaryCrop: 'Arabica Coffee',
-      secondaryCrop: null,
-      cultivations: [
-        {
-          id: 'cult-003',
-          cropName: 'Arabica Coffee',
-          variety: 'Catimor',
-          areaPlanted: 1.8,
-          plantingDate: '2020-03-10',
-          expectedHarvestDate: '2025-12-15',
-          status: 'Active',
-        },
-      ],
-    },
-  ],
-  harvests: [
-    {
-      id: 'hv-001',
-      season: '2024/2025',
-      harvestDate: '2025-01-15',
-      cropName: 'Robusta Coffee',
-      volumeKg: 4800,
-      qualityGrade: 'Grade 1 (Premium)',
-      pricePerKg: 42500,
-      totalRevenue: 204000000,
-      status: 'Completed',
-    },
-    {
-      id: 'hv-002',
-      season: '2024/2025',
-      harvestDate: '2025-02-08',
-      cropName: 'Arabica Coffee',
-      volumeKg: 1200,
-      qualityGrade: 'Grade 1 (Specialty)',
-      pricePerKg: 68000,
-      totalRevenue: 81600000,
-      status: 'Completed',
-    },
-    {
-      id: 'hv-003',
-      season: '2023/2024',
-      harvestDate: '2024-01-20',
-      cropName: 'Robusta Coffee',
-      volumeKg: 4200,
-      qualityGrade: 'Grade 2',
-      pricePerKg: 38500,
-      totalRevenue: 161700000,
-      status: 'Completed',
-    },
-  ],
-  certifications: [
-    {
-      id: 'cert-001',
-      type: '4C Certification',
-      certificateNumber: '4C-VN-2024-0892',
-      issuedDate: '2024-03-01',
-      expiryDate: '2027-02-28',
-      status: 'Active',
-      issuingBody: 'Global Coffee Platform',
-    },
-    {
-      id: 'cert-002',
-      type: 'UTZ / Rainforest Alliance',
-      certificateNumber: 'RA-VN-2023-4521',
-      issuedDate: '2023-06-15',
-      expiryDate: '2026-06-14',
-      status: 'Active',
-      issuingBody: 'Rainforest Alliance',
-    },
-  ],
-  inspections: [
-    {
-      id: 'insp-001',
-      type: 'Annual GAP Inspection',
-      inspectorName: 'Lê Quang Huy',
-      inspectionDate: '2025-09-12',
-      result: 'Passed',
-      findings: 'All GAP standards met. Minor recommendation: improve compost storage.',
-      nextInspection: '2026-09-12',
-    },
-    {
-      id: 'insp-002',
-      type: 'EUDR Compliance Check',
-      inspectorName: 'Phạm Minh Tuấn',
-      inspectionDate: '2025-07-22',
-      result: 'Passed',
-      findings: 'No deforestation risk detected. GPS polygons verified against satellite imagery.',
-      nextInspection: '2026-07-22',
-    },
-    {
-      id: 'insp-003',
-      type: 'Internal Control System Audit',
-      inspectorName: 'Ngô Thị Lan',
-      inspectionDate: '2025-04-05',
-      result: 'Passed with Observation',
-      findings: 'Records well maintained. Observation: pesticide log needs daily entries.',
-      nextInspection: '2025-10-05',
-    },
-  ],
-  loans: [
-    {
-      id: 'loan-001',
-      source: 'Vietnam Bank for Agriculture (Agribank)',
-      amount: 50000000,
-      purpose: 'Farm expansion & drip irrigation equipment',
-      interestRate: 6.5,
-      disbursedDate: '2024-04-01',
-      maturityDate: '2027-03-31',
-      status: 'Active',
-      outstandingBalance: 38500000,
-    },
-  ],
-  procurements: [
-    {
-      id: 'proc-001',
-      batchCode: 'TB-EA-2025-0142',
-      date: '2025-01-20',
-      volumeKg: 3200,
-      pricePerKg: 42500,
-      centreName: 'Ea Sol Collection Centre',
-      status: 'Processed',
-    },
-    {
-      id: 'proc-002',
-      batchCode: 'TB-EA-2025-0188',
-      date: '2025-02-12',
-      volumeKg: 1600,
-      pricePerKg: 68000,
-      centreName: 'Ea Sol Collection Centre',
-      status: 'In Storage',
-    },
-  ],
-  documents: [
-    {
-      id: 'doc-001',
-      name: 'National ID (CCCD)',
-      type: 'Identity',
-      uploadedDate: '2021-06-15',
-      fileSize: '2.4 MB',
-      status: 'Verified',
-    },
-    {
-      id: 'doc-002',
-      name: '4C Certificate 2024',
-      type: 'Certification',
-      uploadedDate: '2024-03-05',
-      fileSize: '1.8 MB',
-      status: 'Verified',
-    },
-    {
-      id: 'doc-003',
-      name: 'UTZ/RA Certificate 2023',
-      type: 'Certification',
-      uploadedDate: '2023-06-20',
-      fileSize: '2.1 MB',
-      status: 'Verified',
-    },
-    {
-      id: 'doc-004',
-      name: 'Land Use Right Certificate',
-      type: 'Legal',
-      uploadedDate: '2021-06-15',
-      fileSize: '3.5 MB',
-      status: 'Verified',
-    },
-    {
-      id: 'doc-005',
-      name: 'GAP Training Completion Certificate',
-      type: 'Training',
-      uploadedDate: '2022-11-10',
-      fileSize: '0.8 MB',
-      status: 'Verified',
-    },
-  ],
-  verifications: [
-    {
-      id: 'ver-001',
-      date: '2025-01-20',
-      verifiedBy: 'Ea Sol Collection Centre',
-      method: 'NFC Tag Scan',
-      result: 'Verified — Identity Confirmed',
-    },
-    {
-      id: 'ver-002',
-      date: '2025-02-12',
-      verifiedBy: 'Ea Sol Collection Centre',
-      method: 'QR Code Scan',
-      result: 'Verified — Identity Confirmed',
-    },
-    {
-      id: 'ver-003',
-      date: '2025-07-22',
-      verifiedBy: 'EUDR Compliance Unit',
-      method: 'Document Review + GPS',
-      result: 'Verified — EUDR Compliant',
-    },
-  ],
-}
-
 // ─── Helpers ────────────────────────────────────────────────────────
 
 function getInitials(name: string): string {
@@ -513,19 +225,22 @@ function formatDate(dateStr: string): string {
   })
 }
 
-function getCreditScoreColor(score: number): string {
+function getCreditScoreColor(score: number | null | undefined): string {
+  if (!score) return 'text-muted-foreground'
   if (score >= 80) return 'text-emerald-600 dark:text-emerald-400'
   if (score >= 60) return 'text-amber-600 dark:text-amber-400'
   return 'text-red-600 dark:text-red-400'
 }
 
-function getCreditScoreBarColor(score: number): string {
+function getCreditScoreBarColor(score: number | null | undefined): string {
+  if (!score) return 'bg-muted'
   if (score >= 80) return 'bg-emerald-500'
   if (score >= 60) return 'bg-amber-500'
   return 'bg-red-500'
 }
 
-function getCreditScoreLabel(score: number): string {
+function getCreditScoreLabel(score: number | null | undefined): string {
+  if (!score) return 'N/A'
   if (score >= 80) return 'Excellent'
   if (score >= 60) return 'Good'
   if (score >= 40) return 'Fair'
@@ -539,8 +254,8 @@ function InfoRow({ label, value, icon }: { label: string; value: string | number
     <div className="flex items-start gap-2.5 py-2">
       {icon && <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>}
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
-        <p className="text-sm text-foreground font-medium truncate">{value ?? '—'}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-base text-foreground font-medium truncate">{value ?? '—'}</p>
       </div>
     </div>
   )
@@ -548,7 +263,7 @@ function InfoRow({ label, value, icon }: { label: string; value: string | number
 
 function BoolBadge({ value, trueLabel, falseLabel }: { value: boolean; trueLabel: string; falseLabel: string }) {
   return (
-    <Badge className={`${value ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'} text-[10px] border-0 gap-1`}>
+    <Badge className={`${value ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'} text-xs border-0 gap-1`}>
       {value ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
       {value ? trueLabel : falseLabel}
     </Badge>
@@ -566,7 +281,7 @@ function StatCard({ icon: Icon, label, value, suffix, color }: { icon: React.Ele
         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-3`}>
           <Icon className="w-5 h-5 text-white" />
         </div>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
         <div className="flex items-baseline gap-1">
           <p className="text-xl font-bold text-foreground">{value}</p>
           {suffix && <span className="text-xs text-muted-foreground">{suffix}</span>}
@@ -595,29 +310,26 @@ export default function FarmerDetailPage() {
       const res = await fetch(`/api/farmers?id=${id}`)
       const data = await res.json()
       if (data.success && data.data?.data) {
-        // Merge API data with mock data for comprehensive display
         const apiData = data.data.data
+        // Use API data directly, initialize empty arrays for related data
         setFarmer({
-          ...MOCK_FARMER,
           ...apiData,
-          farmLands: apiData.farmLands?.length ? apiData.farmLands : MOCK_FARMER.farmLands,
-          harvests: MOCK_FARMER.harvests,
-          certifications: MOCK_FARMER.certifications,
-          inspections: MOCK_FARMER.inspections,
-          loans: MOCK_FARMER.loans,
-          procurements: MOCK_FARMER.procurements,
-          documents: MOCK_FARMER.documents,
-          verifications: MOCK_FARMER.verifications,
-          eudrCompliant: apiData.eudrCompliant ?? MOCK_FARMER.eudrCompliant,
-          _count: apiData._count ?? MOCK_FARMER._count,
+          farmLands: apiData.farmLands || [],
+          harvests: apiData.harvests || apiData.harvestTraceabilities || [],
+          certifications: apiData.certifications || apiData.certAssessments || [],
+          inspections: apiData.inspections || apiData.coffeeInspections || [],
+          loans: [],
+          procurements: apiData.procurements || apiData.procurementRecords || [],
+          documents: [],
+          verifications: [],
+          eudrCompliant: apiData.eudrCompliant ?? false,
+          _count: apiData._count ?? { farmLands: 0, cultivations: 0, harvestTraceabilities: 0 },
         })
       } else {
-        // Fallback to full mock data
-        setFarmer(MOCK_FARMER)
+        setFarmer(null)
       }
     } catch {
-      // Fallback to mock data on error
-      setFarmer(MOCK_FARMER)
+      setFarmer(null)
     } finally {
       setLoading(false)
     }
@@ -632,14 +344,21 @@ export default function FarmerDetailPage() {
   }, [status, router, fetchFarmer])
 
   const qrUrl = farmer ? `/verify/${encodeURIComponent(farmer.farmerCode)}` : ''
-  const qrImageUrl = farmer
-    ? `https://api.qrserver.com/v1/qr-code/?size=150x150&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}${qrUrl}`)}`
-    : ''
+  const [qrDataUrl, setQrDataUrl] = useState<string>('')
+
+  useEffect(() => {
+    if (farmer && qrUrl) {
+      const fullUrl = `${window.location.origin}${qrUrl}`
+      QRCode.toDataURL(fullUrl, { width: 150, margin: 2, color: { dark: '#6D2932', light: '#ffffff' } })
+        .then(url => setQrDataUrl(url))
+        .catch(() => setQrDataUrl(''))
+    }
+  }, [farmer, qrUrl])
 
   const handleDownloadQR = useCallback(() => {
-    if (!farmer) return
+    if (!farmer || !qrDataUrl) return
+
     const img = new Image()
-    img.crossOrigin = 'anonymous'
     img.onload = () => {
       const canvas = document.createElement('canvas')
       canvas.width = 300
@@ -705,8 +424,8 @@ export default function FarmerDetailPage() {
     img.onerror = () => {
       toast.error(t2('Không thể tải QR', 'Failed to download QR'))
     }
-    img.src = qrImageUrl
-  }, [farmer, qrImageUrl, qrUrl, t2])
+    img.src = qrDataUrl
+  }, [farmer, qrDataUrl, qrUrl, t2])
 
   const handleCopyLink = useCallback(() => {
     if (!farmer) return
@@ -789,7 +508,7 @@ export default function FarmerDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-0">
               <InfoRow label={t2('Họ và tên', 'Full Name')} value={farmer.fullName} icon={<Users className="w-3.5 h-3.5" />} />
               <InfoRow label={t2('Giới tính', 'Gender')} value={farmer.gender === 'Male' ? t2('Nam', 'Male') : farmer.gender === 'Female' ? t2('Nữ', 'Female') : farmer.gender} />
-              <InfoRow label={t2('Tuổi', 'Age')} value={`${farmer.age} ${t2('tuổi', 'yrs')}`} />
+              <InfoRow label={t2('Tuổi', 'Age')} value={(!farmer.age || farmer.age === 0) ? t2('Trống', 'Empty') : `${farmer.age} ${t2('tuổi', 'yrs')}`} />
               <InfoRow label={t2('Ngày sinh', 'Date of Birth')} value={formatDate(farmer.dob)} icon={<Calendar className="w-3.5 h-3.5" />} />
               <InfoRow label={t2('Trình độ học vấn', 'Education')} value={farmer.education} icon={<GraduationCap className="w-3.5 h-3.5" />} />
               <InfoRow label={t2('Tình trạng hôn nhân', 'Marital Status')} value={farmer.maritalStatus === 'Married' ? t2('Đã kết hôn', 'Married') : farmer.maritalStatus} />
@@ -850,7 +569,7 @@ export default function FarmerDetailPage() {
                   <Wheat className="w-5 h-5 text-coffee-600 dark:text-coffee-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Kinh nghiệm', 'Experience')}</p>
+                  <p className="text-xs text-muted-foreground uppercase">{t2('Kinh nghiệm', 'Experience')}</p>
                   <p className="text-xl font-bold text-coffee-700 dark:text-coffee-300">{farmer.yearsOfFarmingExperience} <span className="text-sm">{t2('năm', 'yrs')}</span></p>
                 </div>
               </div>
@@ -863,7 +582,7 @@ export default function FarmerDetailPage() {
                   <TreePine className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Tổng diện tích', 'Total Area')}</p>
+                  <p className="text-xs text-muted-foreground uppercase">{t2('Tổng diện tích', 'Total Area')}</p>
                   <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{totalArea.toFixed(1)} <span className="text-sm">ha</span></p>
                 </div>
               </div>
@@ -876,7 +595,7 @@ export default function FarmerDetailPage() {
                   <Sprout className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase">{t2('Sản lượng mùa này', 'Yield This Season')}</p>
+                  <p className="text-xs text-muted-foreground uppercase">{t2('Sản lượng mùa này', 'Yield This Season')}</p>
                   <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{(totalHarvestVolume / 1000).toFixed(1)} <span className="text-sm">{t2('tấn', 'tons')}</span></p>
                 </div>
               </div>
@@ -931,7 +650,7 @@ export default function FarmerDetailPage() {
                       <Layers className="w-4 h-4 text-coffee-600 dark:text-coffee-400" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">{t2('Loại đất', 'Soil Type')}</p>
+                      <p className="text-xs text-muted-foreground uppercase">{t2('Loại đất', 'Soil Type')}</p>
                       <p className="text-xs font-medium text-foreground">{fl.soilType}</p>
                     </div>
                   </div>
@@ -940,7 +659,7 @@ export default function FarmerDetailPage() {
                       <Mountain className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">{t2('Độ cao', 'Elevation')}</p>
+                      <p className="text-xs text-muted-foreground uppercase">{t2('Độ cao', 'Elevation')}</p>
                       <p className="text-xs font-medium text-foreground">{fl.elevation}m ASL</p>
                     </div>
                   </div>
@@ -949,7 +668,7 @@ export default function FarmerDetailPage() {
                       <Droplets className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">{t2('Tưới tiêu', 'Irrigation')}</p>
+                      <p className="text-xs text-muted-foreground uppercase">{t2('Tưới tiêu', 'Irrigation')}</p>
                       <p className="text-xs font-medium text-foreground">{fl.irrigationMethod}</p>
                     </div>
                   </div>
@@ -958,9 +677,9 @@ export default function FarmerDetailPage() {
                       <Sprout className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase">{t2('Cây trồng chính', 'Primary Crop')}</p>
+                      <p className="text-xs text-muted-foreground uppercase">{t2('Cây trồng chính', 'Primary Crop')}</p>
                       <p className="text-xs font-medium text-foreground">{fl.primaryCrop}</p>
-                      {fl.secondaryCrop && <p className="text-[10px] text-muted-foreground">+ {fl.secondaryCrop}</p>}
+                      {fl.secondaryCrop && <p className="text-xs text-muted-foreground">+ {fl.secondaryCrop}</p>}
                     </div>
                   </div>
                 </div>
@@ -969,25 +688,19 @@ export default function FarmerDetailPage() {
                 <div className="mb-5 p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2 mb-1">
                     <CircleDot className="w-3.5 h-3.5 text-muted-foreground" />
-                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Ranh giới GPS (Polygon)', 'GPS Polygon Boundary')}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{t2('Ranh giới GPS (Polygon)', 'GPS Polygon Boundary')}</p>
                   </div>
                   <p className="text-xs font-mono text-foreground break-all">{fl.gpsPolygon}</p>
                 </div>
 
-                {/* Map Placeholder */}
-                <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 p-8 flex flex-col items-center justify-center min-h-[180px]">
-                  <Map className="w-10 h-10 text-muted-foreground/40 mb-3" />
-                  <p className="text-sm text-muted-foreground">{t2('Bản đồ nông trại', 'Farm Land Map')}</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">{t2('Hiển thị vị trí đất nông trại trên bản đồ', 'Farm land location displayed on map')}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 text-xs gap-1.5"
-                    onClick={() => router.push(`/farmlands/${fl.id}`)}
-                  >
-                    {t2('Xem chi tiết', 'View Detail')}
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
+                {/* Farm Land Map */}
+                <div className="rounded-xl overflow-hidden border border-border">
+                  <FarmerLandMap
+                    latitude={fl.latitude || 0}
+                    longitude={fl.longitude || 0}
+                    farmerName={fl.farmName}
+                    zoom={14}
+                  />
                 </div>
 
                 {/* Cultivations */}
@@ -1001,11 +714,11 @@ export default function FarmerDetailPage() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/50">
-                            <TableHead className="text-[10px] uppercase">{t2('Cây trồng', 'Crop')}</TableHead>
-                            <TableHead className="text-[10px] uppercase">{t2('Giống', 'Variety')}</TableHead>
-                            <TableHead className="text-[10px] uppercase">{t2('Diện tích', 'Area')}</TableHead>
-                            <TableHead className="text-[10px] uppercase">{t2('Ngày trồng', 'Planted')}</TableHead>
-                            <TableHead className="text-[10px] uppercase">{t2('Trạng thái', 'Status')}</TableHead>
+                            <TableHead className="text-xs uppercase">{t2('Cây trồng', 'Crop')}</TableHead>
+                            <TableHead className="text-xs uppercase">{t2('Giống', 'Variety')}</TableHead>
+                            <TableHead className="text-xs uppercase">{t2('Diện tích', 'Area')}</TableHead>
+                            <TableHead className="text-xs uppercase">{t2('Ngày trồng', 'Planted')}</TableHead>
+                            <TableHead className="text-xs uppercase">{t2('Trạng thái', 'Status')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1016,7 +729,7 @@ export default function FarmerDetailPage() {
                               <TableCell className="text-xs">{cult.areaPlanted} ha</TableCell>
                               <TableCell className="text-xs">{formatDate(cult.plantingDate)}</TableCell>
                               <TableCell>
-                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] border-0">
+                                <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs border-0">
                                   {cult.status}
                                 </Badge>
                               </TableCell>
@@ -1046,19 +759,19 @@ export default function FarmerDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 rounded-xl bg-muted/50">
                 <p className="text-xl font-bold text-coffee-600 dark:text-coffee-400">{farmer.farmLands.length}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Mảnh đất', 'Plots')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Mảnh đất', 'Plots')}</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-muted/50">
                 <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{totalArea.toFixed(1)}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Tổng ha', 'Total ha')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Tổng ha', 'Total ha')}</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-muted/50">
                 <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{farmer._count.cultivations}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Vụ canh tác', 'Cultivations')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Vụ canh tác', 'Cultivations')}</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-muted/50">
                 <p className="text-xl font-bold text-sky-600 dark:text-sky-400">{farmer.yearsOfFarmingExperience}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Năm KN', 'Yrs Exp')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Năm KN', 'Yrs Exp')}</p>
               </div>
             </div>
           </CardContent>
@@ -1091,7 +804,7 @@ export default function FarmerDetailPage() {
           <CardContent className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Trạng thái', 'Status')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Trạng thái', 'Status')}</p>
                 <div className="flex items-center gap-2 mt-1">
                   {farmer.eudrCompliant ? (
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -1104,11 +817,11 @@ export default function FarmerDetailPage() {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Địa chỉ GPS', 'GPS Verified')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Địa chỉ GPS', 'GPS Verified')}</p>
                 <p className="text-sm font-medium text-foreground mt-1">{t2('Đã xác minh', 'Verified')}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground uppercase">{t2('Ngày kiểm tra', 'Last Check')}</p>
+                <p className="text-xs text-muted-foreground uppercase">{t2('Ngày kiểm tra', 'Last Check')}</p>
                 <p className="text-sm font-medium text-foreground mt-1">{formatDate('2025-07-22')}</p>
               </div>
             </div>
@@ -1140,21 +853,21 @@ export default function FarmerDetailPage() {
                           <p className="text-xs text-muted-foreground font-mono">{cert.certificateNumber}</p>
                         </div>
                       </div>
-                      <Badge className={`text-[10px] border-0 ${cert.status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                      <Badge className={`text-xs border-0 ${cert.status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                         {cert.status}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3 text-xs">
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Cấp ngày', 'Issued')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Cấp ngày', 'Issued')}</p>
                         <p className="font-medium">{formatDate(cert.issuedDate)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Hết hạn', 'Expiry')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Hết hạn', 'Expiry')}</p>
                         <p className="font-medium">{formatDate(cert.expiryDate)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Tổ chức cấp', 'Issuing Body')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Tổ chức cấp', 'Issuing Body')}</p>
                         <p className="font-medium">{cert.issuingBody}</p>
                       </div>
                     </div>
@@ -1180,11 +893,11 @@ export default function FarmerDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="text-[10px] uppercase">{t2('Loại', 'Type')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Kiểm tra viên', 'Inspector')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Ngày', 'Date')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Kết quả', 'Result')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Kế tiếp', 'Next')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Loại', 'Type')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Kiểm tra viên', 'Inspector')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Ngày', 'Date')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Kết quả', 'Result')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Kế tiếp', 'Next')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1194,7 +907,7 @@ export default function FarmerDetailPage() {
                       <TableCell className="text-xs text-muted-foreground">{insp.inspectorName}</TableCell>
                       <TableCell className="text-xs">{formatDate(insp.inspectionDate)}</TableCell>
                       <TableCell>
-                        <Badge className={`text-[10px] border-0 ${insp.result === 'Passed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                        <Badge className={`text-xs border-0 ${insp.result === 'Passed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                           {insp.result}
                         </Badge>
                       </TableCell>
@@ -1221,13 +934,13 @@ export default function FarmerDetailPage() {
             <CardContent>
               <div className="text-center mb-4">
                 <div className={`text-5xl font-bold ${getCreditScoreColor(farmer.creditScore)}`}>
-                  {farmer.creditScore}
+                  {farmer.creditScore ?? '—'}
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{t2('trên 100', 'out of 100')}</p>
                 <Badge className={`mt-2 text-xs border-0 ${
-                  farmer.creditScore >= 80
+                  (farmer.creditScore ?? 0) >= 80
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                    : farmer.creditScore >= 60
+                    : (farmer.creditScore ?? 0) >= 60
                     ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                     : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                 }`}>
@@ -1235,7 +948,7 @@ export default function FarmerDetailPage() {
                 </Badge>
               </div>
               <Progress value={farmer.creditScore} className={`h-3 ${getCreditScoreBarColor(farmer.creditScore)}`} />
-              <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
+              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
                 <span>0</span>
                 <span>{t2('Rủi ro cao', 'High Risk')}</span>
                 <span>{t2('Tốt', 'Good')}</span>
@@ -1283,25 +996,25 @@ export default function FarmerDetailPage() {
                             <p className="text-sm font-semibold text-foreground">{loan.source}</p>
                             <p className="text-xs text-muted-foreground">{formatDate(loan.disbursedDate)}</p>
                           </div>
-                          <Badge className={`text-[10px] border-0 ${loan.status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
+                          <Badge className={`text-xs border-0 ${loan.status === 'Active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}`}>
                             {loan.status}
                           </Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-xs">
                           <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">{t2('Số tiền vay', 'Loan Amount')}</p>
+                            <p className="text-xs text-muted-foreground uppercase">{t2('Số tiền vay', 'Loan Amount')}</p>
                             <p className="font-semibold text-foreground">{formatCurrency(loan.amount)}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">{t2('Dư nợ', 'Outstanding')}</p>
+                            <p className="text-xs text-muted-foreground uppercase">{t2('Dư nợ', 'Outstanding')}</p>
                             <p className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(loan.outstandingBalance)}</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">{t2('Lãi suất', 'Interest Rate')}</p>
+                            <p className="text-xs text-muted-foreground uppercase">{t2('Lãi suất', 'Interest Rate')}</p>
                             <p className="font-medium">{loan.interestRate}%/yr</p>
                           </div>
                           <div>
-                            <p className="text-[10px] text-muted-foreground uppercase">{t2('Đáo hạn', 'Maturity')}</p>
+                            <p className="text-xs text-muted-foreground uppercase">{t2('Đáo hạn', 'Maturity')}</p>
                             <p className="font-medium">{formatDate(loan.maturityDate)}</p>
                           </div>
                         </div>
@@ -1347,13 +1060,13 @@ export default function FarmerDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="text-[10px] uppercase">{t2('Mùa vụ', 'Season')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Ngày', 'Date')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Cây trồng', 'Crop')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('KL (kg)', 'Vol (kg)')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Hạng chất lượng', 'Quality')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Doanh thu', 'Revenue')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Trạng thái', 'Status')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Mùa vụ', 'Season')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Ngày', 'Date')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Cây trồng', 'Crop')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('KL (kg)', 'Vol (kg)')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Hạng chất lượng', 'Quality')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Doanh thu', 'Revenue')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Trạng thái', 'Status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1364,13 +1077,13 @@ export default function FarmerDetailPage() {
                       <TableCell className="text-xs font-medium">{hv.cropName}</TableCell>
                       <TableCell className="text-xs font-semibold">{hv.volumeKg.toLocaleString()}</TableCell>
                       <TableCell>
-                        <Badge className="bg-coffee-100 text-coffee-700 dark:bg-coffee-900/30 dark:text-coffee-400 text-[10px] border-0">
+                        <Badge className="bg-coffee-100 text-coffee-700 dark:bg-coffee-900/30 dark:text-coffee-400 text-xs border-0">
                           {hv.qualityGrade}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(hv.totalRevenue)}</TableCell>
                       <TableCell>
-                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] border-0">
+                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs border-0">
                           {hv.status}
                         </Badge>
                       </TableCell>
@@ -1407,21 +1120,21 @@ export default function FarmerDetailPage() {
                           <p className="text-xs text-muted-foreground">{proc.centreName}</p>
                         </div>
                       </div>
-                      <Badge className={`text-[10px] border-0 ${proc.status === 'Processed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                      <Badge className={`text-xs border-0 ${proc.status === 'Processed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                         {proc.status}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-xs mt-2">
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Ngày', 'Date')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Ngày', 'Date')}</p>
                         <p className="font-medium">{formatDate(proc.date)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Khối lượng', 'Volume')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Khối lượng', 'Volume')}</p>
                         <p className="font-medium">{proc.volumeKg.toLocaleString()} kg</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground uppercase">{t2('Đơn giá', 'Unit Price')}</p>
+                        <p className="text-xs text-muted-foreground uppercase">{t2('Đơn giá', 'Unit Price')}</p>
                         <p className="font-medium">{formatCurrency(proc.pricePerKg)}/kg</p>
                       </div>
                     </div>
@@ -1446,19 +1159,19 @@ export default function FarmerDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
               <div className="text-center p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
                 <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalRevenue)}</p>
-                <p className="text-[10px] text-muted-foreground uppercase mt-1">{t2('Tổng doanh thu', 'Total Revenue')}</p>
+                <p className="text-xs text-muted-foreground uppercase mt-1">{t2('Tổng doanh thu', 'Total Revenue')}</p>
               </div>
               <div className="text-center p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20">
                 <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{(totalHarvestVolume / 1000).toFixed(1)} {t2('tấn', 'tons')}</p>
-                <p className="text-[10px] text-muted-foreground uppercase mt-1">{t2('Tổng sản lượng', 'Total Volume')}</p>
+                <p className="text-xs text-muted-foreground uppercase mt-1">{t2('Tổng sản lượng', 'Total Volume')}</p>
               </div>
               <div className="text-center p-4 rounded-xl bg-coffee-50 dark:bg-coffee-900/20">
                 <p className="text-xl font-bold text-coffee-600 dark:text-coffee-400">{farmer.harvests.length}</p>
-                <p className="text-[10px] text-muted-foreground uppercase mt-1">{t2('Vụ thu hoạch', 'Harvests')}</p>
+                <p className="text-xs text-muted-foreground uppercase mt-1">{t2('Vụ thu hoạch', 'Harvests')}</p>
               </div>
               <div className="text-center p-4 rounded-xl bg-sky-50 dark:bg-sky-900/20">
                 <p className="text-xl font-bold text-sky-600 dark:text-sky-400">{formatCurrency(Math.round(totalRevenue / totalHarvestVolume))}</p>
-                <p className="text-[10px] text-muted-foreground uppercase mt-1">{t2('Giá TB/kg', 'Avg Price/kg')}</p>
+                <p className="text-xs text-muted-foreground uppercase mt-1">{t2('Giá TB/kg', 'Avg Price/kg')}</p>
               </div>
             </div>
 
@@ -1473,7 +1186,7 @@ export default function FarmerDetailPage() {
               </div>
               <div className="flex-1">
                 <p className="text-xs font-medium text-foreground">{t2('Các mẻ thu mua đã liên kết đến lô chế biến', 'Procurement batches linked to processing')}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t2('Truy xuất nguồn gốc từ nông trại đến cốc', 'Traceability from farm to cup')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t2('Truy xuất nguồn gốc từ nông trại đến cốc', 'Traceability from farm to cup')}</p>
               </div>
               <Button
                 variant="outline"
@@ -1507,7 +1220,7 @@ export default function FarmerDetailPage() {
               <div className="flex flex-col items-center">
                 <div className="p-4 bg-white rounded-2xl shadow-lg">
                   <img
-                    src={qrImageUrl}
+                    src={qrDataUrl}
                     alt={`QR Code for ${farmer.farmerCode}`}
                     width={200}
                     height={200}
@@ -1541,7 +1254,7 @@ export default function FarmerDetailPage() {
               </div>
               <div className="flex-1 space-y-4">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase mb-1">{t2('URL xác minh', 'Verification URL')}</p>
+                  <p className="text-xs text-muted-foreground uppercase mb-1">{t2('URL xác minh', 'Verification URL')}</p>
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                     <p className="text-sm font-mono text-foreground flex-1 break-all">{qrUrl}</p>
                     <Button variant="ghost" size="sm" className="shrink-0" onClick={handleCopyLink}>
@@ -1551,11 +1264,11 @@ export default function FarmerDetailPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">{t2('Mã nông dân', 'Farmer Code')}</p>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">{t2('Mã nông dân', 'Farmer Code')}</p>
                     <p className="text-sm font-semibold text-foreground font-mono">{farmer.farmerCode}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">{t2('Trạng thái', 'Status')}</p>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">{t2('Trạng thái', 'Status')}</p>
                     <div className="flex items-center gap-1.5">
                       {farmer.isActive ? (
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
@@ -1566,7 +1279,7 @@ export default function FarmerDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">{t2('Đã xác minh eKYC', 'eKYC Verified')}</p>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">{t2('Đã xác minh eKYC', 'eKYC Verified')}</p>
                     <div className="flex items-center gap-1.5">
                       {farmer.ekycConsent ? (
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
@@ -1577,8 +1290,8 @@ export default function FarmerDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase mb-1">{t2('EUDR', 'EUDR')}</p>
-                    <Badge className={`text-[10px] border-0 ${farmer.eudrCompliant ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">{t2('EUDR', 'EUDR')}</p>
+                    <Badge className={`text-xs border-0 ${farmer.eudrCompliant ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
                       {farmer.eudrCompliant ? t2('Tuân thủ', 'Compliant') : t2('Không tuân thủ', 'Non-Compliant')}
                     </Badge>
                   </div>
@@ -1608,9 +1321,9 @@ export default function FarmerDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-foreground truncate">{doc.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{doc.type} · {doc.fileSize} · {formatDate(doc.uploadedDate)}</p>
+                      <p className="text-xs text-muted-foreground">{doc.type} · {doc.fileSize} · {formatDate(doc.uploadedDate)}</p>
                     </div>
-                    <Badge className={`text-[10px] border-0 shrink-0 ${doc.status === 'Verified' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                    <Badge className={`text-xs border-0 shrink-0 ${doc.status === 'Verified' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                       {doc.status}
                     </Badge>
                   </div>
@@ -1635,10 +1348,10 @@ export default function FarmerDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="text-[10px] uppercase">{t2('Ngày', 'Date')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Xác minh bởi', 'Verified By')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Phương thức', 'Method')}</TableHead>
-                    <TableHead className="text-[10px] uppercase">{t2('Kết quả', 'Result')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Ngày', 'Date')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Xác minh bởi', 'Verified By')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Phương thức', 'Method')}</TableHead>
+                    <TableHead className="text-xs uppercase">{t2('Kết quả', 'Result')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1647,7 +1360,7 @@ export default function FarmerDetailPage() {
                       <TableCell className="text-xs">{formatDate(ver.date)}</TableCell>
                       <TableCell className="text-xs">{ver.verifiedBy}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px] gap-1">
+                        <Badge variant="outline" className="text-xs gap-1">
                           {ver.method === 'NFC Tag Scan' ? <Smartphone className="w-3 h-3" /> : ver.method === 'QR Code Scan' ? <QrCode className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
                           {ver.method}
                         </Badge>
@@ -1731,7 +1444,7 @@ export default function FarmerDetailPage() {
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-white rounded-xl shadow-lg">
                         <img
-                          src={qrImageUrl}
+                          src={qrDataUrl}
                           alt={`QR for ${farmer.farmerCode}`}
                           width={100}
                           height={100}
@@ -1739,7 +1452,7 @@ export default function FarmerDetailPage() {
                         />
                       </div>
                       <div className="hidden md:flex flex-col gap-2">
-                        <p className="text-[10px] text-coffee-200 uppercase">{t2('Mã truy xuất', 'Trace Code')}</p>
+                        <p className="text-xs text-coffee-200 uppercase">{t2('Mã truy xuất', 'Trace Code')}</p>
                         <p className="text-sm font-bold text-white font-mono">{farmer.farmerCode}</p>
                         <Button
                           variant="ghost"
@@ -1831,28 +1544,28 @@ export default function FarmerDetailPage() {
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <TreePine className="w-3.5 h-3.5 text-emerald-500" />
-                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Đất', 'Lands')}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{t2('Đất', 'Lands')}</p>
                   </div>
                   <p className="text-lg md:text-xl font-bold text-foreground">{farmer._count.farmLands}</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <Sprout className="w-3.5 h-3.5 text-amber-500" />
-                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Canh tác', 'Crops')}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{t2('Canh tác', 'Crops')}</p>
                   </div>
                   <p className="text-lg md:text-xl font-bold text-foreground">{farmer._count.cultivations}</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <Calendar className="w-3.5 h-3.5 text-sky-500" />
-                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Thu hoạch', 'Harvests')}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{t2('Thu hoạch', 'Harvests')}</p>
                   </div>
                   <p className="text-lg md:text-xl font-bold text-foreground">{farmer._count.harvestTraceabilities}</p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-0.5">
                     <CreditCard className="w-3.5 h-3.5 text-coffee-500" />
-                    <p className="text-[10px] text-muted-foreground uppercase">{t2('Tín dụng', 'Credit')}</p>
+                    <p className="text-xs text-muted-foreground uppercase">{t2('Tín dụng', 'Credit')}</p>
                   </div>
                   <p className={`text-lg md:text-xl font-bold ${getCreditScoreColor(farmer.creditScore)}`}>{farmer.creditScore ?? '—'}</p>
                 </div>

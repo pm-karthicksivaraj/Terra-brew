@@ -113,7 +113,7 @@ function NavItemLink({
       href={item.href}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all duration-200',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-base transition-all duration-200',
         isActive
           ? 'bg-primary/15 text-primary font-bold shadow-sm border-l-2 border-primary'
           : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
@@ -177,7 +177,7 @@ function SidebarContent({
       'fertilizer-apps': 'nav.fertilizerApps', 'pest-disease-mgmts': 'nav.pestDiseaseMgmts',
       'harvest-traceabilities': 'nav.harvestTraceabilities', 'procurement': 'nav.procurement',
       'processing': 'nav.processing', 'coffee-inspections': 'nav.coffeeInspections',
-      'qc-verifications': 'nav.coffeeInspections', 'eudr-compliance': 'nav.traceability',
+      'qc-verifications': 'nav.coffeeInspections', 'eudr-compliance': 'nav.eudrCompliance',
       'cert-assessments': 'nav.certAssessments', 'deforestation': 'nav.cropMonitorings',
       'marketplace': 'nav.marketplace', 'rfq': 'nav.procurement',
       'inspections': 'nav.coffeeInspections', 'product-monitoring': 'nav.cropMonitorings',
@@ -250,7 +250,7 @@ function SidebarContent({
                 {entityTypeLabel && (
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary capitalize"
+                    className="text-xs px-1.5 py-0 h-4 border-primary/30 text-primary capitalize"
                   >
                     {(entityTypeLabel as any)[lang] || entityTypeLabel.en}
                   </Badge>
@@ -258,7 +258,7 @@ function SidebarContent({
                 {roleLabel && (
                   <Badge
                     variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4 capitalize"
+                    className="text-xs px-1.5 py-0 h-4 capitalize"
                   >
                     {(roleLabel as any)[lang] || roleLabel.en}
                   </Badge>
@@ -304,7 +304,7 @@ function SidebarContent({
                     <button
                       onClick={() => toggleGroup(group.id)}
                       className={cn(
-                        'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors',
+                        'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors',
                         hasActiveItem
                           ? 'text-primary'
                           : 'text-sidebar-foreground/40 hover:text-sidebar-foreground/60'
@@ -402,7 +402,7 @@ export function AppSidebar({
       <aside
         className={cn(
           'hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border transition-all duration-300',
-          collapsed ? 'w-16' : 'w-60'
+          collapsed ? 'w-18' : 'w-64'
         )}
       >
         <SidebarContent

@@ -4,6 +4,33 @@
 // role-based access control for the Terra Brew sidebar.
 // ════════════════════════════════════════════════════════════════
 
+// ─── RBAC User Roles ─────────────────────────────────────────────
+//
+// Super Admin:      Platform operator managing all tenants, price tickers, platform settings.
+//                   Full platform access. Authenticates via /login → redirected to /super-admin/dashboard.
+//
+// Tenant Admin:     Organization administrator — manages their org's users, settings, all modules.
+//                   Full tenant access.
+//
+// Operations Manager: Oversees farm operations and processing.
+//                   Farm + Processing modules.
+//
+// Field Officer:    Collects data in the field, registers farmers.
+//                   Farm data entry only.
+//
+// Quality Controller: Manages inspections, QC, EUDR compliance.
+//                   Quality + Compliance modules.
+//
+// Trader:           Handles marketplace, RFQ, trading, shipments.
+//                   Trade + Logistics modules.
+//
+// Finance Manager:  Manages billing, payments, financial reports.
+//                   Finance + Billing modules.
+//
+// Viewer:           Read-only access to permitted modules.
+//                   View only.
+// ──────────────────────────────────────────────────────────────────
+
 // Entity types in the platform
 export type EntityType = 'producer' | 'aggregator' | 'exporter' | 'importer' | 'certification_body' | 'laboratory'
 

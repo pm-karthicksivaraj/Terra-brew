@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import {
   Coffee, Globe, Eye, EyeOff, Loader2, AlertCircle,
-  ArrowLeft, Building2, MapPin,
+  ArrowLeft, Building2, MapPin, Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,8 +36,8 @@ interface TenantOption {
 
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false)
-  const [email, setEmail] = useState('admin@metrang-coffee.terrabrew.com')
-  const [password, setPassword] = useState('Admin@2024')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -51,12 +51,16 @@ export default function LoginPage() {
 
   useEffect(() => { setMounted(true) }, [])
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated, redirect based on role
   useEffect(() => {
-    if (status === 'authenticated' && session?.user && !session.user.isPlatformAdmin) {
-      const params = new URLSearchParams(window.location.search)
-      const callbackUrl = params.get('callbackUrl') || '/dashboard'
-      window.location.href = callbackUrl
+    if (status === 'authenticated' && session?.user) {
+      if (session.user.isPlatformAdmin) {
+        window.location.href = '/super-admin/dashboard'
+      } else {
+        const params = new URLSearchParams(window.location.search)
+        const callbackUrl = params.get('callbackUrl') || '/dashboard'
+        window.location.href = callbackUrl
+      }
     }
   }, [status, session])
 
@@ -72,13 +76,29 @@ export default function LoginPage() {
     delay: seededRandom(i * 3 + 8) * 5,
   }))
 
-  // Step 1: Submit email + password
+  // Step 1: Submit email + password — unified login for all roles
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
+      // First, try platform admin login
+      const platformRes = await fetch('/api/auth/platform-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const platformData = await platformRes.json()
+
+      if (platformData.success && platformData.user?.isPlatformAdmin) {
+        // Platform admin — redirect to super-admin dashboard
+        toast.success(t2('Đăng nhập thành công!', 'Login successful!'))
+        window.location.href = '/super-admin/dashboard'
+        return
+      }
+
+      // Not a platform admin — try tenant login
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,7 +267,7 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[#561C24] text-xs font-medium">
+                  <Label htmlFor="email" className="text-[#561C24] text-sm font-medium">
                     Email
                   </Label>
                   <Input
@@ -256,14 +276,14 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t2('Nhập email của bạn', 'Enter your email')}
-                    className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-11 text-sm"
+                    className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-12 text-sm"
                     required
                   />
                 </div>
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-[#561C24] text-xs font-medium">
+                  <Label htmlFor="password" className="text-[#561C24] text-sm font-medium">
                     {t2('Mật khẩu', 'Password')}
                   </Label>
                   <div className="relative">
@@ -273,7 +293,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-11 text-sm pr-10"
+                      className="bg-[#E8D8C4]/30 border-[#C7B7A3] focus:border-[#6D2932] focus:ring-[#6D2932]/20 rounded-xl h-12 text-sm pr-10"
                       required
                     />
                     <button
@@ -294,17 +314,25 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Demo info */}
+                {/* Hint for roles */}
                 <div className="bg-[#E8D8C4]/30 border border-[#C7B7A3]/50 rounded-xl p-3 text-xs text-[#6D2932]">
-                  <p className="font-medium mb-1">{t2('Tài khoản demo đã được điền sẵn', 'Demo credentials pre-filled')}</p>
-                  <p className="text-[#6D2932]/70">admin@metrang-coffee.terrabrew.com / Admin@2024</p>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span className="font-medium">{t2('Đăng nhập dành cho mọi vai trò', 'Single login for all roles')}</span>
+                  </div>
+                  <p className="text-[#6D2932]/70 leading-relaxed">
+                    {t2(
+                      'Quản trị viên nền tảng, quản trị viên tổ chức và người dùng tenant đều đăng nhập tại đây.',
+                      'Platform admins, tenant admins, and tenant users all sign in here.'
+                    )}
+                  </p>
                 </div>
 
                 {/* Submit Button */}
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#6D2932] to-[#561C24] hover:from-[#561C24] hover:to-[#3d1419] text-[#E8D8C4] h-11 rounded-xl shadow-lg shadow-[#6D2932]/20 transition-all duration-300 hover:shadow-xl text-sm font-medium"
+                  className="w-full bg-gradient-to-r from-[#6D2932] to-[#561C24] hover:from-[#561C24] hover:to-[#3d1419] text-[#E8D8C4] h-12 rounded-xl shadow-lg shadow-[#6D2932]/20 transition-all duration-300 hover:shadow-xl text-sm font-medium"
                 >
                   {loading ? (
                     <>
@@ -395,47 +423,12 @@ export default function LoginPage() {
                 </button>
               </div>
             )}
-
-            {/* Seed data link & platform admin — always visible */}
-            {step === 'credentials' && (
-              <>
-                <div className="mt-4 text-center">
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/api/seed', { method: 'POST' })
-                        const data = await res.json()
-                        if (data.success) {
-                          toast.success(t2('Đã tải dữ liệu mẫu thành công!', 'Sample data loaded!'))
-                        } else {
-                          toast.error(data.error || 'Error')
-                        }
-                      } catch {
-                        toast.error(t2('Lỗi khi tải dữ liệu mẫu', 'Error loading sample data'))
-                      }
-                    }}
-                    className="text-xs text-[#6D2932]/70 hover:text-[#561C24] underline underline-offset-2 transition-colors"
-                  >
-                    {t2('Tải dữ liệu mẫu (Đầy đủ)', 'Load Sample Data (Full Pipeline)')}
-                  </button>
-                </div>
-
-                <div className="mt-3 text-center">
-                  <button
-                    onClick={() => window.location.href = '/super-admin'}
-                    className="text-xs text-[#6D2932]/60 hover:text-[#561C24] transition-colors"
-                  >
-                    {t2('Đăng nhập Quản trị nền tảng →', 'Platform Admin Login →')}
-                  </button>
-                </div>
-              </>
-            )}
           </CardContent>
         </Card>
 
         {/* Bottom text */}
         <p className="text-center text-[#C7B7A3]/60 text-xs mt-6">
-          © 2024 Terra Brew — {t2('Nền tảng Truy xuất Nguồn gốc Cà phê', 'Coffee Traceability Platform')}
+          © 2024 Terra Brew — {t2('Nền tảng Tuân thủ EUDR Cà phê', 'Coffee EUDR Compliance Platform')}
         </p>
       </div>
     </div>

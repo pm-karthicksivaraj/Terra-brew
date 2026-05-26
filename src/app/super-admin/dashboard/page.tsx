@@ -10,6 +10,7 @@ import {
   Activity, UserCog, FileText, Search,
   Eye, Power, ArrowRight, Clock,
   AlertTriangle, Leaf, TrendingUp,
+  DollarSign, Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -80,6 +81,22 @@ interface ModuleDef {
   description?: string | null
   category?: string | null
   version: string
+}
+
+interface PriceTicker {
+  id: string
+  commodity: string
+  price: number
+  currency: string
+  change: number
+  changePercent: number
+  unit: string
+  source: string | null
+  high52w: number | null
+  low52w: number | null
+  lastUpdated: string
+  isActive: boolean
+  createdAt: string
 }
 
 const MODULE_LIST = [
@@ -158,6 +175,7 @@ export default function SuperAdminDashboard() {
   const [modules, setModules] = useState<ModuleDef[]>([])
   const [platformUsers, setPlatformUsers] = useState<PlatformUser[]>([])
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
+  const [priceTickers, setPriceTickers] = useState<PriceTicker[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -187,6 +205,15 @@ export default function SuperAdminDashboard() {
     email: '', password: '', name: '', role: 'support' as 'super_admin' | 'support',
   })
 
+  // Price ticker dialog
+  const [tickerDialogOpen, setTickerDialogOpen] = useState(false)
+  const [tickerSubmitting, setTickerSubmitting] = useState(false)
+  const [editingTicker, setEditingTicker] = useState<PriceTicker | null>(null)
+  const [tickerForm, setTickerForm] = useState({
+    commodity: '', price: '', currency: 'USD', change: '0', changePercent: '0',
+    unit: 'per lb', source: '', high52w: '', low52w: '', isActive: true,
+  })
+
 
   const resetForm = () => {
     setForm({
@@ -201,6 +228,14 @@ export default function SuperAdminDashboard() {
   const resetUserForm = () => {
     setUserForm({ email: '', password: '', name: '', role: 'support' })
     setEditingUser(null)
+  }
+
+  const resetTickerForm = () => {
+    setTickerForm({
+      commodity: '', price: '', currency: 'USD', change: '0', changePercent: '0',
+      unit: 'per lb', source: '', high52w: '', low52w: '', isActive: true,
+    })
+    setEditingTicker(null)
   }
 
   const fetchData = useCallback(async () => {
@@ -243,6 +278,16 @@ export default function SuperAdminDashboard() {
     }
   }, [logFilter])
 
+  const fetchPriceTickers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/price-tickers')
+      const data = await res.json()
+      if (data.success) setPriceTickers(data.data.tickers || [])
+    } catch (err) {
+      console.error('Failed to fetch price tickers', err)
+    }
+  }, [])
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/super-admin')
@@ -253,9 +298,10 @@ export default function SuperAdminDashboard() {
         fetchData()
         fetchPlatformUsers()
         fetchAuditLogs()
+        fetchPriceTickers()
       }
     }
-  }, [status, router, session, fetchData, fetchPlatformUsers, fetchAuditLogs])
+  }, [status, router, session, fetchData, fetchPlatformUsers, fetchAuditLogs, fetchPriceTickers])
 
   // Refetch audit logs when filters change
   useEffect(() => {
@@ -571,6 +617,10 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="modules" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Package className="w-3.5 h-3.5 mr-1.5" />
               Modules
+            </TabsTrigger>
+            <TabsTrigger value="tickers" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
+              <DollarSign className="w-3.5 h-3.5 mr-1.5" />
+              {t2('Giá cả', 'Tickers')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-stone-700 data-[state=active]:text-stone-100 text-stone-400 rounded-lg text-xs px-4">
               <Globe className="w-3.5 h-3.5 mr-1.5" />
@@ -1214,6 +1264,277 @@ export default function SuperAdminDashboard() {
                   </div>
                 ))}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* ══════════════════════════════════════════════════════════
+              PRICE TICKERS TAB
+              ══════════════════════════════════════════════════════════ */}
+          <TabsContent value="tickers">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-stone-500" />
+                  {t2('Quản lý Báo giá', 'Price Tickers')}
+                </h2>
+                <Dialog open={tickerDialogOpen} onOpenChange={(open) => { setTickerDialogOpen(open); if (!open) resetTickerForm() }}>
+                  <Button
+                    className="bg-gradient-to-r from-stone-600 to-stone-800 text-white gap-2 rounded-xl hover:from-stone-500 hover:to-stone-700"
+                    onClick={() => { resetTickerForm(); setTickerDialogOpen(true) }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t2('Thêm báo giá', 'Add Ticker')}
+                  </Button>
+                  <DialogContent className="max-w-lg rounded-2xl bg-stone-900 border-stone-800 text-stone-100">
+                    <DialogHeader>
+                      <DialogTitle className="text-stone-100 flex items-center gap-2">
+                        <DollarSign className="w-5 h-5 text-stone-500" />
+                        {editingTicker
+                          ? t2('Chỉnh sửa báo giá', 'Edit Ticker')
+                          : t2('Thêm báo giá mới', 'Add New Ticker')}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault()
+                      setTickerSubmitting(true)
+                      try {
+                        const payload = {
+                          commodity: tickerForm.commodity,
+                          price: parseFloat(tickerForm.price) || 0,
+                          currency: tickerForm.currency,
+                          change: parseFloat(tickerForm.change) || 0,
+                          changePercent: parseFloat(tickerForm.changePercent) || 0,
+                          unit: tickerForm.unit,
+                          source: tickerForm.source || null,
+                          high52w: tickerForm.high52w ? parseFloat(tickerForm.high52w) : null,
+                          low52w: tickerForm.low52w ? parseFloat(tickerForm.low52w) : null,
+                          isActive: tickerForm.isActive,
+                        }
+                        if (editingTicker) {
+                          const res = await fetch(`/api/price-tickers/${editingTicker.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                          })
+                          const data = await res.json()
+                          if (data.success) {
+                            toast.success(t2('Đã cập nhật báo giá!', 'Ticker updated!'))
+                            setTickerDialogOpen(false)
+                            resetTickerForm()
+                            fetchPriceTickers()
+                          } else {
+                            toast.error(data.error || 'Error')
+                          }
+                        } else {
+                          const res = await fetch('/api/price-tickers', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                          })
+                          const data = await res.json()
+                          if (data.success) {
+                            toast.success(t2('Đã tạo báo giá!', 'Ticker created!'))
+                            setTickerDialogOpen(false)
+                            resetTickerForm()
+                            fetchPriceTickers()
+                          } else {
+                            toast.error(data.error || 'Error')
+                          }
+                        }
+                      } catch {
+                        toast.error(t2('Lỗi kết nối', 'Connection error'))
+                      } finally {
+                        setTickerSubmitting(false)
+                      }
+                    }} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5 col-span-2">
+                          <Label className="text-xs text-stone-400">{t2('Hàng hóa', 'Commodity')} *</Label>
+                          <Input value={tickerForm.commodity} onChange={(e) => setTickerForm({ ...tickerForm, commodity: e.target.value })} placeholder="e.g. Robusta, Arabica" className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" required />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Giá', 'Price')} *</Label>
+                          <Input type="number" step="0.01" value={tickerForm.price} onChange={(e) => setTickerForm({ ...tickerForm, price: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" required />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Tiền tệ', 'Currency')}</Label>
+                          <Select value={tickerForm.currency} onValueChange={(v) => setTickerForm({ ...tickerForm, currency: v })}>
+                            <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-stone-800 border-stone-700">
+                              <SelectItem value="USD">USD ($)</SelectItem>
+                              <SelectItem value="VND">VND (₫)</SelectItem>
+                              <SelectItem value="EUR">EUR (€)</SelectItem>
+                              <SelectItem value="GBP">GBP (£)</SelectItem>
+                              <SelectItem value="BRL">BRL (R$)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Thay đổi', 'Change')}</Label>
+                          <Input type="number" step="0.01" value={tickerForm.change} onChange={(e) => setTickerForm({ ...tickerForm, change: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Thay đổi %', 'Change %')}</Label>
+                          <Input type="number" step="0.01" value={tickerForm.changePercent} onChange={(e) => setTickerForm({ ...tickerForm, changePercent: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Đơn vị', 'Unit')}</Label>
+                          <Select value={tickerForm.unit} onValueChange={(v) => setTickerForm({ ...tickerForm, unit: v })}>
+                            <SelectTrigger className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-stone-800 border-stone-700">
+                              <SelectItem value="per lb">per lb</SelectItem>
+                              <SelectItem value="per kg">per kg</SelectItem>
+                              <SelectItem value="per bag">per bag</SelectItem>
+                              <SelectItem value="per MT">per MT</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Nguồn', 'Source')}</Label>
+                          <Input value={tickerForm.source} onChange={(e) => setTickerForm({ ...tickerForm, source: e.target.value })} placeholder="ICE Futures, LIFFE..." className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Cao 52 tuần', '52W High')}</Label>
+                          <Input type="number" step="0.01" value={tickerForm.high52w} onChange={(e) => setTickerForm({ ...tickerForm, high52w: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-stone-400">{t2('Thấp 52 tuần', '52W Low')}</Label>
+                          <Input type="number" step="0.01" value={tickerForm.low52w} onChange={(e) => setTickerForm({ ...tickerForm, low52w: e.target.value })} className="rounded-xl border-stone-700 bg-stone-800/50 text-stone-100 focus:border-stone-500" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch checked={tickerForm.isActive} onCheckedChange={(v) => setTickerForm({ ...tickerForm, isActive: v })} />
+                          <Label className="text-xs text-stone-400">{t2('Hoạt động', 'Active')}</Label>
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-3 pt-4 border-t border-stone-800">
+                        <Button type="button" variant="outline" onClick={() => { setTickerDialogOpen(false); resetTickerForm() }} className="rounded-xl border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</Button>
+                        <Button type="submit" disabled={tickerSubmitting} className="bg-gradient-to-r from-stone-600 to-stone-800 text-white rounded-xl hover:from-stone-500 hover:to-stone-700">
+                          {tickerSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingTicker ? t2('Cập nhật', 'Update') : t2('Tạo mới', 'Create')}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Price Tickers Table */}
+              <Card className="rounded-2xl border border-stone-800 bg-stone-900/50 backdrop-blur overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-stone-800/30 border-b border-stone-800">
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Hàng hóa', 'Commodity')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Giá', 'Price')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Thay đổi', 'Change')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden md:table-cell">{t2('Thay đổi %', 'Change %')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('Nguồn', 'Source')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider hidden lg:table-cell">{t2('Cập nhật', 'Updated')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider">{t2('Trạng thái', 'Status')}</th>
+                        <th className="px-4 py-3 text-[10px] font-bold text-stone-500 uppercase tracking-wider text-right">{t2('Hành động', 'Actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {priceTickers.map((ticker) => (
+                        <tr key={ticker.id} className="border-b border-stone-800/50 hover:bg-stone-800/20 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center shrink-0">
+                                <TrendingUp className="w-4 h-4 text-stone-500" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-medium text-stone-200">{ticker.commodity}</p>
+                                <p className="text-[10px] text-stone-600">{ticker.unit}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs font-bold text-stone-200">
+                            {ticker.currency === 'USD' ? '$' : ticker.currency === 'VND' ? '₫' : ticker.currency === 'EUR' ? '€' : ''}{ticker.price.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-xs hidden md:table-cell">
+                            <span className={ticker.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                              {ticker.change >= 0 ? '+' : ''}{ticker.change.toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs hidden md:table-cell">
+                            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${ticker.changePercent >= 0 ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'}`}>
+                              {ticker.changePercent >= 0 ? '↑' : '↓'} {Math.abs(ticker.changePercent).toFixed(2)}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-stone-400 hidden lg:table-cell">{ticker.source || '—'}</td>
+                          <td className="px-4 py-3 text-[10px] text-stone-500 hidden lg:table-cell">{new Date(ticker.lastUpdated).toLocaleDateString()}</td>
+                          <td className="px-4 py-3">
+                            <Badge className={`${ticker.isActive ? 'bg-emerald-900/40 text-emerald-300' : 'bg-red-900/40 text-red-300'} text-[10px] border-0`}>
+                              {ticker.isActive ? t2('Hoạt động', 'Active') : t2('Tắt', 'Off')}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                setEditingTicker(ticker)
+                                setTickerForm({
+                                  commodity: ticker.commodity,
+                                  price: String(ticker.price),
+                                  currency: ticker.currency,
+                                  change: String(ticker.change),
+                                  changePercent: String(ticker.changePercent),
+                                  unit: ticker.unit,
+                                  source: ticker.source || '',
+                                  high52w: ticker.high52w !== null ? String(ticker.high52w) : '',
+                                  low52w: ticker.low52w !== null ? String(ticker.low52w) : '',
+                                  isActive: ticker.isActive,
+                                })
+                                setTickerDialogOpen(true)
+                              }} className="text-stone-500 hover:text-stone-200 h-7 w-7 p-0">
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-red-500/70 hover:text-red-400 h-7 w-7 p-0">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-stone-900 border-stone-800 text-stone-100">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-stone-100 flex items-center gap-2">
+                                      <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                      {t2('Xóa báo giá?', 'Delete Ticker?')}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-stone-400">
+                                      {t2(`Bạn có chắc muốn xóa "${ticker.commodity}"?`, `Are you sure you want to delete "${ticker.commodity}"?`)}
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="border-stone-700 text-stone-400 hover:text-stone-200">{t2('Hủy', 'Cancel')}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={async () => {
+                                      try {
+                                        const res = await fetch(`/api/price-tickers/${ticker.id}`, { method: 'DELETE' })
+                                        const data = await res.json()
+                                        if (data.success) {
+                                          toast.success(t2('Đã xóa báo giá', 'Ticker deleted'))
+                                          fetchPriceTickers()
+                                        } else {
+                                          toast.error(data.error || 'Error')
+                                        }
+                                      } catch {
+                                        toast.error(t2('Lỗi kết nối', 'Connection error'))
+                                      }
+                                    }} className="bg-red-700 hover:bg-red-600 text-white">{t2('Xóa', 'Delete')}</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {priceTickers.length === 0 && (
+                  <div className="py-12 text-center text-stone-600 text-xs">
+                    {t2('Chưa có báo giá nào', 'No price tickers yet')}
+                  </div>
+                )}
+              </Card>
             </div>
           </TabsContent>
 

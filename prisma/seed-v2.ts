@@ -63,8 +63,6 @@ async function main() {
     { slug: 'cooxupe', name: 'Cooxupé', legalName: 'Cooperativa Regional de Cafeicultores em Guaxupé', entityType: 'aggregator', country: 'BR', currency: 'BRL', currencySymbol: 'R$', language: 'pt', timezone: 'America/Sao_Paulo', locale: 'pt-BR', dateFormat: 'DD/MM/YYYY', region: 'South America', supportedLanguages: '["pt","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Rainforest Alliance","UTZ","Fair Trade"]', plan: 'professional', maxUsers: 50, maxFarmers: 5000, commodityTypes: '["coffee"]' },
     { slug: 'yirgacheffe-union', name: 'Yirgacheffe Union', legalName: 'Yirgacheffe Coffee Farmers Cooperative Union', entityType: 'producer', country: 'ET', currency: 'ETB', currencySymbol: 'Br', language: 'am', timezone: 'Africa/Addis_Ababa', locale: 'am-ET', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["am","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Organic","Fair Trade"]', plan: 'starter', maxUsers: 15, maxFarmers: 2000, commodityTypes: '["coffee"]' },
     { slug: 'othaya-cooperative', name: 'Othaya Cooperative', legalName: 'Othaya Farmers Cooperative Society Ltd', entityType: 'producer', country: 'KE', currency: 'KES', currencySymbol: 'KSh', language: 'sw', timezone: 'Africa/Nairobi', locale: 'sw-KE', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["sw","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Fair Trade","Rainforest Alliance"]', plan: 'starter', maxUsers: 10, maxFarmers: 1500, commodityTypes: '["coffee"]' },
-    { slug: 'euro-coffee-imports', name: 'Euro Coffee Imports', legalName: 'Euro Coffee Imports B.V.', entityType: 'exporter', country: 'NL', currency: 'EUR', currencySymbol: '€', language: 'en', timezone: 'Europe/Amsterdam', locale: 'en-IE', dateFormat: 'DD/MM/YYYY', region: 'Europe', supportedLanguages: '["en","nl"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '[]', plan: 'professional', maxUsers: 20, maxFarmers: 0, commodityTypes: '["coffee"]' },
-    { slug: 'sgs-inspection', name: 'SGS Inspection', legalName: 'SGS Société Générale de Surveillance SA', entityType: 'certification_body', country: 'CH', currency: 'CHF', currencySymbol: 'CHF', language: 'en', timezone: 'Europe/Zurich', locale: 'de-CH', dateFormat: 'DD.MM.YYYY', region: 'Europe', supportedLanguages: '["en","de","fr"]', measurementUnit: 'metric', eudrCompliant: false, certifications: '[]', plan: 'starter', maxUsers: 10, maxFarmers: 0, commodityTypes: '["coffee","cocoa","soy"]' },
   ]
   const tenants: Record<string, any> = {}
   for (const td of tenantDefs) {
@@ -113,13 +111,6 @@ async function main() {
     // Othaya Cooperative (Kenya)
     { email: 'admin@othaya-cooperative.terrabrew.com', name: 'Othaya Admin', role: 'tenant_admin', tenantSlug: 'othaya-cooperative' },
     { email: 'field_officer@othaya-cooperative.terrabrew.com', name: 'Othaya Field Officer', role: 'field_officer', tenantSlug: 'othaya-cooperative' },
-    // Euro Coffee Imports (Netherlands - exporter)
-    { email: 'admin@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Admin', role: 'tenant_admin', tenantSlug: 'euro-coffee-imports' },
-    { email: 'trader@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Trader', role: 'trader', tenantSlug: 'euro-coffee-imports' },
-    { email: 'operations@euro-coffee-imports.terrabrew.com', name: 'Euro Coffee Ops', role: 'operations_manager', tenantSlug: 'euro-coffee-imports' },
-    // SGS Inspection (Switzerland - cert body)
-    { email: 'admin@sgs-inspection.terrabrew.com', name: 'SGS Admin', role: 'tenant_admin', tenantSlug: 'sgs-inspection' },
-    { email: 'inspector@sgs-inspection.terrabrew.com', name: 'SGS Inspector', role: 'quality_controller', tenantSlug: 'sgs-inspection' },
   ]
   const users: Record<string, any> = {}
   for (const ud of userDefs) {
@@ -216,13 +207,9 @@ async function main() {
 
   // ═══ 8. Entity Relationships ═══
   const relDefs = [
-    { from: 'metrang-coffee', to: 'euro-coffee-imports', type: 'export' },
-    { from: 'cooxupe', to: 'euro-coffee-imports', type: 'export' },
-    { from: 'yirgacheffe-union', to: 'euro-coffee-imports', type: 'export' },
-    { from: 'othaya-cooperative', to: 'euro-coffee-imports', type: 'export' },
-    { from: 'sgs-inspection', to: 'metrang-coffee', type: 'certify' },
-    { from: 'sgs-inspection', to: 'cooxupe', type: 'inspect' },
-    { from: 'sgs-inspection', to: 'yirgacheffe-union', type: 'certify' },
+    { from: 'metrang-coffee', to: 'cooxupe', type: 'export' },
+    { from: 'yirgacheffe-union', to: 'cooxupe', type: 'export' },
+    { from: 'othaya-cooperative', to: 'cooxupe', type: 'export' },
   ]
   for (const rd of relDefs) {
     const fromId = tenants[rd.from].id
@@ -235,22 +222,7 @@ async function main() {
   }
   console.log('  ✅ EntityRelationships')
 
-  // ═══ 9. Buyers for Euro Coffee ═══
-  const nlTid = tenants['euro-coffee-imports'].id
-  const nlAdmin = users['admin@euro-coffee-imports.terrabrew.com']
-  const buyerDefs = [
-    { companyName: 'Kaffeerösterei Berlin GmbH', contactPerson: 'Hans Müller', email: 'hans@kaffeerosterei.de', country: 'Germany', city: 'Berlin', taxId: 'DE123456789', euRegistration: true },
-    { companyName: 'Cafés Spécialisés Paris SAS', contactPerson: 'Pierre Dupont', email: 'pierre@cafes-specialises.fr', country: 'France', city: 'Paris', taxId: 'FR987654321', euRegistration: true },
-  ]
-  for (const bd of buyerDefs) {
-    const existing = await db.buyer.findFirst({ where: { tenantId: nlTid, companyName: bd.companyName } })
-    if (!existing) {
-      await db.buyer.create({ data: { ...bd, tenantId: nlTid, createdBy: nlAdmin.id, isActive: true } })
-    }
-  }
-  console.log('  ✅ Buyers')
-
-  // ═══ 10. EUDR Compliance for each producer ═══
+  // ═══ 9. EUDR Compliance for each producer ═══
   const eudrDefs = [
     { tenantId: vnTid, complianceId: 'EUDR-VN-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-VN-001', flKey: 'VN-PLT-001' },
     { tenantId: vnTid, complianceId: 'EUDR-VN-2024-002', status: 'in_review', riskLevel: 'medium', farmerCode: 'FRM-VN-002', flKey: 'VN-PLT-002' },
@@ -266,12 +238,33 @@ async function main() {
   }
   console.log('  ✅ EUDR Compliance')
 
+  // ═══ 10. Price Tickers (platform-level, managed by super admin) ═══
+  const tickerDefs = [
+    { commodity: 'Robusta Coffee', price: 4.28, currency: 'USD', change: 0.12, changePercent: 2.88, unit: 'per lb', source: 'ICE Futures Europe', high52w: 5.14, low52w: 3.42, isActive: true },
+    { commodity: 'Arabica Coffee', price: 7.82, currency: 'USD', change: -0.15, changePercent: -1.88, unit: 'per lb', source: 'ICE Futures US', high52w: 9.45, low52w: 5.90, isActive: true },
+    { commodity: 'C-Price ICE', price: 392.50, currency: 'USc', change: 3.20, changePercent: 0.82, unit: 'per lb', source: 'ICE Futures', high52w: 445.00, low52w: 310.00, isActive: true },
+    { commodity: 'Vietnam Robusta (Liffe)', price: 3845, currency: 'USD', change: 28, changePercent: 0.73, unit: 'per tonne', source: 'LIFFE/Euronext', high52w: 4250, low52w: 2980, isActive: true },
+    { commodity: 'Brazil Natural (NY)', price: 410.25, currency: 'USc', change: -2.50, changePercent: -0.61, unit: 'per lb', source: 'ICE Futures US', high52w: 460.00, low52w: 325.00, isActive: true },
+    { commodity: 'Colombian Milds', price: 435.80, currency: 'USc', change: 1.40, changePercent: 0.32, unit: 'per lb', source: 'ICE Futures US', high52w: 490.00, low52w: 355.00, isActive: false },
+  ]
+  for (const td of tickerDefs) {
+    const existing = await db.priceTicker.findFirst({ where: { commodity: td.commodity } })
+    if (!existing) {
+      await db.priceTicker.create({ data: td })
+      console.log(`  ✅ Ticker: ${td.commodity}`)
+    } else {
+      console.log(`  ℹ️  Ticker ${td.commodity} exists`)
+    }
+  }
+  console.log('  ✅ Price Tickers')
+
   // ═══ DONE ═══
   console.log('\n🌱 Seed complete! Summary:')
   console.log(`  Tenants: ${Object.keys(tenants).length}`)
   console.log(`  Users: ${Object.keys(users).length}`)
   console.log(`  Farmers: ${Object.keys(farmerRecords).length}`)
   console.log(`  FarmLands: ${Object.keys(flRecords).length}`)
+  console.log(`  Price Tickers: ${tickerDefs.length}`)
   console.log('\n  Login credentials: <email>@<tenant-slug>.terrabrew.com / Admin@2024\n')
 }
 

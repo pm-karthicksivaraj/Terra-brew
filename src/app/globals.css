@@ -3,58 +3,58 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ══ Terra Brew Coffee Brown Theme ══
-     Palette: #561C24 (deep maroon), #6D2932 (burgundy), #C7B7A3 (taupe), #E8D8C4 (cream)
-     Inspired by ColorHunt — warm, premium, coffee heritage feel */
+  /* ══ TerraBrew — White + Coffee Brown Two-Color Theme ══
+     Primary: #6D2932 (coffee brown) + #FFFFFF (white)
+     Clean, professional, minimal palette */
 
-  --background: hsl(34 40% 96%);         /* #F8F3ED — warm cream white */
-  --foreground: hsl(350 44% 15%);        /* dark burgundy text */
+  --background: hsl(0 0% 100%);           /* #FFFFFF — pure white */
+  --foreground: hsl(350 44% 15%);         /* dark coffee brown text */
 
-  --card: hsl(0 0% 100%);               /* pure white cards */
+  --card: hsl(0 0% 100%);                /* pure white cards */
   --card-foreground: hsl(350 44% 15%);
 
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(350 44% 15%);
 
-  /* Primary: rich burgundy — the heart of the coffee brand */
-  --primary: hsl(350 44% 29%);           /* #6D2932 */
-  --primary-foreground: hsl(34 40% 96%); /* cream white on burgundy */
+  /* Primary: coffee brown — the heart of the brand */
+  --primary: hsl(350 44% 29%);            /* #6D2932 */
+  --primary-foreground: hsl(0 0% 100%);   /* white on coffee brown */
 
-  --secondary: hsl(34 24% 88%);          /* light taupe */
+  --secondary: hsl(30 20% 95%);           /* very light brown tint — almost white with warmth */
   --secondary-foreground: hsl(350 44% 29%);
 
-  --muted: hsl(34 20% 92%);              /* very light warm gray */
-  --muted-foreground: hsl(350 20% 45%);  /* muted burgundy */
+  --muted: hsl(30 10% 95%);               /* light gray with warm tint */
+  --muted-foreground: hsl(350 20% 45%);   /* medium brown */
 
-  --accent: hsl(34 24% 78%);             /* warm taupe #C7B7A3 */
-  --accent-foreground: hsl(350 44% 15%);
+  --accent: hsl(350 30% 95%);             /* light brownish accent */
+  --accent-foreground: hsl(350 44% 29%);  /* coffee brown */
 
   --destructive: hsl(0 72% 50%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(34 20% 85%);             /* warm light border */
-  --input: hsl(34 20% 85%);
-  --ring: hsl(350 44% 29%);              /* burgundy ring */
+  --border: hsl(30 10% 90%);              /* light warm gray */
+  --input: hsl(30 10% 90%);
+  --ring: hsl(350 44% 29%);               /* coffee brown ring */
 
   --radius: 0.625rem;
 
-  /* Sidebar — deep maroon for premium feel */
-  --sidebar-background: hsl(350 53% 22%); /* #561C24 deep maroon */
-  --sidebar-foreground: hsl(34 40% 92%);  /* warm cream text */
-  --sidebar-primary: hsl(34 40% 89%);     /* cream #E8D8C4 */
-  --sidebar-primary-foreground: hsl(350 53% 22%);
-  --sidebar-accent: hsl(350 40% 28%);     /* slightly lighter maroon */
-  --sidebar-accent-foreground: hsl(34 40% 92%);
-  --sidebar-border: hsl(350 40% 30%);     /* maroon border */
-  --sidebar-ring: hsl(34 24% 71%);        /* taupe ring */
+  /* Sidebar — coffee brown */
+  --sidebar-background: hsl(350 44% 29%); /* #6D2932 coffee brown */
+  --sidebar-foreground: hsl(0 0% 100%);   /* white text */
+  --sidebar-primary: hsl(0 0% 100%);      /* white */
+  --sidebar-primary-foreground: hsl(350 44% 29%); /* coffee brown */
+  --sidebar-accent: hsl(350 35% 35%);     /* slightly lighter coffee brown */
+  --sidebar-accent-foreground: hsl(0 0% 100%); /* white */
+  --sidebar-border: hsl(350 40% 22%);     /* darker coffee brown border */
+  --sidebar-ring: hsl(0 0% 100%);         /* white ring */
 
-  --chart-1: hsl(350 44% 29%);            /* burgundy */
-  --chart-2: hsl(34 60% 50%);             /* warm gold-brown */
-  --chart-3: hsl(350 53% 22%);            /* deep maroon */
-  --chart-4: hsl(34 24% 71%);             /* taupe */
+  --chart-1: hsl(350 44% 29%);            /* coffee brown */
+  --chart-2: hsl(350 35% 45%);            /* lighter coffee brown */
+  --chart-3: hsl(350 53% 22%);            /* deep coffee brown */
+  --chart-4: hsl(350 25% 55%);            /* medium coffee brown */
   --chart-5: hsl(0 72% 50%);              /* red */
 
-  /* Status colors — warm palette aligned */
+  /* Status colors */
   --success: hsl(142 50% 40%);
   --info: hsl(200 70% 50%);
   --warning: hsl(34 90% 50%);
@@ -62,51 +62,51 @@
 }
 
 .dark {
-  /* ══ Terra Brew Dark Theme ══ */
+  /* ══ TerraBrew Dark Theme — Coffee Brown Two-Color ══ */
 
-  --background: hsl(350 53% 8%);         /* very dark maroon */
-  --foreground: hsl(34 40% 92%);          /* warm cream */
+  --background: hsl(350 30% 8%);          /* very dark brown */
+  --foreground: hsl(30 20% 92%);          /* light cream/white */
 
-  --card: hsl(350 40% 12%);              /* dark burgundy card */
-  --card-foreground: hsl(34 40% 92%);
+  --card: hsl(350 25% 12%);              /* dark brown card */
+  --card-foreground: hsl(30 20% 92%);
 
-  --popover: hsl(350 40% 12%);
-  --popover-foreground: hsl(34 40% 92%);
+  --popover: hsl(350 25% 12%);
+  --popover-foreground: hsl(30 20% 92%);
 
-  /* Primary: brighter burgundy for dark mode */
-  --primary: hsl(350 50% 45%);            /* brighter burgundy */
-  --primary-foreground: hsl(34 40% 96%);
+  /* Primary: lighter coffee brown for dark mode */
+  --primary: hsl(350 40% 45%);            /* lighter coffee brown */
+  --primary-foreground: hsl(0 0% 100%);   /* white */
 
-  --secondary: hsl(350 30% 18%);
-  --secondary-foreground: hsl(34 40% 92%);
+  --secondary: hsl(350 20% 18%);
+  --secondary-foreground: hsl(30 20% 90%);
 
-  --muted: hsl(350 25% 16%);
-  --muted-foreground: hsl(34 20% 60%);
+  --muted: hsl(350 20% 16%);
+  --muted-foreground: hsl(30 10% 60%);
 
-  --accent: hsl(350 30% 22%);
-  --accent-foreground: hsl(34 40% 92%);
+  --accent: hsl(350 20% 22%);
+  --accent-foreground: hsl(30 20% 90%);
 
   --destructive: hsl(0 72% 51%);
   --destructive-foreground: hsl(0 0% 100%);
 
-  --border: hsl(350 25% 22%);
-  --input: hsl(350 25% 22%);
-  --ring: hsl(350 50% 45%);
+  --border: hsl(350 20% 22%);
+  --input: hsl(350 20% 22%);
+  --ring: hsl(350 40% 45%);
 
-  /* Sidebar — deep dark maroon */
-  --sidebar-background: hsl(350 53% 10%);
-  --sidebar-foreground: hsl(34 40% 92%);
-  --sidebar-primary: hsl(350 50% 45%);
-  --sidebar-primary-foreground: hsl(34 40% 96%);
-  --sidebar-accent: hsl(350 30% 18%);
-  --sidebar-accent-foreground: hsl(34 40% 92%);
-  --sidebar-border: hsl(350 25% 20%);
-  --sidebar-ring: hsl(350 50% 45%);
+  /* Sidebar — deep dark coffee brown */
+  --sidebar-background: hsl(350 35% 12%);
+  --sidebar-foreground: hsl(30 20% 90%);
+  --sidebar-primary: hsl(350 40% 45%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(350 25% 18%);
+  --sidebar-accent-foreground: hsl(30 20% 90%);
+  --sidebar-border: hsl(350 20% 18%);
+  --sidebar-ring: hsl(350 40% 45%);
 
-  --chart-1: hsl(350 50% 45%);
-  --chart-2: hsl(34 70% 60%);
-  --chart-3: hsl(350 53% 35%);
-  --chart-4: hsl(34 24% 71%);
+  --chart-1: hsl(350 40% 45%);
+  --chart-2: hsl(350 30% 55%);
+  --chart-3: hsl(350 35% 35%);
+  --chart-4: hsl(350 25% 65%);
   --chart-5: hsl(0 72% 55%);
 }
 
@@ -150,11 +150,11 @@
   --font-sans: var(--font-space-mono);
   --font-mono: var(--font-space-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Coffee color scale — warm brown palette for login/landing pages */
-  --color-coffee-50: #f8f3ed;
-  --color-coffee-100: #e8d8c4;
-  --color-coffee-200: #c7b7a3;
-  --color-coffee-300: #a89478;
+  /* Coffee color scale — simplified white + coffee brown palette */
+  --color-coffee-50: #ffffff;
+  --color-coffee-100: #f5f0eb;
+  --color-coffee-200: #e8ddd2;
+  --color-coffee-300: #c7b7a3;
   --color-coffee-400: #8b7054;
   --color-coffee-500: #6d2932;
   --color-coffee-600: #5a2230;
@@ -172,6 +172,9 @@
   --color-info: #00a3e0;
   --color-warning: #ff7f32;
   --color-danger: #cc2f2f;
+
+  /* Font sizes — bigger base */
+  --font-size-base: 17px;
 }
 
 @layer base {
@@ -185,7 +188,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: 0em;
-    line-height: 1.6;
+    font-size: 17px;
+    line-height: 1.7;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
@@ -212,17 +216,17 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(350 20% 70%);
+  background: hsl(350 30% 60%);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(350 30% 50%);
+  background: hsl(350 44% 29%);
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: hsl(350 25% 30%);
+  background: hsl(350 25% 35%);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: hsl(350 30% 40%);
+  background: hsl(350 40% 45%);
 }
 
 /* ── Animations ── */
@@ -441,10 +445,10 @@
   transition: background-color 0.15s ease;
 }
 .table-row-hover:hover {
-  background-color: hsl(34 24% 92%);
+  background-color: hsl(30 10% 95%);
 }
 .dark .table-row-hover:hover {
-  background-color: hsl(350 25% 16%);
+  background-color: hsl(350 20% 16%);
 }
 
 /* ── Focus ring ── */
@@ -474,7 +478,7 @@
 
 .farm-land-tooltip {
   font-family: var(--font-space-mono), "Space Mono", monospace;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* ── Trace Journey Animations ── */

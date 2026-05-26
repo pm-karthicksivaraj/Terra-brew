@@ -66,6 +66,7 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   distribution: { en: 'Distribution', vi: 'Phân phối' },
   retail: { en: 'Retail', vi: 'Bán lẻ' },
   'eudr-compliance': { en: 'EUDR Compliance', vi: 'Tuân thủ EUDR' },
+  'new': { en: 'New Record', vi: 'Tạo mới' },
   'export-docs': { en: 'Export Documents', vi: 'Tài liệu Xuất khẩu' },
   deforestation: { en: 'Deforestation', vi: 'Phá rừng' },
   shipments: { en: 'Shipments', vi: 'Vận chuyển' },
@@ -257,11 +258,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
                     <BreadcrumbItem key={crumb.href}>
                       {idx > 0 && <BreadcrumbSeparator />}
                       {crumb.isLast ? (
-                        <BreadcrumbPage className="text-xs text-foreground font-medium">
+                        <BreadcrumbPage className="text-sm text-foreground font-medium">
                           {crumb.label}
                         </BreadcrumbPage>
                       ) : (
-                        <BreadcrumbLink href={crumb.href} className="text-xs text-muted-foreground hover:text-foreground">
+                        <BreadcrumbLink href={crumb.href} className="text-sm text-muted-foreground hover:text-foreground">
                           {crumb.label}
                         </BreadcrumbLink>
                       )}
