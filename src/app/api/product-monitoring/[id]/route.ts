@@ -41,43 +41,35 @@ export async function PUT(
 
     // Status updates
     if (body.status) updateData.status = body.status
-    if (body.plannedFinishDate) updateData.plannedFinishDate = new Date(body.plannedFinishDate)
-    if (body.actualFinishDate) updateData.actualFinishDate = new Date(body.actualFinishDate)
+    if (body.scheduledDate) updateData.scheduledDate = new Date(body.scheduledDate)
+    if (body.actualDate) updateData.actualDate = new Date(body.actualDate)
 
     // Monitoring details
-    if (body.callConfirmation !== undefined) updateData.callConfirmation = body.callConfirmation
-    if (body.callDate) updateData.callDate = new Date(body.callDate)
-    if (body.callNotes !== undefined) updateData.callNotes = body.callNotes
-    if (body.onSiteCheckDate) updateData.onSiteCheckDate = new Date(body.onSiteCheckDate)
+    if (body.monitoringType) updateData.monitoringType = body.monitoringType
+    if (body.inspectorName) updateData.inspectorName = body.inspectorName
+    if (body.productName) updateData.productName = body.productName
+    if (body.batchId) updateData.batchId = body.batchId
+    if (body.orderRef) updateData.orderRef = body.orderRef
 
-    // On-site check
-    if (body.quantityCheck) updateData.quantityCheck = body.quantityCheck
-    if (body.quantityOrderTotal !== undefined) updateData.quantityOrderTotal = parseInt(body.quantityOrderTotal)
-    if (body.quantityActualTotal !== undefined) updateData.quantityActualTotal = parseInt(body.quantityActualTotal)
-    if (body.quantityTotalPackages !== undefined) updateData.quantityTotalPackages = parseInt(body.quantityTotalPackages)
-    if (body.quantityPackagingDesc !== undefined) updateData.quantityPackagingDesc = body.quantityPackagingDesc
-    if (body.visualCheck) updateData.visualCheck = body.visualCheck
-    if (body.packagingCheck) updateData.packagingCheck = body.packagingCheck
-    if (body.shippingMarkCheck) updateData.shippingMarkCheck = body.shippingMarkCheck
-    if (body.additionalItemsFindings !== undefined) updateData.additionalItemsFindings = body.additionalItemsFindings
-    if (body.additionalItemsPIRequirements !== undefined) updateData.additionalItemsPIRequirements = body.additionalItemsPIRequirements
+    // Quantity checks
+    if (body.quantityOrdered !== undefined) updateData.quantityOrdered = parseFloat(body.quantityOrdered)
+    if (body.quantityProduced !== undefined) updateData.quantityProduced = parseFloat(body.quantityProduced)
+    if (body.quantityPassed !== undefined) updateData.quantityPassed = parseFloat(body.quantityPassed)
+    if (body.quantityFailed !== undefined) updateData.quantityFailed = parseFloat(body.quantityFailed)
 
-    // Packing
-    if (body.individualPackingDesc !== undefined) updateData.individualPackingDesc = body.individualPackingDesc
-    if (body.exportCartonDesc !== undefined) updateData.exportCartonDesc = body.exportCartonDesc
-    if (body.innerPackingDesc !== undefined) updateData.innerPackingDesc = body.innerPackingDesc
+    // Status checks
+    if (body.packingStatus) updateData.packingStatus = body.packingStatus
+    if (body.shippingMarkStatus) updateData.shippingMarkStatus = body.shippingMarkStatus
+    if (body.labellingStatus) updateData.labellingStatus = body.labellingStatus
 
     // Report
-    if (body.reportNumber) updateData.reportNumber = body.reportNumber
-    if (body.reportDate) updateData.reportDate = new Date(body.reportDate)
+    if (body.findings !== undefined) updateData.findings = typeof body.findings === 'object' ? JSON.stringify(body.findings) : body.findings
     if (body.reportUrl !== undefined) updateData.reportUrl = body.reportUrl
-    if (body.overallResult) updateData.overallResult = body.overallResult
-    if (body.remarks !== undefined) updateData.remarks = body.remarks
-    if (body.productPhotos) updateData.productPhotos = JSON.stringify(body.productPhotos)
-    if (body.packingPhotos) updateData.packingPhotos = JSON.stringify(body.packingPhotos)
-    if (body.shippingMarkPhotos) updateData.shippingMarkPhotos = JSON.stringify(body.shippingMarkPhotos)
-    if (body.goodsPilePhotos) updateData.goodsPilePhotos = JSON.stringify(body.goodsPilePhotos)
     if (body.notes !== undefined) updateData.notes = body.notes
+    if (body.amount !== undefined) updateData.amount = parseFloat(body.amount)
+    if (body.currency) updateData.currency = body.currency
+    if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus
+    if (body.metadata !== undefined) updateData.metadata = typeof body.metadata === 'object' ? JSON.stringify(body.metadata) : body.metadata
 
     const updated = await db.productMonitoring.update({ where: { id }, data: updateData })
     return apiResponse(updated)

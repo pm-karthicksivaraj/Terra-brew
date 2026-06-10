@@ -167,6 +167,7 @@ declare module 'next-auth' {
       currencySymbol?: string
       language?: string
       isPlatformAdmin?: boolean
+      onboardingCompleted?: boolean
     }
   }
 }
@@ -183,5 +184,6 @@ declare module 'next-auth/jwt' {
     currencySymbol?: string
     language?: string
     isPlatformAdmin?: boolean
+    onboardingCompleted?: boolean
   }
 }

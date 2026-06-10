@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Ship, FileCheck, FileWarning, Clock, PackageCheck, Truck,
   ShieldCheck, AlertTriangle, ChevronRight, Container, ArrowRight,
-  CheckCircle, XCircle,
+  CheckCircle, XCircle, Loader2, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,24 +17,83 @@ import { ComplianceFearBanner } from '@/components/compliance/compliance-fear-ba
 import { DdsStatusWidget } from './dds-status-widget'
 import { StaggerContainer, StaggerItem } from '@/components/ui/motion'
 
-const MOCK_SHIPMENTS = [
-  { id: 'SHP-2026-001', container: 'MSCU-7842365', destination: 'Rotterdam, NL', status: 'ready', docsComplete: true, ddsStatus: 'compliant', eta: 'Jun 15, 2026' },
-  { id: 'SHP-2026-002', container: 'MAEU-9120547', destination: 'Hamburg, DE', status: 'ready', docsComplete: true, ddsStatus: 'compliant', eta: 'Jun 18, 2026' },
-  { id: 'SHP-2026-003', container: 'CSLU-4456892', destination: 'Antwerp, BE', status: 'pending', docsComplete: false, ddsStatus: 'missing', eta: 'Jun 22, 2026' },
-  { id: 'SHP-2026-004', container: 'EISU-3127890', destination: 'Barcelona, ES', status: 'pending', docsComplete: false, ddsStatus: 'expired', eta: 'Jun 25, 2026' },
-  { id: 'SHP-2026-005', container: 'HLCU-8890234', destination: 'Genoa, IT', status: 'loading', docsComplete: true, ddsStatus: 'pending_review', eta: 'Jul 01, 2026' },
-  { id: 'SHP-2026-006', container: 'TCLU-6234567', destination: 'Le Havre, FR', status: 'pending', docsComplete: false, ddsStatus: 'missing', eta: 'Jul 05, 2026' },
-]
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <Inbox className="w-8 h-8 text-muted-foreground/40 mb-2" />
+      <p className="text-xs text-muted-foreground">{message}</p>
+    </div>
+  )
+}
 
 export function ExportDirectorView() {
   const { t2 } = useI18n()
   const router = useRouter()
   const { data: session } = useSession()
   const userName = session?.user?.name || 'User'
+  const [shipments, setShipments] = useState<any[]>([])
+  const [eudrRecords, setEudrRecords] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const readyCount = MOCK_SHIPMENTS.filter(s => s.status === 'ready').length
-  const pendingCount = MOCK_SHIPMENTS.filter(s => s.status === 'pending').length
-  const missingDds = MOCK_SHIPMENTS.filter(s => s.ddsStatus === 'missing' || s.ddsStatus === 'expired').length
+  const fetchShipments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/shipments?pageSize=20')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setShipments(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch shipments', err)
+    }
+  }, [])
+
+  const fetchEudrCompliance = useCallback(async () => {
+    try {
+      const res = await fetch('/api/eudr-compliance?pageSize=20')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setEudrRecords(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch EUDR compliance', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchShipments()
+      await fetchEudrCompliance()
+    }
+    load()
+  }, [fetchShipments, fetchEudrCompliance])
+
+  // Map shipments with DDS status
+  const shipmentList = shipments.slice(0, 6).map((s: any) => {
+    // Find matching EUDR record for this shipment
+    const eudr = eudrRecords.find((e: any) => e.shipmentId === s.id || e.referenceCode === s.shipmentCode)
+    const ddsStatus = eudr
+      ? (eudr.complianceStatus === 'Compliant' || eudr.overallStatus === 'Compliant' ? 'compliant'
+        : eudr.complianceStatus === 'Pending' || eudr.overallStatus === 'Pending Review' ? 'pending_review'
+        : eudr.complianceStatus === 'Expired' || eudr.overallStatus === 'Expired' ? 'expired'
+        : 'missing')
+      : 'missing'
+    const docsComplete = ddsStatus === 'compliant' || ddsStatus === 'pending_review'
+    return {
+      id: s.shipmentCode || s.id,
+      container: s.containerNumber || s.containerId || 'N/A',
+      destination: s.destination || s.destinationPort || 'Unknown',
+      status: s.status === 'Delivered' ? 'ready' : s.status === 'In Transit' || s.status === 'in_transit' ? 'ready' : s.status === 'Booked' ? 'loading' : 'pending',
+      docsComplete,
+      ddsStatus,
+      eta: s.estimatedArrival || s.eta || 'N/A',
+    }
+  })
+
+  const readyCount = shipmentList.filter(s => s.status === 'ready').length
+  const pendingCount = shipmentList.filter(s => s.status === 'pending').length
+  const missingDds = shipmentList.filter(s => s.ddsStatus === 'missing' || s.ddsStatus === 'expired').length
 
   return (
     <StaggerContainer className="space-y-6">
@@ -101,10 +161,10 @@ export function ExportDirectorView() {
           </div>
           <div>
             <DdsStatusWidget
-              totalShipments={MOCK_SHIPMENTS.length}
-              completeDds={MOCK_SHIPMENTS.filter(s => s.ddsStatus === 'compliant').length}
-              pendingPlots={2}
-              expiringSoon={1}
+              totalShipments={shipments.length}
+              completeDds={shipmentList.filter(s => s.ddsStatus === 'compliant').length}
+              pendingPlots={0}
+              expiringSoon={0}
               highRisk={missingDds}
               compact
             />
@@ -121,65 +181,69 @@ export function ExportDirectorView() {
                 <Container className="w-4 h-4 text-primary" />
                 {t2('Bảng trạng thái lô hàng', 'Shipment Readiness Board')}
               </CardTitle>
-              <Badge variant="outline" className="text-[9px]">{MOCK_SHIPMENTS.length} {t2('lô', 'shipments')}</Badge>
+              <Badge variant="outline" className="text-[9px]">{shipments.length} {t2('lô', 'shipments')}</Badge>
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="space-y-2">
-              {MOCK_SHIPMENTS.map((shipment) => (
-                <button
-                  key={shipment.id}
-                  onClick={() => router.push('/shipments')}
-                  className="w-full flex items-center gap-4 p-3 rounded-xl border border-border/50 hover:bg-accent/30 transition-colors text-left group"
-                >
-                  {/* Status indicator */}
-                  <div className={`w-3 h-3 rounded-full shrink-0 ${
-                    shipment.status === 'ready' ? 'bg-green-500' :
-                    shipment.status === 'loading' ? 'bg-blue-500' : 'bg-amber-500'
-                  }`} />
+            {shipmentList.length > 0 ? (
+              <div className="space-y-2">
+                {shipmentList.map((shipment) => (
+                  <button
+                    key={shipment.id}
+                    onClick={() => router.push('/shipments')}
+                    className="w-full flex items-center gap-4 p-3 rounded-xl border border-border/50 hover:bg-accent/30 transition-colors text-left group"
+                  >
+                    {/* Status indicator */}
+                    <div className={`w-3 h-3 rounded-full shrink-0 ${
+                      shipment.status === 'ready' ? 'bg-green-500' :
+                      shipment.status === 'loading' ? 'bg-blue-500' : 'bg-amber-500'
+                    }`} />
 
-                  {/* Container + Destination */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-foreground font-mono">{shipment.container}</span>
-                      <Badge variant="outline" className={`text-[8px] h-4 ${
-                        shipment.status === 'ready' ? 'border-green-300 text-green-600' :
-                        shipment.status === 'loading' ? 'border-blue-300 text-blue-600' :
-                        'border-amber-300 text-amber-600'
-                      }`}>
-                        {shipment.status === 'ready' ? t2('Sẵn sàng', 'READY') :
-                         shipment.status === 'loading' ? t2('Đang xếp', 'LOADING') :
-                         t2('Chờ', 'PENDING')}
-                      </Badge>
+                    {/* Container + Destination */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-foreground font-mono">{shipment.container}</span>
+                        <Badge variant="outline" className={`text-[8px] h-4 ${
+                          shipment.status === 'ready' ? 'border-green-300 text-green-600' :
+                          shipment.status === 'loading' ? 'border-blue-300 text-blue-600' :
+                          'border-amber-300 text-amber-600'
+                        }`}>
+                          {shipment.status === 'ready' ? t2('Sẵn sàng', 'READY') :
+                           shipment.status === 'loading' ? t2('Đang xếp', 'LOADING') :
+                           t2('Chờ', 'PENDING')}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">→ {shipment.destination} · ETA {shipment.eta}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">→ {shipment.destination} · ETA {shipment.eta}</p>
-                  </div>
 
-                  {/* Docs + DDS indicators */}
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-1">
-                      {shipment.docsComplete ? (
-                        <FileCheck className="w-3.5 h-3.5 text-green-500" />
-                      ) : (
-                        <FileWarning className="w-3.5 h-3.5 text-red-500" />
-                      )}
-                      <span className="text-[9px] text-muted-foreground">{t2('Tài liệu', 'Docs')}</span>
+                    {/* Docs + DDS indicators */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-1">
+                        {shipment.docsComplete ? (
+                          <FileCheck className="w-3.5 h-3.5 text-green-500" />
+                        ) : (
+                          <FileWarning className="w-3.5 h-3.5 text-red-500" />
+                        )}
+                        <span className="text-[9px] text-muted-foreground">{t2('Tài liệu', 'Docs')}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {shipment.ddsStatus === 'compliant' ? (
+                          <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                        ) : shipment.ddsStatus === 'pending_review' ? (
+                          <Clock className="w-3.5 h-3.5 text-amber-500" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-red-500" />
+                        )}
+                        <span className="text-[9px] text-muted-foreground">DDS</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground" />
                     </div>
-                    <div className="flex items-center gap-1">
-                      {shipment.ddsStatus === 'compliant' ? (
-                        <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                      ) : shipment.ddsStatus === 'pending_review' ? (
-                        <Clock className="w-3.5 h-3.5 text-amber-500" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5 text-red-500" />
-                      )}
-                      <span className="text-[9px] text-muted-foreground">DDS</span>
-                    </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground" />
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message={t2('Chưa có lô hàng. Tạo vận chuyển để bắt đầu.', 'No shipments yet. Create a shipment to get started.')} />
+            )}
           </CardContent>
         </Card>
       </StaggerItem>
@@ -188,11 +252,11 @@ export function ExportDirectorView() {
       <StaggerItem>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <DdsStatusWidget
-            totalShipments={24}
-            completeDds={16}
-            pendingPlots={5}
-            expiringSoon={3}
-            highRisk={3}
+            totalShipments={shipments.length}
+            completeDds={shipmentList.filter(s => s.ddsStatus === 'compliant').length}
+            pendingPlots={0}
+            expiringSoon={0}
+            highRisk={missingDds}
             onGenerateDds={() => router.push('/eudr-compliance')}
             onViewDetails={() => router.push('/eudr-compliance')}
           />

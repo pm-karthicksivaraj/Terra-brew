@@ -251,12 +251,13 @@ export async function createSubscription(
   // Get or create PayPal customer
   const tenant = await prisma.tenant.findUnique({
     where: { id: params.tenantId },
-    select: { paypalCustomerId: true, name: true },
+    select: { name: true, whiteLabelConfig: true },
   })
 
   const subscriber: Record<string, unknown> = {}
-  if (tenant?.paypalCustomerId) {
-    subscriber.payer_id = tenant.paypalCustomerId
+  const paypalCustomerId = (tenant?.whiteLabelConfig ? JSON.parse(tenant.whiteLabelConfig).paypalCustomerId : null)
+  if (paypalCustomerId) {
+    subscriber.payer_id = paypalCustomerId
   }
 
   const response = await paypalRequest('/v1/billing/subscriptions', {
@@ -284,12 +285,16 @@ export async function createSubscription(
 
   const data = await response.json()
 
-  // Save PayPal customer ID if this is a new subscriber
-  if (data.subscriber?.payer_id && tenant && !tenant.paypalCustomerId) {
-    await prisma.tenant.update({
-      where: { id: params.tenantId },
-      data: { paypalCustomerId: data.subscriber.payer_id },
-    })
+  // Save PayPal customer ID if this is a new subscriber (store in whiteLabelConfig JSON)
+  if (data.subscriber?.payer_id && tenant) {
+    const existingConfig = tenant.whiteLabelConfig ? JSON.parse(tenant.whiteLabelConfig) : {}
+    if (!existingConfig.paypalCustomerId) {
+      existingConfig.paypalCustomerId = data.subscriber.payer_id
+      await prisma.tenant.update({
+        where: { id: params.tenantId },
+        data: { whiteLabelConfig: JSON.stringify(existingConfig) },
+      })
+    }
   }
 
   return data
@@ -580,7 +585,6 @@ async function handlePaymentSuccess(
       billingCycle: billingCycle as 'monthly' | 'yearly',
       lastPaymentDate: new Date(),
       isActive: true,
-      cancelAtPeriodEnd: false,
     },
   })
 
@@ -648,7 +652,6 @@ async function handleSubscriptionCancelled(tenantId: string): Promise<void> {
       status: 'cancelled',
       isActive: false,
       autoRenew: false,
-      cancelAtPeriodEnd: false,
       endDate: new Date(),
     },
   })

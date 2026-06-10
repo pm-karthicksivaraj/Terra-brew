@@ -31,11 +31,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { organization, compliance, entityType } = body
 
-    // 3. Update the User record
+    // 3. Update the User record (onboardingCompleted is tracked via JWT, not a DB field)
     await db.user.update({
       where: { id: token.id as string },
       data: {
-        onboardingCompleted: true,
         lastLoginAt: new Date(),
       },
     })

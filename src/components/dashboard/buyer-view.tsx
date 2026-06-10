@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ShieldCheck, AlertTriangle, CheckCircle, XCircle, Clock,
   Download, ChevronRight, PackageCheck, Truck, FileText,
-  ArrowRight, Building2, Globe, Star,
+  ArrowRight, Building2, Globe, Star, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -15,30 +16,89 @@ import { useSession } from 'next-auth/react'
 import { ComplianceFearBanner } from '@/components/compliance/compliance-fear-banner'
 import { StaggerContainer, StaggerItem } from '@/components/ui/motion'
 
-const MOCK_SUPPLIERS = [
-  { id: '1', name: 'Metrang Coffee', country: 'Vietnam', ddsStatus: 'compliant', lastVerified: '2 days ago', risk: 'low', score: 89, expiringSoon: false },
-  { id: '2', name: 'Cooxupé Cooperative', country: 'Brazil', ddsStatus: 'compliant', lastVerified: '5 days ago', risk: 'low', score: 92, expiringSoon: false },
-  { id: '3', name: 'Yirgacheffe Union', country: 'Ethiopia', ddsStatus: 'pending', lastVerified: '30 days ago', risk: 'medium', score: 67, expiringSoon: true },
-  { id: '4', name: 'Othaya Cooperative', country: 'Kenya', ddsStatus: 'non_compliant', lastVerified: '60 days ago', risk: 'high', score: 41, expiringSoon: true },
-  { id: '5', name: 'Euro Coffee Imports', country: 'Netherlands', ddsStatus: 'compliant', lastVerified: '1 day ago', risk: 'low', score: 95, expiringSoon: false },
-]
-
-const MOCK_SHIPMENTS = [
-  { id: 'SHP-001', supplier: 'Metrang Coffee', origin: 'Vietnam', variety: 'Robusta G1', weight: '24T', eta: 'Jun 15, 2026', ddsStatus: 'compliant', stage: 'in_transit' },
-  { id: 'SHP-002', supplier: 'Cooxupé', origin: 'Brazil', variety: 'Arabica SC15', weight: '18T', eta: 'Jun 22, 2026', ddsStatus: 'compliant', stage: 'loading' },
-  { id: 'SHP-003', supplier: 'Yirgacheffe Union', origin: 'Ethiopia', variety: 'Arabica Yirgacheffe', weight: '12T', eta: 'Jul 01, 2026', ddsStatus: 'pending', stage: 'booked' },
-  { id: 'SHP-004', supplier: 'Othaya Cooperative', origin: 'Kenya', variety: 'AA Top', weight: '8T', eta: 'Jul 10, 2026', ddsStatus: 'non_compliant', stage: 'pending' },
-]
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <Inbox className="w-8 h-8 text-muted-foreground/40 mb-2" />
+      <p className="text-xs text-muted-foreground">{message}</p>
+    </div>
+  )
+}
 
 export function BuyerView() {
   const { t2 } = useI18n()
   const router = useRouter()
   const { data: session } = useSession()
   const userName = session?.user?.name || 'User'
+  const [eudrRecords, setEudrRecords] = useState<any[]>([])
+  const [shipments, setShipments] = useState<any[]>([])
 
-  const compliantCount = MOCK_SUPPLIERS.filter(s => s.ddsStatus === 'compliant').length
-  const highRiskCount = MOCK_SUPPLIERS.filter(s => s.risk === 'high').length
-  const expiringCount = MOCK_SUPPLIERS.filter(s => s.expiringSoon).length
+  const fetchEudrCompliance = useCallback(async () => {
+    try {
+      const res = await fetch('/api/eudr-compliance?pageSize=20')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setEudrRecords(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch EUDR compliance', err)
+    }
+  }, [])
+
+  const fetchShipments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/shipments?pageSize=10')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setShipments(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch shipments', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchEudrCompliance()
+      await fetchShipments()
+    }
+    load()
+  }, [fetchEudrCompliance, fetchShipments])
+
+  // Map suppliers from EUDR compliance records
+  const suppliers = eudrRecords.slice(0, 5).map((r: any) => ({
+    id: r.id,
+    name: r.farmName || r.farmerName || r.entityName || `Supplier ${r.id}`,
+    country: r.country || r.province || 'Vietnam',
+    ddsStatus: r.complianceStatus === 'Compliant' || r.overallStatus === 'Compliant' ? 'compliant'
+      : r.complianceStatus === 'Pending' || r.overallStatus === 'Pending Review' ? 'pending'
+      : 'non_compliant',
+    lastVerified: r.lastVerified || r.updatedAt ? new Date(r.lastVerified || r.updatedAt).toLocaleDateString() : 'N/A',
+    risk: r.riskLevel === 'High' || r.complianceStatus === 'Non-Compliant' || r.overallStatus === 'Non-Compliant' ? 'high'
+      : r.riskLevel === 'Medium' || r.complianceStatus === 'Pending' ? 'medium' : 'low',
+    score: r.complianceScore || (r.complianceStatus === 'Compliant' ? 90 : r.complianceStatus === 'Pending' ? 65 : 40),
+    expiringSoon: r.complianceStatus === 'Expiring' || r.overallStatus === 'Expiring',
+  }))
+
+  // Map incoming shipments from real data
+  const shipmentList = shipments.slice(0, 4).map((s: any) => ({
+    id: s.shipmentCode || s.id,
+    supplier: s.supplierName || s.origin || s.shipper || 'Unknown',
+    origin: s.origin || s.originCountry || 'Vietnam',
+    variety: s.coffeeType || s.productType || 'Coffee',
+    weight: s.weight ? `${(s.weight / 1000).toFixed(0)}T` : 'N/A',
+    eta: s.estimatedArrival || s.eta || 'N/A',
+    ddsStatus: s.ddsStatus === 'compliant' || s.eudrCompliant ? 'compliant'
+      : s.ddsStatus === 'pending' ? 'pending' : 'non_compliant',
+    stage: s.status === 'In Transit' || s.status === 'in_transit' ? 'in_transit'
+      : s.status === 'Loading' || s.status === 'loading' ? 'loading' : 'pending',
+  }))
+
+  const compliantCount = suppliers.filter(s => s.ddsStatus === 'compliant').length
+  const highRiskCount = suppliers.filter(s => s.risk === 'high').length
+  const expiringCount = suppliers.filter(s => s.expiringSoon).length
 
   return (
     <StaggerContainer className="space-y-6">
@@ -105,7 +165,7 @@ export function BuyerView() {
               <Building2 className="w-4 h-4 text-primary" />
               <span className="text-[10px] text-muted-foreground">{t2('Tổng NCC', 'Suppliers')}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{MOCK_SUPPLIERS.length}</p>
+            <p className="text-2xl font-bold text-foreground">{suppliers.length}</p>
           </div>
         </div>
       </StaggerItem>
@@ -122,92 +182,94 @@ export function BuyerView() {
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {MOCK_SUPPLIERS.map((supplier) => (
-                <div
-                  key={supplier.id}
-                  className={`p-4 rounded-xl border ${
-                    supplier.risk === 'low' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/30' :
-                    supplier.risk === 'medium' ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30' :
-                    'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30'
-                  }`}
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{supplier.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{supplier.country}</p>
-                    </div>
-                    <Badge className={`text-[8px] font-bold tracking-wider border-0 ${
-                      supplier.ddsStatus === 'compliant' ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' :
-                      supplier.ddsStatus === 'pending' ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300' :
-                      'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
-                    }`}>
-                      {supplier.ddsStatus === 'compliant' ? t2('ĐẠT', 'PASS') :
-                       supplier.ddsStatus === 'pending' ? t2('CHỜ', 'PENDING') :
-                       t2('RỦI RO', 'RISK')}
-                    </Badge>
-                  </div>
-
-                  {/* Score */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="flex-1">
-                      <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            supplier.score >= 80 ? 'bg-green-500' :
-                            supplier.score >= 60 ? 'bg-amber-500' : 'bg-red-500'
-                          }`}
-                          style={{ width: `${supplier.score}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className={`text-sm font-bold ${
-                      supplier.score >= 80 ? 'text-green-600' :
-                      supplier.score >= 60 ? 'text-amber-600' : 'text-red-600'
-                    }`}>
-                      {supplier.score}%
-                    </span>
-                  </div>
-
-                  {/* Meta */}
-                  <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-                    <span>{t2('Xác minh', 'Verified')}: {supplier.lastVerified}</span>
-                    {supplier.expiringSoon && (
-                      <Badge variant="outline" className="text-[8px] h-4 border-amber-300 text-amber-600">
-                        {t2('Sắp hết hạn', 'EXPIRING')}
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Download DDS */}
-                  <Button
-                    size="sm"
-                    variant={supplier.ddsStatus === 'compliant' ? 'outline' : 'destructive'}
-                    className={`w-full mt-3 rounded-xl text-[10px] gap-1.5 ${supplier.ddsStatus === 'compliant' ? '' : ''}`}
-                    onClick={() => {
-                      if (supplier.ddsStatus === 'compliant') {
-                        // Download compliance package
-                      } else {
-                        router.push('/eudr-compliance')
-                      }
-                    }}
+            {suppliers.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {suppliers.map((supplier) => (
+                  <div
+                    key={supplier.id}
+                    className={`p-4 rounded-xl border ${
+                      supplier.risk === 'low' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/30' :
+                      supplier.risk === 'medium' ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/30' :
+                      'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30'
+                    }`}
                   >
-                    {supplier.ddsStatus === 'compliant' ? (
-                      <>
-                        <Download className="w-3 h-3" />
-                        {t2('Tải DDS', 'Download DDS')}
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="w-3 h-3" />
-                        {t2('Xem vấn đề', 'View Issues')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-sm font-bold text-foreground">{supplier.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{supplier.country}</p>
+                      </div>
+                      <Badge className={`text-[8px] font-bold tracking-wider border-0 ${
+                        supplier.ddsStatus === 'compliant' ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' :
+                        supplier.ddsStatus === 'pending' ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300' :
+                        'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
+                      }`}>
+                        {supplier.ddsStatus === 'compliant' ? t2('ĐẠT', 'PASS') :
+                         supplier.ddsStatus === 'pending' ? t2('CHỜ', 'PENDING') :
+                         t2('RỦI RO', 'RISK')}
+                      </Badge>
+                    </div>
+
+                    {/* Score */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              supplier.score >= 80 ? 'bg-green-500' :
+                              supplier.score >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${supplier.score}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className={`text-sm font-bold ${
+                        supplier.score >= 80 ? 'text-green-600' :
+                        supplier.score >= 60 ? 'text-amber-600' : 'text-red-600'
+                      }`}>
+                        {supplier.score}%
+                      </span>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="flex items-center justify-between text-[9px] text-muted-foreground">
+                      <span>{t2('Xác minh', 'Verified')}: {supplier.lastVerified}</span>
+                      {supplier.expiringSoon && (
+                        <Badge variant="outline" className="text-[8px] h-4 border-amber-300 text-amber-600">
+                          {t2('Sắp hết hạn', 'EXPIRING')}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Download DDS */}
+                    <Button
+                      size="sm"
+                      variant={supplier.ddsStatus === 'compliant' ? 'outline' : 'destructive'}
+                      className="w-full mt-3 rounded-xl text-[10px] gap-1.5"
+                      onClick={() => {
+                        if (supplier.ddsStatus !== 'compliant') {
+                          router.push('/eudr-compliance')
+                        }
+                      }}
+                    >
+                      {supplier.ddsStatus === 'compliant' ? (
+                        <>
+                          <Download className="w-3 h-3" />
+                          {t2('Tải DDS', 'Download DDS')}
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-3 h-3" />
+                          {t2('Xem vấn đề', 'View Issues')}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message={t2('Chưa có nhà cung cấp. Dữ liệu sẽ xuất hiện khi có bản ghi EUDR.', 'No suppliers yet. Data will appear as EUDR records are added.')} />
+            )}
           </CardContent>
         </Card>
       </StaggerItem>
@@ -221,51 +283,55 @@ export function BuyerView() {
                 <PackageCheck className="w-4 h-4 text-primary" />
                 {t2('Lô hàng sắp đến', 'Incoming Shipments')}
               </CardTitle>
-              <Badge variant="outline" className="text-[9px]">{MOCK_SHIPMENTS.length}</Badge>
+              <Badge variant="outline" className="text-[9px]">{shipments.length}</Badge>
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="space-y-2">
-              {MOCK_SHIPMENTS.map((shipment) => (
-                <div key={shipment.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50">
-                  {/* Stage indicator */}
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    shipment.stage === 'in_transit' ? 'bg-blue-100 dark:bg-blue-900/40' :
-                    shipment.stage === 'loading' ? 'bg-amber-100 dark:bg-amber-900/40' :
-                    'bg-muted/50'
-                  }`}>
-                    {shipment.stage === 'in_transit' ? <Truck className="w-4 h-4 text-blue-600" /> :
-                     shipment.stage === 'loading' ? <PackageCheck className="w-4 h-4 text-amber-600" /> :
-                     <Clock className="w-4 h-4 text-muted-foreground" />}
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground">{shipment.supplier}</span>
-                      <Badge variant="outline" className="text-[8px] h-4">{shipment.variety}</Badge>
+            {shipmentList.length > 0 ? (
+              <div className="space-y-2">
+                {shipmentList.map((shipment) => (
+                  <div key={shipment.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50">
+                    {/* Stage indicator */}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      shipment.stage === 'in_transit' ? 'bg-blue-100 dark:bg-blue-900/40' :
+                      shipment.stage === 'loading' ? 'bg-amber-100 dark:bg-amber-900/40' :
+                      'bg-muted/50'
+                    }`}>
+                      {shipment.stage === 'in_transit' ? <Truck className="w-4 h-4 text-blue-600" /> :
+                       shipment.stage === 'loading' ? <PackageCheck className="w-4 h-4 text-amber-600" /> :
+                       <Clock className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {shipment.origin} · {shipment.weight} · ETA {shipment.eta}
-                    </p>
-                  </div>
 
-                  {/* DDS status */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {shipment.ddsStatus === 'compliant' ? (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : shipment.ddsStatus === 'pending' ? (
-                      <Clock className="w-4 h-4 text-amber-500" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500" />
-                    )}
-                    <Button size="sm" variant="ghost" className="text-[9px] h-6 px-1.5 rounded-lg">
-                      {shipment.ddsStatus === 'compliant' ? t2('Tải DDS', 'Download') : t2('Chi tiết', 'Details')}
-                    </Button>
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-foreground">{shipment.supplier}</span>
+                        <Badge variant="outline" className="text-[8px] h-4">{shipment.variety}</Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {shipment.origin} · {shipment.weight} · ETA {shipment.eta}
+                      </p>
+                    </div>
+
+                    {/* DDS status */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {shipment.ddsStatus === 'compliant' ? (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      ) : shipment.ddsStatus === 'pending' ? (
+                        <Clock className="w-4 h-4 text-amber-500" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-500" />
+                      )}
+                      <Button size="sm" variant="ghost" className="text-[9px] h-6 px-1.5 rounded-lg">
+                        {shipment.ddsStatus === 'compliant' ? t2('Tải DDS', 'Download') : t2('Chi tiết', 'Details')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState message={t2('Chưa có lô hàng. Dữ liệu sẽ xuất hiện khi có vận chuyển.', 'No shipments yet. Data will appear as shipments are created.')} />
+            )}
           </CardContent>
         </Card>
       </StaggerItem>

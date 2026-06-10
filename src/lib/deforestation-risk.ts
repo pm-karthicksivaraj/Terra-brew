@@ -500,13 +500,9 @@ export async function calculateRiskScore(params: RiskAssessmentParams): Promise<
       await prisma.eudrCompliance.update({
         where: { id: eudrComplianceId },
         data: {
-          riskAssessmentStatus: riskCategory === 'no_risk' ? 'no_risk' : riskCategory,
-          riskAssessmentDate: new Date(),
-          riskAssessmentSource: params.method || 'satellite',
-          riskScore: riskScore,
-          riskNotes: findings.join('\n'),
-          deforestationCheckDate: new Date(),
-          deforestationCheckResult: hasPostCutoffLoss ? 'flagged' : 'clear',
+          riskLevel: riskCategory === 'no_risk' ? 'low' : riskCategory,
+          deforestationRiskScore: riskScore,
+          notes: findings.join('\n'),
         },
       })
     } catch (error) {

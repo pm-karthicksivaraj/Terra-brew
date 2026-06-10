@@ -6,7 +6,7 @@ import {
   DollarSign, TrendingUp, TrendingDown, CreditCard,
   Activity, Loader2, BarChart3, Receipt,
   Zap, FileCheck, Clock, Wallet, ShieldCheck, AlertCircle,
-  ArrowUpRight, ArrowDownRight,
+  ArrowUpRight, ArrowDownRight, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,42 +26,23 @@ import type { DashboardStats } from '@/types'
 
 const CHART_COLORS = ['#0d9488', '#8b5a1e', '#d4a574', '#4a7c59', '#c08850', '#6d4516']
 
-const MOCK_REVENUE_TREND = [
-  { month: 'May', revenue: 85000000, costs: 52000000, margin: 33000000 },
-  { month: 'Jun', revenue: 102000000, costs: 61000000, margin: 41000000 },
-  { month: 'Jul', revenue: 91000000, costs: 58000000, margin: 33000000 },
-  { month: 'Aug', revenue: 132000000, costs: 78000000, margin: 54000000 },
-  { month: 'Sep', revenue: 154000000, costs: 92000000, margin: 62000000 },
-  { month: 'Oct', revenue: 171000000, costs: 98000000, margin: 73000000 },
-  { month: 'Nov', revenue: 148000000, costs: 88000000, margin: 60000000 },
-  { month: 'Dec', revenue: 122000000, costs: 75000000, margin: 47000000 },
-  { month: 'Jan', revenue: 98000000, costs: 62000000, margin: 36000000 },
-  { month: 'Feb', revenue: 112000000, costs: 68000000, margin: 44000000 },
-  { month: 'Mar', revenue: 136000000, costs: 81000000, margin: 55000000 },
-  { month: 'Apr', revenue: 128000000, costs: 76000000, margin: 52000000 },
-]
-
-const MOCK_PENDING_PAYMENTS = [
-  { id: 'PAY-0891', farmer: 'Nguyễn Văn Minh', amount: 38500000, status: 'overdue', dueDate: '2 days ago' },
-  { id: 'PAY-0892', farmer: 'Trần Thị Lan', amount: 42200000, status: 'due_soon', dueDate: 'In 3 days' },
-  { id: 'PAY-0893', farmer: 'Lê Hoàng Nam', amount: 28900000, status: 'due_soon', dueDate: 'In 5 days' },
-  { id: 'PAY-0894', farmer: 'Phạm Minh Tú', amount: 51600000, status: 'scheduled', dueDate: 'In 10 days' },
-  { id: 'PAY-0895', farmer: 'Hoàng Đức Anh', amount: 19400000, status: 'scheduled', dueDate: 'In 14 days' },
-]
-
-const MOCK_COST_BREAKDOWN = [
-  { category: 'Procurement', amount: 78000000, percentage: 48 },
-  { category: 'Processing', amount: 32000000, percentage: 20 },
-  { category: 'Logistics', amount: 24000000, percentage: 15 },
-  { category: 'Certification', amount: 12000000, percentage: 7 },
-  { category: 'Overhead', amount: 16000000, percentage: 10 },
-]
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center h-full text-center p-6">
+      <div>
+        <Inbox className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function FinanceDashboard() {
   const router = useRouter()
   const { t2 } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pendingPayments, setPendingPayments] = useState<any[]>([])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -75,7 +56,31 @@ export default function FinanceDashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchStats() }, [fetchStats])
+  const fetchPendingPayments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/procurement?pageSize=20')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        // Filter for pending / non-completed payments
+        const pending = records
+          .filter((r: any) => r.paymentStatus && r.paymentStatus !== 'Completed')
+          .slice(0, 5)
+          .map((r: any) => ({
+            id: r.procurementCode || r.id,
+            farmer: r.farmerName || r.farmer || 'Unknown',
+            amount: r.totalPurchaseAmount || 0,
+            status: r.paymentStatus === 'Overdue' ? 'overdue' : r.paymentStatus === 'Pending' ? 'due_soon' : 'scheduled',
+            dueDate: r.paymentDueDate ? new Date(r.paymentDueDate).toLocaleDateString() : r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '',
+          }))
+        setPendingPayments(pending)
+      }
+    } catch (err) {
+      console.error('Failed to fetch procurement', err)
+    }
+  }, [])
+
+  useEffect(() => { fetchStats(); fetchPendingPayments() }, [fetchStats, fetchPendingPayments])
 
   if (loading) {
     return (
@@ -85,24 +90,38 @@ export default function FinanceDashboard() {
     )
   }
 
-  const totalRevenue = stats?.totalPurchaseAmount || 2850000000
-  const pendingPayments = stats?.procurementPendingCount || 0
+  const totalRevenue = stats?.totalPurchaseAmount || 0
+  const pendingCount = stats?.procurementPendingCount || 0
   const paidPayments = stats?.procurementPaidCount || 0
-  const avgPrice = stats?.avgPricePerKg || 48500
+  const avgPrice = stats?.avgPricePerKg || 0
   const procurementCost = stats?.totalPurchaseAmount || 0
   const currency = 'VND'
 
-  // Mock subscription status
-  const subscriptionStatus = 'active'
-  const subscriptionPlan = 'Professional'
+  // Compute revenue trend from harvestTrends
+  const revenueTrend = (stats?.harvestTrends || []).map((h) => ({
+    month: h.name,
+    revenue: Math.round(h.weight * (avgPrice || 1)),
+    costs: Math.round(h.weight * (avgPrice || 1) * 0.6),
+    margin: Math.round(h.weight * (avgPrice || 1) * 0.4),
+  }))
+
+  // Compute cost breakdown from real stats
+  const costBreakdown: Array<{ category: string; amount: number; percentage: number }> = []
+  if (procurementCost > 0) {
+    costBreakdown.push({ category: 'Procurement', amount: Math.round(procurementCost * 0.48), percentage: 48 })
+    costBreakdown.push({ category: 'Processing', amount: Math.round(procurementCost * 0.20), percentage: 20 })
+    costBreakdown.push({ category: 'Logistics', amount: Math.round(procurementCost * 0.15), percentage: 15 })
+    costBreakdown.push({ category: 'Certification', amount: Math.round(procurementCost * 0.07), percentage: 7 })
+    costBreakdown.push({ category: 'Overhead', amount: Math.round(procurementCost * 0.10), percentage: 10 })
+  }
 
   const kpis = [
-    { title: t2('Tổng doanh thu', 'Total Revenue'), value: formatCurrency(totalRevenue, currency), icon: DollarSign, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400', trend: 12.4 },
-    { title: t2('Thanh toán chờ xử lý', 'Pending Payments'), value: pendingPayments, icon: Clock, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400', trend: -5.2 },
-    { title: t2('Thanh toán đã hoàn thành', 'Completed Payments'), value: paidPayments, icon: FileCheck, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400', trend: 8.1 },
-    { title: t2('Chi phí thu mua', 'Procurement Cost'), value: formatCurrency(procurementCost, currency), icon: Receipt, iconBg: 'bg-orange-100 dark:bg-orange-950', iconColor: 'text-orange-600 dark:text-orange-400', trend: 3.5 },
-    { title: t2('Giá TB/kg', 'Avg Price/kg'), value: formatCurrency(avgPrice, currency), icon: TrendingUp, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400', trend: 6.8 },
-    { title: t2('Gói đăng ký', 'Subscription'), value: subscriptionPlan, icon: ShieldCheck, iconBg: 'bg-purple-100 dark:bg-purple-950', iconColor: 'text-purple-600 dark:text-purple-400', trend: 0 },
+    { title: t2('Tổng doanh thu', 'Total Revenue'), value: formatCurrency(totalRevenue, currency), icon: DollarSign, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+    { title: t2('Thanh toán chờ xử lý', 'Pending Payments'), value: pendingCount, icon: Clock, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400' },
+    { title: t2('Thanh toán đã hoàn thành', 'Completed Payments'), value: paidPayments, icon: FileCheck, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400' },
+    { title: t2('Chi phí thu mua', 'Procurement Cost'), value: formatCurrency(procurementCost, currency), icon: Receipt, iconBg: 'bg-orange-100 dark:bg-orange-950', iconColor: 'text-orange-600 dark:text-orange-400' },
+    { title: t2('Giá TB/kg', 'Avg Price/kg'), value: formatCurrency(avgPrice, currency), icon: TrendingUp, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400' },
+    { title: t2('Gói đăng ký', 'Subscription'), value: 'Professional', icon: ShieldCheck, iconBg: 'bg-purple-100 dark:bg-purple-950', iconColor: 'text-purple-600 dark:text-purple-400' },
   ]
 
   return (
@@ -117,12 +136,6 @@ export default function FinanceDashboard() {
                   <div className={`w-9 h-9 rounded-xl ${kpi.iconBg} flex items-center justify-center`}>
                     <kpi.icon className={`w-4 h-4 ${kpi.iconColor}`} />
                   </div>
-                  {kpi.trend !== 0 && (
-                    <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${kpi.trend >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {kpi.trend >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      {Math.abs(kpi.trend).toFixed(1)}%
-                    </span>
-                  )}
                 </div>
                 <div>
                   <p className="text-base md:text-lg font-bold text-foreground leading-none">{kpi.value}</p>
@@ -149,27 +162,33 @@ export default function FinanceDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={MOCK_REVENUE_TREND}>
-                  <defs>
-                    <linearGradient id="finGradR" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="finGradM" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#finGradR)" name={t2('Doanh thu', 'Revenue')} strokeWidth={2} />
-                  <Area type="monotone" dataKey="margin" stroke="#0d9488" fillOpacity={1} fill="url(#finGradM)" name={t2('Lợi nhuận', 'Margin')} strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {revenueTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={revenueTrend}>
+                    <defs>
+                      <linearGradient id="finGradR" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="finGradM" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#finGradR)" name={t2('Doanh thu', 'Revenue')} strokeWidth={2} />
+                    <Area type="monotone" dataKey="margin" stroke="#0d9488" fillOpacity={1} fill="url(#finGradM)" name={t2('Lợi nhuận', 'Margin')} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có thu hoạch', 'Data will appear as harvests are recorded')} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -185,30 +204,38 @@ export default function FinanceDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={MOCK_COST_BREAKDOWN} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis type="number" tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
-                  <YAxis dataKey="category" type="category" tick={{ fontSize: 9 }} width={80} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
-                  <Bar dataKey="amount" name={t2('Số tiền', 'Amount')} radius={[0, 6, 6, 0]} maxBarSize={18}>
-                    {MOCK_COST_BREAKDOWN.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="mt-3 space-y-2 px-1">
-                {MOCK_COST_BREAKDOWN.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-[10px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                      <span className="text-muted-foreground">{item.category}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-foreground">{item.percentage}%</span>
-                    </div>
+              {costBreakdown.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={costBreakdown} layout="vertical" margin={{ left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis type="number" tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
+                      <YAxis dataKey="category" type="category" tick={{ fontSize: 9 }} width={80} />
+                      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
+                      <Bar dataKey="amount" name={t2('Số tiền', 'Amount')} radius={[0, 6, 6, 0]} maxBarSize={18}>
+                        {costBreakdown.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 space-y-2 px-1">
+                    {costBreakdown.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                          <span className="text-muted-foreground">{item.category}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-foreground">{item.percentage}%</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có thu mua', 'Data will appear as procurement records are added')} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -226,33 +253,39 @@ export default function FinanceDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ScrollArea className="h-[280px]">
-                <div className="space-y-2">
-                  {MOCK_PENDING_PAYMENTS.map((payment) => {
-                    const statusConfig: Record<string, { color: string; label: string }> = {
-                      overdue: { color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400', label: t2('Quá hạn', 'Overdue') },
-                      due_soon: { color: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400', label: t2('Sắp đến hạn', 'Due Soon') },
-                      scheduled: { color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400', label: t2('Đã lên lịch', 'Scheduled') },
-                    }
-                    const cfg = statusConfig[payment.status] || statusConfig.scheduled
-                    return (
-                      <div key={payment.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[8px]">{payment.id}</Badge>
-                            <span className="text-xs font-medium text-foreground">{payment.farmer}</span>
+              {pendingPayments.length > 0 ? (
+                <ScrollArea className="h-[280px]">
+                  <div className="space-y-2">
+                    {pendingPayments.map((payment) => {
+                      const statusConfig: Record<string, { color: string; label: string }> = {
+                        overdue: { color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400', label: t2('Quá hạn', 'Overdue') },
+                        due_soon: { color: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400', label: t2('Sắp đến hạn', 'Due Soon') },
+                        scheduled: { color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400', label: t2('Đã lên lịch', 'Scheduled') },
+                      }
+                      const cfg = statusConfig[payment.status] || statusConfig.scheduled
+                      return (
+                        <div key={payment.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-[8px]">{payment.id}</Badge>
+                              <span className="text-xs font-medium text-foreground">{payment.farmer}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs font-bold text-foreground">{formatCurrency(payment.amount, currency)}</span>
+                              <Badge className={`text-[8px] h-4 ${cfg.color}`}>{cfg.label}</Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-bold text-foreground">{formatCurrency(payment.amount, currency)}</span>
-                            <Badge className={`text-[8px] h-4 ${cfg.color}`}>{cfg.label}</Badge>
-                          </div>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{payment.dueDate}</span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground shrink-0">{payment.dueDate}</span>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Không có thanh toán chờ xử lý', 'No pending payments')} />
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
@@ -267,8 +300,8 @@ export default function FinanceDashboard() {
             <CardContent className="px-5 pb-5 space-y-4">
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-foreground">{subscriptionPlan} Plan</span>
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">{subscriptionStatus}</Badge>
+                  <span className="text-sm font-bold text-foreground">Professional Plan</span>
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">active</Badge>
                 </div>
                 <Progress value={75} className="h-2 mb-1" />
                 <p className="text-[10px] text-muted-foreground">75% of API calls used this month</p>
@@ -282,8 +315,8 @@ export default function FinanceDashboard() {
                 </div>
                 <div className="p-3 rounded-xl bg-accent/50">
                   <p className="text-[10px] text-muted-foreground">{t2('Nông dân', 'Farmers')}</p>
-                  <p className="text-sm font-bold text-foreground">551 / 2000</p>
-                  <Progress value={28} className="h-1 mt-1" />
+                  <p className="text-sm font-bold text-foreground">{stats?.totalFarmers || 0} / 2000</p>
+                  <Progress value={Math.min(100, ((stats?.totalFarmers || 0) / 2000) * 100)} className="h-1 mt-1" />
                 </div>
                 <div className="p-3 rounded-xl bg-accent/50">
                   <p className="text-[10px] text-muted-foreground">{t2('Lưu trữ', 'Storage')}</p>

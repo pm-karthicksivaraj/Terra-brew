@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const idParam = url.searchParams.get('id')
 
     if (idParam) {
-      const record = await db.serviceBooking.findFirst({
+      const record = await db.complianceBooking.findFirst({
         where: { id: idParam, tenantId, isActive: true },
         include: { service: true },
       })
@@ -28,22 +28,21 @@ export async function GET(request: NextRequest) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { bookingCode: { contains: search, mode: 'insensitive' as const } },
-        { targetEntity: { contains: search, mode: 'insensitive' as const } },
+        { notes: { contains: search, mode: 'insensitive' as const } },
       ]
     }
     if (statusFilter) where.status = statusFilter
     if (serviceFilter) where.serviceId = serviceFilter
 
     const [records, total] = await Promise.all([
-      db.serviceBooking.findMany({
+      db.complianceBooking.findMany({
         where,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: { service: { select: { id: true, serviceName: true, providerName: true, category: true } } },
+        include: { service: { select: { id: true, providerName: true, serviceType: true, coverage: true } } },
       }),
-      db.serviceBooking.count({ where }),
+      db.complianceBooking.count({ where }),
     ])
 
     return apiResponse({ data: records, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
@@ -63,17 +62,22 @@ export async function POST(request: NextRequest) {
 
     if (!body.serviceId) return apiError('Service ID is required', 400)
 
-    // Verify service exists and belongs to tenant
+    // Verify service exists
     const service = await db.complianceService.findFirst({
-      where: { id: body.serviceId, tenantId, isActive: true },
+      where: { id: body.serviceId, isActive: true },
     })
     if (!service) return apiError('Compliance service not found', 404)
 
-    const record = await db.serviceBooking.create({
+    const record = await db.complianceBooking.create({
       data: {
-        ...body,
         tenantId,
-        createdBy: user!.id,
+        serviceId: body.serviceId,
+        bookedBy: user!.id,
+        status: body.status,
+        scheduledDate: body.scheduledDate ? new Date(body.scheduledDate) : undefined,
+        completedDate: body.completedDate ? new Date(body.completedDate) : undefined,
+        notes: body.notes,
+        metadata: body.metadata,
       },
     })
 

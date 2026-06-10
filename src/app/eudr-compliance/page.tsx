@@ -87,7 +87,7 @@ interface EudrRecord {
   dueDiligenceStatement?: string; tracesCertificateRef?: string;
   validFrom?: string; validUntil?: string;
   notes?: string; metadata?: any; createdAt: string;
-  farmer?: { name: string }; farmLand?: { farmName: string };
+  farmer?: { name: string; fullName?: string }; farmLand?: { farmName: string };
 }
 
 interface DeforestationAssessment {
@@ -673,8 +673,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                     <TableHead className="text-xs">Farm Land</TableHead>
                     <TableHead className="text-xs">Status</TableHead>
                     <TableHead className="text-xs">Risk</TableHead>
-                    <TableHead className="text-xs">Risk Score</TableHead>
-                    <TableHead className="text-xs">Land Use</TableHead>
+                    <TableHead className="text-xs">Location</TableHead>
                     <TableHead className="text-xs">Valid Until</TableHead>
                     <TableHead className="text-xs">Actions</TableHead>
                   </TableRow>
@@ -682,7 +681,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                         <Shield className="w-10 h-10 mx-auto mb-2 opacity-40" />
                         <p className="text-sm">No compliance records found</p>
                       </TableCell>
@@ -693,7 +692,7 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                         <Checkbox checked={selectedIds.has(item.id)} onCheckedChange={(checked) => { checked?.toString(); toggleSelect(item.id) }} onClick={e => e.stopPropagation()} />
                       </TableCell>
                       <TableCell className="font-mono text-xs font-medium" style={{ color: '#6D2932' }}>{item.complianceId}</TableCell>
-                      <TableCell className="text-xs">{item.farmer?.name || item.farmerId || '—'}</TableCell>
+                      <TableCell className="text-xs">{item.farmer?.name || item.farmer?.fullName || item.farmerId || '—'}</TableCell>
                       <TableCell className="text-xs">{item.farmLand?.farmName || item.farmLandId || '—'}</TableCell>
                       <TableCell>
                         <Badge className={`${STATUS_COLORS[item.status] || ''} border capitalize text-xs`}>{item.status?.replace('_', ' ')}</Badge>
@@ -701,14 +700,11 @@ function ComplianceRecordsTab({ records }: { records: EudrRecord[] }) {
                       <TableCell>
                         <Badge className={`${RISK_COLORS[item.riskLevel] || ''} border capitalize text-xs`}>{item.riskLevel}</Badge>
                       </TableCell>
-                      <TableCell>
-                        {item.deforestationRiskScore != null ? (
-                          <span className={`font-mono font-medium text-xs ${getRiskScoreColor(item.deforestationRiskScore)}`}>
-                            {item.deforestationRiskScore}/100
-                          </span>
+                      <TableCell className="text-xs font-mono">
+                        {item.geolocationLat != null && item.geolocationLng != null ? (
+                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" style={{ color: '#6D2932' }} />{Number(item.geolocationLat).toFixed(2)}, {Number(item.geolocationLng).toFixed(2)}</span>
                         ) : '—'}
                       </TableCell>
-                      <TableCell className="text-xs capitalize">{item.landUseType?.replace('_', ' ') || '—'}</TableCell>
                       <TableCell className="text-xs font-mono">{item.validUntil ? new Date(item.validUntil).toLocaleDateString() : '—'}</TableCell>
                       <TableCell>
                         <div className="flex gap-1" onClick={e => e.stopPropagation()}>
@@ -1558,8 +1554,14 @@ export default function EudrCompliancePage() {
         const res = await fetch('/api/eudr-compliance')
         const data = await res.json()
         if (data.success && data.data) {
-          const records = data.data.compliances || data.data.records || data.data.data || []
-          setComplianceRecords(records)
+          // API returns { data: [...], total, page, pageSize, totalPages }
+          const records = Array.isArray(data.data) ? data.data : (data.data.data || data.data.records || data.data.compliances || [])
+          // Map fullName to name for backward compatibility
+          const mapped = records.map((r: any) => ({
+            ...r,
+            farmer: r.farmer ? { name: r.farmer.fullName || r.farmer.name, ...r.farmer } : r.farmer,
+          }))
+          setComplianceRecords(mapped)
         }
       } catch (err) {
         console.error('Failed to fetch compliance records', err)

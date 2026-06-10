@@ -34,13 +34,13 @@ const ALL_MODULES: ModuleSlug[] = [
   'dashboard', 'reports', 'settings', 'users',
   'eudr-compliance', 'export-docs', 'shipments', 'buyers', 'trading-desk',
   'api-access', 'deforestation', 'iot-tracking', 'qc-verification',
-  'compliance-marketplace', 'analytics', 'logistics',
+  'compliance-marketplace', 'analytics', 'logistics', 'product-monitoring', 'traces',
 ]
 
 const B2B_MODULES: ModuleSlug[] = [
   'eudr-compliance', 'export-docs', 'shipments', 'buyers', 'trading-desk',
   'api-access', 'deforestation', 'iot-tracking', 'qc-verification',
-  'compliance-marketplace', 'analytics', 'logistics',
+  'compliance-marketplace', 'analytics', 'logistics', 'product-monitoring', 'traces',
 ]
 
 export const ROLE_PERMISSIONS: Record<string, PermissionMap> = {

@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       where: { id, tenantId: user!.tenantId!, isActive: true },
       include: {
         farmer: { select: { id: true, fullName: true, farmerCode: true } },
-        farmLand: { select: { id: true, farmName: true } },
+        farmLand: { select: { id: true, farmName: true, polygonGeoJson: true, latitude: true, longitude: true } },
         deforestationAssessments: { where: { isActive: true } },
       },
     })

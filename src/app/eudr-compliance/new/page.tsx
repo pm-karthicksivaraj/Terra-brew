@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
@@ -11,19 +11,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Shield, ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2,
   MapPin, AlertTriangle, FileCheck, CalendarDays,
-  Loader2, Info, Globe2
+  Loader2, Info, Globe2, TreePine, Upload
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { FadeIn } from '@/components/ui/motion'
+import type { PolygonCoordinate } from '@/components/map/eudr-draw-map'
 
 // Dynamic import for map — SSR must be disabled for Leaflet
-const EudrLocationMap = dynamic(
-  () => import('@/components/map/eudr-location-map').then(mod => ({ default: mod.EudrLocationMap })),
-  { ssr: false, loading: () => <div className="h-[400px] bg-muted animate-pulse rounded-xl" /> }
+const EudrDrawMap = dynamic(
+  () => import('@/components/map/eudr-draw-map').then(mod => ({ default: mod.EudrDrawMap })),
+  { ssr: false, loading: () => <div className="h-[450px] bg-muted animate-pulse rounded-xl" /> }
 )
 
 // ─── Coffee Brown Theme ────────────────────────────────────────
@@ -33,11 +35,10 @@ const COFFEE_BROWN = '#6D2932'
 // ─── Constants ─────────────────────────────────────────────────
 
 const WIZARD_STEPS = [
-  { label: 'Basic Info', icon: Shield },
-  { label: 'Geolocation & Land', icon: MapPin },
-  { label: 'Risk Assessment', icon: AlertTriangle },
-  { label: 'Verification & DDS', icon: FileCheck },
-  { label: 'Validity & Notes', icon: CalendarDays },
+  { label: 'Farm Location', icon: MapPin, description: 'Mark farm location on map & draw boundary' },
+  { label: 'Farmer & Farm Details', icon: TreePine, description: 'Select farmer, farm land & land use' },
+  { label: 'Compliance Information', icon: Shield, description: 'Risk assessment & supporting documents' },
+  { label: 'Review & Submit', icon: CheckCircle2, description: 'Verify all details before submission' },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
@@ -55,23 +56,23 @@ const RISK_COLORS: Record<string, string> = {
   critical: 'bg-red-100 text-red-800 border-red-200',
 }
 
-// ─── Mock dropdown data ────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────
 
-const MOCK_FARMERS = [
-  { id: 'F-001', name: 'Nguyen Van Minh', code: 'TB-ĐL-2024-0347' },
-  { id: 'F-002', name: 'Le Thi Hoa', code: 'TB-LĐ-2024-0215' },
-  { id: 'F-003', name: 'Tran Van Duc', code: 'TB-GL-2024-0189' },
-  { id: 'F-004', name: 'Pham Thi Lan', code: 'TB-LĐ-2024-0432' },
-  { id: 'F-005', name: 'Hoang Van Em', code: 'TB-ĐN-2024-0076' },
-]
+interface FarmerOption {
+  id: string
+  fullName: string
+  farmerCode: string | null
+}
 
-const MOCK_FARM_LANDS = [
-  { id: 'FL-001', name: 'Highland Plot A', farmerId: 'F-001' },
-  { id: 'FL-002', name: 'Central Valley Plot', farmerId: 'F-002' },
-  { id: 'FL-003', name: 'Lowland Expansion', farmerId: 'F-003' },
-  { id: 'FL-004', name: 'Shade Garden B', farmerId: 'F-004' },
-  { id: 'FL-005', name: 'Mixed Plot C', farmerId: 'F-005' },
-]
+interface FarmLandOption {
+  id: string
+  farmName: string
+  farmerId: string
+  polygonGeoJson?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  totalLandHolding?: number | null
+}
 
 // ─── Helper Functions ──────────────────────────────────────────
 
@@ -109,6 +110,10 @@ export default function NewEudrCompliancePage() {
   const { data: session } = useSession()
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [farmers, setFarmers] = useState<FarmerOption[]>([])
+  const [farmLands, setFarmLands] = useState<FarmLandOption[]>([])
+  const [polygonCoords, setPolygonCoords] = useState<PolygonCoordinate[]>([])
+  const [polygonArea, setPolygonArea] = useState<number>(0)
 
   const [form, setForm] = useState<any>({
     complianceId: generateComplianceId(),
@@ -130,7 +135,54 @@ export default function NewEudrCompliancePage() {
     validFrom: '',
     validUntil: '',
     notes: '',
+    processingMethod: '',
   })
+
+  // Fetch farmers from API
+  useEffect(() => {
+    async function fetchFarmers() {
+      try {
+        const res = await fetch('/api/farmers?pageSize=500')
+        const data = await res.json()
+        if (data.success && data.data) {
+          const items = data.data.data || data.data.records || data.data || []
+          setFarmers(items.map((f: any) => ({
+            id: f.id,
+            fullName: f.fullName,
+            farmerCode: f.farmerCode,
+          })))
+        }
+      } catch (err) {
+        console.error('Failed to fetch farmers', err)
+      }
+    }
+    fetchFarmers()
+  }, [])
+
+  // Fetch farm lands from API
+  useEffect(() => {
+    async function fetchFarmLands() {
+      try {
+        const res = await fetch('/api/farmlands?pageSize=500')
+        const data = await res.json()
+        if (data.success && data.data) {
+          const items = data.data.data || data.data.records || data.data || []
+          setFarmLands(items.map((fl: any) => ({
+            id: fl.id,
+            farmName: fl.farmName,
+            farmerId: fl.farmerId,
+            polygonGeoJson: fl.polygonGeoJson,
+            latitude: fl.latitude,
+            longitude: fl.longitude,
+            totalLandHolding: fl.totalLandHolding,
+          })))
+        }
+      } catch (err) {
+        console.error('Failed to fetch farm lands', err)
+      }
+    }
+    fetchFarmLands()
+  }, [])
 
   const updateForm = (field: string, value: any) => {
     setForm((prev: any) => {
@@ -145,15 +197,67 @@ export default function NewEudrCompliancePage() {
 
   // Filter farm lands based on selected farmer
   const filteredFarmLands = useMemo(() => {
-    if (!form.farmerId) return MOCK_FARM_LANDS
-    return MOCK_FARM_LANDS.filter(fl => fl.farmerId === form.farmerId)
-  }, [form.farmerId])
+    if (!form.farmerId) return farmLands
+    return farmLands.filter(fl => fl.farmerId === form.farmerId)
+  }, [form.farmerId, farmLands])
+
+  // When farm land is selected, auto-fill coordinates from farm land data
+  useEffect(() => {
+    if (!form.farmLandId) return
+    const selectedLand = farmLands.find(fl => fl.id === form.farmLandId)
+    if (selectedLand) {
+      if (selectedLand.latitude && selectedLand.longitude) {
+        updateForm('geolocationLat', selectedLand.latitude)
+        updateForm('geolocationLng', selectedLand.longitude)
+      }
+      if (selectedLand.polygonGeoJson) {
+        try {
+          const geojson = JSON.parse(selectedLand.polygonGeoJson)
+          let coords: PolygonCoordinate[] = []
+          if (geojson.type === 'Polygon' && geojson.coordinates) {
+            const ring = geojson.coordinates[0]
+            coords = ring.map((c: number[]) => ({ lng: c[0], lat: c[1] }))
+          }
+          if (coords.length >= 3) {
+            setPolygonCoords(coords)
+            const R = 6371000
+            let area = 0
+            for (let i = 0; i < coords.length; i++) {
+              const j = (i + 1) % coords.length
+              const lat1 = (coords[i].lat * Math.PI) / 180
+              const lat2 = (coords[j].lat * Math.PI) / 180
+              const lng1 = (coords[i].lng * Math.PI) / 180
+              const lng2 = (coords[j].lng * Math.PI) / 180
+              area += (lng2 - lng1) * (2 + Math.sin(lat1) + Math.sin(lat2))
+            }
+            area = Math.abs((area * R * R) / 2) / 10000
+            setPolygonArea(area)
+          }
+        } catch {
+          // Invalid GeoJSON, ignore
+        }
+      }
+    }
+  }, [form.farmLandId, farmLands])
 
   const canAdvance = (): boolean => {
-    if (step === 0 && !form.complianceId) return false
-    if (step === 1 && (!form.geolocationLat || !form.geolocationLng)) return false
+    if (step === 0 && (!form.geolocationLat || !form.geolocationLng)) return false
+    if (step === 1 && !form.farmerId) return false
     return true
   }
+
+  const handleLocationSelect = useCallback((lat: number, lng: number) => {
+    updateForm('geolocationLat', lat)
+    updateForm('geolocationLng', lng)
+  }, [])
+
+  const handlePolygonDrawn = useCallback((coords: PolygonCoordinate[]) => {
+    setPolygonCoords(coords)
+  }, [])
+
+  const handleAreaCalculated = useCallback((area: number) => {
+    setPolygonArea(area)
+  }, [])
 
   const handleSubmit = async () => {
     setSubmitting(true)
@@ -178,6 +282,11 @@ export default function NewEudrCompliancePage() {
         validFrom: form.validFrom || undefined,
         validUntil: form.validUntil || undefined,
         notes: form.notes || undefined,
+        metadata: JSON.stringify({
+          polygonCoordinates: polygonCoords.length >= 3 ? polygonCoords : undefined,
+          polygonAreaHectares: polygonArea > 0 ? polygonArea : undefined,
+          processingMethod: form.processingMethod || undefined,
+        }),
       }
 
       const res = await fetch('/api/eudr-compliance', {
@@ -250,9 +359,12 @@ export default function NewEudrCompliancePage() {
                       >
                         {i < step ? '✓' : i + 1}
                       </div>
-                      <span className={`text-sm hidden md:inline ${i === step ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-                        {s.label}
-                      </span>
+                      <div className="hidden md:block">
+                        <span className={`text-sm ${i === step ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                          {s.label}
+                        </span>
+                        <p className="text-xs text-muted-foreground hidden lg:block">{s.description}</p>
+                      </div>
                     </button>
                     {i < WIZARD_STEPS.length - 1 && (
                       <div className="flex-1 h-px bg-border mx-1" />
@@ -277,110 +389,32 @@ export default function NewEudrCompliancePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              {/* Step 0: Basic Info */}
+              {/* ─── Step 0: Farm Location ─── */}
               {step === 0 && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Compliance ID *</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="EUDR-2024-XXX"
-                          value={form.complianceId || ''}
-                          onChange={e => updateForm('complianceId', e.target.value)}
-                          className="font-mono text-base"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="whitespace-nowrap"
-                          onClick={() => updateForm('complianceId', generateComplianceId())}
-                        >
-                          Auto
-                        </Button>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="text-sm text-amber-800 dark:text-amber-300">
+                        <p className="font-semibold mb-1">Mark your farm location</p>
+                        <p>Click on the map to set the farm geolocation. Use the &quot;Draw Polygon&quot; button to outline the farm boundary, or upload a GeoJSON file. The polygon area will be auto-calculated in hectares.</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">Auto-generated. You can override if needed.</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Batch ID</Label>
-                      <Input
-                        placeholder="BATCH-XXX"
-                        value={form.batchId || ''}
-                        onChange={e => updateForm('batchId', e.target.value)}
-                        className="font-mono text-base"
-                      />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Farmer</Label>
-                      <Select value={form.farmerId || '_none'} onValueChange={v => {
-                        updateForm('farmerId', v === '_none' ? '' : v)
-                        if (v !== '_none') updateForm('farmLandId', '')
-                      }}>
-                        <SelectTrigger className="text-base"><SelectValue placeholder="Select farmer" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">None</SelectItem>
-                          {MOCK_FARMERS.map(f => (
-                            <SelectItem key={f.id} value={f.id}>{f.name} ({f.code})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Farm Land</Label>
-                      <Select value={form.farmLandId || '_none'} onValueChange={v => updateForm('farmLandId', v === '_none' ? '' : v)}>
-                        <SelectTrigger className="text-base"><SelectValue placeholder="Select farm land" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">None</SelectItem>
-                          {filteredFarmLands.map(fl => (
-                            <SelectItem key={fl.id} value={fl.id}>{fl.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Status</Label>
-                      <Select value={form.status} onValueChange={v => updateForm('status', v)}>
-                        <SelectTrigger className="text-base"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in_review">In Review</SelectItem>
-                          <SelectItem value="compliant">Compliant</SelectItem>
-                          <SelectItem value="non_compliant">Non-Compliant</SelectItem>
-                          <SelectItem value="expired">Expired</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Risk Level</Label>
-                      <div className="flex items-center gap-3">
-                        <Select value={form.riskLevel} onValueChange={v => updateForm('riskLevel', v)} disabled={form.deforestationRiskScore != null}>
-                          <SelectTrigger className="text-base"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Badge className={`${RISK_COLORS[form.riskLevel]} border capitalize text-sm`}>
-                          {form.riskLevel}
-                        </Badge>
-                      </div>
-                      {form.deforestationRiskScore != null && (
-                        <p className="text-xs text-muted-foreground">Auto-calculated from risk score in Step 3</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {/* Step 1: Geolocation & Land */}
-              {step === 1 && (
-                <div className="space-y-6">
+                  {/* OpenStreetMap with drawing tools */}
+                  <EudrDrawMap
+                    center={[form.geolocationLat || 11.9404, form.geolocationLng || 108.4584]}
+                    zoom={12}
+                    latitude={form.geolocationLat}
+                    longitude={form.geolocationLng}
+                    onLocationSelect={handleLocationSelect}
+                    onPolygonDrawn={handlePolygonDrawn}
+                    onAreaCalculated={handleAreaCalculated}
+                    existingPolygon={polygonCoords.length >= 3 ? polygonCoords : undefined}
+                    height="450px"
+                  />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-base font-medium">Latitude *</Label>
@@ -406,27 +440,82 @@ export default function NewEudrCompliancePage() {
                     </div>
                   </div>
 
-                  {/* OpenStreetMap Preview */}
-                  {form.geolocationLat && form.geolocationLng ? (
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium flex items-center gap-2">
-                        <Globe2 className="w-4 h-4" style={{ color: COFFEE_BROWN }} />
-                        Location Preview
-                      </Label>
-                      <EudrLocationMap
-                        latitude={form.geolocationLat}
-                        longitude={form.geolocationLng}
-                        complianceId={form.complianceId}
-                        zoom={13}
-                      />
-                      <p className="text-xs text-muted-foreground">Click on the map marker to see details. The map updates as you change coordinates.</p>
-                    </div>
-                  ) : (
-                    <div className="h-[200px] bg-muted/30 rounded-xl flex items-center justify-center border border-dashed border-muted-foreground/20">
-                      <p className="text-sm text-muted-foreground">Enter coordinates to preview location</p>
+                  {polygonArea > 0 && (
+                    <div className="p-4 rounded-xl bg-muted/50 border flex items-center gap-3">
+                      <MapPin className="w-5 h-5" style={{ color: COFFEE_BROWN }} />
+                      <div>
+                        <p className="text-sm font-medium">Farm Boundary Area</p>
+                        <p className="text-lg font-bold font-mono" style={{ color: COFFEE_BROWN }}>{polygonArea.toFixed(2)} hectares</p>
+                      </div>
                     </div>
                   )}
+                </div>
+              )}
 
+              {/* ─── Step 1: Farmer & Farm Details ─── */}
+              {step === 1 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Farmer *</Label>
+                      <Select value={form.farmerId || '_none'} onValueChange={v => {
+                        updateForm('farmerId', v === '_none' ? '' : v)
+                        if (v !== '_none') updateForm('farmLandId', '')
+                      }}>
+                        <SelectTrigger className="text-base"><SelectValue placeholder="Select farmer" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">None</SelectItem>
+                          {farmers.map(f => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.fullName} {f.farmerCode ? `(${f.farmerCode})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Farm Land</Label>
+                      <Select value={form.farmLandId || '_none'} onValueChange={v => updateForm('farmLandId', v === '_none' ? '' : v)}>
+                        <SelectTrigger className="text-base"><SelectValue placeholder="Select farm land" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">None</SelectItem>
+                          {filteredFarmLands.map(fl => (
+                            <SelectItem key={fl.id} value={fl.id}>{fl.farmName}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Compliance ID</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="EUDR-2024-XXX"
+                          value={form.complianceId || ''}
+                          onChange={e => updateForm('complianceId', e.target.value)}
+                          className="font-mono text-base"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="whitespace-nowrap"
+                          onClick={() => updateForm('complianceId', generateComplianceId())}
+                        >
+                          Auto
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Batch ID</Label>
+                      <Input
+                        placeholder="BATCH-XXX"
+                        value={form.batchId || ''}
+                        onChange={e => updateForm('batchId', e.target.value)}
+                        className="font-mono text-base"
+                      />
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-base font-medium">Land Use Type</Label>
@@ -443,6 +532,21 @@ export default function NewEudrCompliancePage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
+                      <Label className="text-base font-medium">Processing Method</Label>
+                      <Select value={form.processingMethod || '_none'} onValueChange={v => updateForm('processingMethod', v === '_none' ? '' : v)}>
+                        <SelectTrigger className="text-base"><SelectValue placeholder="Select method" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">None</SelectItem>
+                          <SelectItem value="washed">Washed / Wet</SelectItem>
+                          <SelectItem value="natural">Natural / Dry</SelectItem>
+                          <SelectItem value="honey">Honey / Semi-washed</SelectItem>
+                          <SelectItem value="wet_hulled">Wet Hulled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
                       <Label className="text-base font-medium">Land Cover Change Date</Label>
                       <Input
                         type="date"
@@ -451,20 +555,20 @@ export default function NewEudrCompliancePage() {
                         className="text-base"
                       />
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Satellite Imagery Reference</Label>
-                    <Input
-                      placeholder="SAT-GFW-2024-XXX"
-                      value={form.satelliteImageryRef || ''}
-                      onChange={e => updateForm('satelliteImageryRef', e.target.value)}
-                      className="font-mono text-base"
-                    />
+                    <div className="space-y-2">
+                      <Label className="text-base font-medium">Satellite Imagery Reference</Label>
+                      <Input
+                        placeholder="SAT-GFW-2024-XXX"
+                        value={form.satelliteImageryRef || ''}
+                        onChange={e => updateForm('satelliteImageryRef', e.target.value)}
+                        className="font-mono text-base"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Risk Assessment */}
+              {/* ─── Step 2: Compliance Information ─── */}
               {step === 2 && (
                 <div className="space-y-6">
                   <div className="space-y-3">
@@ -500,8 +604,6 @@ export default function NewEudrCompliancePage() {
                         <span>High (41-70)</span>
                         <span>Critical (71-100)</span>
                       </div>
-
-                      {/* Auto-calculated Risk Level */}
                       <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
                         <AlertTriangle className="w-5 h-5" style={{ color: COFFEE_BROWN }} />
                         <div>
@@ -514,21 +616,8 @@ export default function NewEudrCompliancePage() {
                     </div>
                   )}
 
-                  <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="text-sm text-amber-800 dark:text-amber-300">
-                        <p className="font-semibold mb-1">EUDR Cutoff Date: December 31, 2020</p>
-                        <p>Any deforestation after this date renders the commodity non-compliant with EU regulations. Risk scores are calculated based on satellite imagery analysis, ground survey data, and Global Forest Watch alerts.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  <Separator />
 
-              {/* Step 3: Verification & DDS */}
-              {step === 3 && (
-                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-base font-medium">Verification Date</Label>
@@ -550,7 +639,7 @@ export default function NewEudrCompliancePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-base font-medium">Due Diligence Statement (DDS) Document URL</Label>
+                    <Label className="text-base font-medium">Due Diligence Statement (DDS)</Label>
                     <Input
                       placeholder="/docs/dds/EUDR-2024-XXX.pdf"
                       value={form.dueDiligenceStatement || ''}
@@ -567,65 +656,112 @@ export default function NewEudrCompliancePage() {
                       className="font-mono text-base"
                     />
                   </div>
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-3">
-                      <Globe2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <div className="text-sm text-blue-800 dark:text-blue-300">
-                        <p className="font-semibold mb-1">TRACES-NT: EU Trade Control and Expert System</p>
-                        <p>All DDS documents must be submitted through TRACES-NT before placing commodities on the EU market.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Validity & Notes */}
-              {step === 4 && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Valid From</Label>
-                      <Input
-                        type="date"
-                        value={form.validFrom || ''}
-                        onChange={e => updateForm('validFrom', e.target.value)}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base font-medium">Valid Until</Label>
-                      <Input
-                        type="date"
-                        value={form.validUntil || ''}
-                        onChange={e => updateForm('validUntil', e.target.value)}
-                        className="text-base"
-                      />
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <Label className="text-base font-medium">Notes</Label>
                     <Textarea
                       placeholder="Additional compliance notes, observations, remediation plans..."
                       value={form.notes || ''}
                       onChange={e => updateForm('notes', e.target.value)}
-                      rows={5}
+                      rows={4}
                       className="text-base"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Supporting Documents</Label>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" size="sm" className="gap-1.5 text-sm" type="button">
+                        <Upload className="w-4 h-4" /> Upload Documents
+                      </Button>
+                      <span className="text-xs text-muted-foreground">PDF, JPG, PNG up to 10MB</span>
+                    </div>
+                  </div>
 
-                  {/* Summary before submit */}
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="text-sm text-amber-800 dark:text-amber-300">
+                        <p className="font-semibold mb-1">EUDR Cutoff Date: December 31, 2020</p>
+                        <p>Any deforestation after this date renders the commodity non-compliant with EU regulations. Risk scores are calculated based on satellite imagery analysis, ground survey data, and Global Forest Watch alerts.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ─── Step 3: Review & Submit ─── */}
+              {step === 3 && (
+                <div className="space-y-6">
+                  {/* Location Summary */}
                   <div className="p-4 rounded-xl bg-muted/50 border space-y-3">
                     <h4 className="text-base font-semibold flex items-center gap-2">
-                      <CheckCircle2 className="w-5 h-5" style={{ color: COFFEE_BROWN }} />
-                      Record Summary
+                      <MapPin className="w-5 h-5" style={{ color: COFFEE_BROWN }} /> Farm Location
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                      <div><span className="text-muted-foreground">Latitude:</span><p className="font-mono font-medium">{form.geolocationLat}</p></div>
+                      <div><span className="text-muted-foreground">Longitude:</span><p className="font-mono font-medium">{form.geolocationLng}</p></div>
+                      <div><span className="text-muted-foreground">Area:</span><p className="font-mono font-medium">{polygonArea > 0 ? `${polygonArea.toFixed(2)} ha` : '—'}</p></div>
+                    </div>
+                  </div>
+
+                  {/* Farmer & Farm Summary */}
+                  <div className="p-4 rounded-xl bg-muted/50 border space-y-3">
+                    <h4 className="text-base font-semibold flex items-center gap-2">
+                      <TreePine className="w-5 h-5" style={{ color: COFFEE_BROWN }} /> Farmer & Farm Details
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                       <div><span className="text-muted-foreground">Compliance ID:</span><p className="font-mono font-medium">{form.complianceId}</p></div>
-                      <div><span className="text-muted-foreground">Status:</span><p><Badge className={`${STATUS_COLORS[form.status]} border capitalize`}>{form.status?.replace('_', ' ')}</Badge></p></div>
-                      <div><span className="text-muted-foreground">Risk Level:</span><p><Badge className={`${RISK_COLORS[form.riskLevel]} border capitalize`}>{form.riskLevel}</Badge></p></div>
-                      <div><span className="text-muted-foreground">Coordinates:</span><p className="font-mono">{form.geolocationLat}, {form.geolocationLng}</p></div>
-                      <div><span className="text-muted-foreground">Risk Score:</span><p className={`font-mono font-bold ${getRiskScoreColor(form.deforestationRiskScore)}`}>{form.deforestationRiskScore ?? '—'}/100</p></div>
+                      <div>
+                        <span className="text-muted-foreground">Farmer:</span>
+                        <p className="font-medium">{farmers.find(f => f.id === form.farmerId)?.fullName || form.farmerId || '—'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Farm Land:</span>
+                        <p className="font-medium">{farmLands.find(fl => fl.id === form.farmLandId)?.farmName || form.farmLandId || '—'}</p>
+                      </div>
                       <div><span className="text-muted-foreground">Batch ID:</span><p className="font-mono">{form.batchId || '—'}</p></div>
+                      <div><span className="text-muted-foreground">Land Use:</span><p className="capitalize">{form.landUseType?.replace('_', ' ') || '—'}</p></div>
+                      <div><span className="text-muted-foreground">Processing:</span><p className="capitalize">{form.processingMethod?.replace('_', ' ') || '—'}</p></div>
+                    </div>
+                  </div>
+
+                  {/* Compliance Summary */}
+                  <div className="p-4 rounded-xl bg-muted/50 border space-y-3">
+                    <h4 className="text-base font-semibold flex items-center gap-2">
+                      <Shield className="w-5 h-5" style={{ color: COFFEE_BROWN }} /> Compliance Information
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Status:</span>
+                        <p><Badge className={`${STATUS_COLORS[form.status]} border capitalize`}>{form.status?.replace('_', ' ')}</Badge></p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Risk Level:</span>
+                        <p><Badge className={`${RISK_COLORS[form.riskLevel]} border capitalize`}>{form.riskLevel}</Badge></p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Risk Score:</span>
+                        <p className={`font-mono font-bold ${getRiskScoreColor(form.deforestationRiskScore)}`}>{form.deforestationRiskScore ?? '—'}/100</p>
+                      </div>
+                      <div><span className="text-muted-foreground">Satellite Ref:</span><p className="font-mono">{form.satelliteImageryRef || '—'}</p></div>
+                      <div><span className="text-muted-foreground">Verified By:</span><p>{form.verifiedBy || '—'}</p></div>
+                      <div><span className="text-muted-foreground">TRACES-NT:</span><p className="font-mono">{form.tracesCertificateRef || '—'}</p></div>
+                    </div>
+                    {form.notes && (
+                      <div>
+                        <span className="text-muted-foreground text-sm">Notes:</span>
+                        <p className="text-sm mt-1">{form.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Validity */}
+                  <div className="p-4 rounded-xl bg-muted/50 border space-y-3">
+                    <h4 className="text-base font-semibold flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5" style={{ color: COFFEE_BROWN }} /> Validity Period
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div><span className="text-muted-foreground">Valid From:</span><p className="font-mono">{form.validFrom || '—'}</p></div>
+                      <div><span className="text-muted-foreground">Valid Until:</span><p className="font-mono">{form.validUntil || '—'}</p></div>
                     </div>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import {
   MapPin, Users, Wheat, AlertTriangle,
   TrendingUp, Activity, Loader2, ClipboardList,
   Bug, TreePine, Zap, ChevronRight, CalendarDays,
-  Sprout, Droplets, Eye,
+  Sprout, Droplets, Eye, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,48 +25,28 @@ import type { DashboardStats } from '@/types'
 
 const CHART_COLORS = ['#0d9488', '#8b5a1e', '#d4a574', '#4a7c59', '#c08850', '#6d4516']
 
-const MOCK_FARM_VISITS = [
-  { id: '1', farmer: 'Nguyễn Văn Minh', location: 'Dak Lak', type: 'Crop Monitoring', due: 'Today', priority: 'high' },
-  { id: '2', farmer: 'Trần Thị Lan', location: 'Lam Dong', type: 'Pest Inspection', due: 'Today', priority: 'high' },
-  { id: '3', farmer: 'Lê Hoàng Nam', location: 'Gia Lai', type: 'Harvest Verification', due: 'Tomorrow', priority: 'medium' },
-  { id: '4', farmer: 'Phạm Minh Tú', location: 'Dak Nong', type: 'Cert Assessment', due: 'In 2 days', priority: 'low' },
-  { id: '5', farmer: 'Hoàng Đức Anh', location: 'Kon Tum', type: 'Fertilizer Follow-up', due: 'In 3 days', priority: 'medium' },
-]
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center h-full text-center p-6">
+      <div>
+        <Inbox className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
 
-const MOCK_CROP_ALERTS = [
-  { id: '1', type: 'pest', severity: 'high', message: 'Coffee borer beetle detected — Dak Lak region', count: 12, icon: Bug },
-  { id: '2', type: 'disease', severity: 'medium', message: 'Leaf rust spreading — Lam Dong farms', count: 8, icon: AlertTriangle },
-  { id: '3', type: 'weather', severity: 'low', message: 'Heavy rain expected — Central Highlands', count: 3, icon: Droplets },
-]
-
-const MOCK_ACTIVITY = [
-  { id: '1', action: 'Registered new farmer', entity: 'Nguyễn Thị Hoa — Dak Lak', time: '2 hrs ago' },
-  { id: '2', action: 'Crop monitoring completed', entity: 'Farm F-1087 — Healthy', time: '3 hrs ago' },
-  { id: '3', action: 'Pest alert filed', entity: 'Farm F-0923 — Leaf rust', time: '4 hrs ago' },
-  { id: '4', action: 'Harvest entry recorded', entity: 'Lot #H-2026-0442 — 320kg', time: '5 hrs ago' },
-  { id: '5', action: 'Fertilizer application logged', entity: 'Farm F-1105 — Organic NPK', time: '6 hrs ago' },
-]
-
-const MOCK_VISITS_BY_REGION = [
-  { region: 'Dak Lak', completed: 28, pending: 12 },
-  { region: 'Lam Dong', completed: 22, pending: 8 },
-  { region: 'Gia Lai', completed: 15, pending: 10 },
-  { region: 'Dak Nong', completed: 12, pending: 6 },
-  { region: 'Kon Tum', completed: 8, pending: 5 },
-]
-
-const MOCK_HARVEST_TYPES = [
-  { name: 'Arabica', value: 45, color: '#0d9488' },
-  { name: 'Robusta', value: 40, color: '#8b5a1e' },
-  { name: 'Excelsa', value: 10, color: '#d4a574' },
-  { name: 'Liberica', value: 5, color: '#4a7c59' },
-]
+function EmptyChart({ message }: { message: string }) {
+  return <EmptyState message={message} />
+}
 
 export default function FieldOfficerDashboard() {
   const router = useRouter()
   const { t2 } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [cropMonitorings, setCropMonitorings] = useState<any[]>([])
+  const [farmVisits, setFarmVisits] = useState<any[]>([])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -80,7 +60,33 @@ export default function FieldOfficerDashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchStats() }, [fetchStats])
+  const fetchCropMonitorings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/crop-monitorings')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setCropMonitorings(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch crop monitorings', err)
+    }
+  }, [])
+
+  const fetchFarmVisits = useCallback(async () => {
+    try {
+      const res = await fetch('/api/farmers?pageSize=10')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setFarmVisits(records.slice(0, 5))
+      }
+    } catch (err) {
+      console.error('Failed to fetch farmers', err)
+    }
+  }, [])
+
+  useEffect(() => { fetchStats(); fetchCropMonitorings(); fetchFarmVisits() }, [fetchStats, fetchCropMonitorings, fetchFarmVisits])
 
   if (loading) {
     return (
@@ -90,16 +96,42 @@ export default function FieldOfficerDashboard() {
     )
   }
 
-  const totalFarmers = stats?.totalFarmers || 551
-  const totalFarmLands = stats?.totalFarmLands || 420
-  const pendingVisits = 5
-  const cropAlertsCount = 3
+  const totalFarmers = stats?.totalFarmers || 0
+  const totalFarmLands = stats?.totalFarmLands || 0
+  const cropAlertsCount = stats?.totalCropMonitorings || 0
   const harvestEntries = stats?.totalHarvestRecords || 0
   const certifiedFarmers = stats?.certifiedFarmersCount || 0
 
+  // Compute visits by region from farmersPerProvince
+  const visitsByRegion = (stats?.farmersPerProvince || []).map((p) => ({
+    region: p.province || 'Unknown',
+    completed: p._count.province,
+    pending: 0,
+  }))
+
+  // Compute harvest types from cultivationsByCrop
+  const harvestTypes = (stats?.cultivationsByCrop || []).map((c, i) => ({
+    name: c.cultivatedCrop || 'Unknown',
+    value: c._count.cultivatedCrop,
+    color: CHART_COLORS[i % CHART_COLORS.length],
+  }))
+
+  // Compute crop alerts from real crop monitoring data
+  const cropAlerts = cropMonitorings.slice(0, 3).map((cm: any, i: number) => ({
+    id: cm.id || String(i),
+    type: cm.healthStatus === 'At Risk' ? 'pest' : cm.healthStatus === 'Needs Attention' ? 'disease' : 'weather',
+    severity: cm.healthStatus === 'At Risk' ? 'high' : cm.healthStatus === 'Needs Attention' ? 'medium' : 'low',
+    message: `${cm.healthStatus || 'Monitoring'} — ${cm.observationNotes || 'Crop monitoring record'}`,
+    count: 1,
+    icon: cm.healthStatus === 'At Risk' ? Bug : cm.healthStatus === 'Needs Attention' ? AlertTriangle : Droplets,
+  }))
+
+  // Compute activity from recentActivity
+  const activityFeed = (stats?.recentActivity || []).slice(0, 3)
+
   const kpis = [
     { title: t2('Nông dân đã đăng ký', 'Registered Farmers'), value: totalFarmers, icon: Users, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400' },
-    { title: t2('Chuyến thăm hôm nay', 'Visits Due Today'), value: pendingVisits, icon: MapPin, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400' },
+    { title: t2('Chuyến thăm hôm nay', 'Visits Due Today'), value: farmVisits.length, icon: MapPin, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400' },
     { title: t2('Cảnh báo cây trồng', 'Crop Alerts'), value: cropAlertsCount, icon: AlertTriangle, iconBg: 'bg-red-100 dark:bg-red-950', iconColor: 'text-red-600 dark:text-red-400' },
     { title: t2('Mục thu hoạch', 'Harvest Entries'), value: harvestEntries, icon: Wheat, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400' },
     { title: t2('Diện tích canh tác', 'Farm Lands'), value: totalFarmLands, icon: TreePine, iconBg: 'bg-green-100 dark:bg-green-950', iconColor: 'text-green-600 dark:text-green-400' },
@@ -138,21 +170,26 @@ export default function FieldOfficerDashboard() {
                 {t2('Chuyến thăm theo vùng', 'Farm Visits by Region')}
               </CardTitle>
               <CardDescription className="text-[10px] text-muted-foreground">
-                {t2('Hoàn thành vs. chờ xử lý', 'Completed vs. Pending')}
+                {t2('Nông dân theo tỉnh', 'Farmers by province')}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={MOCK_VISITS_BY_REGION} margin={{ bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="region" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="completed" name={t2('Hoàn thành', 'Completed')} fill="#0d9488" radius={[6, 6, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="pending" name={t2('Chờ xử lý', 'Pending')} fill="#d97706" radius={[6, 6, 0, 0]} maxBarSize={28} />
-                </BarChart>
-              </ResponsiveContainer>
+              {visitsByRegion.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={visitsByRegion} margin={{ bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="region" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Bar dataKey="completed" name={t2('Nông dân', 'Farmers')} fill="#0d9488" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có nông dân', 'Data will appear as farmers are registered')} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -165,15 +202,21 @@ export default function FieldOfficerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={MOCK_HARVEST_TYPES} cx="50%" cy="50%" outerRadius={100} innerRadius={55} dataKey="value" paddingAngle={3} stroke="none">
-                    {MOCK_HARVEST_TYPES.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [`${value}%`]} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                </PieChart>
-              </ResponsiveContainer>
+              {harvestTypes.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={harvestTypes} cx="50%" cy="50%" outerRadius={100} innerRadius={55} dataKey="value" paddingAngle={3} stroke="none">
+                      {harvestTypes.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có canh tác', 'Data will appear as cultivations are added')} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -190,36 +233,34 @@ export default function FieldOfficerDashboard() {
                   <ClipboardList className="w-4 h-4 text-primary" />
                   {t2('Chuyến thăm sắp tới', 'Upcoming Farm Visits')}
                 </CardTitle>
-                <Badge variant="outline" className="text-[9px]">{pendingVisits} {t2('chuyến', 'visits')}</Badge>
+                <Badge variant="outline" className="text-[9px]">{farmVisits.length} {t2('chuyến', 'visits')}</Badge>
               </div>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ScrollArea className="h-[280px] pr-2">
-                <div className="space-y-2">
-                  {MOCK_FARM_VISITS.map((visit) => {
-                    const priorityColors: Record<string, string> = {
-                      high: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-                      medium: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-                      low: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400',
-                    }
-                    return (
-                      <div key={visit.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
+              {farmVisits.length > 0 ? (
+                <ScrollArea className="h-[280px] pr-2">
+                  <div className="space-y-2">
+                    {farmVisits.map((farmer: any) => (
+                      <div key={farmer.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="text-xs font-medium text-foreground">{visit.farmer}</p>
-                            <Badge variant="outline" className={`text-[8px] h-4 ${priorityColors[visit.priority]}`}>{visit.priority}</Badge>
+                            <p className="text-xs font-medium text-foreground">{farmer.farmerName || farmer.name || 'Unknown'}</p>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">{visit.type} — {visit.location}</p>
+                          <p className="text-[10px] text-muted-foreground">{farmer.province || 'Unknown region'}</p>
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
                           <CalendarDays className="w-3 h-3" />
-                          {visit.due}
+                          {farmer.createdAt ? new Date(farmer.createdAt).toLocaleDateString() : ''}
                         </div>
                       </div>
-                    )
-                  })}
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyState message={t2('Chưa có chuyến thăm', 'No visits scheduled yet')} />
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
@@ -232,50 +273,59 @@ export default function FieldOfficerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4 space-y-3">
-              {MOCK_CROP_ALERTS.map((alert) => {
-                const severityColors: Record<string, string> = {
-                  high: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30',
-                  medium: 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30',
-                  low: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
-                }
-                const severityBadge: Record<string, string> = {
-                  high: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-                  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-                  low: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
-                }
-                return (
-                  <div key={alert.id} className={`p-3 rounded-xl border ${severityColors[alert.severity]}`}>
-                    <div className="flex items-start gap-3">
-                      <alert.icon className="w-5 h-5 shrink-0 text-foreground mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-medium text-foreground">{alert.message}</p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className={`text-[8px] h-4 ${severityBadge[alert.severity]}`}>{alert.severity}</Badge>
-                          <span className="text-[10px] text-muted-foreground">{alert.count} {t2('nông trại', 'farms')}</span>
+              {cropAlerts.length > 0 ? (
+                <>
+                  {cropAlerts.map((alert) => {
+                    const severityColors: Record<string, string> = {
+                      high: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30',
+                      medium: 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30',
+                      low: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30',
+                    }
+                    const severityBadge: Record<string, string> = {
+                      high: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
+                      medium: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+                      low: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+                    }
+                    const Icon = alert.icon
+                    return (
+                      <div key={alert.id} className={`p-3 rounded-xl border ${severityColors[alert.severity]}`}>
+                        <div className="flex items-start gap-3">
+                          <Icon className="w-5 h-5 shrink-0 text-foreground mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-medium text-foreground">{alert.message}</p>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline" className={`text-[8px] h-4 ${severityBadge[alert.severity]}`}>{alert.severity}</Badge>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )
-              })}
-
-              <Separator />
+                    )
+                  })}
+                  <Separator />
+                </>
+              ) : (
+                <div className="py-6">
+                  <EmptyState message={t2('Không có cảnh báo', 'No alerts at this time')} />
+                </div>
+              )}
 
               {/* Recent Field Activity */}
-              <div className="space-y-1">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t2('Hoạt động gần đây', 'Recent Field Activity')}</p>
-                {MOCK_ACTIVITY.slice(0, 3).map((a) => (
-                  <div key={a.id} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 transition-colors">
-                    <Activity className="w-3 h-3 text-muted-foreground shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-foreground truncate">{a.action}</p>
+              {activityFeed.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t2('Hoạt động gần đây', 'Recent Field Activity')}</p>
+                  {activityFeed.map((a: any) => (
+                    <div key={a.id} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent/50 transition-colors">
+                      <Activity className="w-3 h-3 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-foreground truncate">{a.action}</p>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground shrink-0">{a.time}</span>
                     </div>
-                    <span className="text-[9px] text-muted-foreground shrink-0">{a.time}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

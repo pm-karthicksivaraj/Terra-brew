@@ -27,46 +27,6 @@ import type { DashboardStats } from '@/types'
 
 const CHART_COLORS = ['#0d9488', '#8b5a1e', '#d4a574', '#4a7c59', '#c08850', '#6d4516', '#a06b2d', '#2e7d32']
 
-const MOCK_HARVEST_TRENDS = [
-  { month: '2025-05', name: 'May 25', harvests: 18, weight: 4200, procurement: 15, procWeight: 3800, avgCupScore: 82.5 },
-  { month: '2025-06', name: 'Jun 25', harvests: 24, weight: 5600, procurement: 20, procWeight: 5100, avgCupScore: 83.1 },
-  { month: '2025-07', name: 'Jul 25', harvests: 32, weight: 7800, procurement: 28, procWeight: 7200, avgCupScore: 81.8 },
-  { month: '2025-08', name: 'Aug 25', harvests: 28, weight: 6500, procurement: 25, procWeight: 6000, avgCupScore: 84.2 },
-  { month: '2025-09', name: 'Sep 25', harvests: 45, weight: 11200, procurement: 40, procWeight: 10500, avgCupScore: 85.6 },
-  { month: '2025-10', name: 'Oct 25', harvests: 62, weight: 15800, procurement: 55, procWeight: 14200, avgCupScore: 86.3 },
-  { month: '2025-11', name: 'Nov 25', harvests: 78, weight: 19200, procurement: 70, procWeight: 17800, avgCupScore: 84.9 },
-  { month: '2025-12', name: 'Dec 25', harvests: 55, weight: 13600, procurement: 48, procWeight: 12500, avgCupScore: 83.5 },
-  { month: '2026-01', name: 'Jan 26', harvests: 38, weight: 8900, procurement: 32, procWeight: 8100, avgCupScore: 82.7 },
-  { month: '2026-02', name: 'Feb 26', harvests: 22, weight: 5100, procurement: 18, procWeight: 4600, avgCupScore: 83.4 },
-  { month: '2026-03', name: 'Mar 26', harvests: 15, weight: 3500, procurement: 12, procWeight: 3100, avgCupScore: 84.1 },
-  { month: '2026-04', name: 'Apr 26', harvests: 20, weight: 4800, procurement: 16, procWeight: 4200, avgCupScore: 85.0 },
-]
-
-const MOCK_EUDR_COMPLIANCE = [
-  { name: 'Compliant', value: 67, color: '#2e7d32' },
-  { name: 'Pending Review', value: 21, color: '#d97706' },
-  { name: 'Non-Compliant', value: 8, color: '#dc2626' },
-  { name: 'Expired', value: 4, color: '#9ca3af' },
-]
-
-const MOCK_REVENUE_BY_BUYER = [
-  { buyer: 'Neue Kaffee GmbH', revenue: 480000000 },
-  { buyer: 'Terra Rossa Srl', revenue: 380000000 },
-  { buyer: 'Nordic Bean AB', revenue: 290000000 },
-  { buyer: 'Café Direct Ltd', revenue: 220000000 },
-  { buyer: 'Bean Brothers Co', revenue: 180000000 },
-  { buyer: 'Alpine Roast AG', revenue: 140000000 },
-]
-
-const MOCK_RECENT_ACTIVITY = [
-  { id: '1', type: 'procurement', action: 'Procurement completed', entity: 'Lot #PRC-2026-0892 — 450kg Robusta', time: '5 min ago' },
-  { id: '2', type: 'inspection', action: 'QC inspection passed', entity: 'Batch #B-4419 — Score: 86.5', time: '22 min ago' },
-  { id: '3', type: 'farmer', action: 'New farmer registered', entity: 'Nguyễn Văn Minh — Dak Lak', time: '1 hr ago' },
-  { id: '4', type: 'contract', action: 'Smart contract executed', entity: 'SC-2026-0344 — 2.4T shipment', time: '2 hrs ago' },
-  { id: '5', type: 'alert', action: 'EUDR expiry warning', entity: 'Farm F-1087 — Expires in 14 days', time: '3 hrs ago' },
-  { id: '6', type: 'procurement', action: 'Payment processed', entity: 'Lot #PRC-2026-0891 — ₫38.5M', time: '4 hrs ago' },
-]
-
 function Sparkline({ data, color = '#0d9488', width = 80, height = 28 }: { data: number[]; color?: string; width?: number; height?: number }) {
   if (!data || data.length < 2) return null
   const min = Math.min(...data)
@@ -94,17 +54,33 @@ function TrendIndicator({ value }: { value: number }) {
   )
 }
 
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center h-full text-center p-6">
+      <div>
+        <BarChart className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const { t2 } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [eudrCompliance, setEudrCompliance] = useState<Array<{ name: string; value: number; color: string }>>([])
+  const [recentActivity, setRecentActivity] = useState<Array<{ id: string; type: string; action: string; entity: string; time: string }>>([])
 
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/dashboard/stats')
       const data = await res.json()
-      if (data.success) setStats(data.data)
+      if (data.success) {
+        setStats(data.data)
+        setRecentActivity(data.data.recentActivity || [])
+      }
     } catch (err) {
       console.error('Failed to fetch stats', err)
     } finally {
@@ -112,7 +88,35 @@ export default function AdminDashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchStats() }, [fetchStats])
+  const fetchEudrCompliance = useCallback(async () => {
+    try {
+      const res = await fetch('/api/eudr-compliance')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        if (records.length > 0) {
+          const compliant = records.filter((r: any) => r.complianceStatus === 'Compliant' || r.overallStatus === 'Compliant').length
+          const pending = records.filter((r: any) => r.complianceStatus === 'Pending' || r.overallStatus === 'Pending Review').length
+          const nonCompliant = records.filter((r: any) => r.complianceStatus === 'Non-Compliant' || r.overallStatus === 'Non-Compliant').length
+          const expired = records.filter((r: any) => r.complianceStatus === 'Expired' || r.overallStatus === 'Expired').length
+          const total = compliant + pending + nonCompliant + expired || records.length
+          const result: { name: string; value: number; color: string }[] = []
+          if (compliant > 0) result.push({ name: 'Compliant', value: Math.round((compliant / total) * 100), color: '#2e7d32' })
+          if (pending > 0) result.push({ name: 'Pending Review', value: Math.round((pending / total) * 100), color: '#d97706' })
+          if (nonCompliant > 0) result.push({ name: 'Non-Compliant', value: Math.round((nonCompliant / total) * 100), color: '#dc2626' })
+          if (expired > 0) result.push({ name: 'Expired', value: Math.round((expired / total) * 100), color: '#9ca3af' })
+          if (result.length === 0) {
+            result.push({ name: 'No Data', value: 100, color: '#d4d4d4' })
+          }
+          setEudrCompliance(result)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch EUDR compliance', err)
+    }
+  }, [])
+
+  useEffect(() => { fetchStats(); fetchEudrCompliance() }, [fetchStats, fetchEudrCompliance])
 
   if (loading) {
     return (
@@ -122,30 +126,35 @@ export default function AdminDashboard() {
     )
   }
 
-  const totalRevenue = stats?.totalPurchaseAmount || 2850000000
-  const totalFarmers = stats?.totalFarmers || 551
-  const farmArea = stats?.totalLandArea || 1284.5
-  const harvestVolume = stats?.totalCherryWeight || 94800
-  const avgPrice = stats?.avgPricePerKg || 48500
-  const qualityScore = stats?.avgCupScore || 83.6
+  const totalRevenue = stats?.totalPurchaseAmount || 0
+  const totalFarmers = stats?.totalFarmers || 0
+  const farmArea = stats?.totalLandArea || 0
+  const harvestVolume = stats?.totalCherryWeight || 0
+  const avgPrice = stats?.avgPricePerKg || 0
+  const qualityScore = stats?.avgCupScore || 0
   const currency = 'VND'
 
   const primaryKPIs = [
-    { title: t2('Tổng doanh thu', 'Total Revenue'), value: totalRevenue, icon: DollarSign, format: 'currency' as const, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400', trend: 12.4, sparkData: [42, 48, 52, 58, 55, 62, 68, 72, 78, 82, 88, 95], sparkColor: '#10b981' },
-    { title: t2('Tổng nông dân', 'Total Farmers'), value: totalFarmers, icon: Users, format: 'number' as const, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400', trend: 8.2, sparkData: [380, 395, 410, 425, 440, 458, 472, 490, 510, 525, 540, 551], sparkColor: '#0d9488' },
-    { title: t2('Diện tích (ha)', 'Farm Area (ha)'), value: farmArea, icon: MapPin, format: 'decimal' as const, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400', trend: 5.6, sparkData: [980, 1000, 1040, 1080, 1100, 1130, 1160, 1190, 1220, 1250, 1265, 1284], sparkColor: '#d97706' },
-    { title: t2('Sản lượng (kg)', 'Harvest Volume (kg)'), value: harvestVolume, icon: Wheat, format: 'number' as const, iconBg: 'bg-orange-100 dark:bg-orange-950', iconColor: 'text-orange-600 dark:text-orange-400', trend: -3.1, sparkData: [12000, 10500, 8900, 7800, 6500, 5100, 4800, 8900, 11200, 13600, 15800, 94800], sparkColor: '#8b5a1e' },
-    { title: t2('Giá TB/kg', 'Avg Price/kg'), value: avgPrice, icon: TrendingUp, format: 'currency' as const, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400', trend: 6.8, sparkData: [42000, 43000, 44000, 44500, 45000, 45500, 46000, 47000, 47500, 48000, 48200, 48500], sparkColor: '#06b6d4' },
-    { title: t2('Điểm chất lượng', 'Quality Score'), value: qualityScore, icon: Award, format: 'score' as const, iconBg: 'bg-rose-100 dark:bg-rose-950', iconColor: 'text-rose-600 dark:text-rose-400', trend: 2.1, sparkData: [80.2, 81.0, 81.5, 82.1, 82.4, 82.8, 83.0, 83.3, 83.5, 83.8, 84.0, 83.6], sparkColor: '#e11d48' },
+    { title: t2('Tổng doanh thu', 'Total Revenue'), value: totalRevenue, icon: DollarSign, format: 'currency' as const, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400', trend: 0, sparkData: [] as number[], sparkColor: '#10b981' },
+    { title: t2('Tổng nông dân', 'Total Farmers'), value: totalFarmers, icon: Users, format: 'number' as const, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400', trend: 0, sparkData: [] as number[], sparkColor: '#0d9488' },
+    { title: t2('Diện tích (ha)', 'Farm Area (ha)'), value: farmArea, icon: MapPin, format: 'decimal' as const, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400', trend: 0, sparkData: [] as number[], sparkColor: '#d97706' },
+    { title: t2('Sản lượng (kg)', 'Harvest Volume (kg)'), value: harvestVolume, icon: Wheat, format: 'number' as const, iconBg: 'bg-orange-100 dark:bg-orange-950', iconColor: 'text-orange-600 dark:text-orange-400', trend: 0, sparkData: [] as number[], sparkColor: '#8b5a1e' },
+    { title: t2('Giá TB/kg', 'Avg Price/kg'), value: avgPrice, icon: TrendingUp, format: 'currency' as const, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400', trend: 0, sparkData: [] as number[], sparkColor: '#06b6d4' },
+    { title: t2('Điểm chất lượng', 'Quality Score'), value: qualityScore, icon: Award, format: 'score' as const, iconBg: 'bg-rose-100 dark:bg-rose-950', iconColor: 'text-rose-600 dark:text-rose-400', trend: 0, sparkData: [] as number[], sparkColor: '#e11d48' },
   ]
 
-  const harvestTrends = (stats?.harvestTrends && stats.harvestTrends.length > 0) ? stats.harvestTrends : MOCK_HARVEST_TRENDS
-  const mergedTrends = harvestTrends.map((h, i) => ({
+  const harvestTrends = stats?.harvestTrends || []
+  const mergedTrends = harvestTrends.map((h) => ({
     ...h,
-    procurement: MOCK_HARVEST_TRENDS[i]?.procurement || Math.round(h.harvests * 0.85),
-    procWeight: MOCK_HARVEST_TRENDS[i]?.procWeight || Math.round(h.weight * 0.9),
+    procurement: Math.round(h.harvests * 0.85),
+    procWeight: Math.round(h.weight * 0.9),
   }))
-  const activityFeed = (stats?.recentActivity && stats.recentActivity.length > 0) ? stats.recentActivity : MOCK_RECENT_ACTIVITY
+
+  // Compute revenue by buyer from procurement records if available
+  const revenueByBuyer: Array<{ buyer: string; revenue: number }> = []
+  // We'll use recentActivity or stats to derive this; for now empty state
+
+  const activityFeed = recentActivity.length > 0 ? recentActivity : []
 
   return (
     <StaggerContainer className="space-y-6">
@@ -159,7 +168,7 @@ export default function AdminDashboard() {
                   <div className={`w-9 h-9 rounded-xl ${kpi.iconBg} flex items-center justify-center`}>
                     <kpi.icon className={`w-4 h-4 ${kpi.iconColor}`} />
                   </div>
-                  <TrendIndicator value={kpi.trend} />
+                  {kpi.value > 0 && <TrendIndicator value={kpi.trend} />}
                 </div>
                 <div>
                   <p className="text-lg md:text-xl font-bold text-foreground leading-none">
@@ -170,9 +179,11 @@ export default function AdminDashboard() {
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.title}</p>
                 </div>
-                <div className="pt-1">
-                  <Sparkline data={kpi.sparkData} color={kpi.sparkColor} width={100} height={24} />
-                </div>
+                {kpi.sparkData.length >= 2 && (
+                  <div className="pt-1">
+                    <Sparkline data={kpi.sparkData} color={kpi.sparkColor} width={100} height={24} />
+                  </div>
+                )}
               </CardContent>
             </MotionCard>
           ))}
@@ -194,27 +205,33 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={mergedTrends}>
-                  <defs>
-                    <linearGradient id="adminGradH" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="adminGradP" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5a1e" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#8b5a1e" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Area type="monotone" dataKey="harvests" stroke="#0d9488" fillOpacity={1} fill="url(#adminGradH)" name={t2('Thu hoạch', 'Harvests')} strokeWidth={2} />
-                  <Area type="monotone" dataKey="procurement" stroke="#8b5a1e" fillOpacity={1} fill="url(#adminGradP)" name={t2('Thu mua', 'Procurement')} strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
+              {mergedTrends.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={mergedTrends}>
+                    <defs>
+                      <linearGradient id="adminGradH" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="adminGradP" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5a1e" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#8b5a1e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Area type="monotone" dataKey="harvests" stroke="#0d9488" fillOpacity={1} fill="url(#adminGradH)" name={t2('Thu hoạch', 'Harvests')} strokeWidth={2} />
+                    <Area type="monotone" dataKey="procurement" stroke="#8b5a1e" fillOpacity={1} fill="url(#adminGradP)" name={t2('Thu mua', 'Procurement')} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có bản ghi', 'Data will appear as records are added')} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -227,29 +244,35 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <ResponsiveContainer width="100%" height={240}>
-                    <PieChart>
-                      <Pie data={MOCK_EUDR_COMPLIANCE} cx="50%" cy="50%" outerRadius={95} innerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
-                        {MOCK_EUDR_COMPLIANCE.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [`${value}%`]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-3 min-w-[120px]">
-                  {MOCK_EUDR_COMPLIANCE.map((entry, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-muted-foreground truncate">{entry.name}</p>
-                        <p className="text-xs font-bold text-foreground">{entry.value}%</p>
+              {eudrCompliance.length > 0 && eudrCompliance.some(e => e.name !== 'No Data') ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie data={eudrCompliance} cx="50%" cy="50%" outerRadius={95} innerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
+                          {eudrCompliance.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [`${value}%`]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-3 min-w-[120px]">
+                    {eudrCompliance.map((entry, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-muted-foreground truncate">{entry.name}</p>
+                          <p className="text-xs font-bold text-foreground">{entry.value}%</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="h-[240px]">
+                  <EmptyChart message={t2('Chưa có dữ liệu EUDR', 'No EUDR data yet')} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -267,17 +290,23 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={MOCK_REVENUE_BY_BUYER} margin={{ bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="buyer" tick={{ fontSize: 8 }} angle={-15} textAnchor="end" height={50} />
-                  <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
-                  <Bar dataKey="revenue" name={t2('Doanh thu', 'Revenue')} radius={[6, 6, 0, 0]} maxBarSize={32}>
-                    {MOCK_REVENUE_BY_BUYER.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {revenueByBuyer.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={revenueByBuyer} margin={{ bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="buyer" tick={{ fontSize: 8 }} angle={-15} textAnchor="end" height={50} />
+                    <YAxis tick={{ fontSize: 9 }} tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}M`} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} formatter={(value) => [formatCurrency(Number(value), currency)]} />
+                    <Bar dataKey="revenue" name={t2('Doanh thu', 'Revenue')} radius={[6, 6, 0, 0]} maxBarSize={32}>
+                      {revenueByBuyer.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có hợp đồng', 'Data will appear as contracts are created')} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -290,36 +319,42 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ScrollArea className="h-[300px] pr-2">
-                <div className="space-y-1">
-                  {activityFeed.map((activity) => {
-                    const typeIcons: Record<string, typeof Activity> = {
-                      procurement: ShoppingCart, inspection: ClipboardCheck,
-                      farmer: Users, contract: FileCheck, alert: AlertTriangle,
-                    }
-                    const typeColors: Record<string, string> = {
-                      procurement: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
-                      inspection: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400',
-                      farmer: 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
-                      contract: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-                      alert: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
-                    }
-                    const Icon = typeIcons[activity.type] || Activity
-                    return (
-                      <div key={activity.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-accent/50 transition-colors">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[activity.type] || 'bg-muted text-muted-foreground'}`}>
-                          <Icon className="w-4 h-4" />
+              {activityFeed.length > 0 ? (
+                <ScrollArea className="h-[300px] pr-2">
+                  <div className="space-y-1">
+                    {activityFeed.map((activity) => {
+                      const typeIcons: Record<string, typeof Activity> = {
+                        procurement: ShoppingCart, inspection: ClipboardCheck,
+                        farmer: Users, contract: FileCheck, alert: AlertTriangle,
+                      }
+                      const typeColors: Record<string, string> = {
+                        procurement: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+                        inspection: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400',
+                        farmer: 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
+                        contract: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+                        alert: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',
+                      }
+                      const Icon = typeIcons[activity.type] || Activity
+                      return (
+                        <div key={activity.id} className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-accent/50 transition-colors">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[activity.type] || 'bg-muted text-muted-foreground'}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-foreground leading-tight">{activity.action}</p>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">{activity.entity}</p>
+                            <p className="text-[9px] text-muted-foreground/70 mt-0.5">{activity.time}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-foreground leading-tight">{activity.action}</p>
-                          <p className="text-[10px] text-muted-foreground truncate mt-0.5">{activity.entity}</p>
-                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">{activity.time}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="h-[300px]">
+                  <EmptyChart message={t2('Chưa có hoạt động', 'No activity yet')} />
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -105,16 +105,15 @@ export async function GET(req: Request) {
         },
       }),
 
-      // Due Diligence Statements
-      db.dueDiligenceStatement.findMany({
-        where: { tenantId, isActive: true },
+      // Due Diligence Statements (from ExportDocument with eudr_dds type)
+      db.exportDocument.findMany({
+        where: { tenantId, isActive: true, documentType: 'eudr_dds' },
         select: {
           id: true,
-          ddsReference: true,
+          documentNumber: true,
           status: true,
-          validFrom: true,
-          validUntil: true,
-          riskAssessmentResult: true,
+          issueDate: true,
+          expiryDate: true,
         },
       }),
 
@@ -164,8 +163,8 @@ export async function GET(req: Request) {
       : null
 
     // DDS counts
-    const activeDdsCount = dueDiligenceStatements.filter(d => d.status === 'accepted').length
-    const pendingDdsCount = dueDiligenceStatements.filter(d => d.status === 'draft' || d.status === 'submitted').length
+    const activeDdsCount = dueDiligenceStatements.filter(d => d.status === 'approved').length
+    const pendingDdsCount = dueDiligenceStatements.filter(d => d.status === 'draft' || d.status === 'pending_approval').length
     const expiredDdsCount = dueDiligenceStatements.filter(d => d.status === 'expired').length
 
     // Deforestation risk
@@ -268,10 +267,10 @@ export async function GET(req: Request) {
 
         const ddsRef = shipmentMetadata.ddsReference as string | undefined
         if (ddsRef) {
-          const dds = dueDiligenceStatements.find(d => d.ddsReference === ddsRef)
+          const dds = dueDiligenceStatements.find(d => d.documentNumber === ddsRef)
           if (dds) {
             shipmentDds = {
-              ddsReference: dds.ddsReference,
+              ddsReference: dds.documentNumber,
               status: dds.status,
             }
           }
@@ -279,11 +278,11 @@ export async function GET(req: Request) {
 
         // If no DDS linked via metadata, use the best DDS from the tenant
         if (!shipmentDds && dueDiligenceStatements.length > 0) {
-          const bestDds = dueDiligenceStatements.find(d => d.status === 'accepted') ||
-            dueDiligenceStatements.find(d => d.status === 'submitted') ||
+          const bestDds = dueDiligenceStatements.find(d => d.status === 'approved') ||
+            dueDiligenceStatements.find(d => d.status === 'pending_approval') ||
             dueDiligenceStatements[0]
           shipmentDds = {
-            ddsReference: bestDds.ddsReference,
+            ddsReference: bestDds.documentNumber,
             status: bestDds.status,
           }
         }
@@ -291,7 +290,7 @@ export async function GET(req: Request) {
         // Shipment Trust Score: base score with DDS bonus
         let shipmentTrustScore = breakdown.total
         if (shipmentDds) {
-          const ddsBonus = shipmentDds.status === 'accepted' ? 5 : shipmentDds.status === 'submitted' ? 2 : 0
+          const ddsBonus = shipmentDds.status === 'approved' ? 5 : shipmentDds.status === 'pending_approval' ? 2 : 0
           shipmentTrustScore = Math.min(100, breakdown.total + ddsBonus)
         }
 

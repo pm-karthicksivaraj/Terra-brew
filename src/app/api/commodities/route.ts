@@ -10,42 +10,27 @@ export async function GET(request: NextRequest) {
   try {
     const tenantId = user!.tenantId!
     const url = new URL(request.url)
-    const idParam = url.searchParams.get('id')
+    const commodityType = url.searchParams.get('commodityType') || 'coffee'
 
-    if (idParam) {
-      const record = await db.commodity.findFirst({
-        where: { id: idParam, tenantId, isActive: true },
-      })
-      if (!record) return apiError('Commodity not found', 404)
-      return apiResponse({ data: record })
-    }
+    // Return commodity types from tenant's commodityTypes field
+    const tenant = await db.tenant.findUnique({
+      where: { id: tenantId },
+      select: { commodityTypes: true, country: true, currency: true, currencySymbol: true },
+    })
 
-    const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(request)
-    const typeFilter = url.searchParams.get('commodityType') || undefined
-    const statusFilter = url.searchParams.get('status') || undefined
+    if (!tenant) return apiError('Tenant not found', 404)
 
-    const where: any = { tenantId, isActive: true }
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' as const } },
-        { commodityCode: { contains: search, mode: 'insensitive' as const } },
-        { description: { contains: search, mode: 'insensitive' as const } },
-      ]
-    }
-    if (typeFilter) where.commodityType = typeFilter
-    if (statusFilter) where.status = statusFilter
+    const types = JSON.parse(tenant.commodityTypes || '["coffee"]')
+    
+    const commodities = types.map((type: string) => ({
+      type,
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      country: tenant.country,
+      currency: tenant.currency,
+      currencySymbol: tenant.currencySymbol,
+    }))
 
-    const [records, total] = await Promise.all([
-      db.commodity.findMany({
-        where,
-        orderBy: { [sortBy]: sortOrder },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      db.commodity.count({ where }),
-    ])
-
-    return apiResponse({ data: records, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
+    return apiResponse({ data: commodities })
   } catch (e: any) {
     return apiError(e.message, 500)
   }
@@ -60,17 +45,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const tenantId = user!.tenantId!
 
-    if (!body.name) return apiError('Name is required', 400)
+    if (!body.type) return apiError('Commodity type is required', 400)
 
-    const record = await db.commodity.create({
-      data: {
-        ...body,
-        tenantId,
-        createdBy: user!.id,
-      },
+    // Add commodity type to tenant's commodityTypes
+    const tenant = await db.tenant.findUnique({
+      where: { id: tenantId },
+      select: { commodityTypes: true },
     })
 
-    return apiResponse(record, 201)
+    if (!tenant) return apiError('Tenant not found', 404)
+
+    const types = JSON.parse(tenant.commodityTypes || '["coffee"]')
+    if (!types.includes(body.type)) {
+      types.push(body.type)
+      await db.tenant.update({
+        where: { id: tenantId },
+        data: { commodityTypes: JSON.stringify(types) },
+      })
+    }
+
+    return apiResponse({ data: { type: body.type, added: true } }, 201)
   } catch (e: any) {
     return apiError(e.message, 500)
   }

@@ -43,6 +43,8 @@
     "mini-services",
     "upload",
     "mobile",
-    "mobile-app"
+    "mobile-app",
+    "prisma/seed-b2b.ts",
+    "prisma/seed.ts"
   ]
 }

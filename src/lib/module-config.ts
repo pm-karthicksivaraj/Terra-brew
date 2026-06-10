@@ -211,6 +211,12 @@ export const MODULES: ModuleDef[] = [
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'view', importer: 'hidden', certification_body: 'full', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
   },
+  {
+    slug: 'trace-journey', label: 'EUDR Compliance', labelVi: 'Tuân thủ EUDR', href: '/traceability', icon: 'Route', color: '#7c3aed',
+    group: 'compliance', orderInGroup: 4,
+    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
+  },
 
   // TRADE & LOGISTICS
   {
@@ -273,13 +279,6 @@ export const MODULES: ModuleDef[] = [
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view' },
   },
-  {
-    slug: 'trace-journey', label: 'Trace Journey', labelVi: 'Hành trình truy xuất', href: '/traceability', icon: 'Route', color: '#7c3aed',
-    group: 'trade', orderInGroup: 11,
-    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
-  },
-
   // FINANCE & ADMIN
   {
     slug: 'billing', label: 'Billing', labelVi: 'Thanh toán', href: '/billing', icon: 'CreditCard', color: '#be185d',

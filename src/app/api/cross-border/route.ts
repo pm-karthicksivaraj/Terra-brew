@@ -17,11 +17,10 @@ export async function GET(req: NextRequest) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { transactionNumber: { contains: search } },
+        { transactionId: { contains: search } },
         { commodity: { contains: search } },
         { originCountry: { contains: search } },
         { destinationCountry: { contains: search } },
-        { hsCode: { contains: search } },
       ]
     }
     if (statusFilter) where.status = statusFilter
@@ -52,40 +51,37 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const tenantId = user!.tenantId!
 
-    // Generate transaction number
+    // Generate transaction ID
     const now = new Date()
     const yearStr = now.getFullYear().toString().slice(-2)
     const monthStr = (now.getMonth() + 1).toString().padStart(2, '0')
     const count = await db.crossBorderTransaction.count({ where: { tenantId } })
-    const transactionNumber = `CBT-${yearStr}${monthStr}-${(count + 1).toString().padStart(4, '0')}`
+    const transactionId = `CBT-${yearStr}${monthStr}-${(count + 1).toString().padStart(4, '0')}`
 
     const item = await db.crossBorderTransaction.create({
       data: {
         tenantId,
-        transactionNumber,
-        buyerId: body.buyerId || null,
-        escrowId: body.escrowId || null,
-        shipmentId: body.shipmentId || null,
-        contractId: body.contractId || null,
+        transactionId,
+        buyerTenantId: body.buyerTenantId || null,
+        sellerTenantId: body.sellerTenantId || null,
+        escrowRef: body.escrowRef || null,
+        shipmentRef: body.shipmentRef || null,
+        contractRef: body.contractRef || null,
         createdBy: user!.id,
         status: body.status || 'initiated',
         tradeType: body.tradeType || null,
         commodity: body.commodity || 'coffee',
-        grade: body.grade || null,
         quantityKg: body.quantityKg ? parseFloat(body.quantityKg) : null,
-        unitPrice: body.unitPrice ? parseFloat(body.unitPrice) : null,
+        unitPricePerKg: body.unitPricePerKg ? parseFloat(body.unitPricePerKg) : null,
         totalValue: body.totalValue ? parseFloat(body.totalValue) : null,
         currency: body.currency || 'USD',
-        incoterm: body.incoterm || null,
+        incoterms: body.incoterms || null,
         originCountry: body.originCountry || null,
         destinationCountry: body.destinationCountry || null,
         portOfLoading: body.portOfLoading || null,
         portOfDischarge: body.portOfDischarge || null,
-        hsCode: body.hsCode || null,
         customsStatus: body.customsStatus || null,
-        customsBroker: body.customsBroker || null,
         paymentStatus: body.paymentStatus || null,
-        paymentMethod: body.paymentMethod || null,
         notes: body.notes || null,
         metadata: body.metadata || null,
       },

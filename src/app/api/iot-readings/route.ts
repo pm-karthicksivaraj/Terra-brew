@@ -4,45 +4,45 @@ import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationP
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser(request)
-  const authError = requireTenantAccess(user, 'shipments', 'read')
+  const authError = requireTenantAccess(user, 'iot-tracking', 'read')
   if (authError) return authError
 
   try {
     const tenantId = user!.tenantId!
     const url = new URL(request.url)
     const idParam = url.searchParams.get('id')
-    const deviceId = url.searchParams.get('deviceId') || undefined
+    const sensorId = url.searchParams.get('sensorId') || undefined
 
     if (idParam) {
-      const record = await db.ioTSensorReading.findFirst({
-        where: { id: idParam, tenantId },
-        include: { device: { select: { id: true, deviceName: true, deviceType: true } } },
+      const record = await db.ioTReading.findFirst({
+        where: { id: idParam, sensor: { tenantId } },
+        include: { sensor: { select: { id: true, deviceName: true, sensorType: true } } },
       })
       if (!record) return apiError('IoT sensor reading not found', 404)
       return apiResponse({ data: record })
     }
 
     const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(request)
-    const alertFilter = url.searchParams.get('alertTriggered')
+    const alertFilter = url.searchParams.get('isAlert')
     const typeFilter = url.searchParams.get('readingType') || undefined
 
-    const where: any = { tenantId }
-    if (deviceId) where.deviceId = deviceId
-    if (alertFilter === 'true') where.alertTriggered = true
+    const where: any = { sensor: { tenantId } }
+    if (sensorId) where.sensorId = sensorId
+    if (alertFilter === 'true') where.isAlert = true
     if (typeFilter) where.readingType = typeFilter
     if (search) {
       where.readingType = { contains: search, mode: 'insensitive' as const }
     }
 
     const [records, total] = await Promise.all([
-      db.ioTSensorReading.findMany({
+      db.ioTReading.findMany({
         where,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        include: { device: { select: { id: true, deviceName: true, deviceType: true } } },
+        include: { sensor: { select: { id: true, deviceName: true, sensorType: true } } },
       }),
-      db.ioTSensorReading.count({ where }),
+      db.ioTReading.count({ where }),
     ])
 
     return apiResponse({ data: records, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
@@ -53,55 +53,51 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const user = await getAuthUser(request)
-  const authError = requireTenantAccess(user, 'shipments', 'create')
+  const authError = requireTenantAccess(user, 'iot-tracking', 'create')
   if (authError) return authError
 
   try {
     const body = await request.json()
     const tenantId = user!.tenantId!
 
-    if (!body.deviceId) return apiError('Device ID is required', 400)
+    if (!body.sensorId) return apiError('Sensor ID is required', 400)
     if (!body.readingType) return apiError('Reading type is required', 400)
     if (body.value === undefined || body.value === null) return apiError('Value is required', 400)
 
-    // Verify device belongs to tenant
-    const device = await db.ioTDevice.findFirst({
-      where: { id: body.deviceId, tenantId, isActive: true },
+    // Verify sensor belongs to tenant
+    const sensor = await db.ioTSensor.findFirst({
+      where: { id: body.sensorId, tenantId, isActive: true },
     })
-    if (!device) return apiError('IoT device not found', 404)
+    if (!sensor) return apiError('IoT sensor not found', 404)
 
-    // Check if alert should be triggered
-    let alertTriggered = false
-    let alertSeverity: string | null = null
-    if (device.alertThresholdMin !== null && body.value < device.alertThresholdMin!) {
-      alertTriggered = true
-      alertSeverity = 'warning'
-    }
-    if (device.alertThresholdMax !== null && body.value > device.alertThresholdMax!) {
-      alertTriggered = true
-      alertSeverity = body.value > device.alertThresholdMax! * 1.2 ? 'critical' : 'warning'
+    // Determine if this reading triggers an alert
+    let isAlert = false
+    let alertType: string | null = null
+    if (body.isAlert === true) {
+      isAlert = true
+      alertType = body.alertType || null
     }
 
-    const record = await db.ioTSensorReading.create({
+    const record = await db.ioTReading.create({
       data: {
-        tenantId,
-        deviceId: body.deviceId,
-        shipmentId: body.shipmentId || device.shipmentId || null,
+        sensorId: body.sensorId,
         readingType: body.readingType,
-        value: body.value,
-        unit: body.unit || null,
+        value: parseFloat(body.value),
+        unit: body.unit || '',
         latitude: body.latitude || null,
         longitude: body.longitude || null,
-        alertTriggered,
-        alertSeverity,
-        rawData: body.rawData || null,
+        isAlert,
+        alertType,
       },
     })
 
-    // Update device last ping
-    await db.ioTDevice.update({
-      where: { id: body.deviceId },
-      data: { lastPingAt: new Date() },
+    // Update sensor last reading
+    await db.ioTSensor.update({
+      where: { id: body.sensorId },
+      data: {
+        lastReading: JSON.stringify({ readingType: body.readingType, value: body.value, unit: body.unit }),
+        lastReadingAt: new Date(),
+      },
     })
 
     return apiResponse(record, 201)

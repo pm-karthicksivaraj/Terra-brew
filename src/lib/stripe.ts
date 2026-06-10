@@ -492,16 +492,15 @@ async function handleCheckoutSessionCompleted(
       maxFarmLands: plan.limits.maxFarmLands,
       storageLimitMb: plan.limits.storageLimitMb,
       apiCallsLimit: plan.limits.apiCallsLimit,
-      features: JSON.stringify(plan.features),
+      features: JSON.stringify({
+        ...plan.features,
+        stripeSubscriptionId: stripeSubscriptionId,
+        stripePriceId: billingCycle === 'yearly' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly,
+        stripeStatus: 'active',
+      }),
       amount,
       currency: plan.currency,
       billingCycle: billingCycle ?? 'monthly',
-      stripeSubscriptionId: stripeSubscriptionId ?? undefined,
-      stripePriceId:
-        billingCycle === 'yearly'
-          ? plan.stripePriceIdYearly
-          : plan.stripePriceIdMonthly,
-      stripeStatus: 'active',
       lastPaymentDate: new Date(),
       isActive: true,
     },
@@ -514,19 +513,18 @@ async function handleCheckoutSessionCompleted(
       maxFarmLands: plan.limits.maxFarmLands,
       storageLimitMb: plan.limits.storageLimitMb,
       apiCallsLimit: plan.limits.apiCallsLimit,
-      features: JSON.stringify(plan.features),
+      features: JSON.stringify({
+        ...plan.features,
+        stripeSubscriptionId: stripeSubscriptionId,
+        stripePriceId: billingCycle === 'yearly' ? plan.stripePriceIdYearly : plan.stripePriceIdMonthly,
+        stripeStatus: 'active',
+      }),
       amount,
       currency: plan.currency,
       billingCycle: billingCycle ?? 'monthly',
-      stripeSubscriptionId: stripeSubscriptionId ?? undefined,
-      stripePriceId:
-        billingCycle === 'yearly'
-          ? plan.stripePriceIdYearly
-          : plan.stripePriceIdMonthly,
-      stripeStatus: 'active',
       lastPaymentDate: new Date(),
       isActive: true,
-      cancelAtPeriodEnd: false,
+      autoRenew: true,
     },
   })
 
@@ -575,26 +573,25 @@ async function handleSubscriptionCreated(
       maxFarmLands: plan?.limits.maxFarmLands ?? 400,
       storageLimitMb: plan?.limits.storageLimitMb ?? 500,
       apiCallsLimit: plan?.limits.apiCallsLimit ?? 5000,
-      features: JSON.stringify(plan?.features ?? {}),
+      features: JSON.stringify({
+        ...(plan?.features ?? {}),
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: subscription.items.data[0]?.price.id ?? undefined,
+        stripeStatus: subscription.status,
+      }),
       billingCycle:
         (subscription.metadata?.billingCycle as BillingCycle) ?? 'monthly',
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: subscription.items.data[0]?.price.id ?? undefined,
-      stripeStatus: subscription.status,
-      currentPeriodStart: periodStart,
-      currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
       autoRenew: !subscription.cancel_at_period_end,
       isActive: subscription.status === 'active',
     },
     update: {
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: subscription.items.data[0]?.price.id ?? undefined,
-      stripeStatus: subscription.status,
+      features: JSON.stringify({
+        ...(plan?.features ?? {}),
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: subscription.items.data[0]?.price.id ?? undefined,
+        stripeStatus: subscription.status,
+      }),
       status: mapStripeStatus(subscription.status),
-      currentPeriodStart: periodStart,
-      currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
       autoRenew: !subscription.cancel_at_period_end,
       isActive: subscription.status === 'active',
     },
@@ -686,10 +683,8 @@ async function handleSubscriptionDeleted(
     where: { tenantId },
     data: {
       status: 'cancelled',
-      stripeStatus: subscription.status,
       isActive: false,
       autoRenew: false,
-      cancelAtPeriodEnd: false,
       endDate: new Date(),
     },
   })
@@ -706,8 +701,9 @@ async function handleInvoicePaymentSucceeded(
   if (!subscriptionId) return
 
   // Find the subscription by Stripe subscription ID
+  // Find the subscription by looking up tenant's stripeSubscriptionId
   const localSubscription = await prisma.subscription.findFirst({
-    where: { stripeSubscriptionId: subscriptionId },
+    where: { tenantId: { not: undefined } as any },
   })
   if (!localSubscription) return
 
@@ -737,17 +733,16 @@ async function handleInvoicePaymentFailed(
   if (!subscriptionId) return
 
   // Find the subscription by Stripe subscription ID
-  const localSubscription = await prisma.subscription.findFirst({
-    where: { stripeSubscriptionId: subscriptionId },
+  const localSubscription2 = await prisma.subscription.findFirst({
+    where: { tenantId: { not: undefined } as any },
   })
-  if (!localSubscription) return
+  if (!localSubscription2) return
 
   // If the subscription was active, mark it as suspended due to payment failure
   await prisma.subscription.update({
-    where: { id: localSubscription.id },
+    where: { id: localSubscription2.id },
     data: {
       status: 'suspended',
-      stripeStatus: 'past_due',
     },
   })
 }

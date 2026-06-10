@@ -10,7 +10,7 @@ import {
   Activity, UserCog, FileText, Search,
   Eye, Power, ArrowRight, Clock,
   AlertTriangle, Leaf, TrendingUp,
-  DollarSign, Trash2,
+  DollarSign, Trash2, ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1277,6 +1277,16 @@ export default function SuperAdminDashboard() {
                   <DollarSign className="w-5 h-5 text-stone-500" />
                   {t2('Quản lý Báo giá', 'Price Tickers')}
                 </h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs border-stone-700 text-stone-300 hover:bg-stone-800"
+                    onClick={() => router.push('/super-admin/dashboard/price-tickers')}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    {t2('Trang đầy đủ', 'Full Page')}
+                  </Button>
                 <Dialog open={tickerDialogOpen} onOpenChange={(open) => { setTickerDialogOpen(open); if (!open) resetTickerForm() }}>
                   <Button
                     className="bg-gradient-to-r from-stone-600 to-stone-800 text-white gap-2 rounded-xl hover:from-stone-500 hover:to-stone-700"
@@ -1415,6 +1425,7 @@ export default function SuperAdminDashboard() {
                     </form>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
 
               {/* Price Tickers Table */}

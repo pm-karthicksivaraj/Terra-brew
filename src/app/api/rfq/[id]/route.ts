@@ -18,7 +18,6 @@ export async function GET(
     const item = await db.rFQ.findFirst({
       where: { id, tenantId, isActive: true },
       include: {
-        buyer: { select: { id: true, companyName: true, buyerCode: true, country: true, contactPerson: true, email: true } },
         responses: {
           where: { isActive: true },
           orderBy: { createdAt: 'desc' },
@@ -53,21 +52,25 @@ export async function PUT(
     const data: any = {}
     if (body.status !== undefined) data.status = body.status
     if (body.commodity !== undefined) data.commodity = body.commodity
+    if (body.variety !== undefined) data.variety = body.variety
     if (body.grade !== undefined) data.grade = body.grade
     if (body.quantityKg !== undefined) data.quantityKg = body.quantityKg ? parseFloat(body.quantityKg) : null
     if (body.targetPricePerKg !== undefined) data.targetPricePerKg = body.targetPricePerKg ? parseFloat(body.targetPricePerKg) : null
     if (body.currency !== undefined) data.currency = body.currency
-    if (body.deliveryDate !== undefined) data.deliveryDate = body.deliveryDate ? new Date(body.deliveryDate) : null
-    if (body.deliveryPort !== undefined) data.deliveryPort = body.deliveryPort
+    if (body.deliveryLocation !== undefined) data.deliveryLocation = body.deliveryLocation
+    if (body.deliveryDateFrom !== undefined) data.deliveryDateFrom = body.deliveryDateFrom ? new Date(body.deliveryDateFrom) : null
+    if (body.deliveryDateTo !== undefined) data.deliveryDateTo = body.deliveryDateTo ? new Date(body.deliveryDateTo) : null
+    if (body.incoterms !== undefined) data.incoterms = body.incoterms
+    if (body.originCountry !== undefined) data.originCountry = body.originCountry
     if (body.destinationCountry !== undefined) data.destinationCountry = body.destinationCountry
-    if (body.qualitySpecs !== undefined) data.qualitySpecs = body.qualitySpecs
-    if (body.sampleRequired !== undefined) data.sampleRequired = body.sampleRequired
-    if (body.paymentTerms !== undefined) data.paymentTerms = body.paymentTerms
-    if (body.inspectionRequired !== undefined) data.inspectionRequired = body.inspectionRequired
-    if (body.notes !== undefined) data.notes = body.notes
-    if (body.validUntil !== undefined) data.validUntil = body.validUntil ? new Date(body.validUntil) : null
-    if (body.responseDeadline !== undefined) data.responseDeadline = body.responseDeadline ? new Date(body.responseDeadline) : null
-    if (body.buyerId !== undefined) data.buyerId = body.buyerId || null
+    if (body.certifications !== undefined) data.certifications = body.certifications
+    if (body.processingMethod !== undefined) data.processingMethod = body.processingMethod
+    if (body.cupScoreMin !== undefined) data.cupScoreMin = body.cupScoreMin ? parseFloat(body.cupScoreMin) : null
+    if (body.description !== undefined) data.description = body.description
+    if (body.closesAt !== undefined) data.closesAt = body.closesAt ? new Date(body.closesAt) : null
+    if (body.awardedToResponseId !== undefined) data.awardedToResponseId = body.awardedToResponseId || null
+    if (body.publishedAt !== undefined) data.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
+    if (body.metadata !== undefined) data.metadata = body.metadata
 
     // Handle response status updates
     if (body.responseUpdates && Array.isArray(body.responseUpdates)) {
@@ -85,7 +88,6 @@ export async function PUT(
       where: { id },
       data,
       include: {
-        buyer: { select: { id: true, companyName: true, buyerCode: true } },
         responses: { where: { isActive: true } },
       },
     })

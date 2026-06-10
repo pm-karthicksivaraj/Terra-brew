@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClipboardList, Users, MapPin, CheckCircle, Clock,
   Plus, ChevronRight, Smartphone, Wifi, WifiOff,
-  ArrowRight, CalendarDays, AlertTriangle,
+  ArrowRight, CalendarDays, AlertTriangle, Loader2, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,24 +14,56 @@ import { useI18n } from '@/i18n'
 import { useSession } from 'next-auth/react'
 import { ComplianceFearBanner } from '@/components/compliance/compliance-fear-banner'
 import { StaggerContainer, StaggerItem } from '@/components/ui/motion'
+import type { DashboardStats } from '@/types'
 
-const MOCK_TASKS = [
-  { id: '1', type: 'register', titleVi: 'Đăng ký nông dân mới', titleEn: 'Register new farmer', detailVi: 'Nguyễn Văn Hùng — Dak Lak', detailEn: 'Nguyễn Văn Hùng — Dak Lak', priority: 'high', due: 'Today' },
-  { id: '2', type: 'map', titleVi: 'Lập bản đồ mảnh đất', titleEn: 'Map farm plot GPS', detailVi: 'Plot P-302 cho Farm F-1087', detailEn: 'Plot P-302 for Farm F-1087', priority: 'high', due: 'Today' },
-  { id: '3', type: 'verify', titleVi: 'Xác minh tọa độ GPS', titleEn: 'Verify GPS coordinates', detailVi: '3 mảnh đất chưa xác minh — Lam Dong', detailEn: '3 unmapped plots — Lam Dong', priority: 'medium', due: 'Today' },
-  { id: '4', type: 'register', titleVi: 'Đăng ký nông dân mới', titleEn: 'Register new farmer', detailVi: 'Trần Thị Lan — Dak Lak', detailEn: 'Trần Thị Lan — Dak Lak', priority: 'medium', due: 'Tomorrow' },
-  { id: '5', type: 'harvest', titleVi: 'Cập nhật thu hoạch', titleEn: 'Update harvest record', detailVi: 'Farm F-2034 — Robusta 450kg', detailEn: 'Farm F-2034 — Robusta 450kg', priority: 'low', due: 'This week' },
-  { id: '6', type: 'map', titleVi: 'Lập bản đồ mảnh đất', titleEn: 'Map farm plot GPS', detailVi: '2 mảnh đất mới — Gia Lai', detailEn: '2 new plots — Gia Lai', priority: 'medium', due: 'This week' },
-]
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <Inbox className="w-8 h-8 text-muted-foreground/40 mb-2" />
+      <p className="text-xs text-muted-foreground">{message}</p>
+    </div>
+  )
+}
 
 export function FieldOfficerView() {
   const { t2 } = useI18n()
   const router = useRouter()
   const { data: session } = useSession()
   const userName = session?.user?.name || 'User'
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [tasks, setTasks] = useState<any[]>([])
 
-  const todayTasks = MOCK_TASKS.filter(t => t.due === 'Today')
-  const highPriority = MOCK_TASKS.filter(t => t.priority === 'high')
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/dashboard/stats')
+      const data = await res.json()
+      if (data.success) {
+        setStats(data.data)
+        // Generate tasks from recentActivity
+        const recent = (data.data.recentActivity || []).slice(0, 6).map((a: any, i: number) => ({
+          id: a.id || String(i),
+          type: a.type === 'farmer' ? 'register' : a.type === 'alert' ? 'verify' : a.type === 'procurement' ? 'harvest' : 'map',
+          titleVi: a.action || 'Nhiệm vụ',
+          titleEn: a.action || 'Task',
+          detailVi: a.entity || '',
+          detailEn: a.entity || '',
+          priority: i < 2 ? 'high' : i < 4 ? 'medium' : 'low',
+          due: i < 2 ? 'Today' : i < 4 ? 'Tomorrow' : 'This week',
+        }))
+        setTasks(recent)
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchStats() }, [fetchStats])
+
+  const todayTasks = tasks.filter(t => t.due === 'Today')
+  const highPriority = tasks.filter(t => t.priority === 'high')
 
   return (
     <StaggerContainer className="space-y-6">
@@ -94,14 +127,14 @@ export function FieldOfficerView() {
               <Users className="w-4 h-4 text-green-600" />
               <span className="text-[10px] text-muted-foreground">{t2('Nông dân đã đăng ký', 'Registered')}</span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">186</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats?.totalFarmers || 0}</p>
           </div>
           <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/30">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-blue-600" />
               <span className="text-[10px] text-muted-foreground">{t2('Mảnh đất đã map', 'Mapped Plots')}</span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">148</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats?.totalFarmLands || 0}</p>
           </div>
         </div>
       </StaggerItem>
@@ -125,43 +158,47 @@ export function FieldOfficerView() {
                 </div>
               </CardHeader>
               <CardContent className="px-4 pb-4">
-                <div className="space-y-2">
-                  {MOCK_TASKS.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => {
-                        if (task.type === 'register') router.push('/farmers')
-                        else if (task.type === 'map') router.push('/farmlands')
-                        else router.push('/farmers')
-                      }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-accent/30 transition-colors text-left group"
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        task.type === 'register' ? 'bg-green-100 dark:bg-green-900/40' :
-                        task.type === 'map' ? 'bg-blue-100 dark:bg-blue-900/40' :
-                        task.type === 'verify' ? 'bg-amber-100 dark:bg-amber-900/40' :
-                        'bg-primary/10'
-                      }`}>
-                        {task.type === 'register' ? <Users className="w-4 h-4 text-green-600" /> :
-                         task.type === 'map' ? <MapPin className="w-4 h-4 text-blue-600" /> :
-                         task.type === 'verify' ? <CheckCircle className="w-4 h-4 text-amber-600" /> :
-                         <ClipboardList className="w-4 h-4 text-primary" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-foreground">{t2(task.titleVi, task.titleEn)}</span>
-                          {task.priority === 'high' && (
-                            <Badge variant="destructive" className="text-[8px] h-4">{t2('Gấp', 'URGENT')}</Badge>
-                          )}
+                {tasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {tasks.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => {
+                          if (task.type === 'register') router.push('/farmers')
+                          else if (task.type === 'map') router.push('/farmlands')
+                          else router.push('/farmers')
+                        }}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-accent/30 transition-colors text-left group"
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          task.type === 'register' ? 'bg-green-100 dark:bg-green-900/40' :
+                          task.type === 'map' ? 'bg-blue-100 dark:bg-blue-900/40' :
+                          task.type === 'verify' ? 'bg-amber-100 dark:bg-amber-900/40' :
+                          'bg-primary/10'
+                        }`}>
+                          {task.type === 'register' ? <Users className="w-4 h-4 text-green-600" /> :
+                           task.type === 'map' ? <MapPin className="w-4 h-4 text-blue-600" /> :
+                           task.type === 'verify' ? <CheckCircle className="w-4 h-4 text-amber-600" /> :
+                           <ClipboardList className="w-4 h-4 text-primary" />}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {t2(task.detailVi, task.detailEn)} · {task.due}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                    </button>
-                  ))}
-                </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-foreground">{t2(task.titleVi, task.titleEn)}</span>
+                            {task.priority === 'high' && (
+                              <Badge variant="destructive" className="text-[8px] h-4">{t2('Gấp', 'URGENT')}</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {t2(task.detailVi, task.detailEn)} · {task.due}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState message={t2('Chưa có nhiệm vụ. Dữ liệu sẽ xuất hiện khi có hoạt động.', 'No tasks yet. Data will appear as activity occurs.')} />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -184,15 +221,15 @@ export function FieldOfficerView() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-muted-foreground">{t2('Chờ tải lên', 'Pending uploads')}</span>
-                    <span className="font-bold text-foreground">3</span>
+                    <span className="font-bold text-foreground">0</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-muted-foreground">{t2('Lần đồng bộ cuối', 'Last sync')}</span>
-                    <span className="font-bold text-foreground">2 min ago</span>
+                    <span className="font-bold text-foreground">Just now</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="text-muted-foreground">{t2('Dữ liệu đã tải', 'Data cached')}</span>
-                    <span className="font-bold text-foreground">186 records</span>
+                    <span className="font-bold text-foreground">{stats?.totalFarmers || 0} records</span>
                   </div>
                 </div>
                 <Button size="sm" variant="outline" className="w-full rounded-xl text-xs gap-1.5">

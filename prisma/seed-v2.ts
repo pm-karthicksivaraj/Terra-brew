@@ -63,6 +63,8 @@ async function main() {
     { slug: 'cooxupe', name: 'Cooxupé', legalName: 'Cooperativa Regional de Cafeicultores em Guaxupé', entityType: 'aggregator', country: 'BR', currency: 'BRL', currencySymbol: 'R$', language: 'pt', timezone: 'America/Sao_Paulo', locale: 'pt-BR', dateFormat: 'DD/MM/YYYY', region: 'South America', supportedLanguages: '["pt","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Rainforest Alliance","UTZ","Fair Trade"]', plan: 'professional', maxUsers: 50, maxFarmers: 5000, commodityTypes: '["coffee"]' },
     { slug: 'yirgacheffe-union', name: 'Yirgacheffe Union', legalName: 'Yirgacheffe Coffee Farmers Cooperative Union', entityType: 'producer', country: 'ET', currency: 'ETB', currencySymbol: 'Br', language: 'am', timezone: 'Africa/Addis_Ababa', locale: 'am-ET', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["am","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Organic","Fair Trade"]', plan: 'starter', maxUsers: 15, maxFarmers: 2000, commodityTypes: '["coffee"]' },
     { slug: 'othaya-cooperative', name: 'Othaya Cooperative', legalName: 'Othaya Farmers Cooperative Society Ltd', entityType: 'producer', country: 'KE', currency: 'KES', currencySymbol: 'KSh', language: 'sw', timezone: 'Africa/Nairobi', locale: 'sw-KE', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["sw","en"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Fair Trade","Rainforest Alliance"]', plan: 'starter', maxUsers: 10, maxFarmers: 1500, commodityTypes: '["coffee"]' },
+    { slug: 'asunafo-export', name: 'Asunafo Cocoa & Coffee Export', legalName: 'Asunafo Cocoa & Coffee Export Ltd', entityType: 'exporter', country: 'GH', currency: 'GHS', currencySymbol: 'GH₵', language: 'en', timezone: 'Africa/Accra', locale: 'en-GH', dateFormat: 'DD/MM/YYYY', region: 'West Africa', supportedLanguages: '["en","ak"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Fair Trade","Rainforest Alliance","UTZ"]', plan: 'professional', maxUsers: 20, maxFarmers: 800, commodityTypes: '["coffee","cocoa"]' },
+    { slug: 'nkusi-coffee', name: 'Nkusi Coffee Cooperative', legalName: 'Nkusi Coffee Cooperative Society Ltd', entityType: 'aggregator', country: 'UG', currency: 'UGX', currencySymbol: 'USh', language: 'en', timezone: 'Africa/Kampala', locale: 'en-UG', dateFormat: 'DD/MM/YYYY', region: 'East Africa', supportedLanguages: '["en","lg","sw"]', measurementUnit: 'metric', eudrCompliant: true, certifications: '["Fair Trade","Organic"]', plan: 'professional', maxUsers: 25, maxFarmers: 2000, commodityTypes: '["coffee"]' },
   ]
   const tenants: Record<string, any> = {}
   for (const td of tenantDefs) {
@@ -111,6 +113,12 @@ async function main() {
     // Othaya Cooperative (Kenya)
     { email: 'admin@othaya-cooperative.terrabrew.com', name: 'Othaya Admin', role: 'tenant_admin', tenantSlug: 'othaya-cooperative' },
     { email: 'field_officer@othaya-cooperative.terrabrew.com', name: 'Othaya Field Officer', role: 'field_officer', tenantSlug: 'othaya-cooperative' },
+    // Asunafo Cocoa & Coffee Export (Ghana)
+    { email: 'admin@asunafo-export.terrabrew.com', name: 'Asunafo Admin', role: 'tenant_admin', tenantSlug: 'asunafo-export' },
+    { email: 'trader@asunafo-export.terrabrew.com', name: 'Asunafo Trader', role: 'trader', tenantSlug: 'asunafo-export' },
+    // Nkusi Coffee Cooperative (Uganda)
+    { email: 'admin@nkusi-coffee.terrabrew.com', name: 'Nkusi Admin', role: 'tenant_admin', tenantSlug: 'nkusi-coffee' },
+    { email: 'field_officer@nkusi-coffee.terrabrew.com', name: 'Nkusi Field Officer', role: 'field_officer', tenantSlug: 'nkusi-coffee' },
   ]
   const users: Record<string, any> = {}
   for (const ud of userDefs) {
@@ -159,11 +167,30 @@ async function main() {
     { farmerCode: 'FRM-KE-003', fullName: 'Omondi Otieno', firstName: 'Omondi', lastName: 'Otieno', contactNumber: '+254745678901', gender: 'Male', country: 'Kenya', province: 'Central', district: 'Nyeri', commune: 'Mahiga', village: 'Mahiga', latitude: -0.380, longitude: 36.970, nationalIdType: 'National ID', nationalIdNo: 'KE-40695172', isCertified: true, certificationType: 'Individual', cooperative: 'Othaya Farmers Cooperative Society', yearsOfFarmingExperience: 25, creditScore: 91, bankName: 'Equity Bank', bankBranch: 'Othaya', accountNumber: '0456789012', accountHolderName: 'Omondi Otieno', sortCodeSwift: 'EQBLKENA', paymentPreference: 'bank_transfer' },
   ]
 
+  // Ghana farmers
+  const ghAdmin = users['admin@asunafo-export.terrabrew.com']
+  const ghTid = tenants['asunafo-export'].id
+  const ghFarmers = [
+    { farmerCode: 'FRM-GH-001', fullName: 'Kwame Asante', firstName: 'Kwame', lastName: 'Asante', contactNumber: '+233241234567', gender: 'Male', country: 'Ghana', province: 'Ahafo', district: 'Asunafo North', commune: 'Goaso', village: 'Acherensua', latitude: 6.892, longitude: -2.498, nationalIdType: 'Ghana Card', nationalIdNo: 'GHA-000123456-1', isCertified: true, certificationType: 'Cooperative', cooperative: 'Asunafo Cocoa & Coffee Export', yearsOfFarmingExperience: 14, creditScore: 80, mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+233241234567', paymentPreference: 'mobile_money' },
+    { farmerCode: 'FRM-GH-002', fullName: 'Abena Mensah', firstName: 'Abena', lastName: 'Mensah', contactNumber: '+233242345678', gender: 'Female', country: 'Ghana', province: 'Ahafo', district: 'Sunyani', commune: 'Sunyani', village: 'Nkrankrom', latitude: 7.334, longitude: -2.327, nationalIdType: 'Ghana Card', nationalIdNo: 'GHA-000234567-2', isCertified: true, certificationType: 'Cooperative', cooperative: 'Asunafo Cocoa & Coffee Export', yearsOfFarmingExperience: 9, creditScore: 74, bankName: 'GCB Bank', bankBranch: 'Sunyani', accountNumber: '4012345678', accountHolderName: 'Abena Mensah', sortCodeSwift: 'GHCBGHAC', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+233242345678' },
+    { farmerCode: 'FRM-GH-003', fullName: 'Kofi Boateng', firstName: 'Kofi', lastName: 'Boateng', contactNumber: '+233243456789', gender: 'Male', country: 'Ghana', province: 'Ahafo', district: 'Dormaa East', commune: 'Wamfie', village: 'Kwakuanya', latitude: 7.152, longitude: -2.875, nationalIdType: 'Ghana Card', nationalIdNo: 'GHA-000345678-3', isCertified: true, certificationType: 'Individual', cooperative: 'Asunafo Cocoa & Coffee Export', yearsOfFarmingExperience: 20, creditScore: 88, bankName: 'Agricultural Development Bank', bankBranch: 'Dormaa Ahenkro', accountNumber: '5023456789', accountHolderName: 'Kofi Boateng', sortCodeSwift: 'ADBKGHAC', paymentPreference: 'bank_transfer' },
+  ]
+  // Uganda farmers
+  const ugAdmin = users['admin@nkusi-coffee.terrabrew.com']
+  const ugTid = tenants['nkusi-coffee'].id
+  const ugFarmers = [
+    { farmerCode: 'FRM-UG-001', fullName: 'Emmanuel Mukasa', firstName: 'Emmanuel', lastName: 'Mukasa', contactNumber: '+256771234567', gender: 'Male', country: 'Uganda', province: 'Eastern', district: 'Mbale', commune: 'Mbale', village: 'Bumasobo', latitude: 1.083, longitude: 34.175, nationalIdType: 'National ID', nationalIdNo: 'UG-89012345', isCertified: true, certificationType: 'Cooperative', cooperative: 'Nkusi Coffee Cooperative', yearsOfFarmingExperience: 16, creditScore: 82, mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+256771234567', paymentPreference: 'mobile_money' },
+    { farmerCode: 'FRM-UG-002', fullName: 'Grace Nalubega', firstName: 'Grace', lastName: 'Nalubega', contactNumber: '+256772345678', gender: 'Female', country: 'Uganda', province: 'Eastern', district: 'Kapchorwa', commune: 'Kapchorwa', village: 'Tulel', latitude: 1.397, longitude: 34.455, nationalIdType: 'National ID', nationalIdNo: 'UG-90123456', isCertified: true, certificationType: 'Cooperative', cooperative: 'Nkusi Coffee Cooperative', yearsOfFarmingExperience: 11, creditScore: 76, bankName: 'Centenary Bank', bankBranch: 'Kapchorwa', accountNumber: '1023456789', accountHolderName: 'Grace Nalubega', sortCodeSwift: 'CERBUGKA', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'Airtel Money', mobileMoneyNumber: '+256772345678' },
+    { farmerCode: 'FRM-UG-003', fullName: 'James Ochieng', firstName: 'James', lastName: 'Ochieng', contactNumber: '+256773456789', gender: 'Male', country: 'Uganda', province: 'Eastern', district: 'Mbale', commune: 'Budadiri', village: 'Mount Elgon', latitude: 1.250, longitude: 34.350, nationalIdType: 'National ID', nationalIdNo: 'UG-91234567', isCertified: true, certificationType: 'Individual', cooperative: 'Nkusi Coffee Cooperative', yearsOfFarmingExperience: 22, creditScore: 90, bankName: 'Stanbic Bank', bankBranch: 'Mbale', accountNumber: '2034567890', accountHolderName: 'James Ochieng', sortCodeSwift: 'STANUGMB', paymentPreference: 'bank_transfer' },
+  ]
+
   const allFarmerDefs = [
     ...vnFarmers.map(f => ({ ...f, tenantId: vnTid, createdBy: vnAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Sở hữu', houseType: 'Permanent', smartphoneOwnership: true, healthInsurance: true })),
     ...brFarmers.map(f => ({ ...f, tenantId: brTid, createdBy: brAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Própria', houseType: 'Permanente', smartphoneOwnership: true, healthInsurance: true })),
     ...etFarmers.map(f => ({ ...f, tenantId: etTid, createdBy: etAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Owned', houseType: 'Traditional', smartphoneOwnership: true, healthInsurance: true })),
     ...keFarmers.map(f => ({ ...f, tenantId: keTid, createdBy: keAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Owned', houseType: 'Stone', smartphoneOwnership: true, healthInsurance: true })),
+    ...ghFarmers.map(f => ({ ...f, tenantId: ghTid, createdBy: ghAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Owned', houseType: 'Compound', smartphoneOwnership: true, healthInsurance: true })),
+    ...ugFarmers.map(f => ({ ...f, tenantId: ugTid, createdBy: ugAdmin.id, isActive: true, enrollmentDate: new Date(), housingOwnership: 'Owned', houseType: 'Permanent', smartphoneOwnership: true, healthInsurance: true })),
   ]
   const farmerRecords: Record<string, any> = {}
   for (const fd of allFarmerDefs) {
@@ -192,12 +219,20 @@ async function main() {
     { key: 'KE-PLT-001', tenantId: keTid, farmerCode: 'FRM-KE-001', farmName: 'Gathaithi Estate', plotBlockId: 'TB-KE-PLT-001', totalLandHolding: 2.0, altitude: 1680, soilType: 'Volcanic Loam', latitude: -0.420, longitude: 36.951, noOfTrees: 2200, estYield: 2600 },
     { key: 'KE-PLT-002', tenantId: keTid, farmerCode: 'FRM-KE-002', farmName: 'Kamoko Farm', plotBlockId: 'TB-KE-PLT-002', totalLandHolding: 1.5, altitude: 1720, soilType: 'Volcanic Loam', latitude: -0.430, longitude: 36.940, noOfTrees: 1600, estYield: 2000 },
     { key: 'KE-PLT-003', tenantId: keTid, farmerCode: 'FRM-KE-003', farmName: 'Mahiga Highlands', plotBlockId: 'TB-KE-PLT-003', totalLandHolding: 3.0, altitude: 1650, soilType: 'Humic Nitosol', latitude: -0.380, longitude: 36.970, noOfTrees: 3500, estYield: 4200 },
+    // Ghana farm lands
+    { key: 'GH-PLT-001', tenantId: ghTid, farmerCode: 'FRM-GH-001', farmName: 'Asante Cocoa & Coffee Farm', plotBlockId: 'TB-GH-PLT-001', totalLandHolding: 3.5, altitude: 320, soilType: 'Ferric Acrisol', latitude: 6.892, longitude: -2.498, noOfTrees: 2800, estYield: 3200 },
+    { key: 'GH-PLT-002', tenantId: ghTid, farmerCode: 'FRM-GH-002', farmName: 'Mensah Sunyani Garden', plotBlockId: 'TB-GH-PLT-002', totalLandHolding: 2.0, altitude: 290, soilType: 'Haplic Lixisol', latitude: 7.334, longitude: -2.327, noOfTrees: 1600, estYield: 1900 },
+    { key: 'GH-PLT-003', tenantId: ghTid, farmerCode: 'FRM-GH-003', farmName: 'Boateng Dormaa Plantation', plotBlockId: 'TB-GH-PLT-003', totalLandHolding: 5.0, altitude: 350, soilType: 'Plinthic Acrisol', latitude: 7.152, longitude: -2.875, noOfTrees: 4200, estYield: 4800 },
+    // Uganda farm lands
+    { key: 'UG-PLT-001', tenantId: ugTid, farmerCode: 'FRM-UG-001', farmName: 'Mukasa Mbale Farm', plotBlockId: 'TB-UG-PLT-001', totalLandHolding: 2.5, altitude: 1450, soilType: 'Nitisol', latitude: 1.083, longitude: 34.175, noOfTrees: 2200, estYield: 2600 },
+    { key: 'UG-PLT-002', tenantId: ugTid, farmerCode: 'FRM-UG-002', farmName: 'Nalubega Kapchorwa Garden', plotBlockId: 'TB-UG-PLT-002', totalLandHolding: 1.8, altitude: 1800, soilType: 'Andisol', latitude: 1.397, longitude: 34.455, noOfTrees: 1500, estYield: 1800 },
+    { key: 'UG-PLT-003', tenantId: ugTid, farmerCode: 'FRM-UG-003', farmName: 'Ochieng Mount Elgon Farm', plotBlockId: 'TB-UG-PLT-003', totalLandHolding: 4.0, altitude: 1650, soilType: 'Volcanic Loam', latitude: 1.250, longitude: 34.350, noOfTrees: 3800, estYield: 4400 },
   ]
   const flRecords: Record<string, any> = {}
   for (const fld of farmLandDefs) {
     const existing = await db.farmLand.findFirst({ where: { tenantId: fld.tenantId, plotBlockId: fld.plotBlockId } })
     if (!existing) {
-      const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : keAdmin.id
+      const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : fld.tenantId === keTid ? keAdmin.id : fld.tenantId === ghTid ? ghAdmin.id : ugAdmin.id
       flRecords[fld.key] = await db.farmLand.create({ data: { ...fld, farmerId: farmerRecords[fld.farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
       console.log(`  ✅ FarmLand ${fld.key}`)
     } else {
@@ -210,6 +245,8 @@ async function main() {
     { from: 'metrang-coffee', to: 'cooxupe', type: 'export' },
     { from: 'yirgacheffe-union', to: 'cooxupe', type: 'export' },
     { from: 'othaya-cooperative', to: 'cooxupe', type: 'export' },
+    { from: 'asunafo-export', to: 'cooxupe', type: 'export' },
+    { from: 'nkusi-coffee', to: 'cooxupe', type: 'export' },
   ]
   for (const rd of relDefs) {
     const fromId = tenants[rd.from].id
@@ -229,11 +266,18 @@ async function main() {
     { tenantId: brTid, complianceId: 'EUDR-BR-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-BR-001', flKey: 'BR-PLT-001' },
     { tenantId: etTid, complianceId: 'EUDR-ET-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-ET-001', flKey: 'ET-PLT-001' },
     { tenantId: keTid, complianceId: 'EUDR-KE-2024-001', status: 'pending', riskLevel: 'medium', farmerCode: 'FRM-KE-001', flKey: 'KE-PLT-001' },
+    // Ghana EUDR records
+    { tenantId: ghTid, complianceId: 'EUDR-GH-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-GH-001', flKey: 'GH-PLT-001' },
+    { tenantId: ghTid, complianceId: 'EUDR-GH-2024-002', status: 'in_review', riskLevel: 'medium', farmerCode: 'FRM-GH-002', flKey: 'GH-PLT-002' },
+    // Uganda EUDR records
+    { tenantId: ugTid, complianceId: 'EUDR-UG-2024-001', status: 'compliant', riskLevel: 'low', farmerCode: 'FRM-UG-001', flKey: 'UG-PLT-001' },
+    { tenantId: ugTid, complianceId: 'EUDR-UG-2024-002', status: 'pending', riskLevel: 'medium', farmerCode: 'FRM-UG-002', flKey: 'UG-PLT-002' },
   ]
   for (const ed of eudrDefs) {
     const existing = await db.eudrCompliance.findUnique({ where: { tenantId_complianceId: { tenantId: ed.tenantId, complianceId: ed.complianceId } } })
     if (!existing && farmerRecords[ed.farmerCode] && flRecords[ed.flKey]) {
-      await db.eudrCompliance.create({ data: { tenantId: ed.tenantId, complianceId: ed.complianceId, status: ed.status, riskLevel: ed.riskLevel, farmerId: farmerRecords[ed.farmerCode].id, farmLandId: flRecords[ed.flKey].id, createdBy: ed.tenantId === vnTid ? vnAdmin.id : ed.tenantId === brTid ? brAdmin.id : ed.tenantId === etTid ? etAdmin.id : keAdmin.id, geolocationLat: farmerRecords[ed.farmerCode].latitude, geolocationLng: farmerRecords[ed.farmerCode].longitude, validFrom: new Date('2024-01-01'), validUntil: new Date('2025-12-31'), isActive: true } as any })
+      const eudrAdminId = ed.tenantId === vnTid ? vnAdmin.id : ed.tenantId === brTid ? brAdmin.id : ed.tenantId === etTid ? etAdmin.id : ed.tenantId === keTid ? keAdmin.id : ed.tenantId === ghTid ? ghAdmin.id : ugAdmin.id
+      await db.eudrCompliance.create({ data: { tenantId: ed.tenantId, complianceId: ed.complianceId, status: ed.status, riskLevel: ed.riskLevel, farmerId: farmerRecords[ed.farmerCode].id, farmLandId: flRecords[ed.flKey].id, createdBy: eudrAdminId, geolocationLat: farmerRecords[ed.farmerCode].latitude, geolocationLng: farmerRecords[ed.farmerCode].longitude, validFrom: new Date('2024-01-01'), validUntil: new Date('2025-12-31'), isActive: true } as any })
     }
   }
   console.log('  ✅ EUDR Compliance')

@@ -36,15 +36,12 @@ export async function GET(req: Request) {
         status: true,
         riskLevel: true,
         deforestationRiskScore: true,
-        trustScore: true,
         dueDiligenceStatement: true,
         verificationDate: true,
         validFrom: true,
         validUntil: true,
         updatedAt: true,
-        dueDiligenceStatements: {
-          select: { id: true, status: true },
-        },
+        farmer: { select: { isCertified: true } },
       },
     })
 
@@ -94,10 +91,8 @@ export async function GET(req: Request) {
       const hasDds = !!(rec.dueDiligenceStatement && rec.dueDiligenceStatement.trim() !== '')
       if (hasDds) score += 15
 
-      // Certification component (simplified: check if farmer is certified)
-      // We'll add +15 placeholder if the record has a farmerId
-      // Full implementation would join to Farmer.isCertified
-      score += 0 // Certification handled in aggregate below
+      // Certification component — check farmer.isCertified
+      if (rec.farmer?.isCertified) score += 15
 
       // Clamp to 0-100
       score = Math.max(0, Math.min(100, score))
@@ -108,12 +103,9 @@ export async function GET(req: Request) {
         status: rec.status,
         risk_level: rec.riskLevel,
         deforestation_risk_score: rec.deforestationRiskScore,
-        stored_trust_score: rec.trustScore,
         computed_trust_score: score,
         has_dds: hasDds,
-        dds_status: rec.dueDiligenceStatements.length > 0
-          ? rec.dueDiligenceStatements[0].status
-          : null,
+        is_farmer_certified: rec.farmer?.isCertified ?? false,
         verification_date: rec.verificationDate?.toISOString() ?? null,
         valid_from: rec.validFrom?.toISOString() ?? null,
         valid_until: rec.validUntil?.toISOString() ?? null,

@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, ShoppingCart, Truck,
   Activity, Loader2, DollarSign, BarChart3,
   Zap, Globe, FileCheck, Package, ArrowRightLeft,
-  Clock, Store,
+  Clock, Store, Inbox,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,55 +25,25 @@ import type { DashboardStats } from '@/types'
 
 const CHART_COLORS = ['#0d9488', '#8b5a1e', '#d4a574', '#4a7c59', '#c08850', '#6d4516']
 
-const MOCK_PRICE_TRENDS = [
-  { month: 'May 25', arabica: 4200, robusta: 2100, cPrice: 3800 },
-  { month: 'Jun 25', arabica: 4350, robusta: 2200, cPrice: 3950 },
-  { month: 'Jul 25', arabica: 4400, robusta: 2250, cPrice: 4000 },
-  { month: 'Aug 25', arabica: 4500, robusta: 2300, cPrice: 4100 },
-  { month: 'Sep 25', arabica: 4450, robusta: 2280, cPrice: 4050 },
-  { month: 'Oct 25', arabica: 4600, robusta: 2350, cPrice: 4200 },
-  { month: 'Nov 25', arabica: 4700, robusta: 2400, cPrice: 4300 },
-  { month: 'Dec 25', arabica: 4650, robusta: 2380, cPrice: 4250 },
-  { month: 'Jan 26', arabica: 4800, robusta: 2450, cPrice: 4400 },
-  { month: 'Feb 26', arabica: 4900, robusta: 2500, cPrice: 4500 },
-  { month: 'Mar 26', arabica: 4850, robusta: 2480, cPrice: 4450 },
-  { month: 'Apr 26', arabica: 5000, robusta: 2550, cPrice: 4600 },
-]
-
-const MOCK_OPEN_RFQS = [
-  { id: 'RFQ-2026-089', buyer: 'Neue Kaffee GmbH', type: 'Arabica SHB', quantity: '2,400 kg', deadline: '3 days', bids: 4 },
-  { id: 'RFQ-2026-090', buyer: 'Terra Rossa Srl', type: 'Robusta Grade 1', quantity: '5,000 kg', deadline: '5 days', bids: 2 },
-  { id: 'RFQ-2026-091', buyer: 'Nordic Bean AB', type: 'Arabica HB', quantity: '1,800 kg', deadline: '7 days', bids: 3 },
-  { id: 'RFQ-2026-092', buyer: 'Café Direct Ltd', type: 'Blend Special', quantity: '3,200 kg', deadline: '4 days', bids: 1 },
-]
-
-const MOCK_SHIPMENTS = [
-  { id: 'SHP-2026-041', destination: 'Hamburg, DE', status: 'in_transit', eta: 'Mar 15', progress: 65 },
-  { id: 'SHP-2026-042', destination: 'Genoa, IT', status: 'booked', eta: 'Mar 20', progress: 25 },
-  { id: 'SHP-2026-043', destination: 'Gothenburg, SE', status: 'in_transit', eta: 'Mar 12', progress: 80 },
-  { id: 'SHP-2026-044', destination: 'Felixstowe, UK', status: 'planned', eta: 'Mar 28', progress: 10 },
-]
-
-const MOCK_TRADING_VOLUME = [
-  { month: 'May', volume: 18500, revenue: 85000000 },
-  { month: 'Jun', volume: 22000, revenue: 102000000 },
-  { month: 'Jul', volume: 19500, revenue: 91000000 },
-  { month: 'Aug', volume: 28000, revenue: 132000000 },
-  { month: 'Sep', volume: 32000, revenue: 154000000 },
-  { month: 'Oct', volume: 35000, revenue: 171000000 },
-  { month: 'Nov', volume: 31000, revenue: 148000000 },
-  { month: 'Dec', volume: 26000, revenue: 122000000 },
-  { month: 'Jan', volume: 21000, revenue: 98000000 },
-  { month: 'Feb', volume: 24000, revenue: 112000000 },
-  { month: 'Mar', volume: 29000, revenue: 136000000 },
-  { month: 'Apr', volume: 27000, revenue: 128000000 },
-]
+function EmptyChart({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center h-full text-center p-6">
+      <div>
+        <Inbox className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function TraderDashboard() {
   const router = useRouter()
   const { t2 } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [priceTickers, setPriceTickers] = useState<any[]>([])
+  const [rfqs, setRfqs] = useState<any[]>([])
+  const [shipments, setShipments] = useState<any[]>([])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -87,7 +57,46 @@ export default function TraderDashboard() {
     }
   }, [])
 
-  useEffect(() => { fetchStats() }, [fetchStats])
+  const fetchPriceTickers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/price-tickers?pageSize=20')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setPriceTickers(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch price tickers', err)
+    }
+  }, [])
+
+  const fetchRfqs = useCallback(async () => {
+    try {
+      const res = await fetch('/api/rfq?pageSize=10')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setRfqs(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch RFQs', err)
+    }
+  }, [])
+
+  const fetchShipments = useCallback(async () => {
+    try {
+      const res = await fetch('/api/shipments?pageSize=10')
+      const data = await res.json()
+      if (data.success && data.data) {
+        const records = Array.isArray(data.data) ? data.data : data.data.records || []
+        setShipments(records)
+      }
+    } catch (err) {
+      console.error('Failed to fetch shipments', err)
+    }
+  }, [])
+
+  useEffect(() => { fetchStats(); fetchPriceTickers(); fetchRfqs(); fetchShipments() }, [fetchStats, fetchPriceTickers, fetchRfqs, fetchShipments])
 
   if (loading) {
     return (
@@ -97,19 +106,50 @@ export default function TraderDashboard() {
     )
   }
 
-  const openRFQs = 4
-  const activeShipments = 4
   const totalListings = stats?.totalMarketplaceListings || 0
-  const pendingBids = 10
-  const avgPrice = stats?.avgPricePerKg || 48500
+  const avgPrice = stats?.avgPricePerKg || 0
   const totalVolume = stats?.totalNetWeight || 0
   const currency = 'VND'
 
+  // Compute price trends from price tickers
+  const priceTrends = priceTickers.slice(0, 12).map((pt: any, i: number) => ({
+    month: pt.effectiveDate ? new Date(pt.effectiveDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : `Period ${i + 1}`,
+    arabica: pt.arabicaPrice || pt.price || 0,
+    robusta: pt.robustaPrice || 0,
+    cPrice: pt.cPrice || 0,
+  }))
+
+  // Compute trading volume from harvest trends
+  const tradingVolume = (stats?.harvestTrends || []).map((h) => ({
+    month: h.name,
+    volume: h.weight,
+    revenue: Math.round(h.weight * (avgPrice || 1)),
+  }))
+
+  // Map RFQs
+  const openRfqs = rfqs.slice(0, 5).map((rfq: any) => ({
+    id: rfq.rfqCode || rfq.id,
+    buyer: rfq.buyerName || rfq.counterparty || 'Unknown',
+    type: rfq.coffeeType || rfq.productType || 'Coffee',
+    quantity: rfq.quantity ? `${Number(rfq.quantity).toLocaleString()} kg` : 'N/A',
+    deadline: rfq.deadline || rfq.closingDate || 'N/A',
+    bids: rfq.bidCount || 0,
+  }))
+
+  // Map shipments
+  const shipmentList = shipments.slice(0, 5).map((s: any) => ({
+    id: s.shipmentCode || s.id,
+    destination: s.destination || s.destinationPort || 'Unknown',
+    status: s.status || 'planned',
+    eta: s.estimatedArrival || s.eta || 'N/A',
+    progress: s.status === 'Delivered' ? 100 : s.status === 'In Transit' ? 65 : s.status === 'Booked' ? 25 : 10,
+  }))
+
   const kpis = [
-    { title: t2('RFQ mở', 'Open RFQs'), value: openRFQs, icon: ShoppingCart, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400' },
-    { title: t2('Lô hàng hoạt động', 'Active Shipments'), value: activeShipments, icon: Truck, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400' },
+    { title: t2('RFQ mở', 'Open RFQs'), value: rfqs.length, icon: ShoppingCart, iconBg: 'bg-teal-100 dark:bg-teal-950', iconColor: 'text-teal-600 dark:text-teal-400' },
+    { title: t2('Lô hàng hoạt động', 'Active Shipments'), value: shipments.length, icon: Truck, iconBg: 'bg-amber-100 dark:bg-amber-950', iconColor: 'text-amber-600 dark:text-amber-400' },
     { title: t2('Danh sách thị trường', 'Marketplace Listings'), value: totalListings, icon: Store, iconBg: 'bg-emerald-100 dark:bg-emerald-950', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-    { title: t2('Báo giá chờ xử lý', 'Pending Bids'), value: pendingBids, icon: ArrowRightLeft, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400' },
+    { title: t2('Báo giá chờ xử lý', 'Pending Bids'), value: 0, icon: ArrowRightLeft, iconBg: 'bg-cyan-100 dark:bg-cyan-950', iconColor: 'text-cyan-600 dark:text-cyan-400' },
     { title: t2('Giá TB/kg', 'Avg Price/kg'), value: formatCurrency(avgPrice, currency), icon: DollarSign, iconBg: 'bg-orange-100 dark:bg-orange-950', iconColor: 'text-orange-600 dark:text-orange-400' },
     { title: t2('Tổng khối lượng (kg)', 'Total Volume (kg)'), value: totalVolume.toLocaleString(), icon: Package, iconBg: 'bg-rose-100 dark:bg-rose-950', iconColor: 'text-rose-600 dark:text-rose-400' },
   ]
@@ -146,22 +186,27 @@ export default function TraderDashboard() {
                 {t2('Xu hướng giá', 'Price Trends')}
               </CardTitle>
               <CardDescription className="text-[10px] text-muted-foreground">
-                {t2('Giá Arabica, Robusta & C Price ($/kg)', 'Arabica, Robusta & C Price ($/kg)')}
+                {t2('Giá từ bảng giá', 'Prices from tickers')}
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={MOCK_PRICE_TRENDS}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Line type="monotone" dataKey="arabica" stroke="#0d9488" strokeWidth={2} name="Arabica" dot={{ r: 2 }} />
-                  <Line type="monotone" dataKey="robusta" stroke="#8b5a1e" strokeWidth={2} name="Robusta" dot={{ r: 2 }} />
-                  <Line type="monotone" dataKey="cPrice" stroke="#6d4516" strokeWidth={2} strokeDasharray="5 5" name="C Price" dot={{ r: 2 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              {priceTrends.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={priceTrends}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Line type="monotone" dataKey="arabica" stroke="#0d9488" strokeWidth={2} name="Arabica" dot={{ r: 2 }} />
+                    <Line type="monotone" dataKey="robusta" stroke="#8b5a1e" strokeWidth={2} name="Robusta" dot={{ r: 2 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có bảng giá', 'Data will appear as price tickers are added')} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -177,16 +222,22 @@ export default function TraderDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={MOCK_TRADING_VOLUME} margin={{ bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                  <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="volume" name={t2('Khối lượng (kg)', 'Volume (kg)')} fill="#0d9488" radius={[6, 6, 0, 0]} maxBarSize={28} />
-                </BarChart>
-              </ResponsiveContainer>
+              {tradingVolume.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={tradingVolume} margin={{ bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis dataKey="month" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 12 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Bar dataKey="volume" name={t2('Khối lượng (kg)', 'Volume (kg)')} fill="#0d9488" radius={[6, 6, 0, 0]} maxBarSize={28} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[280px]">
+                  <EmptyChart message={t2('Dữ liệu sẽ xuất hiện khi có thu hoạch', 'Data will appear as harvests are recorded')} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -209,25 +260,31 @@ export default function TraderDashboard() {
               </div>
             </CardHeader>
             <CardContent className="px-3 pb-4">
-              <ScrollArea className="h-[260px]">
-                <div className="space-y-2">
-                  {MOCK_OPEN_RFQS.map((rfq) => (
-                    <div key={rfq.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[8px]">{rfq.id}</Badge>
-                          <span className="text-xs font-medium text-foreground truncate">{rfq.buyer}</span>
+              {openRfqs.length > 0 ? (
+                <ScrollArea className="h-[260px]">
+                  <div className="space-y-2">
+                    {openRfqs.map((rfq) => (
+                      <div key={rfq.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[8px]">{rfq.id}</Badge>
+                            <span className="text-xs font-medium text-foreground truncate">{rfq.buyer}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">{rfq.type} — {rfq.quantity}</p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">{rfq.type} — {rfq.quantity}</p>
+                        <div className="text-right shrink-0">
+                          <p className="text-[10px] text-muted-foreground">{rfq.deadline}</p>
+                          <Badge variant="secondary" className="text-[8px] h-4">{rfq.bids} {t2('báo giá', 'bids')}</Badge>
+                        </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] text-muted-foreground">{rfq.deadline}</p>
-                        <Badge variant="secondary" className="text-[8px] h-4">{rfq.bids} {t2('báo giá', 'bids')}</Badge>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="h-[260px]">
+                  <EmptyChart message={t2('Chưa có RFQ', 'No RFQs yet')} />
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
 
@@ -240,29 +297,37 @@ export default function TraderDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-4 space-y-3">
-              {MOCK_SHIPMENTS.map((shipment) => {
-                const statusColors: Record<string, string> = {
-                  in_transit: 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
-                  booked: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-                  planned: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-                }
-                return (
-                  <div key={shipment.id} className="p-3 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[8px]">{shipment.id}</Badge>
-                        <span className="text-xs font-medium text-foreground">{shipment.destination}</span>
+              {shipmentList.length > 0 ? (
+                shipmentList.map((shipment) => {
+                  const statusColors: Record<string, string> = {
+                    'In Transit': 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
+                    'in_transit': 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-400',
+                    'Booked': 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+                    'booked': 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+                    'planned': 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+                  }
+                  return (
+                    <div key={shipment.id} className="p-3 rounded-xl border border-border/50 hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[8px]">{shipment.id}</Badge>
+                          <span className="text-xs font-medium text-foreground">{shipment.destination}</span>
+                        </div>
+                        <Badge className={`text-[8px] ${statusColors[shipment.status] || statusColors.planned}`}>{shipment.status}</Badge>
                       </div>
-                      <Badge className={`text-[8px] ${statusColors[shipment.status]}`}>{shipment.status.replace('_', ' ')}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Progress value={shipment.progress} className="h-1.5 flex-1" />
+                        <span className="text-[10px] text-muted-foreground shrink-0">{shipment.progress}%</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">ETA: {shipment.eta}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={shipment.progress} className="h-1.5 flex-1" />
-                      <span className="text-[10px] text-muted-foreground shrink-0">{shipment.progress}%</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">ETA: {shipment.eta}</p>
-                  </div>
-                )
-              })}
+                  )
+                })
+              ) : (
+                <div className="h-[260px]">
+                  <EmptyChart message={t2('Chưa có lô hàng', 'No shipments yet')} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

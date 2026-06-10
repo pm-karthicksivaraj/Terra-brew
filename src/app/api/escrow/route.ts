@@ -17,9 +17,9 @@ export async function GET(req: NextRequest) {
     const where: any = { tenantId, isActive: true }
     if (search) {
       where.OR = [
-        { escrowNumber: { contains: search } },
-        { paymentMethod: { contains: search } },
-        { bankReference: { contains: search } },
+        { escrowId: { contains: search } },
+        { fundingSource: { contains: search } },
+        { notes: { contains: search } },
       ]
     }
     if (statusFilter) where.status = statusFilter
@@ -50,32 +50,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const tenantId = user!.tenantId!
 
-    // Generate escrow number
+    // Generate escrow ID
     const now = new Date()
     const yearStr = now.getFullYear().toString().slice(-2)
     const monthStr = (now.getMonth() + 1).toString().padStart(2, '0')
     const count = await db.escrowTransaction.count({ where: { tenantId } })
-    const escrowNumber = `ESC-${yearStr}${monthStr}-${(count + 1).toString().padStart(4, '0')}`
+    const escrowId = `ESC-${yearStr}${monthStr}-${(count + 1).toString().padStart(4, '0')}`
 
     const item = await db.escrowTransaction.create({
       data: {
         tenantId,
-        escrowNumber,
-        buyerId: body.buyerId || null,
-        sellerId: body.sellerId || null,
+        escrowId,
+        buyerTenantId: body.buyerTenantId || null,
+        sellerTenantId: body.sellerTenantId || null,
         rfqId: body.rfqId || null,
-        contractId: body.contractId || null,
         createdBy: user!.id,
         status: body.status || 'initiated',
         amount: body.amount ? parseFloat(body.amount) : null,
         currency: body.currency || 'USD',
-        escrowFee: body.escrowFee ? parseFloat(body.escrowFee) : null,
-        escrowFeePayer: body.escrowFeePayer || null,
-        fundingDeadline: body.fundingDeadline ? new Date(body.fundingDeadline) : null,
-        inspectionDeadline: body.inspectionDeadline ? new Date(body.inspectionDeadline) : null,
-        releaseDeadline: body.releaseDeadline ? new Date(body.releaseDeadline) : null,
-        paymentMethod: body.paymentMethod || null,
-        bankReference: body.bankReference || null,
+        fundingSource: body.fundingSource || null,
+        milestoneTerms: body.milestoneTerms || null,
         notes: body.notes || null,
         metadata: body.metadata || null,
       },

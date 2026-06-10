@@ -453,7 +453,7 @@ export default function FarmerDetailPage() {
                   <InfoField label="Full Name" value={farmer.fullName} />
                   <InfoField label="Gender" value={farmer.gender} />
                   <InfoField label="Date of Birth" value={farmer.dob ? new Date(farmer.dob).toLocaleDateString() : null} icon={Calendar} />
-                  <InfoField label="Age" value={farmer.age} />
+                  <InfoField label="Age" value={(!farmer.age || farmer.age === 0) ? 'Empty' : `${farmer.age} years`} />
                   <InfoField label="Education" value={farmer.education} />
                   <InfoField label="Marital Status" value={farmer.maritalStatus} />
                   <InfoField label="Family Members" value={farmer.noOfFamilyMembers} />

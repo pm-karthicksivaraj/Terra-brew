@@ -69,7 +69,7 @@ export type ModuleSlug =
   | 'cert-assessments' | 'coffee-inspections'
   | 'smart-contracts' | 'marketplace'
   | 'dashboard' | 'reports' | 'settings' | 'users'
-  | 'eudr-compliance' | 'export-docs' | 'shipments' | 'buyers' | 'trading-desk' | 'api-access' | 'deforestation' | 'iot-tracking' | 'qc-verification' | 'compliance-marketplace' | 'analytics' | 'logistics'
+  | 'eudr-compliance' | 'export-docs' | 'shipments' | 'buyers' | 'trading-desk' | 'api-access' | 'deforestation' | 'iot-tracking' | 'qc-verification' | 'compliance-marketplace' | 'analytics' | 'logistics' | 'product-monitoring' | 'traces'
 
 export type SubscriptionTier = 'starter' | 'professional' | 'enterprise'
 export type PaymentProvider = 'stripe' | 'paypal'
