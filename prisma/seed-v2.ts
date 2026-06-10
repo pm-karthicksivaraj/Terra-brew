@@ -232,9 +232,10 @@ async function main() {
   for (const fld of farmLandDefs) {
     const existing = await db.farmLand.findFirst({ where: { tenantId: fld.tenantId, plotBlockId: fld.plotBlockId } })
     if (!existing) {
+      const { key, farmerCode, ...flData } = fld
       const adminId = fld.tenantId === vnTid ? vnAdmin.id : fld.tenantId === brTid ? brAdmin.id : fld.tenantId === etTid ? etAdmin.id : fld.tenantId === keTid ? keAdmin.id : fld.tenantId === ghTid ? ghAdmin.id : ugAdmin.id
-      flRecords[fld.key] = await db.farmLand.create({ data: { ...fld, farmerId: farmerRecords[fld.farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(fld.latitude, fld.longitude), boundaryArea: fld.totalLandHolding, geoCenterLat: fld.latitude, geoCenterLng: fld.longitude } as any })
-      console.log(`  ✅ FarmLand ${fld.key}`)
+      flRecords[key] = await db.farmLand.create({ data: { ...flData, farmerId: farmerRecords[farmerCode].id, createdBy: adminId, landOwnership: 'Owned', childLabourPolicy: true, minimumWageCompliance: true, ppeAvailable: true, isActive: true, polygonGeoJson: makePolygonGeoJson(flData.latitude, flData.longitude), boundaryArea: flData.totalLandHolding, geoCenterLat: flData.latitude, geoCenterLng: flData.longitude } as any })
+      console.log(`  ✅ FarmLand ${key}`)
     } else {
       flRecords[fld.key] = existing
     }

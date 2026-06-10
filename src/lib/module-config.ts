@@ -67,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
   { id: 'overview', label: 'Overview', labelVi: 'Tổng quan', defaultOpen: true, order: 1 },
   { id: 'farm', label: 'Farm Operations', labelVi: 'Vận hành nông trại', defaultOpen: true, order: 2 },
   { id: 'processing', label: 'Processing & Quality', labelVi: 'Chế biến & Chất lượng', defaultOpen: false, order: 3 },
-  { id: 'compliance', label: 'Compliance & Certification', labelVi: 'Tuân thủ & Chứng nhận', defaultOpen: false, order: 4 },
+  { id: 'compliance', label: 'EUDR Compliance & Certification', labelVi: 'Tuân thủ EUDR & Chứng nhận', defaultOpen: false, order: 4 },
   { id: 'trade', label: 'Trade & Logistics', labelVi: 'Thương mại & Vận tải', defaultOpen: false, order: 5 },
   { id: 'finance', label: 'Finance & Admin', labelVi: 'Tài chính & Quản trị', defaultOpen: false, order: 6 },
   { id: 'system', label: 'System & Integrations', labelVi: 'Hệ thống & Tích hợp', defaultOpen: false, order: 7 },
@@ -165,6 +165,12 @@ export const MODULES: ModuleDef[] = [
     entityTypeAccess: { producer: 'full', aggregator: 'view', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
   },
+  {
+    slug: 'climate-intelligence', label: 'Climate Intelligence', labelVi: 'Khí hậu thông minh', href: '/climate-intelligence', icon: 'Activity', color: '#00a3e0',
+    group: 'farm', orderInGroup: 10,
+    entityTypeAccess: { producer: 'full', aggregator: 'view', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+  },
 
   // PROCESSING & QUALITY
   {
@@ -194,7 +200,7 @@ export const MODULES: ModuleDef[] = [
 
   // COMPLIANCE & CERTIFICATION
   {
-    slug: 'eudr-compliance', label: 'EUDR Compliance', labelVi: 'Tuân thủ EUDR', href: '/eudr-compliance', icon: 'Shield', color: '#dc2626',
+    slug: 'eudr-compliance', label: 'EUDR Records', labelVi: 'Hồ sơ EUDR', href: '/eudr-compliance', icon: 'Shield', color: '#dc2626',
     group: 'compliance', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
@@ -216,6 +222,24 @@ export const MODULES: ModuleDef[] = [
     group: 'compliance', orderInGroup: 4,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
+  },
+  {
+    slug: 'carbon-tracking', label: 'Carbon Tracking', labelVi: 'Theo dõi Carbon', href: '/carbon-tracking', icon: 'Activity', color: '#059669',
+    group: 'compliance', orderInGroup: 5,
+    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'view', certification_body: 'view', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'view', viewer: 'view' },
+  },
+  {
+    slug: 'esg-reporting', label: 'ESG Reporting', labelVi: 'Báo cáo ESG', href: '/esg-reporting', icon: 'BarChart3', color: '#6366f1',
+    group: 'compliance', orderInGroup: 7,
+    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'full', buyer: 'view', viewer: 'view' },
+  },
+  {
+    slug: 'trust-score', label: 'Trust Score™', labelVi: 'Trust Score™', href: '/trust-score', icon: 'Shield', color: '#ffc627',
+    group: 'compliance', orderInGroup: 6,
+    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'full', viewer: 'view' },
   },
 
   // TRADE & LOGISTICS
@@ -278,6 +302,12 @@ export const MODULES: ModuleDef[] = [
     group: 'trade', orderInGroup: 10,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
     roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view' },
+  },
+  {
+    slug: 'buyer-portal', label: 'Buyer Portal', labelVi: 'Cổng người mua', href: '/buyer-portal', icon: 'UserCheck', color: '#00a3e0',
+    group: 'trade', orderInGroup: 11,
+    entityTypeAccess: { producer: 'hidden', aggregator: 'view', exporter: 'view', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
   },
   // FINANCE & ADMIN
   {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { validateData, priceTickerSchema } from '@/lib/validations'
 
 /**
  * GET /api/price-tickers — List all price tickers
@@ -24,38 +25,28 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const {
-      commodity,
-      price,
-      currency = 'USD',
-      change = 0,
-      changePercent = 0,
-      unit = 'per lb',
-      source,
-      high52w,
-      low52w,
-      isActive = true,
-    } = body
 
-    if (!commodity || price === undefined || price === null) {
+    const validation = validateData(priceTickerSchema, body)
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'commodity and price are required' },
+        { success: false, error: 'Validation failed', details: validation.errors?.issues },
         { status: 400 }
       )
     }
+    const validatedData = validation.data!
 
     const ticker = await db.priceTicker.create({
       data: {
-        commodity,
-        price: parseFloat(String(price)),
-        currency,
-        change: parseFloat(String(change)),
-        changePercent: parseFloat(String(changePercent)),
-        unit,
-        source: source || null,
-        high52w: high52w !== undefined ? parseFloat(String(high52w)) : null,
-        low52w: low52w !== undefined ? parseFloat(String(low52w)) : null,
-        isActive,
+        commodity: validatedData.commodity,
+        price: validatedData.price,
+        currency: validatedData.currency,
+        change: validatedData.change,
+        changePercent: validatedData.changePercent,
+        unit: validatedData.unit,
+        source: validatedData.source || null,
+        high52w: validatedData.high52w ?? null,
+        low52w: validatedData.low52w ?? null,
+        isActive: validatedData.isActive,
       },
     })
 

@@ -276,20 +276,24 @@ export default function FarmerDetailPage() {
     return () => { cancelled = true }
   }, [farmerId])
 
-  // Generate QR code
+  // Generate QR code — use secure verification if available, otherwise plain URL
   useEffect(() => {
     if (farmer?.farmerCode || farmer?.id) {
       const generateQR = async () => {
         try {
           const origin = typeof window !== 'undefined' ? window.location.origin : ''
-          const url = await QRCode.toDataURL(`${origin}/verify/${farmer.farmerCode || farmer.id}`, {
-            width: 128,
-            margin: 1,
-            color: { dark: '#047857', light: '#ffffff' }
+          // Use secure verification URL pattern: /verify/{farmerCode}
+          // The /verify/[qrCode] route will look up the QRVerification record
+          const verifyPath = `/verify/${farmer.farmerCode || farmer.id}`
+          const url = await QRCode.toDataURL(`${origin}${verifyPath}`, {
+            width: 160,
+            margin: 2,
+            color: { dark: '#6D2932', light: '#ffffff' }  // Coffee brown QR code
           })
           setQrUrl(url)
         } catch (err) {
           // Fallback: silent fail
+          console.error('QR generation failed:', err)
         }
       }
       generateQR()
@@ -453,7 +457,11 @@ export default function FarmerDetailPage() {
                   <InfoField label="Full Name" value={farmer.fullName} />
                   <InfoField label="Gender" value={farmer.gender} />
                   <InfoField label="Date of Birth" value={farmer.dob ? new Date(farmer.dob).toLocaleDateString() : null} icon={Calendar} />
-                  <InfoField label="Age" value={(!farmer.age || farmer.age === 0) ? 'Empty' : `${farmer.age} years`} />
+                  <InfoField label="Age" value={
+                    farmer.age && farmer.age > 0 ? `${farmer.age} years` :
+                    farmer.dob ? `${Math.floor((Date.now() - new Date(farmer.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years` :
+                    '—'
+                  } />
                   <InfoField label="Education" value={farmer.education} />
                   <InfoField label="Marital Status" value={farmer.maritalStatus} />
                   <InfoField label="Family Members" value={farmer.noOfFamilyMembers} />

@@ -1,7 +1,5 @@
 import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
 import { db } from '@/lib/db'
-import { NextResponse } from 'next/server'
-import { validateData, eudrComplianceSchema } from '@/lib/validations'
 
 export async function GET(req: Request) {
   const user = await getAuthUser(req)
@@ -12,22 +10,21 @@ export async function GET(req: Request) {
     const tenantId = user!.tenantId!
     const { page, pageSize, search, sortBy, sortOrder } = getPaginationParams(req as any)
     const url = new URL(req.url)
-    const status = url.searchParams.get('status') || undefined
-    const riskLevel = url.searchParams.get('riskLevel') || undefined
+    const verificationStatus = url.searchParams.get('verificationStatus') || undefined
 
     const where: any = { tenantId, isActive: true }
-    if (status) where.status = status
-    if (riskLevel) where.riskLevel = riskLevel
+    if (verificationStatus) where.verificationStatus = verificationStatus
     if (search) {
       where.OR = [
-        { complianceId: { contains: search } },
+        { trackingId: { contains: search } },
         { batchId: { contains: search } },
-        { notes: { contains: search } },
+        { reportingPeriod: { contains: search } },
+        { methodology: { contains: search } },
       ]
     }
 
     const [items, total] = await Promise.all([
-      db.eudrCompliance.findMany({
+      db.carbonTracking.findMany({
         where,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * pageSize,
@@ -35,9 +32,10 @@ export async function GET(req: Request) {
         include: {
           farmer: { select: { id: true, fullName: true, farmerCode: true } },
           farmLand: { select: { id: true, farmName: true } },
+          eudrCompliance: { select: { id: true, complianceId: true } },
         },
       }),
-      db.eudrCompliance.count({ where }),
+      db.carbonTracking.count({ where }),
     ])
 
     return apiResponse({ data: items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
@@ -55,20 +53,21 @@ export async function POST(req: Request) {
     const body = await req.json()
     const tenantId = user!.tenantId!
 
-    const validation = validateData(eudrComplianceSchema, body)
-    if (!validation.success) {
-      return NextResponse.json(
-        { success: false, error: 'Validation failed', details: validation.errors?.issues },
-        { status: 400 }
-      )
-    }
-    const validatedData = validation.data
+    // Auto-calculate emissions fields
+    const scope1 = body.scope1Emissions || 0
+    const scope2 = body.scope2Emissions || 0
+    const scope3 = body.scope3Emissions || 0
+    const totalEmissions = scope1 + scope2 + scope3
+    const carbonSequestered = body.carbonSequestered || 0
+    const netEmissions = totalEmissions - carbonSequestered
 
-    const item = await db.eudrCompliance.create({
+    const item = await db.carbonTracking.create({
       data: {
-        ...validatedData,
+        ...body,
         tenantId,
         createdBy: user!.id,
+        totalEmissions,
+        netEmissions,
       },
     })
 

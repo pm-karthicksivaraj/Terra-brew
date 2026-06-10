@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthUser, requireTenantAccess, apiResponse, apiError, getPaginationParams } from '@/lib/api-middleware'
+import { validateData, farmerSchema } from '@/lib/validations'
 
 export async function GET(req: Request) {
   const user = await getAuthUser(req)
@@ -78,9 +79,20 @@ export async function POST(req: Request) {
     const body = await req.json()
     const tenantId = user!.tenantId!
 
+    const validation = validateData(farmerSchema, body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validation.errors?.issues },
+        { status: 400 }
+      )
+    }
+    const validatedData = validation.data!
+
     const farmer = await db.farmer.create({
       data: {
-        ...body,
+        ...validatedData,
+        fullName: validatedData.fullName ?? '',
+        contactNumber: validatedData.contactNumber ?? '',
         tenantId,
         createdBy: user!.id,
       },

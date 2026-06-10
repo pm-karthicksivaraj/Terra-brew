@@ -188,6 +188,7 @@ function SidebarContent({
       'users': 'nav.users', 'iot-sensors': 'nav.cropMonitorings',
       'blockchain': 'nav.smartContracts', 'api-settings': 'nav.settings',
       'analytics': 'nav.reports',
+      'carbon-tracking': 'nav.cropMonitorings',
     }
 
     return grouped.map(group => ({

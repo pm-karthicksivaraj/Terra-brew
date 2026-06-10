@@ -116,6 +116,7 @@ model Tenant {
   entityRelationshipsFrom EntityRelationship[] @relation("EntityFrom")
   entityRelationshipsTo   EntityRelationship[] @relation("EntityTo")
   tenantModules          TenantModule[]
+  carbonTrackings        CarbonTracking[]
 }
 
 model PlatformSetting {
@@ -313,6 +314,7 @@ model Farmer {
   smartContracts            SmartContract[]
   marketplaceListings       MarketplaceListing[]
   eudrCompliances          EudrCompliance[]
+  carbonTrackings          CarbonTracking[]
   @@unique([farmerCode, tenantId])
   @@index([tenantId])
   @@index([tenantId, province])
@@ -371,6 +373,7 @@ model FarmLand {
   coffeeInspections     CoffeeInspection[]
   deforestationAssessments DeforestationAssessment[]
   eudrCompliances          EudrCompliance[]
+  carbonTrackings          CarbonTracking[]
   @@index([tenantId])
   @@index([tenantId, farmerId])
 }
@@ -1092,6 +1095,7 @@ model EudrCompliance {
   farmer         Farmer?                 @relation(fields: [farmerId], references: [id])
   farmLand       FarmLand?               @relation(fields: [farmLandId], references: [id])
   deforestationAssessments DeforestationAssessment[]
+  carbonTrackings          CarbonTracking[]
   @@unique([tenantId, complianceId])
   @@index([tenantId])
   @@index([tenantId, status])
@@ -1256,6 +1260,43 @@ model TrackingUpdate {
   shipment Shipment @relation(fields: [shipmentId], references: [id])
   @@index([tenantId])
   @@index([tenantId, shipmentId])
+}
+
+model CarbonTracking {
+  id                String   @id @default(cuid())
+  tenantId          String
+  batchId           String?
+  farmerId          String?
+  farmLandId        String?
+  eudrComplianceId  String?
+  createdBy         String?
+  trackingId        String?
+  reportingPeriod   String?
+  scope1Emissions   Float?   // Direct emissions (fuel, fertilizers) in kg CO2e
+  scope2Emissions   Float?   // Indirect emissions (electricity) in kg CO2e
+  scope3Emissions   Float?   // Supply chain emissions in kg CO2e
+  totalEmissions    Float?   // Total in kg CO2e
+  emissionsPerKg    Float?   // kg CO2e per kg of coffee
+  carbonSequestered  Float?  // kg CO2e sequestered by shade trees
+  netEmissions      Float?   // total - sequestered
+  methodology       String?  // GHG Protocol, ISO 14064
+  dataSources       String?  // JSON
+  verificationStatus String? @default("pending")
+  verifiedBy        String?
+  verificationDate  DateTime?
+  notes             String?
+  metadata          String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  farmer           Farmer?          @relation(fields: [farmerId], references: [id])
+  farmLand         FarmLand?        @relation(fields: [farmLandId], references: [id])
+  eudrCompliance   EudrCompliance?  @relation(fields: [eudrComplianceId], references: [id])
+  @@unique([tenantId, trackingId])
+  @@index([tenantId])
+  @@index([tenantId, batchId])
 }
 
 model DeforestationAssessment {

@@ -66,6 +66,7 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   distribution: { en: 'Distribution', vi: 'Phân phối' },
   retail: { en: 'Retail', vi: 'Bán lẻ' },
   'eudr-compliance': { en: 'EUDR Compliance', vi: 'Tuân thủ EUDR' },
+  'carbon-tracking': { en: 'Carbon Tracking', vi: 'Theo dõi Carbon' },
   'new': { en: 'New Record', vi: 'Tạo mới' },
   'export-docs': { en: 'Export Documents', vi: 'Tài liệu Xuất khẩu' },
   deforestation: { en: 'Deforestation', vi: 'Phá rừng' },
@@ -82,6 +83,10 @@ const BREADCRUMB_MAP: Record<string, { en: string; vi: string }> = {
   'compliance-marketplace': { en: 'Compliance Marketplace', vi: 'Thị trường Tuân thủ' },
   billing: { en: 'Billing', vi: 'Thanh toán' },
   'api-settings': { en: 'API Settings', vi: 'Cài đặt API' },
+  'buyer-portal': { en: 'Buyer Portal', vi: 'Cổng người mua' },
+  'esg-reporting': { en: 'ESG Reporting', vi: 'Báo cáo ESG' },
+  'trust-score': { en: 'Trust Score™', vi: 'Trust Score™' },
+  'climate-intelligence': { en: 'Climate Intelligence', vi: 'Khí hậu thông minh' },
 }
 
 // ─── Animation variants ───────────────────────────────────────────
@@ -179,7 +184,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   const tenantName = session?.user?.tenantName || 'Terra Brew'
   const userName = session?.user?.name || 'User'
-  const userRole = session?.user?.role || ''
+  const userRole = session?.user?.role || 'viewer'
   const entityType = session?.user?.entityType || 'producer'
 
   const onLangToggle = () => {
