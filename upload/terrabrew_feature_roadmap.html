@@ -1,0 +1,226 @@
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; padding: 1rem 0; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .cat-label { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: var(--border-radius-md); }
+  .cat-compliance { background: #E1F5EE; color: #0F6E56; }
+  .cat-ai { background: #EEEDFE; color: #3C3489; }
+  .cat-market { background: #FAEEDA; color: #633806; }
+  .cat-trust { background: #E6F1FB; color: #0C447C; }
+  .cat-biz { background: #FAECE7; color: #712B13; }
+  .cat-data { background: #EAF3DE; color: #27500A; }
+  h3 { font-size: 15px; font-weight: 500; margin: 0 0 4px; color: var(--color-text-primary); }
+  .tag-new { font-size: 10px; padding: 2px 8px; border-radius: var(--border-radius-md); background: var(--color-background-danger); color: var(--color-text-danger); margin-left: 6px; vertical-align: middle; }
+  ul { margin: 0; padding: 0 0 0 18px; }
+  li { font-size: 13px; color: var(--color-text-secondary); line-height: 1.9; }
+  .section-title { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.05em; margin: 1.5rem 0 0.5rem; text-transform: uppercase; }
+  .unique-badge { font-size: 10px; padding: 2px 7px; border-radius: var(--border-radius-md); background: #EEEDFE; color: #3C3489; margin-left: 6px; }
+</style>
+
+<h2 class="sr-only">TerraBrew feature roadmap — six categories of additional features to differentiate from competitors</h2>
+
+<p class="section-title">🔒 Compliance & Regulatory Depth</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-compliance">Compliance</span></div>
+    <h3>Multi-regulation engine <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>UK Forest Risk Commodities Act support</li>
+      <li>Japan Green Transformation (GX) readiness</li>
+      <li>Korea deforestation bill (in development)</li>
+      <li>Single dashboard, multiple regulation profiles</li>
+      <li>Auto-flag when new regulation applies to a shipment</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-compliance">Compliance</span></div>
+    <h3>Risk scoring engine <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>Per-plot deforestation risk score (0–100)</li>
+      <li>Based on proximity to forest edge, slope, protected zones</li>
+      <li>Red/amber/green flags on every DDS</li>
+      <li>Auditor-ready risk narrative auto-generated</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-compliance">Compliance</span></div>
+    <h3>DDS version control</h3>
+    <ul>
+      <li>Full history of every DDS revision</li>
+      <li>Diff view between versions</li>
+      <li>Rollback and re-submission workflow</li>
+      <li>EU customs amendment tracking</li>
+    </ul>
+  </div>
+</div>
+
+<p class="section-title">🤖 AI & Intelligence Layer</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-ai">AI</span></div>
+    <h3>Satellite deforestation detection <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>Automated change detection vs. 2020 baseline</li>
+      <li>Monthly polygon re-verification via Sentinel-2</li>
+      <li>Alert when plot boundary overlaps new clearing</li>
+      <li>Evidence image captured + timestamped to DDS</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-ai">AI</span></div>
+    <h3>AI compliance copilot <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>Chat interface: "Is this shipment EUDR-ready?"</li>
+      <li>Auto-fill DDS fields from uploaded documents</li>
+      <li>Translate field agent voice notes to structured data</li>
+      <li>Flag missing evidence before submission</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-ai">AI</span></div>
+    <h3>Yield & climate intelligence</h3>
+    <ul>
+      <li>Weather overlays per farm plot</li>
+      <li>Harvest prediction from NDVI satellite data</li>
+      <li>Drought / flood risk scoring per season</li>
+      <li>Climate risk included in investor ESG reports</li>
+    </ul>
+  </div>
+</div>
+
+<p class="section-title">🌍 Market & Supply Chain Expansion</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-market">Market</span></div>
+    <h3>Buyer-side portal <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>EU importers log in to verify supplier DDS</li>
+      <li>One-click DDS acceptance/rejection workflow</li>
+      <li>Buyer compliance dashboard across all suppliers</li>
+      <li>Reverse onboarding: buyer invites their suppliers</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-market">Market</span></div>
+    <h3>Multi-commodity expansion</h3>
+    <ul>
+      <li>EUDR also covers cocoa, soy, palm oil, cattle, rubber, wood</li>
+      <li>Reuse same compliance engine for new crops</li>
+      <li>Cocoa-specific entity models (Ghana, Côte d'Ivoire)</li>
+      <li>Shared farmer registry across commodities</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-market">Market</span></div>
+    <h3>Cooperative self-service app</h3>
+    <ul>
+      <li>Offline-first mobile app for field agents</li>
+      <li>GPS plot capture without internet</li>
+      <li>Sync on next connection</li>
+      <li>SMS-based farmer registration fallback</li>
+    </ul>
+  </div>
+</div>
+
+<p class="section-title">🔐 Trust & Verification Infrastructure</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-trust">Trust</span></div>
+    <h3>Trust Score™ <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>Composite score per exporter (0–1000)</li>
+      <li>Based on DDS history, audit flags, data completeness</li>
+      <li>Visible to EU buyers as supplier signal</li>
+      <li>Becomes a moat — exporters protect their score</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-trust">Trust</span></div>
+    <h3>Third-party audit integration</h3>
+    <ul>
+      <li>Rainforest Alliance / UTZ audit data import</li>
+      <li>4C Association verification linkage</li>
+      <li>ISO 14001 environmental cert storage</li>
+      <li>Auditor role with read-only portal access</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-trust">Trust</span></div>
+    <h3>Public QR traceability page</h3>
+    <ul>
+      <li>Consumer-facing "scan the bag" landing page</li>
+      <li>Farm origin map, harvest date, EUDR status</li>
+      <li>White-label for roasters and retailers</li>
+      <li>Premium upsell for brand-conscious buyers</li>
+    </ul>
+  </div>
+</div>
+
+<p class="section-title">💰 Business Model & Revenue Expansion</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-biz">Business</span></div>
+    <h3>Carbon credit monetisation <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>Track deforestation-free ha → carbon credits</li>
+      <li>Integrate with Verra / Gold Standard registries</li>
+      <li>Revenue share with compliant farmers</li>
+      <li>TerraBrew takes broker margin</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-biz">Business</span></div>
+    <h3>B2G national infrastructure</h3>
+    <ul>
+      <li>License platform to MARD (Vietnam agriculture ministry)</li>
+      <li>National deforestation monitoring dashboard</li>
+      <li>Country-level EUDR readiness reporting</li>
+      <li>Donor/development bank funded (GIZ, World Bank)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-biz">Business</span></div>
+    <h3>Compliance-as-a-service API</h3>
+    <ul>
+      <li>White-label API for banks, insurers, trading firms</li>
+      <li>Credit risk scoring based on EUDR status</li>
+      <li>Trade finance integration (letters of credit)</li>
+      <li>Per-API-call pricing on top of subscriptions</li>
+    </ul>
+  </div>
+</div>
+
+<p class="section-title">📊 Data & Analytics Layer</p>
+<div class="grid">
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-data">Data</span></div>
+    <h3>ESG reporting suite</h3>
+    <ul>
+      <li>CSRD-aligned sustainability report generation</li>
+      <li>Scope 3 emissions from supply chain data</li>
+      <li>Export to PDF, Excel, or direct to ESG platforms</li>
+      <li>Investor-grade data room for fundraising</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-data">Data</span></div>
+    <h3>Supply chain analytics dashboard</h3>
+    <ul>
+      <li>Origin heatmap of compliant vs at-risk plots</li>
+      <li>DDS approval rate trends over time</li>
+      <li>Bottleneck detection across 14-stage pipeline</li>
+      <li>Benchmarking vs. industry averages</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="cat-label cat-data">Data</span></div>
+    <h3>Farmer financial inclusion <span class="unique-badge">unique</span></h3>
+    <ul>
+      <li>EUDR compliance record as credit signal</li>
+      <li>Partner with microfinance / agri-lenders</li>
+      <li>Farmer "compliance passport" for loan applications</li>
+      <li>Opens fintech revenue stream</li>
+    </ul>
+  </div>
+</div>
