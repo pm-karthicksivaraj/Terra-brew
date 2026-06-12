@@ -1,0 +1,1145 @@
+     1→/// RBAC (Role-Based Access Control) constants for TerraBrew Coffee.
+     2→///
+     3→/// Defines all roles, entity types, access levels, modules, and the
+     4→/// complete permission matrix that determines what each combination of
+     5→/// entity type + role can access. This mirrors the web app's
+     6→/// module-config.ts exactly.
+     7→///
+     8→/// Access = min(entityTypeAccess, roleAccess)
+     9→/// - If either is 'hidden', the result is 'hidden'.
+    10→/// - If either is 'view' and the other is not 'hidden', the result is 'view'.
+    11→/// - If both are 'full', the result is 'full'.
+    12→
+    13→// ═══════════════════════════════════════════════════════════════════
+    14→// ENUMS
+    15→// ═══════════════════════════════════════════════════════════════════
+    16→
+    17→/// Roles within each tenant entity.
+    18→///
+    19→/// - super_admin:     Platform operator managing all tenants, price tickers, platform settings.
+    20→/// - tenant_admin:    Organization administrator — manages their org's users, settings, all modules.
+    21→/// - operations_manager: Oversees farm operations and processing.
+    22→/// - field_officer:   Collects data in the field, registers farmers.
+    23→/// - quality_controller: Manages inspections, QC, EUDR compliance.
+    24→/// - trader:          Handles marketplace, RFQ, trading, shipments.
+    25→/// - finance_manager: Manages billing, payments, financial reports.
+    26→/// - buyer:           External buyer with access to buyer portal and trade modules.
+    27→/// - viewer:          Read-only access to permitted modules.
+    28→enum AppRole {
+    29→  superAdmin('super_admin'),
+    30→  tenantAdmin('tenant_admin'),
+    31→  operationsManager('operations_manager'),
+    32→  fieldOfficer('field_officer'),
+    33→  qualityController('quality_controller'),
+    34→  trader('trader'),
+    35→  financeManager('finance_manager'),
+    36→  buyer('buyer'),
+    37→  viewer('viewer');
+    38→
+    39→  const AppRole(this.value);
+    40→
+    41→  /// String value matching the backend API.
+    42→  final String value;
+    43→
+    44→  /// Display label for the role.
+    45→  String get label {
+    46→    switch (this) {
+    47→      case AppRole.superAdmin:
+    48→        return 'Super Admin';
+    49→      case AppRole.tenantAdmin:
+    50→        return 'Administrator';
+    51→      case AppRole.operationsManager:
+    52→        return 'Operations Manager';
+    53→      case AppRole.fieldOfficer:
+    54→        return 'Field Officer';
+    55→      case AppRole.qualityController:
+    56→        return 'Quality Controller';
+    57→      case AppRole.trader:
+    58→        return 'Trader';
+    59→      case AppRole.financeManager:
+    60→        return 'Finance Manager';
+    61→      case AppRole.buyer:
+    62→        return 'Buyer';
+    63→      case AppRole.viewer:
+    64→        return 'Viewer';
+    65→    }
+    66→  }
+    67→
+    68→  /// Vietnamese label for the role.
+    69→  String get labelVi {
+    70→    switch (this) {
+    71→      case AppRole.superAdmin:
+    72→        return 'Siêu Quản trị';
+    73→      case AppRole.tenantAdmin:
+    74→        return 'Quản trị viên';
+    75→      case AppRole.operationsManager:
+    76→        return 'Quản lý vận hành';
+    77→      case AppRole.fieldOfficer:
+    78→        return 'Cán bộ hiện trường';
+    79→      case AppRole.qualityController:
+    80→        return 'Kiểm soát chất lượng';
+    81→      case AppRole.trader:
+    82→        return 'Thương nhân';
+    83→      case AppRole.financeManager:
+    84→        return 'Quản lý tài chính';
+    85→      case AppRole.buyer:
+    86→        return 'Người mua';
+    87→      case AppRole.viewer:
+    88→        return 'Người xem';
+    89→    }
+    90→  }
+    91→
+    92→  /// Find an AppRole from its string value.
+    93→  static AppRole fromValue(String value) {
+    94→    return AppRole.values.firstWhere(
+    95→      (role) => role.value == value,
+    96→      orElse: () => AppRole.viewer,
+    97→    );
+    98→  }
+    99→}
+   100→
+   101→/// Entity types in the TerraBrew platform.
+   102→enum EntityType {
+   103→  producer('producer'),
+   104→  aggregator('aggregator'),
+   105→  exporter('exporter'),
+   106→  importer('importer'),
+   107→  certificationBody('certification_body'),
+   108→  laboratory('laboratory');
+   109→
+   110→  const EntityType(this.value);
+   111→
+   112→  /// String value matching the backend API.
+   113→  final String value;
+   114→
+   115→  /// Display label for the entity type.
+   116→  String get label {
+   117→    switch (this) {
+   118→      case EntityType.producer:
+   119→        return 'Coffee Producer';
+   120→      case EntityType.aggregator:
+   121→        return 'Aggregator / Processor';
+   122→      case EntityType.exporter:
+   123→        return 'Exporter';
+   124→      case EntityType.importer:
+   125→        return 'Importer';
+   126→      case EntityType.certificationBody:
+   127→        return 'Certification Body';
+   128→      case EntityType.laboratory:
+   129→        return 'Laboratory';
+   130→    }
+   131→  }
+   132→
+   133→  /// Vietnamese label for the entity type.
+   134→  String get labelVi {
+   135→    switch (this) {
+   136→      case EntityType.producer:
+   137→        return 'Nhà sản xuất cà phê';
+   138→      case EntityType.aggregator:
+   139→        return 'Tập hợp / Chế biến';
+   140→      case EntityType.exporter:
+   141→        return 'Nhà xuất khẩu';
+   142→      case EntityType.importer:
+   143→        return 'Nhà nhập khẩu';
+   144→      case EntityType.certificationBody:
+   145→        return 'Tổ chức chứng nhận';
+   146→      case EntityType.laboratory:
+   147→        return 'Phòng thí nghiệm';
+   148→    }
+   149→  }
+   150→
+   151→  /// Icon emoji for the entity type.
+   152→  String get icon {
+   153→    switch (this) {
+   154→      case EntityType.producer:
+   155→        return '🏭';
+   156→      case EntityType.aggregator:
+   157→        return '📦';
+   158→      case EntityType.exporter:
+   159→        return '🚢';
+   160→      case EntityType.importer:
+   161→        return '🏛️';
+   162→      case EntityType.certificationBody:
+   163→        return '✅';
+   164→      case EntityType.laboratory:
+   165→        return '🔬';
+   166→    }
+   167→  }
+   168→
+   169→  /// Find an EntityType from its string value.
+   170→  static EntityType fromValue(String value) {
+   171→    return EntityType.values.firstWhere(
+   172→      (type) => type.value == value,
+   173→      orElse: () => EntityType.producer,
+   174→    );
+   175→  }
+   176→}
+   177→
+   178→/// Access levels for modules.
+   179→///
+   180→/// The ordering matters: hidden < view < full.
+   181→enum AccessLevel {
+   182→  hidden('hidden', 0),
+   183→  view('view', 1),
+   184→  full('full', 2);
+   185→
+   186→  const AccessLevel(this.value, this.priority);
+   187→
+   188→  /// String value matching the backend API.
+   189→  final String value;
+   190→
+   191→  /// Numeric priority for comparison (higher = more access).
+   192→  final int priority;
+   193→
+   194→  /// Find an AccessLevel from its string value.
+   195→  static AccessLevel fromValue(String value) {
+   196→    return AccessLevel.values.firstWhere(
+   197→      (level) => level.value == value,
+   198→      orElse: () => AccessLevel.hidden,
+   199→    );
+   200→  }
+   201→}
+   202→
+   203→/// Navigation module categories matching the web app sidebar groups.
+   204→enum ModuleCategory {
+   205→  overview('overview', 'Overview', 'Tổng quan', true, 1),
+   206→  farm('farm', 'Farm Operations', 'Vận hành nông trại', true, 2),
+   207→  processing('processing', 'Processing & Quality', 'Chế biến & Chất lượng', false, 3),
+   208→  compliance('compliance', 'EUDR Compliance & Certification', 'Tuân thủ EUDR & Chứng nhận', false, 4),
+   209→  trade('trade', 'Trade & Logistics', 'Thương mại & Vận tải', false, 5),
+   210→  finance('finance', 'Finance & Admin', 'Tài chính & Quản trị', false, 6),
+   211→  system('system', 'System & Integrations', 'Hệ thống & Tích hợp', false, 7);
+   212→
+   213→  const ModuleCategory(
+   214→    this.id,
+   215→    this.label,
+   216→    this.labelVi,
+   217→    this.defaultOpen,
+   218→    this.order,
+   219→  );
+   220→
+   221→  final String id;
+   222→  final String label;
+   223→  final String labelVi;
+   224→  final bool defaultOpen;
+   225→  final int order;
+   226→}
+   227→
+   228→/// All 32 application modules matching the web app sidebar.
+   229→///
+   230→/// Each module has a unique slug, display labels, route path,
+   231→/// icon name, accent color, category, and sort order within its group.
+   232→enum AppModule {
+   233→  // ── Overview ────────────────────────────────────────────────────
+   234→  dashboard('dashboard', 'Dashboard', 'Bảng điều khiển', '/dashboard', 'LayoutDashboard', '#059669', ModuleCategory.overview, 1),
+   235→  analytics('analytics', 'Analytics & Reports', 'Phân tích & Báo cáo', '/analytics', 'BarChart3', '#2563eb', ModuleCategory.overview, 2),
+   236→
+   237→  // ── Farm Operations ─────────────────────────────────────────────
+   238→  farmers('farmers', 'Farmers', 'Nông dân', '/farmers', 'Users', '#059669', ModuleCategory.farm, 1),
+   239→  farmlands('farmlands', 'Farm Lands', 'Đất nông trại', '/farmlands', 'MapPin', '#d97706', ModuleCategory.farm, 2),
+   240→  cultivations('cultivations', 'Cultivations', 'Canh tác', '/cultivations', 'Sprout', '#2563eb', ModuleCategory.farm, 3),
+   241→  nurseries('nurseries', 'Nurseries', 'Vườn ươm', '/nurseries', 'TreePine', '#7c3aed', ModuleCategory.farm, 4),
+   242→  landPreparations('land-preparations', 'Land Preparation', 'Chuẩn bị đất', '/land-preparations', 'Tractor', '#0891b2', ModuleCategory.farm, 5),
+   243→  cropMonitorings('crop-monitorings', 'Crop Monitoring', 'Giám sát cây trồng', '/crop-monitorings', 'Activity', '#db2777', ModuleCategory.farm, 6),
+   244→  fertilizerApps('fertilizer-apps', 'Fertilizer Management', 'Quản lý phân bón', '/fertilizer-apps', 'FlaskConical', '#65a30d', ModuleCategory.farm, 7),
+   245→  pestDiseaseMgmts('pest-disease-mgmts', 'Pest & Disease', 'Sâu bệnh', '/pest-disease', 'Shield', '#dc2626', ModuleCategory.farm, 8),
+   246→  harvestTraceabilities('harvest-traceabilities', 'Harvest Traceability', 'Truy xuất thu hoạch', '/harvest', 'Wheat', '#b45309', ModuleCategory.farm, 9),
+   247→  climateIntelligence('climate-intelligence', 'Climate Intelligence', 'Khí hậu thông minh', '/climate-intelligence', 'Activity', '#00a3e0', ModuleCategory.farm, 10),
+   248→
+   249→  // ── Processing & Quality ────────────────────────────────────────
+   250→  procurement('procurement', 'Procurement', 'Thu mua', '/procurement', 'Truck', '#4f46e5', ModuleCategory.processing, 1),
+   251→  processing('processing', 'Processing Pipeline', 'Dây chuyền chế biến', '/processing', 'Factory', '#0d9488', ModuleCategory.processing, 2),
+   252→  coffeeInspections('coffee-inspections', 'Coffee Inspection', 'Kiểm tra cà phê', '/coffee-inspections', 'ClipboardCheck', '#9333ea', ModuleCategory.processing, 3),
+   253→  qcVerifications('qc-verifications', 'QC Verifications', 'Kiểm định CL', '/qc-verifications', 'CheckCircle', '#059669', ModuleCategory.processing, 4),
+   254→
+   255→  // ── EUDR Compliance & Certification ─────────────────────────────
+   256→  eudrCompliance('eudr-compliance', 'EUDR Records', 'Hồ sơ EUDR', '/eudr-compliance', 'Shield', '#dc2626', ModuleCategory.compliance, 1),
+   257→  certAssessments('cert-assessments', 'Certification Assessment', 'Đánh giá chứng nhận', '/cert-assessments', 'Award', '#be185d', ModuleCategory.compliance, 2),
+   258→  deforestation('deforestation', 'Deforestation Monitoring', 'Giám sát phá rừng', '/deforestation', 'TreePine', '#059669', ModuleCategory.compliance, 3),
+   259→  traceJourney('trace-journey', 'EUDR Compliance', 'Tuân thủ EUDR', '/traceability', 'Route', '#7c3aed', ModuleCategory.compliance, 4),
+   260→  carbonTracking('carbon-tracking', 'Carbon Tracking', 'Theo dõi Carbon', '/carbon-tracking', 'Activity', '#059669', ModuleCategory.compliance, 5),
+   261→  trustScore('trust-score', 'Trust Score™', 'Trust Score™', '/trust-score', 'Shield', '#ffc627', ModuleCategory.compliance, 6),
+   262→  esgReporting('esg-reporting', 'ESG Reporting', 'Báo cáo ESG', '/esg-reporting', 'BarChart3', '#6366f1', ModuleCategory.compliance, 7),
+   263→
+   264→  // ── Trade & Logistics ───────────────────────────────────────────
+   265→  marketplace('marketplace', 'Marketplace', 'Thị trường', '/marketplace', 'Store', '#ea580c', ModuleCategory.trade, 1),
+   266→  rfq('rfq', 'RFQ Management', 'Quản lý RFQ', '/rfq', 'FileQuestion', '#7c3aed', ModuleCategory.trade, 2),
+   267→  inspections('inspections', 'Inspection Service', 'Dịch vụ kiểm tra', '/inspections', 'ClipboardCheck', '#9333ea', ModuleCategory.trade, 3),
+   268→  productMonitoring('product-monitoring', 'Product Monitoring', 'Giám sát sản phẩm', '/product-monitoring', 'Activity', '#0d9488', ModuleCategory.trade, 4),
+   269→  smartContracts('smart-contracts', 'Smart Contracts', 'Hợp đồng thông minh', '/smart-contracts', 'FileText', '#0369a1', ModuleCategory.trade, 5),
+   270→  tradingDesk('trading-desk', 'Trading Desk', 'Sàn giao dịch', '/trading-desk', 'TrendingUp', '#0d9488', ModuleCategory.trade, 6),
+   271→  shipments('shipments', 'Shipments', 'Vận chuyển', '/shipments', 'Ship', '#2563eb', ModuleCategory.trade, 7),
+   272→  logistics('logistics', 'Logistics Booking', 'Đặt logistics', '/logistics', 'Container', '#4f46e5', ModuleCategory.trade, 8),
+   273→  exportDocs('export-docs', 'Export Documents', 'Tài liệu xuất khẩu', '/export-docs', 'FileOutput', '#0891b2', ModuleCategory.trade, 9),
+   274→  buyers('buyers', 'Buyers', 'Người mua', '/buyers', 'UserCheck', '#65a30d', ModuleCategory.trade, 10),
+   275→  buyerPortal('buyer-portal', 'Buyer Portal', 'Cổng người mua', '/buyer-portal', 'UserCheck', '#00a3e0', ModuleCategory.trade, 11),
+   276→
+   277→  // ── Finance & Admin ─────────────────────────────────────────────
+   278→  billing('billing', 'Billing', 'Thanh toán', '/billing', 'CreditCard', '#be185d', ModuleCategory.finance, 1),
+   279→  users('users', 'Users', 'Người dùng', '/users', 'UserCog', '#6366f1', ModuleCategory.finance, 2),
+   280→
+   281→  // ── System & Integrations ───────────────────────────────────────
+   282→  iotSensors('iot-sensors', 'IoT Sensors', 'Cảm biến IoT', '/iot-sensors', 'Radio', '#0891b2', ModuleCategory.system, 1),
+   283→  blockchain('blockchain', 'Blockchain', 'Blockchain', '/blockchain', 'Link', '#7c3aed', ModuleCategory.system, 2),
+   284→  apiSettings('api-settings', 'API & Webhooks', 'API & Webhooks', '/api-settings', 'Webhook', '#6366f1', ModuleCategory.system, 3);
+   285→
+   286→  const AppModule(
+   287→    this.slug,
+   288→    this.label,
+   289→    this.labelVi,
+   290→    this.href,
+   291→    this.iconName,
+   292→    this.colorHex,
+   293→    this.category,
+   294→    this.orderInGroup,
+   295→  );
+   296→
+   297→  /// Unique slug identifier matching the Module table in the database.
+   298→  final String slug;
+   299→
+   300→  /// English display label.
+   301→  final String label;
+   302→
+   303→  /// Vietnamese display label.
+   304→  final String labelVi;
+   305→
+   306→  /// Route path for navigation.
+   307→  final String href;
+   308→
+   309→  /// Lucide icon name (for reference; Flutter uses Material icons).
+   310→  final String iconName;
+   311→
+   312→  /// Hex color string for the module accent.
+   313→  final String colorHex;
+   314→
+   315→  /// Navigation group this module belongs to.
+   316→  final ModuleCategory category;
+   317→
+   318→  /// Sort order within the category group.
+   319→  final int orderInGroup;
+   320→
+   321→  /// Find an AppModule from its slug string.
+   322→  static AppModule fromSlug(String slug) {
+   323→    return AppModule.values.firstWhere(
+   324→      (mod) => mod.slug == slug,
+   325→      orElse: () => AppModule.dashboard,
+   326→    );
+   327→  }
+   328→}
+   329→
+   330→// ═══════════════════════════════════════════════════════════════════
+   331→// PERMISSION MATRIX
+   332→// ═══════════════════════════════════════════════════════════════════
+   333→
+   334→/// Entity type access matrix: EntityType → AppModule → AccessLevel.
+   335→///
+   336→/// Defines what each entity type can see regardless of role.
+   337→/// This is the first gate in the access check.
+   338→const Map<EntityType, Map<AppModule, AccessLevel>> entityModuleAccess = {
+   339→  EntityType.producer: {
+   340→    // Overview
+   341→    AppModule.dashboard: AccessLevel.full,
+   342→    AppModule.analytics: AccessLevel.full,
+   343→    // Farm
+   344→    AppModule.farmers: AccessLevel.full,
+   345→    AppModule.farmlands: AccessLevel.full,
+   346→    AppModule.cultivations: AccessLevel.full,
+   347→    AppModule.nurseries: AccessLevel.full,
+   348→    AppModule.landPreparations: AccessLevel.full,
+   349→    AppModule.cropMonitorings: AccessLevel.full,
+   350→    AppModule.fertilizerApps: AccessLevel.full,
+   351→    AppModule.pestDiseaseMgmts: AccessLevel.full,
+   352→    AppModule.harvestTraceabilities: AccessLevel.full,
+   353→    AppModule.climateIntelligence: AccessLevel.full,
+   354→    // Processing
+   355→    AppModule.procurement: AccessLevel.full,
+   356→    AppModule.processing: AccessLevel.hidden,
+   357→    AppModule.coffeeInspections: AccessLevel.view,
+   358→    AppModule.qcVerifications: AccessLevel.hidden,
+   359→    // Compliance
+   360→    AppModule.eudrCompliance: AccessLevel.full,
+   361→    AppModule.certAssessments: AccessLevel.full,
+   362→    AppModule.deforestation: AccessLevel.full,
+   363→    AppModule.traceJourney: AccessLevel.full,
+   364→    AppModule.carbonTracking: AccessLevel.full,
+   365→    AppModule.trustScore: AccessLevel.full,
+   366→    AppModule.esgReporting: AccessLevel.full,
+   367→    // Trade
+   368→    AppModule.marketplace: AccessLevel.full,
+   369→    AppModule.rfq: AccessLevel.view,
+   370→    AppModule.inspections: AccessLevel.view,
+   371→    AppModule.productMonitoring: AccessLevel.view,
+   372→    AppModule.smartContracts: AccessLevel.hidden,
+   373→    AppModule.tradingDesk: AccessLevel.hidden,
+   374→    AppModule.shipments: AccessLevel.hidden,
+   375→    AppModule.logistics: AccessLevel.hidden,
+   376→    AppModule.exportDocs: AccessLevel.hidden,
+   377→    AppModule.buyers: AccessLevel.hidden,
+   378→    AppModule.buyerPortal: AccessLevel.hidden,
+   379→    // Finance
+   380→    AppModule.billing: AccessLevel.full,
+   381→    AppModule.users: AccessLevel.full,
+   382→    // System
+   383→    AppModule.iotSensors: AccessLevel.full,
+   384→    AppModule.blockchain: AccessLevel.full,
+   385→    AppModule.apiSettings: AccessLevel.full,
+   386→  },
+   387→
+   388→  EntityType.aggregator: {
+   389→    // Overview
+   390→    AppModule.dashboard: AccessLevel.full,
+   391→    AppModule.analytics: AccessLevel.full,
+   392→    // Farm
+   393→    AppModule.farmers: AccessLevel.hidden,
+   394→    AppModule.farmlands: AccessLevel.hidden,
+   395→    AppModule.cultivations: AccessLevel.hidden,
+   396→    AppModule.nurseries: AccessLevel.hidden,
+   397→    AppModule.landPreparations: AccessLevel.hidden,
+   398→    AppModule.cropMonitorings: AccessLevel.hidden,
+   399→    AppModule.fertilizerApps: AccessLevel.hidden,
+   400→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   401→    AppModule.harvestTraceabilities: AccessLevel.view,
+   402→    AppModule.climateIntelligence: AccessLevel.view,
+   403→    // Processing
+   404→    AppModule.procurement: AccessLevel.full,
+   405→    AppModule.processing: AccessLevel.full,
+   406→    AppModule.coffeeInspections: AccessLevel.view,
+   407→    AppModule.qcVerifications: AccessLevel.full,
+   408→    // Compliance
+   409→    AppModule.eudrCompliance: AccessLevel.full,
+   410→    AppModule.certAssessments: AccessLevel.full,
+   411→    AppModule.deforestation: AccessLevel.full,
+   412→    AppModule.traceJourney: AccessLevel.full,
+   413→    AppModule.carbonTracking: AccessLevel.full,
+   414→    AppModule.trustScore: AccessLevel.full,
+   415→    AppModule.esgReporting: AccessLevel.full,
+   416→    // Trade
+   417→    AppModule.marketplace: AccessLevel.full,
+   418→    AppModule.rfq: AccessLevel.full,
+   419→    AppModule.inspections: AccessLevel.full,
+   420→    AppModule.productMonitoring: AccessLevel.full,
+   421→    AppModule.smartContracts: AccessLevel.full,
+   422→    AppModule.tradingDesk: AccessLevel.full,
+   423→    AppModule.shipments: AccessLevel.full,
+   424→    AppModule.logistics: AccessLevel.full,
+   425→    AppModule.exportDocs: AccessLevel.hidden,
+   426→    AppModule.buyers: AccessLevel.full,
+   427→    AppModule.buyerPortal: AccessLevel.view,
+   428→    // Finance
+   429→    AppModule.billing: AccessLevel.full,
+   430→    AppModule.users: AccessLevel.full,
+   431→    // System
+   432→    AppModule.iotSensors: AccessLevel.full,
+   433→    AppModule.blockchain: AccessLevel.full,
+   434→    AppModule.apiSettings: AccessLevel.full,
+   435→  },
+   436→
+   437→  EntityType.exporter: {
+   438→    // Overview
+   439→    AppModule.dashboard: AccessLevel.full,
+   440→    AppModule.analytics: AccessLevel.full,
+   441→    // Farm
+   442→    AppModule.farmers: AccessLevel.hidden,
+   443→    AppModule.farmlands: AccessLevel.hidden,
+   444→    AppModule.cultivations: AccessLevel.hidden,
+   445→    AppModule.nurseries: AccessLevel.hidden,
+   446→    AppModule.landPreparations: AccessLevel.hidden,
+   447→    AppModule.cropMonitorings: AccessLevel.hidden,
+   448→    AppModule.fertilizerApps: AccessLevel.hidden,
+   449→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   450→    AppModule.harvestTraceabilities: AccessLevel.hidden,
+   451→    AppModule.climateIntelligence: AccessLevel.hidden,
+   452→    // Processing
+   453→    AppModule.procurement: AccessLevel.hidden,
+   454→    AppModule.processing: AccessLevel.hidden,
+   455→    AppModule.coffeeInspections: AccessLevel.hidden,
+   456→    AppModule.qcVerifications: AccessLevel.view,
+   457→    // Compliance
+   458→    AppModule.eudrCompliance: AccessLevel.full,
+   459→    AppModule.certAssessments: AccessLevel.view,
+   460→    AppModule.deforestation: AccessLevel.view,
+   461→    AppModule.traceJourney: AccessLevel.full,
+   462→    AppModule.carbonTracking: AccessLevel.full,
+   463→    AppModule.trustScore: AccessLevel.full,
+   464→    AppModule.esgReporting: AccessLevel.full,
+   465→    // Trade
+   466→    AppModule.marketplace: AccessLevel.full,
+   467→    AppModule.rfq: AccessLevel.full,
+   468→    AppModule.inspections: AccessLevel.full,
+   469→    AppModule.productMonitoring: AccessLevel.full,
+   470→    AppModule.smartContracts: AccessLevel.full,
+   471→    AppModule.tradingDesk: AccessLevel.full,
+   472→    AppModule.shipments: AccessLevel.full,
+   473→    AppModule.logistics: AccessLevel.full,
+   474→    AppModule.exportDocs: AccessLevel.full,
+   475→    AppModule.buyers: AccessLevel.full,
+   476→    AppModule.buyerPortal: AccessLevel.view,
+   477→    // Finance
+   478→    AppModule.billing: AccessLevel.full,
+   479→    AppModule.users: AccessLevel.full,
+   480→    // System
+   481→    AppModule.iotSensors: AccessLevel.hidden,
+   482→    AppModule.blockchain: AccessLevel.full,
+   483→    AppModule.apiSettings: AccessLevel.full,
+   484→  },
+   485→
+   486→  EntityType.importer: {
+   487→    // Overview
+   488→    AppModule.dashboard: AccessLevel.full,
+   489→    AppModule.analytics: AccessLevel.full,
+   490→    // Farm
+   491→    AppModule.farmers: AccessLevel.hidden,
+   492→    AppModule.farmlands: AccessLevel.hidden,
+   493→    AppModule.cultivations: AccessLevel.hidden,
+   494→    AppModule.nurseries: AccessLevel.hidden,
+   495→    AppModule.landPreparations: AccessLevel.hidden,
+   496→    AppModule.cropMonitorings: AccessLevel.hidden,
+   497→    AppModule.fertilizerApps: AccessLevel.hidden,
+   498→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   499→    AppModule.harvestTraceabilities: AccessLevel.hidden,
+   500→    AppModule.climateIntelligence: AccessLevel.hidden,
+   501→    // Processing
+   502→    AppModule.procurement: AccessLevel.hidden,
+   503→    AppModule.processing: AccessLevel.hidden,
+   504→    AppModule.coffeeInspections: AccessLevel.hidden,
+   505→    AppModule.qcVerifications: AccessLevel.full,
+   506→    // Compliance
+   507→    AppModule.eudrCompliance: AccessLevel.full,
+   508→    AppModule.certAssessments: AccessLevel.view,
+   509→    AppModule.deforestation: AccessLevel.hidden,
+   510→    AppModule.traceJourney: AccessLevel.full,
+   511→    AppModule.carbonTracking: AccessLevel.view,
+   512→    AppModule.trustScore: AccessLevel.full,
+   513→    AppModule.esgReporting: AccessLevel.full,
+   514→    // Trade
+   515→    AppModule.marketplace: AccessLevel.full,
+   516→    AppModule.rfq: AccessLevel.full,
+   517→    AppModule.inspections: AccessLevel.full,
+   518→    AppModule.productMonitoring: AccessLevel.full,
+   519→    AppModule.smartContracts: AccessLevel.full,
+   520→    AppModule.tradingDesk: AccessLevel.full,
+   521→    AppModule.shipments: AccessLevel.full,
+   522→    AppModule.logistics: AccessLevel.full,
+   523→    AppModule.exportDocs: AccessLevel.hidden,
+   524→    AppModule.buyers: AccessLevel.full,
+   525→    AppModule.buyerPortal: AccessLevel.full,
+   526→    // Finance
+   527→    AppModule.billing: AccessLevel.full,
+   528→    AppModule.users: AccessLevel.full,
+   529→    // System
+   530→    AppModule.iotSensors: AccessLevel.hidden,
+   531→    AppModule.blockchain: AccessLevel.full,
+   532→    AppModule.apiSettings: AccessLevel.full,
+   533→  },
+   534→
+   535→  EntityType.certificationBody: {
+   536→    // Overview
+   537→    AppModule.dashboard: AccessLevel.full,
+   538→    AppModule.analytics: AccessLevel.view,
+   539→    // Farm
+   540→    AppModule.farmers: AccessLevel.view,
+   541→    AppModule.farmlands: AccessLevel.view,
+   542→    AppModule.cultivations: AccessLevel.hidden,
+   543→    AppModule.nurseries: AccessLevel.hidden,
+   544→    AppModule.landPreparations: AccessLevel.hidden,
+   545→    AppModule.cropMonitorings: AccessLevel.hidden,
+   546→    AppModule.fertilizerApps: AccessLevel.hidden,
+   547→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   548→    AppModule.harvestTraceabilities: AccessLevel.hidden,
+   549→    AppModule.climateIntelligence: AccessLevel.hidden,
+   550→    // Processing
+   551→    AppModule.procurement: AccessLevel.hidden,
+   552→    AppModule.processing: AccessLevel.hidden,
+   553→    AppModule.coffeeInspections: AccessLevel.full,
+   554→    AppModule.qcVerifications: AccessLevel.hidden,
+   555→    // Compliance
+   556→    AppModule.eudrCompliance: AccessLevel.full,
+   557→    AppModule.certAssessments: AccessLevel.full,
+   558→    AppModule.deforestation: AccessLevel.full,
+   559→    AppModule.traceJourney: AccessLevel.view,
+   560→    AppModule.carbonTracking: AccessLevel.view,
+   561→    AppModule.trustScore: AccessLevel.view,
+   562→    AppModule.esgReporting: AccessLevel.full,
+   563→    // Trade
+   564→    AppModule.marketplace: AccessLevel.hidden,
+   565→    AppModule.rfq: AccessLevel.hidden,
+   566→    AppModule.inspections: AccessLevel.full,
+   567→    AppModule.productMonitoring: AccessLevel.hidden,
+   568→    AppModule.smartContracts: AccessLevel.hidden,
+   569→    AppModule.tradingDesk: AccessLevel.hidden,
+   570→    AppModule.shipments: AccessLevel.hidden,
+   571→    AppModule.logistics: AccessLevel.hidden,
+   572→    AppModule.exportDocs: AccessLevel.hidden,
+   573→    AppModule.buyers: AccessLevel.hidden,
+   574→    AppModule.buyerPortal: AccessLevel.view,
+   575→    // Finance
+   576→    AppModule.billing: AccessLevel.full,
+   577→    AppModule.users: AccessLevel.full,
+   578→    // System
+   579→    AppModule.iotSensors: AccessLevel.hidden,
+   580→    AppModule.blockchain: AccessLevel.hidden,
+   581→    AppModule.apiSettings: AccessLevel.hidden,
+   582→  },
+   583→
+   584→  EntityType.laboratory: {
+   585→    // Overview
+   586→    AppModule.dashboard: AccessLevel.full,
+   587→    AppModule.analytics: AccessLevel.view,
+   588→    // Farm
+   589→    AppModule.farmers: AccessLevel.hidden,
+   590→    AppModule.farmlands: AccessLevel.hidden,
+   591→    AppModule.cultivations: AccessLevel.hidden,
+   592→    AppModule.nurseries: AccessLevel.hidden,
+   593→    AppModule.landPreparations: AccessLevel.hidden,
+   594→    AppModule.cropMonitorings: AccessLevel.hidden,
+   595→    AppModule.fertilizerApps: AccessLevel.hidden,
+   596→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   597→    AppModule.harvestTraceabilities: AccessLevel.hidden,
+   598→    AppModule.climateIntelligence: AccessLevel.hidden,
+   599→    // Processing
+   600→    AppModule.procurement: AccessLevel.hidden,
+   601→    AppModule.processing: AccessLevel.hidden,
+   602→    AppModule.coffeeInspections: AccessLevel.full,
+   603→    AppModule.qcVerifications: AccessLevel.full,
+   604→    // Compliance
+   605→    AppModule.eudrCompliance: AccessLevel.hidden,
+   606→    AppModule.certAssessments: AccessLevel.hidden,
+   607→    AppModule.deforestation: AccessLevel.hidden,
+   608→    AppModule.traceJourney: AccessLevel.hidden,
+   609→    AppModule.carbonTracking: AccessLevel.hidden,
+   610→    AppModule.trustScore: AccessLevel.hidden,
+   611→    AppModule.esgReporting: AccessLevel.hidden,
+   612→    // Trade
+   613→    AppModule.marketplace: AccessLevel.hidden,
+   614→    AppModule.rfq: AccessLevel.hidden,
+   615→    AppModule.inspections: AccessLevel.full,
+   616→    AppModule.productMonitoring: AccessLevel.hidden,
+   617→    AppModule.smartContracts: AccessLevel.hidden,
+   618→    AppModule.tradingDesk: AccessLevel.hidden,
+   619→    AppModule.shipments: AccessLevel.hidden,
+   620→    AppModule.logistics: AccessLevel.hidden,
+   621→    AppModule.exportDocs: AccessLevel.hidden,
+   622→    AppModule.buyers: AccessLevel.hidden,
+   623→    AppModule.buyerPortal: AccessLevel.hidden,
+   624→    // Finance
+   625→    AppModule.billing: AccessLevel.full,
+   626→    AppModule.users: AccessLevel.full,
+   627→    // System
+   628→    AppModule.iotSensors: AccessLevel.hidden,
+   629→    AppModule.blockchain: AccessLevel.hidden,
+   630→    AppModule.apiSettings: AccessLevel.hidden,
+   631→  },
+   632→};
+   633→
+   634→/// Role access matrix: AppRole → AppModule → AccessLevel.
+   635→///
+   636→/// Defines what each role can see regardless of entity type.
+   637→/// This is the second gate in the access check.
+   638→const Map<AppRole, Map<AppModule, AccessLevel>> roleModuleAccess = {
+   639→  AppRole.tenantAdmin: {
+   640→    // Overview
+   641→    AppModule.dashboard: AccessLevel.full,
+   642→    AppModule.analytics: AccessLevel.full,
+   643→    // Farm
+   644→    AppModule.farmers: AccessLevel.full,
+   645→    AppModule.farmlands: AccessLevel.full,
+   646→    AppModule.cultivations: AccessLevel.full,
+   647→    AppModule.nurseries: AccessLevel.full,
+   648→    AppModule.landPreparations: AccessLevel.full,
+   649→    AppModule.cropMonitorings: AccessLevel.full,
+   650→    AppModule.fertilizerApps: AccessLevel.full,
+   651→    AppModule.pestDiseaseMgmts: AccessLevel.full,
+   652→    AppModule.harvestTraceabilities: AccessLevel.full,
+   653→    AppModule.climateIntelligence: AccessLevel.full,
+   654→    // Processing
+   655→    AppModule.procurement: AccessLevel.full,
+   656→    AppModule.processing: AccessLevel.full,
+   657→    AppModule.coffeeInspections: AccessLevel.full,
+   658→    AppModule.qcVerifications: AccessLevel.full,
+   659→    // Compliance
+   660→    AppModule.eudrCompliance: AccessLevel.full,
+   661→    AppModule.certAssessments: AccessLevel.full,
+   662→    AppModule.deforestation: AccessLevel.full,
+   663→    AppModule.traceJourney: AccessLevel.full,
+   664→    AppModule.carbonTracking: AccessLevel.full,
+   665→    AppModule.trustScore: AccessLevel.full,
+   666→    AppModule.esgReporting: AccessLevel.full,
+   667→    // Trade
+   668→    AppModule.marketplace: AccessLevel.full,
+   669→    AppModule.rfq: AccessLevel.full,
+   670→    AppModule.inspections: AccessLevel.full,
+   671→    AppModule.productMonitoring: AccessLevel.full,
+   672→    AppModule.smartContracts: AccessLevel.full,
+   673→    AppModule.tradingDesk: AccessLevel.full,
+   674→    AppModule.shipments: AccessLevel.full,
+   675→    AppModule.logistics: AccessLevel.full,
+   676→    AppModule.exportDocs: AccessLevel.full,
+   677→    AppModule.buyers: AccessLevel.full,
+   678→    AppModule.buyerPortal: AccessLevel.full,
+   679→    // Finance
+   680→    AppModule.billing: AccessLevel.full,
+   681→    AppModule.users: AccessLevel.full,
+   682→    // System
+   683→    AppModule.iotSensors: AccessLevel.full,
+   684→    AppModule.blockchain: AccessLevel.full,
+   685→    AppModule.apiSettings: AccessLevel.full,
+   686→  },
+   687→
+   688→  AppRole.operationsManager: {
+   689→    // Overview
+   690→    AppModule.dashboard: AccessLevel.full,
+   691→    AppModule.analytics: AccessLevel.view,
+   692→    // Farm
+   693→    AppModule.farmers: AccessLevel.full,
+   694→    AppModule.farmlands: AccessLevel.full,
+   695→    AppModule.cultivations: AccessLevel.full,
+   696→    AppModule.nurseries: AccessLevel.full,
+   697→    AppModule.landPreparations: AccessLevel.full,
+   698→    AppModule.cropMonitorings: AccessLevel.full,
+   699→    AppModule.fertilizerApps: AccessLevel.full,
+   700→    AppModule.pestDiseaseMgmts: AccessLevel.full,
+   701→    AppModule.harvestTraceabilities: AccessLevel.full,
+   702→    AppModule.climateIntelligence: AccessLevel.full,
+   703→    // Processing
+   704→    AppModule.procurement: AccessLevel.full,
+   705→    AppModule.processing: AccessLevel.full,
+   706→    AppModule.coffeeInspections: AccessLevel.view,
+   707→    AppModule.qcVerifications: AccessLevel.view,
+   708→    // Compliance
+   709→    AppModule.eudrCompliance: AccessLevel.view,
+   710→    AppModule.certAssessments: AccessLevel.view,
+   711→    AppModule.deforestation: AccessLevel.view,
+   712→    AppModule.traceJourney: AccessLevel.full,
+   713→    AppModule.carbonTracking: AccessLevel.view,
+   714→    AppModule.trustScore: AccessLevel.view,
+   715→    AppModule.esgReporting: AccessLevel.view,
+   716→    // Trade
+   717→    AppModule.marketplace: AccessLevel.view,
+   718→    AppModule.rfq: AccessLevel.view,
+   719→    AppModule.inspections: AccessLevel.view,
+   720→    AppModule.productMonitoring: AccessLevel.full,
+   721→    AppModule.smartContracts: AccessLevel.view,
+   722→    AppModule.tradingDesk: AccessLevel.view,
+   723→    AppModule.shipments: AccessLevel.full,
+   724→    AppModule.logistics: AccessLevel.full,
+   725→    AppModule.exportDocs: AccessLevel.view,
+   726→    AppModule.buyers: AccessLevel.view,
+   727→    AppModule.buyerPortal: AccessLevel.hidden,
+   728→    // Finance
+   729→    AppModule.billing: AccessLevel.hidden,
+   730→    AppModule.users: AccessLevel.hidden,
+   731→    // System
+   732→    AppModule.iotSensors: AccessLevel.full,
+   733→    AppModule.blockchain: AccessLevel.view,
+   734→    AppModule.apiSettings: AccessLevel.hidden,
+   735→  },
+   736→
+   737→  AppRole.fieldOfficer: {
+   738→    // Overview
+   739→    AppModule.dashboard: AccessLevel.full,
+   740→    AppModule.analytics: AccessLevel.hidden,
+   741→    // Farm
+   742→    AppModule.farmers: AccessLevel.full,
+   743→    AppModule.farmlands: AccessLevel.full,
+   744→    AppModule.cultivations: AccessLevel.full,
+   745→    AppModule.nurseries: AccessLevel.full,
+   746→    AppModule.landPreparations: AccessLevel.full,
+   747→    AppModule.cropMonitorings: AccessLevel.full,
+   748→    AppModule.fertilizerApps: AccessLevel.full,
+   749→    AppModule.pestDiseaseMgmts: AccessLevel.full,
+   750→    AppModule.harvestTraceabilities: AccessLevel.full,
+   751→    AppModule.climateIntelligence: AccessLevel.full,
+   752→    // Processing
+   753→    AppModule.procurement: AccessLevel.view,
+   754→    AppModule.processing: AccessLevel.hidden,
+   755→    AppModule.coffeeInspections: AccessLevel.hidden,
+   756→    AppModule.qcVerifications: AccessLevel.hidden,
+   757→    // Compliance
+   758→    AppModule.eudrCompliance: AccessLevel.hidden,
+   759→    AppModule.certAssessments: AccessLevel.hidden,
+   760→    AppModule.deforestation: AccessLevel.hidden,
+   761→    AppModule.traceJourney: AccessLevel.view,
+   762→    AppModule.carbonTracking: AccessLevel.hidden,
+   763→    AppModule.trustScore: AccessLevel.hidden,
+   764→    AppModule.esgReporting: AccessLevel.hidden,
+   765→    // Trade
+   766→    AppModule.marketplace: AccessLevel.hidden,
+   767→    AppModule.rfq: AccessLevel.hidden,
+   768→    AppModule.inspections: AccessLevel.hidden,
+   769→    AppModule.productMonitoring: AccessLevel.hidden,
+   770→    AppModule.smartContracts: AccessLevel.hidden,
+   771→    AppModule.tradingDesk: AccessLevel.hidden,
+   772→    AppModule.shipments: AccessLevel.hidden,
+   773→    AppModule.logistics: AccessLevel.hidden,
+   774→    AppModule.exportDocs: AccessLevel.hidden,
+   775→    AppModule.buyers: AccessLevel.hidden,
+   776→    AppModule.buyerPortal: AccessLevel.hidden,
+   777→    // Finance
+   778→    AppModule.billing: AccessLevel.hidden,
+   779→    AppModule.users: AccessLevel.hidden,
+   780→    // System
+   781→    AppModule.iotSensors: AccessLevel.view,
+   782→    AppModule.blockchain: AccessLevel.hidden,
+   783→    AppModule.apiSettings: AccessLevel.hidden,
+   784→  },
+   785→
+   786→  AppRole.qualityController: {
+   787→    // Overview
+   788→    AppModule.dashboard: AccessLevel.full,
+   789→    AppModule.analytics: AccessLevel.view,
+   790→    // Farm
+   791→    AppModule.farmers: AccessLevel.view,
+   792→    AppModule.farmlands: AccessLevel.view,
+   793→    AppModule.cultivations: AccessLevel.hidden,
+   794→    AppModule.nurseries: AccessLevel.hidden,
+   795→    AppModule.landPreparations: AccessLevel.hidden,
+   796→    AppModule.cropMonitorings: AccessLevel.view,
+   797→    AppModule.fertilizerApps: AccessLevel.hidden,
+   798→    AppModule.pestDiseaseMgmts: AccessLevel.view,
+   799→    AppModule.harvestTraceabilities: AccessLevel.view,
+   800→    AppModule.climateIntelligence: AccessLevel.view,
+   801→    // Processing
+   802→    AppModule.procurement: AccessLevel.hidden,
+   803→    AppModule.processing: AccessLevel.full,
+   804→    AppModule.coffeeInspections: AccessLevel.full,
+   805→    AppModule.qcVerifications: AccessLevel.full,
+   806→    // Compliance
+   807→    AppModule.eudrCompliance: AccessLevel.full,
+   808→    AppModule.certAssessments: AccessLevel.full,
+   809→    AppModule.deforestation: AccessLevel.full,
+   810→    AppModule.traceJourney: AccessLevel.view,
+   811→    AppModule.carbonTracking: AccessLevel.full,
+   812→    AppModule.trustScore: AccessLevel.full,
+   813→    AppModule.esgReporting: AccessLevel.full,
+   814→    // Trade
+   815→    AppModule.marketplace: AccessLevel.hidden,
+   816→    AppModule.rfq: AccessLevel.hidden,
+   817→    AppModule.inspections: AccessLevel.full,
+   818→    AppModule.productMonitoring: AccessLevel.full,
+   819→    AppModule.smartContracts: AccessLevel.hidden,
+   820→    AppModule.tradingDesk: AccessLevel.hidden,
+   821→    AppModule.shipments: AccessLevel.hidden,
+   822→    AppModule.logistics: AccessLevel.hidden,
+   823→    AppModule.exportDocs: AccessLevel.hidden,
+   824→    AppModule.buyers: AccessLevel.hidden,
+   825→    AppModule.buyerPortal: AccessLevel.hidden,
+   826→    // Finance
+   827→    AppModule.billing: AccessLevel.hidden,
+   828→    AppModule.users: AccessLevel.hidden,
+   829→    // System
+   830→    AppModule.iotSensors: AccessLevel.hidden,
+   831→    AppModule.blockchain: AccessLevel.hidden,
+   832→    AppModule.apiSettings: AccessLevel.hidden,
+   833→  },
+   834→
+   835→  AppRole.trader: {
+   836→    // Overview
+   837→    AppModule.dashboard: AccessLevel.full,
+   838→    AppModule.analytics: AccessLevel.view,
+   839→    // Farm
+   840→    AppModule.farmers: AccessLevel.hidden,
+   841→    AppModule.farmlands: AccessLevel.hidden,
+   842→    AppModule.cultivations: AccessLevel.hidden,
+   843→    AppModule.nurseries: AccessLevel.hidden,
+   844→    AppModule.landPreparations: AccessLevel.hidden,
+   845→    AppModule.cropMonitorings: AccessLevel.hidden,
+   846→    AppModule.fertilizerApps: AccessLevel.hidden,
+   847→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   848→    AppModule.harvestTraceabilities: AccessLevel.view,
+   849→    AppModule.climateIntelligence: AccessLevel.hidden,
+   850→    // Processing
+   851→    AppModule.procurement: AccessLevel.hidden,
+   852→    AppModule.processing: AccessLevel.hidden,
+   853→    AppModule.coffeeInspections: AccessLevel.hidden,
+   854→    AppModule.qcVerifications: AccessLevel.view,
+   855→    // Compliance
+   856→    AppModule.eudrCompliance: AccessLevel.view,
+   857→    AppModule.certAssessments: AccessLevel.hidden,
+   858→    AppModule.deforestation: AccessLevel.hidden,
+   859→    AppModule.traceJourney: AccessLevel.view,
+   860→    AppModule.carbonTracking: AccessLevel.view,
+   861→    AppModule.trustScore: AccessLevel.view,
+   862→    AppModule.esgReporting: AccessLevel.view,
+   863→    // Trade
+   864→    AppModule.marketplace: AccessLevel.full,
+   865→    AppModule.rfq: AccessLevel.full,
+   866→    AppModule.inspections: AccessLevel.view,
+   867→    AppModule.productMonitoring: AccessLevel.view,
+   868→    AppModule.smartContracts: AccessLevel.full,
+   869→    AppModule.tradingDesk: AccessLevel.full,
+   870→    AppModule.shipments: AccessLevel.full,
+   871→    AppModule.logistics: AccessLevel.full,
+   872→    AppModule.exportDocs: AccessLevel.view,
+   873→    AppModule.buyers: AccessLevel.full,
+   874→    AppModule.buyerPortal: AccessLevel.full,
+   875→    // Finance
+   876→    AppModule.billing: AccessLevel.hidden,
+   877→    AppModule.users: AccessLevel.hidden,
+   878→    // System
+   879→    AppModule.iotSensors: AccessLevel.hidden,
+   880→    AppModule.blockchain: AccessLevel.hidden,
+   881→    AppModule.apiSettings: AccessLevel.hidden,
+   882→  },
+   883→
+   884→  AppRole.financeManager: {
+   885→    // Overview
+   886→    AppModule.dashboard: AccessLevel.full,
+   887→    AppModule.analytics: AccessLevel.full,
+   888→    // Farm
+   889→    AppModule.farmers: AccessLevel.hidden,
+   890→    AppModule.farmlands: AccessLevel.hidden,
+   891→    AppModule.cultivations: AccessLevel.hidden,
+   892→    AppModule.nurseries: AccessLevel.hidden,
+   893→    AppModule.landPreparations: AccessLevel.hidden,
+   894→    AppModule.cropMonitorings: AccessLevel.hidden,
+   895→    AppModule.fertilizerApps: AccessLevel.hidden,
+   896→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   897→    AppModule.harvestTraceabilities: AccessLevel.hidden,
+   898→    AppModule.climateIntelligence: AccessLevel.hidden,
+   899→    // Processing
+   900→    AppModule.procurement: AccessLevel.full,
+   901→    AppModule.processing: AccessLevel.hidden,
+   902→    AppModule.coffeeInspections: AccessLevel.hidden,
+   903→    AppModule.qcVerifications: AccessLevel.hidden,
+   904→    // Compliance
+   905→    AppModule.eudrCompliance: AccessLevel.hidden,
+   906→    AppModule.certAssessments: AccessLevel.hidden,
+   907→    AppModule.deforestation: AccessLevel.hidden,
+   908→    AppModule.traceJourney: AccessLevel.hidden,
+   909→    AppModule.carbonTracking: AccessLevel.view,
+   910→    AppModule.trustScore: AccessLevel.view,
+   911→    AppModule.esgReporting: AccessLevel.full,
+   912→    // Trade
+   913→    AppModule.marketplace: AccessLevel.view,
+   914→    AppModule.rfq: AccessLevel.view,
+   915→    AppModule.inspections: AccessLevel.hidden,
+   916→    AppModule.productMonitoring: AccessLevel.hidden,
+   917→    AppModule.smartContracts: AccessLevel.view,
+   918→    AppModule.tradingDesk: AccessLevel.full,
+   919→    AppModule.shipments: AccessLevel.view,
+   920→    AppModule.logistics: AccessLevel.view,
+   921→    AppModule.exportDocs: AccessLevel.view,
+   922→    AppModule.buyers: AccessLevel.view,
+   923→    AppModule.buyerPortal: AccessLevel.hidden,
+   924→    // Finance
+   925→    AppModule.billing: AccessLevel.full,
+   926→    AppModule.users: AccessLevel.view,
+   927→    // System
+   928→    AppModule.iotSensors: AccessLevel.hidden,
+   929→    AppModule.blockchain: AccessLevel.hidden,
+   930→    AppModule.apiSettings: AccessLevel.hidden,
+   931→  },
+   932→
+   933→  AppRole.buyer: {
+   934→    // Overview
+   935→    AppModule.dashboard: AccessLevel.full,
+   936→    AppModule.analytics: AccessLevel.view,
+   937→    // Farm
+   938→    AppModule.farmers: AccessLevel.hidden,
+   939→    AppModule.farmlands: AccessLevel.hidden,
+   940→    AppModule.cultivations: AccessLevel.hidden,
+   941→    AppModule.nurseries: AccessLevel.hidden,
+   942→    AppModule.landPreparations: AccessLevel.hidden,
+   943→    AppModule.cropMonitorings: AccessLevel.hidden,
+   944→    AppModule.fertilizerApps: AccessLevel.hidden,
+   945→    AppModule.pestDiseaseMgmts: AccessLevel.hidden,
+   946→    AppModule.harvestTraceabilities: AccessLevel.view,
+   947→    AppModule.climateIntelligence: AccessLevel.hidden,
+   948→    // Processing
+   949→    AppModule.procurement: AccessLevel.hidden,
+   950→    AppModule.processing: AccessLevel.hidden,
+   951→    AppModule.coffeeInspections: AccessLevel.view,
+   952→    AppModule.qcVerifications: AccessLevel.view,
+   953→    // Compliance
+   954→    AppModule.eudrCompliance: AccessLevel.view,
+   955→    AppModule.certAssessments: AccessLevel.view,
+   956→    AppModule.deforestation: AccessLevel.view,
+   957→    AppModule.traceJourney: AccessLevel.full,
+   958→    AppModule.carbonTracking: AccessLevel.view,
+   959→    AppModule.trustScore: AccessLevel.full,
+   960→    AppModule.esgReporting: AccessLevel.view,
+   961→    // Trade
+   962→    AppModule.marketplace: AccessLevel.full,
+   963→    AppModule.rfq: AccessLevel.full,
+   964→    AppModule.inspections: AccessLevel.view,
+   965→    AppModule.productMonitoring: AccessLevel.view,
+   966→    AppModule.smartContracts: AccessLevel.view,
+   967→    AppModule.tradingDesk: AccessLevel.full,
+   968→    AppModule.shipments: AccessLevel.view,
+   969→    AppModule.logistics: AccessLevel.view,
+   970→    AppModule.exportDocs: AccessLevel.view,
+   971→    AppModule.buyers: AccessLevel.full,
+   972→    AppModule.buyerPortal: AccessLevel.full,
+   973→    // Finance
+   974→    AppModule.billing: AccessLevel.view,
+   975→    AppModule.users: AccessLevel.hidden,
+   976→    // System
+   977→    AppModule.iotSensors: AccessLevel.hidden,
+   978→    AppModule.blockchain: AccessLevel.view,
+   979→    AppModule.apiSettings: AccessLevel.hidden,
+   980→  },
+   981→
+   982→  AppRole.viewer: {
+   983→    // Overview
+   984→    AppModule.dashboard: AccessLevel.view,
+   985→    AppModule.analytics: AccessLevel.view,
+   986→    // Farm
+   987→    AppModule.farmers: AccessLevel.view,
+   988→    AppModule.farmlands: AccessLevel.view,
+   989→    AppModule.cultivations: AccessLevel.view,
+   990→    AppModule.nurseries: AccessLevel.view,
+   991→    AppModule.landPreparations: AccessLevel.view,
+   992→    AppModule.cropMonitorings: AccessLevel.view,
+   993→    AppModule.fertilizerApps: AccessLevel.view,
+   994→    AppModule.pestDiseaseMgmts: AccessLevel.view,
+   995→    AppModule.harvestTraceabilities: AccessLevel.view,
+   996→    AppModule.climateIntelligence: AccessLevel.view,
+   997→    // Processing
+   998→    AppModule.procurement: AccessLevel.view,
+   999→    AppModule.processing: AccessLevel.view,
+  1000→    AppModule.coffeeInspections: AccessLevel.view,
+  1001→    AppModule.qcVerifications: AccessLevel.view,
+  1002→    // Compliance
+  1003→    AppModule.eudrCompliance: AccessLevel.view,
+  1004→    AppModule.certAssessments: AccessLevel.view,
+  1005→    AppModule.deforestation: AccessLevel.view,
+  1006→    AppModule.traceJourney: AccessLevel.view,
+  1007→    AppModule.carbonTracking: AccessLevel.view,
+  1008→    AppModule.trustScore: AccessLevel.view,
+  1009→    AppModule.esgReporting: AccessLevel.view,
+  1010→    // Trade
+  1011→    AppModule.marketplace: AccessLevel.view,
+  1012→    AppModule.rfq: AccessLevel.view,
+  1013→    AppModule.inspections: AccessLevel.view,
+  1014→    AppModule.productMonitoring: AccessLevel.view,
+  1015→    AppModule.smartContracts: AccessLevel.view,
+  1016→    AppModule.tradingDesk: AccessLevel.view,
+  1017→    AppModule.shipments: AccessLevel.view,
+  1018→    AppModule.logistics: AccessLevel.view,
+  1019→    AppModule.exportDocs: AccessLevel.view,
+  1020→    AppModule.buyers: AccessLevel.view,
+  1021→    AppModule.buyerPortal: AccessLevel.view,
+  1022→    // Finance
+  1023→    AppModule.billing: AccessLevel.view,
+  1024→    AppModule.users: AccessLevel.hidden,
+  1025→    // System
+  1026→    AppModule.iotSensors: AccessLevel.view,
+  1027→    AppModule.blockchain: AccessLevel.view,
+  1028→    AppModule.apiSettings: AccessLevel.hidden,
+  1029→  },
+  1030→};
+  1031→
+  1032→// ═══════════════════════════════════════════════════════════════════
+  1033→// ACCESS COMPUTATION FUNCTIONS
+  1034→// ═══════════════════════════════════════════════════════════════════
+  1035→
+  1036→/// Computes the effective access level for a given entity type, role,
+  1037→/// and module by taking the minimum (most restrictive) of entity
+  1038→/// type access and role access.
+  1039→///
+  1040→/// The access resolution follows these rules:
+  1041→/// - If either is `hidden`, the result is `hidden`.
+  1042→/// - If either is `view` and the other is not `hidden`, the result is `view`.
+  1043→/// - If both are `full`, the result is `full`.
+  1044→///
+  1045→/// Super admins always get `full` access regardless of other factors.
+  1046→AccessLevel getAccessLevel(
+  1047→  EntityType entityType,
+  1048→  AppRole role,
+  1049→  AppModule module,
+  1050→) {
+  1051→  // Super admin always has full access
+  1052→  if (role == AppRole.superAdmin) return AccessLevel.full;
+  1053→
+  1054→  final entityAccess = entityModuleAccess[entityType]?[module] ?? AccessLevel.hidden;
+  1055→  final roleAccess = roleModuleAccess[role]?[module] ?? AccessLevel.hidden;
+  1056→
+  1057→  // If either is hidden, result is hidden
+  1058→  if (entityAccess == AccessLevel.hidden || roleAccess == AccessLevel.hidden) {
+  1059→    return AccessLevel.hidden;
+  1060→  }
+  1061→
+  1062→  // If either is view and the other isn't hidden, result is view
+  1063→  if (entityAccess == AccessLevel.view || roleAccess == AccessLevel.view) {
+  1064→    return AccessLevel.view;
+  1065→  }
+  1066→
+  1067→  // Both are full
+  1068→  return AccessLevel.full;
+  1069→}
+  1070→
+  1071→/// Checks whether the user has at least the required access level
+  1072→/// for a given module.
+  1073→///
+  1074→/// [requiredAccess] defaults to `view`.
+  1075→bool hasAccess(
+  1076→  EntityType entityType,
+  1077→  AppRole role,
+  1078→  AppModule module, {
+  1079→  AccessLevel requiredAccess = AccessLevel.view,
+  1080→}) {
+  1081→  final effective = getAccessLevel(entityType, role, module);
+  1082→
+  1083→  if (requiredAccess == AccessLevel.full) {
+  1084→    return effective == AccessLevel.full;
+  1085→  }
+  1086→
+  1087→  // For 'view' requirement, any non-hidden access is sufficient
+  1088→  return effective != AccessLevel.hidden;
+  1089→}
+  1090→
+  1091→/// Returns a list of modules visible to the given entity type + role
+  1092→/// combination, sorted by category and order within each category.
+  1093→List<AppModule> getFilteredModules(EntityType entityType, AppRole role) {
+  1094→  return AppModule.values.where((module) {
+  1095→    final access = getAccessLevel(entityType, role, module);
+  1096→    return access != AccessLevel.hidden;
+  1097→  }).toList()
+  1098→    ..sort((a, b) {
+  1099→      // Sort by category order first, then by order within group
+  1100→      final categoryCompare = a.category.order.compareTo(b.category.order);
+  1101→      if (categoryCompare != 0) return categoryCompare;
+  1102→      return a.orderInGroup.compareTo(b.orderInGroup);
+  1103→    });
+  1104→}
+  1105→
+  1106→/// Returns a map of category → list of visible modules for the given
+  1107→/// entity type + role, suitable for rendering grouped navigation.
+  1108→Map<ModuleCategory, List<AppModule>> getGroupedModules(
+  1109→  EntityType entityType,
+  1110→  AppRole role,
+  1111→) {
+  1112→  final filtered = getFilteredModules(entityType, role);
+  1113→
+  1114→  final Map<ModuleCategory, List<AppModule>> grouped = {};
+  1115→
+  1116→  for (final module in filtered) {
+  1117→    grouped.putIfAbsent(module.category, () => []).add(module);
+  1118→  }
+  1119→
+  1120→  // Sort categories by their order
+  1121→  final sortedKeys = grouped.keys.toList()
+  1122→    ..sort((a, b) => a.order.compareTo(b.order));
+  1123→
+  1124→  return {for (final key in sortedKeys) key: grouped[key]!};
+  1125→}
+  1126→
+  1127→/// Returns the access level for each module visible to the given
+  1128→/// entity type + role, useful for rendering access badges or
+  1129→/// determining edit vs. read-only mode per module.
+  1130→Map<AppModule, AccessLevel> getModuleAccessMap(
+  1131→  EntityType entityType,
+  1132→  AppRole role,
+  1133→) {
+  1134→  final result = <AppModule, AccessLevel>{};
+  1135→
+  1136→  for (final module in AppModule.values) {
+  1137→    final access = getAccessLevel(entityType, role, module);
+  1138→    if (access != AccessLevel.hidden) {
+  1139→      result[module] = access;
+  1140→    }
+  1141→  }
+  1142→
+  1143→  return result;
+  1144→}
+  1145→

@@ -84,10 +84,9 @@ export async function POST(req: NextRequest) {
         data: { lastLoginAt: new Date() },
       })
 
-      // Create a JWT token using next-auth's encode
+      // Create access token (24h) and refresh token (7d) using next-auth's encode
       const { encode } = await import('next-auth/jwt')
       const now = Math.floor(Date.now() / 1000)
-      const maxAge = 24 * 60 * 60 // 24 hours
 
       const token = await encode({
         token: {
@@ -104,7 +103,20 @@ export async function POST(req: NextRequest) {
           language: tenant.language,
           isPlatformAdmin: false,
           iat: now,
-          exp: now + maxAge,
+          exp: now + 24 * 60 * 60,
+        },
+        secret: process.env.NEXTAUTH_SECRET,
+      })
+
+      const refreshToken = await encode({
+        token: {
+          id: user.id,
+          email: user.email,
+          tenantId: tenant.id,
+          isPlatformAdmin: false,
+          tokenType: 'refresh',
+          iat: now,
+          exp: now + 7 * 24 * 60 * 60, // 7 days
         },
         secret: process.env.NEXTAUTH_SECRET,
       })
@@ -126,6 +138,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         token,
+        refreshToken,
         user: userData,
       })
     }
