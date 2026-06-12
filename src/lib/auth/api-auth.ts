@@ -45,10 +45,33 @@ export interface ApiSession {
 
 /**
  * Extract and verify the session from an API request.
- * Reads the NextAuth JWT from the session cookie and decodes it.
+ * Supports two authentication methods:
+ * 1. NextAuth session cookie (web browser)
+ * 2. Authorization: Bearer <token> header (mobile app / API clients)
  * Returns null if no valid session is found.
  */
 export function getServerSession(req: NextRequest): ApiSession | null {
+  // Method 1: Try Authorization Bearer header (mobile app)
+  const authHeader = req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7)
+    const payload = decodeJWT(token)
+    if (payload && payload.id && payload.email) {
+      return {
+        id: payload.id as string,
+        email: payload.email as string,
+        name: (payload.name as string) || '',
+        role: (payload.role as string) || '',
+        tenantId: payload.tenantId as string | undefined,
+        tenantSlug: payload.tenantSlug as string | undefined,
+        tenantName: payload.tenantName as string | undefined,
+        entityType: payload.entityType as string | undefined,
+        isPlatformAdmin: payload.isPlatformAdmin === true,
+      }
+    }
+  }
+
+  // Method 2: Try NextAuth session cookie (web browser)
   const sessionToken =
     req.cookies.get('next-auth.session-token')?.value ||
     req.cookies.get('__Secure-next-auth.session-token')?.value
@@ -100,6 +123,7 @@ export function requireRole(
  * Ensure that the authenticated user belongs to the specified tenant.
  * Returns a 403 JSON response if the user does not have access.
  * Returns the session if access is allowed.
+ * For mobile requests, the X-Tenant-Id header is also checked.
  */
 export function requireTenantAccess(
   req: NextRequest,
@@ -122,4 +146,18 @@ export function requireTenantAccess(
     )
   }
   return session
+}
+
+/**
+ * Extract the tenant ID from the request.
+ * Checks X-Tenant-Id header (mobile) first, then falls back to session tenant.
+ */
+export function getTenantId(req: NextRequest): string | null {
+  // Mobile app sends X-Tenant-Id header
+  const headerTenantId = req.headers.get('x-tenant-id')
+  if (headerTenantId) return headerTenantId
+
+  // Web session has tenantId in JWT
+  const session = getServerSession(req)
+  return session?.tenantId ?? null
 }

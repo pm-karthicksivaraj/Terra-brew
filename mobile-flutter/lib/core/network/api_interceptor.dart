@@ -150,7 +150,7 @@ class ApiInterceptor extends Interceptor {
       ));
 
       final response = await dio.post(
-        '/auth/refresh',
+        '/mobile/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
 
@@ -215,7 +215,7 @@ class ApiInterceptor extends Interceptor {
 
   /// Checks if the given path is the refresh token endpoint.
   bool _isRefreshEndpoint(String path) {
-    return path.contains('/auth/refresh') || path.contains('/auth/login');
+    return path.contains('/mobile/auth/refresh') || path.contains('/mobile/auth');
   }
 }
 

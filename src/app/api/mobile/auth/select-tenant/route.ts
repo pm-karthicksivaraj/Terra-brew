@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
       token: {
         id: user.id,
         email: user.email,
+        role: user.role,
         tenantId: tenant.id,
         isPlatformAdmin: false,
         tokenType: 'refresh',

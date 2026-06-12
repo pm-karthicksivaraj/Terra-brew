@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
         token: {
           id: admin.id,
           email: admin.email,
+          role: admin.role,
           isPlatformAdmin: true,
           tokenType: 'refresh',
           iat: now,
@@ -154,6 +155,7 @@ export async function POST(req: NextRequest) {
         token: {
           id: user.id,
           email: user.email,
+          role: user.role,
           tenantId: tenant.id,
           isPlatformAdmin: false,
           tokenType: 'refresh',

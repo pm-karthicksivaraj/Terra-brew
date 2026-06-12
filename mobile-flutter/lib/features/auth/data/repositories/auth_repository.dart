@@ -164,6 +164,9 @@ class AuthRepository {
   /// Persist auth data to secure storage
   Future<void> _persistAuthData(AuthResponseModel authResponse) async {
     await AuthStorage.saveAccessToken(authResponse.token);
+    if (authResponse.refreshToken != null) {
+      await AuthStorage.saveRefreshToken(authResponse.refreshToken!);
+    }
     await AuthStorage.saveTenantId(authResponse.user.tenantId);
     await AuthStorage.saveUserData(authResponse.user.toJson());
   }
