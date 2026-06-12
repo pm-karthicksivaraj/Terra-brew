@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { encode } from 'next-auth/jwt'
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/crypto'
+import { getSessionCookieName, getCallbackUrlCookieName, getSessionCookieOptions, getCallbackUrlCookieOptions } from '@/lib/auth/cookies'
 
 /**
  * Complete login after tenant selection.
@@ -116,24 +117,22 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({ success: true, user: userData })
 
-    // Set the NextAuth session cookie
-    response.cookies.set('next-auth.session-token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+    // Set the NextAuth session cookie — must use the SAME name NextAuth expects
+    const sessionCookieName = getSessionCookieName()
+    const sessionCookieOpts = getSessionCookieOptions()
+    response.cookies.set(sessionCookieName, token, {
+      ...sessionCookieOpts,
       maxAge,
     })
 
     // Also set the callback URL cookie for NextAuth compatibility
+    const callbackCookieName = getCallbackUrlCookieName()
+    const callbackCookieOpts = getCallbackUrlCookieOptions()
     const origin = req.headers.get('x-forwarded-host')
-      ? `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('x-forwarded-host')}`
+      ? `${req.headers.get('x-forwarded-proto') || 'https'}://${req.headers.get('x-forwarded-host')}`
       : process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    response.cookies.set('next-auth.callback-url', `${origin}/dashboard`, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+    response.cookies.set(callbackCookieName, `${origin}/dashboard`, {
+      ...callbackCookieOpts,
       maxAge,
     })
 

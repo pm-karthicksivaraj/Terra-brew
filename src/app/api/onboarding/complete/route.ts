@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { encode } from 'next-auth/jwt'
 import { db } from '@/lib/db'
+import { getSessionCookieName, getSessionCookieOptions } from '@/lib/auth/cookies'
 
 /**
  * POST /api/onboarding/complete
@@ -118,12 +119,11 @@ export async function POST(req: NextRequest) {
       message: 'Onboarding completed successfully',
     })
 
-    // Set the updated NextAuth session cookie
-    response.cookies.set('next-auth.session-token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+    // Set the updated NextAuth session cookie — must use the SAME name NextAuth expects
+    const sessionCookieName = getSessionCookieName()
+    const sessionCookieOpts = getSessionCookieOptions()
+    response.cookies.set(sessionCookieName, newToken, {
+      ...sessionCookieOpts,
       maxAge,
     })
 
