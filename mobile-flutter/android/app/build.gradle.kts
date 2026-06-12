@@ -6,8 +6,8 @@ plugins {
 
 android {
     namespace = "com.terrabrew.terrabrew_coffee"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    // ndkVersion removed - auto-detected by Flutter
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
