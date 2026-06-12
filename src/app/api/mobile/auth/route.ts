@@ -1,86 +1,160 @@
-/**
- * Mobile JWT Authentication API
- *
- * POST: Accepts { email, password, tenantSlug }, validates credentials,
- * returns a signed JWT for mobile app consumption.
- */
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { db } from '@/lib/db'
 import { verifyPassword } from '@/lib/crypto'
-import { tenantLoginSchema } from '@/lib/validators'
-import { apiResponse, apiError, validateBody } from '@/lib/api-middleware'
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback-secret-change-me'
-const JWT_EXPIRY = '24h'
-
+/**
+ * Mobile app authentication endpoint.
+ * 
+ * Unlike the web login which sets NextAuth session cookies,
+ * this endpoint returns a JWT token + user data as JSON
+ * for the Flutter mobile app to store locally.
+ *
+ * Flow:
+ *   1. App submits { email, password }
+ *   2. System finds all active users with this email across all tenants
+ *   3. Verifies password against the first match
+ *   4. If 1 tenant → auto-login, return token + user
+ *   5. If multiple tenants → return { requiresTenantSelection: true, tenants: [...] }
+ *   6. If 0 found → return invalid credentials error
+ */
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.error('[Mobile Auth] NEXTAUTH_SECRET is not set')
+      return NextResponse.json(
+        { success: false, error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
     const body = await req.json()
+    const { email, password } = body
 
-    // Validate input
-    const validation = validateBody(tenantLoginSchema, body)
-    if ('error' in validation) return validation.error
-
-    const { email, password, tenantSlug } = validation.data
-
-    // Look up tenant
-    const tenant = await db.tenant.findUnique({
-      where: { slug: tenantSlug, isActive: true },
-    })
-    if (!tenant) {
-      return apiError('Tenant not found or inactive', 404)
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: 'Email and password are required' },
+        { status: 400 }
+      )
     }
 
-    // Look up user within tenant
-    const user = await db.user.findUnique({
-      where: { email_tenantId: { email, tenantId: tenant.id } },
-    })
-    if (!user) {
-      return apiError('Invalid credentials', 401)
-    }
-    if (!user.isActive) {
-      return apiError('Account deactivated', 403)
-    }
-
-    // Verify password
-    const valid = await verifyPassword(password, user.passwordHash)
-    if (!valid) {
-      return apiError('Invalid credentials', 401)
-    }
-
-    // Update last login
-    await db.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+    // 1. Find all users with this email across all active tenants
+    const users = await db.user.findMany({
+      where: {
+        email,
+        isActive: true,
+        tenant: { isActive: true },
+      },
+      include: {
+        tenant: true,
+      },
     })
 
-    // Build JWT payload
-    const tokenPayload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
+    if (users.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      )
+    }
+
+    // 2. Verify password against all matches
+    type UserWithTenant = Awaited<ReturnType<typeof db.user.findMany<{ include: { tenant: true } }>>>[number]
+    const validUsers: UserWithTenant[] = []
+    for (const user of users) {
+      const valid = await verifyPassword(password, user.passwordHash)
+      if (valid) {
+        validUsers.push(user)
+      }
+    }
+
+    if (validUsers.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      )
+    }
+
+    // 3a. If only one valid match → auto-login
+    if (validUsers.length === 1) {
+      const user = validUsers[0]
+      const tenant = user.tenant
+
+      // Update last login
+      await db.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      })
+
+      // Create a JWT token using next-auth's encode
+      const { encode } = await import('next-auth/jwt')
+      const now = Math.floor(Date.now() / 1000)
+      const maxAge = 24 * 60 * 60 // 24 hours
+
+      const token = await encode({
+        token: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: tenant.name,
+          entityType: tenant.entityType,
+          currency: tenant.currency,
+          currencySymbol: tenant.currencySymbol,
+          language: tenant.language,
+          isPlatformAdmin: false,
+          iat: now,
+          exp: now + maxAge,
+        },
+        secret: process.env.NEXTAUTH_SECRET,
+      })
+
+      const userData = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        tenantId: tenant.id,
+        tenantSlug: tenant.slug,
+        tenantName: tenant.name,
+        entityType: tenant.entityType,
+        currency: tenant.currency,
+        currencySymbol: tenant.currencySymbol,
+        language: tenant.language,
+      }
+
+      return NextResponse.json({
+        success: true,
+        token,
+        user: userData,
+      })
+    }
+
+    // 3b. Multiple tenants → return tenant list for selection
+    const tenants = validUsers.map((user) => ({
+      tenantId: user.tenant.id,
+      tenantName: user.tenant.name,
+      tenantSlug: user.tenant.slug,
+      entityType: user.tenant.entityType,
+      countryCode: user.tenant.countryCode,
+      country: user.tenant.country,
+      currency: user.tenant.currency,
+      language: user.tenant.language,
+      userId: user.id,
+      userName: user.name,
       role: user.role,
-      tenantId: tenant.id,
-      tenantSlug: tenant.slug,
-      tenantName: tenant.name,
-      currency: tenant.currency,
-      currencySymbol: tenant.currencySymbol,
-      language: tenant.language,
-    }
+    }))
 
-    // Sign JWT
-    const token = jwt.sign(tokenPayload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRY,
-      algorithm: 'HS256',
+    return NextResponse.json({
+      success: true,
+      requiresTenantSelection: true,
+      tenants,
     })
-
-    return apiResponse({
-      token,
-      user: tokenPayload,
-    }, 200)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return apiError(msg, 500)
+  } catch (e: any) {
+    console.error('[Mobile Auth] Error:', e)
+    return NextResponse.json(
+      { success: false, error: 'Server error' },
+      { status: 500 }
+    )
   }
 }

@@ -6,11 +6,11 @@ import '../models/auth_response_model.dart';
 import '../models/user_model.dart';
 
 class AuthRepository {
-  /// Login with email, password, and tenant slug
+  /// Login with email and password (email-first, auto-discovers tenant)
+  /// If user belongs to multiple tenants, returns requiresTenantSelection.
   Future<AuthResponseModel> login({
     required String email,
     required String password,
-    required String tenantSlug,
   }) async {
     try {
       final data = await ApiClient.postMap(
@@ -18,7 +18,44 @@ class AuthRepository {
         data: {
           'email': email.trim(),
           'password': password,
-          'tenantSlug': tenantSlug.trim(),
+        },
+      );
+
+      // Check if tenant selection is required
+      if (data['requiresTenantSelection'] == true) {
+        throw TenantSelectionRequiredException(
+          tenants: (data['tenants'] as List<dynamic>)
+              .map((t) => TenantOption.fromJson(t as Map<String, dynamic>))
+              .toList(),
+        );
+      }
+
+      final authResponse = AuthResponseModel.fromJson(data);
+
+      await _persistAuthData(authResponse);
+
+      return authResponse;
+    } on ApiException catch (e) {
+      throw AuthException(_mapApiException(e));
+    } catch (e) {
+      if (e is TenantSelectionRequiredException) rethrow;
+      throw AuthException('An unexpected error occurred. Please try again.');
+    }
+  }
+
+  /// Select a specific tenant after multi-tenant discovery
+  Future<AuthResponseModel> selectTenant({
+    required String email,
+    required String password,
+    required String tenantId,
+  }) async {
+    try {
+      final data = await ApiClient.postMap(
+        '/mobile/auth/select-tenant',
+        data: {
+          'email': email.trim(),
+          'password': password,
+          'tenantId': tenantId,
         },
       );
 
@@ -163,6 +200,60 @@ class AuthException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// Thrown when user belongs to multiple tenants and must select one
+class TenantSelectionRequiredException implements Exception {
+  final List<TenantOption> tenants;
+  TenantSelectionRequiredException({required this.tenants});
+
+  @override
+  String toString() => 'Tenant selection required (${tenants.length} tenants)';
+}
+
+/// Tenant option returned during multi-tenant discovery
+class TenantOption {
+  final String tenantId;
+  final String tenantName;
+  final String tenantSlug;
+  final String entityType;
+  final String? countryCode;
+  final String? country;
+  final String? currency;
+  final String? language;
+  final String userId;
+  final String userName;
+  final String role;
+
+  const TenantOption({
+    required this.tenantId,
+    required this.tenantName,
+    required this.tenantSlug,
+    required this.entityType,
+    this.countryCode,
+    this.country,
+    this.currency,
+    this.language,
+    required this.userId,
+    required this.userName,
+    required this.role,
+  });
+
+  factory TenantOption.fromJson(Map<String, dynamic> json) {
+    return TenantOption(
+      tenantId: json['tenantId'] as String? ?? '',
+      tenantName: json['tenantName'] as String? ?? '',
+      tenantSlug: json['tenantSlug'] as String? ?? '',
+      entityType: json['entityType'] as String? ?? '',
+      countryCode: json['countryCode'] as String?,
+      country: json['country'] as String?,
+      currency: json['currency'] as String?,
+      language: json['language'] as String?,
+      userId: json['userId'] as String? ?? '',
+      userName: json['userName'] as String? ?? '',
+      role: json['role'] as String? ?? '',
+    );
+  }
 }
 
 class RememberMeData {

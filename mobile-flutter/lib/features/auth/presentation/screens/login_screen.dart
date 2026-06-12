@@ -19,11 +19,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _tenantSlugController = TextEditingController();
 
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
-  final _tenantSlugFocusNode = FocusNode();
 
   bool _isPlatformAdmin = false;
   bool _rememberMe = false;
@@ -70,7 +68,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       setState(() {
         _rememberMe = data.remember;
         _emailController.text = data.email;
-        _tenantSlugController.text = data.tenantSlug;
       });
     }
   }
@@ -79,10 +76,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _tenantSlugController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
-    _tenantSlugFocusNode.dispose();
     _logoAnimationController.dispose();
     super.dispose();
   }
@@ -104,7 +99,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       ref.read(authStateProvider.notifier).login(
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            tenantSlug: _tenantSlugController.text.trim(),
           );
     }
 
@@ -113,7 +107,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     repository.saveRememberMe(
       remember: _rememberMe,
       email: _rememberMe ? _emailController.text.trim() : null,
-      tenantSlug: _rememberMe ? _tenantSlugController.text.trim() : null,
     );
   }
 
@@ -215,9 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               onFieldSubmitted: (_) {
                                 _emailFocusNode.unfocus();
                                 FocusScope.of(context).requestFocus(
-                                  _isPlatformAdmin
-                                      ? _passwordFocusNode
-                                      : _tenantSlugFocusNode,
+                                  _passwordFocusNode,
                                 );
                               },
                               validator: (value) {
@@ -232,32 +223,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ),
 
                             const SizedBox(height: 16),
-
-                            // Tenant slug field (hidden for platform admin)
-                            if (!_isPlatformAdmin) ...[
-                              AuthTextField(
-                                label: 'TENANT SLUG',
-                                hint: 'your-organization',
-                                controller: _tenantSlugController,
-                                focusNode: _tenantSlugFocusNode,
-                                prefixIcon:
-                                    const Icon(Icons.business_outlined),
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.next,
-                                onFieldSubmitted: (_) {
-                                  _tenantSlugFocusNode.unfocus();
-                                  FocusScope.of(context)
-                                      .requestFocus(_passwordFocusNode);
-                                },
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Tenant slug is required';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                            ],
 
                             // Password field
                             AuthTextField(

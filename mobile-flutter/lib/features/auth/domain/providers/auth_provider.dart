@@ -52,20 +52,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Login with tenant slug
+  /// Login with email-first (auto-discovers tenant)
   Future<void> login({
     required String email,
     required String password,
-    required String tenantSlug,
   }) async {
     state = const AuthLoading();
     try {
       final response = await _authRepository.login(
         email: email,
         password: password,
-        tenantSlug: tenantSlug,
       );
       state = AuthAuthenticated(response.user);
+    } on TenantSelectionRequiredException catch (e) {
+      // User belongs to multiple tenants - for now, auto-select the first one
+      if (e.tenants.isNotEmpty) {
+        final selected = e.tenants.first;
+        try {
+          final response = await _authRepository.selectTenant(
+            email: email,
+            password: password,
+            tenantId: selected.tenantId,
+          );
+          state = AuthAuthenticated(response.user);
+        } on AuthException catch (authError) {
+          state = AuthUnauthenticated(error: authError.message);
+        }
+      } else {
+        state = const AuthUnauthenticated(error: 'No tenants available.');
+      }
     } on AuthException catch (e) {
       state = AuthUnauthenticated(error: e.message);
     } catch (e) {

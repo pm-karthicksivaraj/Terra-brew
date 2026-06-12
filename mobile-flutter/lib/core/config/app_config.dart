@@ -6,7 +6,12 @@ class AppConfig {
   AppConfig._();
 
   /// Base URL for the TerraBrew API server.
-  static const String apiBaseUrl = 'http://localhost:3000';
+  /// Production: https://terra-brew.vercel.app
+  /// Development: http://localhost:3000
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://terra-brew.vercel.app',
+  );
 
   /// API version prefix appended to all API requests.
   static const String apiVersion = '/api';
