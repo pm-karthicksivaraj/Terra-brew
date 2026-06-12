@@ -473,3 +473,31 @@ Stage Summary:
 - Database: ✅ 6 tenants including Ghana + Uganda
 - All 15 original tasks: ✅ Complete
 - Additional roadmap features: ✅ Carbon Tracking, Trust Score™, Climate Intelligence, Buyer Portal, ESG Reporting
+---
+Task ID: comprehensive-ui-fix
+Agent: main
+Task: Fix all broken UI pages, create farmers page, fix ESG downloads, fix sidebar, move pages under (app)/ layout
+
+Work Log:
+- Analyzed 6 screenshots from user showing broken UI
+- Used VLM to identify specific issues: truncated sidebar, 404 on /farmers, fake ESG downloads, poor contrast
+- Audited entire codebase: found 46 page directories outside (app)/ route group (no sidebar)
+- Moved all 46 page directories from src/app/ to src/app/(app)/ so they get DashboardShell
+- Removed DashboardShell wrappers from 77 individual page files
+- Created /farmers list page with search, table, add farmer dialog, pagination
+- Fixed ESG report: PDF generation now calls /api/assessment/pdf API, CSV export generates real data
+- Fixed dashboard: replaced hardcoded mock KPIs with real API data from /api/dashboard/stats
+- Fixed sidebar: increased width from w-64 to w-72, improved contrast, better active states
+- Fixed TypeScript errors (recharts PieLabel type)
+- Added react-is dependency for recharts compatibility
+- Added framework config to vercel.json
+- Build passes successfully
+- Pushed to GitHub (commit 4443fe4)
+
+Stage Summary:
+- All authenticated pages now render with sidebar/auth layout
+- /farmers page no longer 404s
+- ESG reports can be downloaded as PDF/CSV
+- Dashboard uses real API data
+- Sidebar has better readability and no truncation
+- Vercel deployment should work with Root Directory set to "."
