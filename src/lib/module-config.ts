@@ -66,8 +66,8 @@ export interface NavGroup {
 export const NAV_GROUPS: NavGroup[] = [
   { id: 'overview', label: 'Overview', labelVi: 'Tổng quan', defaultOpen: true, order: 1 },
   { id: 'farm', label: 'Farm Operations', labelVi: 'Vận hành nông trại', defaultOpen: true, order: 2 },
-  { id: 'processing', label: 'Processing & Quality', labelVi: 'Chế biến & Chất lượng', defaultOpen: false, order: 3 },
-  { id: 'compliance', label: 'EUDR Compliance & Certification', labelVi: 'Tuân thủ EUDR & Chứng nhận', defaultOpen: false, order: 4 },
+  { id: 'processing', label: 'Processing & Quality', labelVi: 'Chế biến & Chất lượng', defaultOpen: true, order: 3 },
+  { id: 'compliance', label: 'EUDR Compliance & Certification', labelVi: 'Tuân thủ EUDR & Chứng nhận', defaultOpen: true, order: 4 },
   { id: 'trade', label: 'Trade & Logistics', labelVi: 'Thương mại & Vận tải', defaultOpen: false, order: 5 },
   { id: 'finance', label: 'Finance & Admin', labelVi: 'Tài chính & Quản trị', defaultOpen: false, order: 6 },
   { id: 'system', label: 'System & Integrations', labelVi: 'Hệ thống & Tích hợp', defaultOpen: false, order: 7 },

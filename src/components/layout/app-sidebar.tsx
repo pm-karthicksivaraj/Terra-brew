@@ -92,6 +92,48 @@ interface NavGroupRender {
 
 // ─── Sub-components ───────────────────────────────────────────────
 
+function DashboardLink({
+  collapsed,
+  isActive,
+  onClick,
+}: {
+  collapsed: boolean
+  isActive: boolean
+  onClick?: () => void
+}) {
+  const content = (
+    <Link
+      href="/dashboard"
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200',
+        isActive
+          ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-primary font-medium',
+        collapsed && 'justify-center px-2'
+      )}
+    >
+      <LayoutDashboard className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-5 h-5')} />
+      {!collapsed && (
+        <span className="text-sm font-semibold truncate overflow-hidden whitespace-nowrap">
+          Dashboard
+        </span>
+      )}
+    </Link>
+  )
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>Dashboard</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return content
+}
+
 function NavItemLink({
   item,
   collapsed,
@@ -105,7 +147,7 @@ function NavItemLink({
   lang: string
   onClick?: () => void
 }) {
-  const label = item.label  // Already resolved to current locale in SidebarContent
+  const label = item.label
   const Icon = item.icon
 
   const linkContent = (
@@ -113,14 +155,14 @@ function NavItemLink({
       href={item.href}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+        'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-all duration-150',
         isActive
-          ? 'bg-primary/20 text-primary font-semibold shadow-sm border-l-[3px] border-primary'
-          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          ? 'bg-primary/10 text-primary font-semibold border-l-[3px] border-primary'
+          : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground',
         collapsed && 'justify-center px-2 border-l-0'
       )}
     >
-      <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-4 h-4')} />
+      <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-4 h-4')} style={{ color: isActive ? 'var(--sidebar-primary)' : item.color }} />
       {!collapsed && (
         <span className="truncate overflow-hidden whitespace-nowrap leading-tight">
           {label}
@@ -199,7 +241,6 @@ function SidebarContent({
       items: group.items.map((mod: ModuleDef) => {
         const navKey = slugToNavKey[mod.slug]
         const i18nLabel = navKey ? t(navKey) : undefined
-        // Use i18n label if available and not just the key itself, otherwise fall back
         const resolvedLabel = (i18nLabel && !i18nLabel.includes('.')) ? i18nLabel : (lang === 'vi' ? mod.labelVi : mod.label)
         return {
           label: resolvedLabel,
@@ -238,20 +279,20 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tenant header */}
-      <div className={cn('px-3 pt-4 pb-2', collapsed && 'px-2')}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0 shadow-sm">
+      {/* Tenant header — clean and spacious */}
+      <div className={cn('px-4 pt-4 pb-3', collapsed && 'px-2')}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-md">
             <Coffee className="w-5 h-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <p className="text-sm font-bold text-sidebar-foreground leading-tight">{tenantName || 'Terra Brew'}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="overflow-hidden min-w-0">
+              <p className="text-sm font-bold text-sidebar-foreground leading-tight truncate">{tenantName || 'TerraBrew'}</p>
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 {entityTypeLabel && (
                   <Badge
                     variant="outline"
-                    className="text-xs px-1.5 py-0 h-4 border-primary/30 text-primary capitalize"
+                    className="text-[10px] px-1.5 py-0 h-[18px] border-primary/30 text-primary capitalize shrink-0"
                   >
                     {(entityTypeLabel as any)[lang] || entityTypeLabel.en}
                   </Badge>
@@ -259,7 +300,7 @@ function SidebarContent({
                 {roleLabel && (
                   <Badge
                     variant="secondary"
-                    className="text-xs px-1.5 py-0 h-4 capitalize"
+                    className="text-[10px] px-1.5 py-0 h-[18px] capitalize shrink-0"
                   >
                     {(roleLabel as any)[lang] || roleLabel.en}
                   </Badge>
@@ -270,12 +311,43 @@ function SidebarContent({
         </div>
       </div>
 
-      <Separator className="mx-3 my-1 bg-sidebar-border" />
+      <Separator className="mx-3 my-0 bg-sidebar-border" />
 
-      {/* Navigation - scrollable */}
+      {/* Dashboard — always visible, standalone */}
+      <div className="px-3 pt-3 pb-1">
+        <DashboardLink
+          collapsed={collapsed}
+          isActive={isActive('/dashboard')}
+          onClick={onNavClick}
+        />
+      </div>
+
+      {/* Navigation groups — scrollable */}
       <ScrollArea className="flex-1 px-2 overflow-y-auto">
-        <div className="py-2 space-y-1">
+        <div className="py-1 space-y-0.5">
           {navigation.map((group) => {
+            // Skip the overview group since Dashboard is shown standalone
+            if (group.id === 'overview') {
+              // Still show Analytics if it exists
+              const analyticsItems = group.items.filter(i => i.href !== '/dashboard')
+              if (analyticsItems.length === 0) return null
+              return (
+                <div key={group.id}>
+                  {analyticsItems.map((item) => (
+                    <div key={item.href} onClick={onNavClick}>
+                      <NavItemLink
+                        item={item}
+                        collapsed={collapsed}
+                        isActive={isActive(item.href)}
+                        lang={lang}
+                        onClick={onNavClick}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
             const isGroupOpen = openGroups[group.id] ?? false
             const hasActiveItem = group.items.some((item) => isActive(item.href))
 
@@ -300,21 +372,23 @@ function SidebarContent({
                     ))}
                   </div>
                 ) : (
-                  /* Expanded: collapsible groups */
-                  <div className="mb-1">
+                  /* Expanded: collapsible groups with proper hierarchy */
+                  <div className="mb-0.5">
                     <button
                       onClick={() => toggleGroup(group.id)}
                       className={cn(
-                        'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors',
+                        'flex items-center justify-between w-full px-3 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-colors',
                         hasActiveItem
-                          ? 'text-primary/90'
-                          : 'text-sidebar-foreground/55 hover:text-sidebar-foreground/75'
+                          ? 'text-sidebar-primary'
+                          : 'text-sidebar-foreground/40 hover:text-sidebar-foreground/70'
                       )}
                     >
-                      <span className='text-left leading-tight'>{lang === 'vi' ? group.titleVi : lang === 'en' ? group.title : t('nav.' + group.id) !== 'nav.' + group.id ? t('nav.' + group.id) : group.title}</span>
+                      <span className="text-left leading-tight truncate">
+                        {lang === 'vi' ? group.titleVi : lang === 'en' ? group.title : t('nav.' + group.id) !== 'nav.' + group.id ? t('nav.' + group.id) : group.title}
+                      </span>
                       <ChevronDown
                         className={cn(
-                          'w-3 h-3 transition-transform duration-200',
+                          'w-3.5 h-3.5 shrink-0 ml-2 transition-transform duration-200',
                           isGroupOpen ? 'rotate-0' : '-rotate-90'
                         )}
                       />
@@ -351,18 +425,18 @@ function SidebarContent({
           size="sm"
           onClick={onLangToggle}
           className={cn(
-            'w-full gap-2 text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 text-xs rounded-lg',
+            'w-full gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 text-xs rounded-lg',
             collapsed && 'justify-center px-2'
           )}
         >
           <Globe className="w-4 h-4 shrink-0" />
           {!collapsed && (
             <span className="overflow-hidden whitespace-nowrap">
-              {lang === 'vi' ? 'English' : lang === 'en' ? 'Português' : lang === 'pt' ? 'አማርኛ' : lang === 'am' ? 'Kiswahili' : 'Tiếng Việt'}
+              {lang === 'vi' ? 'English' : lang === 'en' ? 'Portugues' : lang === 'pt' ? 'Amharic' : lang === 'am' ? 'Kiswahili' : 'Tieng Viet'}
             </span>
           )}
           {!collapsed && (
-            <span className="ml-auto text-[10px] font-bold text-sidebar-foreground/50">
+            <span className="ml-auto text-[10px] font-bold text-sidebar-foreground/40">
               {lang.toUpperCase()}
             </span>
           )}
@@ -403,7 +477,7 @@ export function AppSidebar({
       <aside
         className={cn(
           'hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border transition-all duration-300',
-          collapsed ? 'w-18' : 'w-72'
+          collapsed ? 'w-18' : 'w-64'
         )}
       >
         <SidebarContent
@@ -421,7 +495,7 @@ export function AppSidebar({
             variant="ghost"
             size="sm"
             onClick={onToggleCollapse}
-            className="w-full justify-center text-sidebar-foreground/50 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 rounded-lg h-8"
+            className="w-full justify-center text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg h-8"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
@@ -430,7 +504,7 @@ export function AppSidebar({
 
       {/* Mobile drawer */}
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
-        <SheetContent side="left" className="w-72 p-0 bg-sidebar-background border-sidebar-border">
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar-background border-sidebar-border">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>

@@ -38,15 +38,15 @@
 
   --radius: 0.625rem;
 
-  /* Sidebar — coffee brown */
-  --sidebar-background: hsl(350 44% 29%); /* #6D2932 coffee brown */
-  --sidebar-foreground: hsl(0 0% 100%);   /* white text */
-  --sidebar-primary: hsl(0 0% 100%);      /* white */
-  --sidebar-primary-foreground: hsl(350 44% 29%); /* coffee brown */
-  --sidebar-accent: hsl(350 35% 35%);     /* slightly lighter coffee brown */
-  --sidebar-accent-foreground: hsl(0 0% 100%); /* white */
-  --sidebar-border: hsl(350 40% 22%);     /* darker coffee brown border */
-  --sidebar-ring: hsl(0 0% 100%);         /* white ring */
+  /* Sidebar — clean light sidebar with coffee brown accents */
+  --sidebar-background: hsl(30 30% 98%);  /* warm white/cream */
+  --sidebar-foreground: hsl(350 44% 15%); /* dark coffee brown text */
+  --sidebar-primary: hsl(350 44% 29%);    /* coffee brown — active item */
+  --sidebar-primary-foreground: hsl(0 0% 100%); /* white on active */
+  --sidebar-accent: hsl(350 30% 95%);     /* very light coffee tint */
+  --sidebar-accent-foreground: hsl(350 44% 29%); /* coffee brown */
+  --sidebar-border: hsl(30 15% 88%);      /* warm light border */
+  --sidebar-ring: hsl(350 44% 29%);       /* coffee brown ring */
 
   --chart-1: hsl(350 44% 29%);            /* coffee brown */
   --chart-2: hsl(350 35% 45%);            /* lighter coffee brown */
@@ -93,15 +93,15 @@
   --input: hsl(350 20% 22%);
   --ring: hsl(350 40% 45%);
 
-  /* Sidebar — deep dark coffee brown */
-  --sidebar-background: hsl(350 35% 12%);
-  --sidebar-foreground: hsl(30 20% 90%);
-  --sidebar-primary: hsl(350 40% 45%);
+  /* Sidebar — dark mode: dark card with warm brown accents */
+  --sidebar-background: hsl(350 20% 10%);
+  --sidebar-foreground: hsl(30 20% 88%);
+  --sidebar-primary: hsl(350 40% 50%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(350 25% 18%);
-  --sidebar-accent-foreground: hsl(30 20% 90%);
-  --sidebar-border: hsl(350 20% 18%);
-  --sidebar-ring: hsl(350 40% 45%);
+  --sidebar-accent: hsl(350 15% 16%);
+  --sidebar-accent-foreground: hsl(30 20% 88%);
+  --sidebar-border: hsl(350 15% 18%);
+  --sidebar-ring: hsl(350 40% 50%);
 
   --chart-1: hsl(350 40% 45%);
   --chart-2: hsl(350 30% 55%);
