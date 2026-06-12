@@ -113,16 +113,16 @@ function NavItemLink({
       href={item.href}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-3 rounded-lg px-3 py-2 text-base transition-all duration-200',
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
         isActive
-          ? 'bg-primary/15 text-primary font-bold shadow-sm border-l-2 border-primary'
-          : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
+          ? 'bg-primary/20 text-primary font-semibold shadow-sm border-l-[3px] border-primary'
+          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground',
         collapsed && 'justify-center px-2 border-l-0'
       )}
     >
       <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-4 h-4')} />
       {!collapsed && (
-        <span className="truncate overflow-hidden whitespace-nowrap">
+        <span className="truncate overflow-hidden whitespace-nowrap leading-tight">
           {label}
         </span>
       )}
@@ -246,7 +246,7 @@ function SidebarContent({
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <p className="text-sm font-bold text-sidebar-foreground truncate">{tenantName || 'Terra Brew'}</p>
+              <p className="text-sm font-bold text-sidebar-foreground leading-tight">{tenantName || 'Terra Brew'}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 {entityTypeLabel && (
                   <Badge
@@ -305,13 +305,13 @@ function SidebarContent({
                     <button
                       onClick={() => toggleGroup(group.id)}
                       className={cn(
-                        'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors',
+                        'flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors',
                         hasActiveItem
-                          ? 'text-primary'
-                          : 'text-sidebar-foreground/40 hover:text-sidebar-foreground/60'
+                          ? 'text-primary/90'
+                          : 'text-sidebar-foreground/55 hover:text-sidebar-foreground/75'
                       )}
                     >
-                      <span>{lang === 'vi' ? group.titleVi : lang === 'en' ? group.title : t('nav.' + group.id) !== 'nav.' + group.id ? t('nav.' + group.id) : group.title}</span>
+                      <span className='text-left leading-tight'>{lang === 'vi' ? group.titleVi : lang === 'en' ? group.title : t('nav.' + group.id) !== 'nav.' + group.id ? t('nav.' + group.id) : group.title}</span>
                       <ChevronDown
                         className={cn(
                           'w-3 h-3 transition-transform duration-200',
@@ -403,7 +403,7 @@ export function AppSidebar({
       <aside
         className={cn(
           'hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40 bg-sidebar-background border-r border-sidebar-border transition-all duration-300',
-          collapsed ? 'w-18' : 'w-64'
+          collapsed ? 'w-18' : 'w-72'
         )}
       >
         <SidebarContent

@@ -194,7 +194,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   }
 
   // Compute margin-left: only on desktop, matches sidebar width
-  const marginLeft = mounted && isDesktop ? (collapsed ? 64 : 240) : 0
+  const marginLeft = mounted && isDesktop ? (collapsed ? 72 : 288) : 0
 
   // Before client mount, render a minimal shell that matches the server output.
   if (!mounted) {

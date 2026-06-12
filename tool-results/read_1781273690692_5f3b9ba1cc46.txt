@@ -1,0 +1,532 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback } from 'react'
+     4→import { useSession } from 'next-auth/react'
+     5→import { useRouter } from 'next/navigation'
+     6→import {
+     7→  Search, Plus, ChevronLeft, ChevronRight, Loader2,
+     8→  Pencil, Trash2, AlertTriangle, CheckCircle, XCircle, Factory,
+     9→  Eye,
+    10→} from 'lucide-react'
+    11→import { Button } from '@/components/ui/button'
+    12→import { useI18n } from '@/i18n'
+    13→import { Input } from '@/components/ui/input'
+    14→import { Label } from '@/components/ui/label'
+    15→import { Card } from '@/components/ui/card'
+    16→import { Badge } from '@/components/ui/badge'
+    17→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+    18→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    19→import { Textarea } from '@/components/ui/textarea'
+    20→import { toast } from 'sonner'
+    21→import { DashboardShell } from '@/components/layout/dashboard-shell'
+    22→import type { LucideIcon } from 'lucide-react'
+    23→
+    24→interface ProcessingStageRecord {
+    25→  id: string
+    26→  stageType: string | null
+    27→  stageDate: string | null
+    28→  inputWeight: number | null
+    29→  outputWeight: number | null
+    30→  durationMinutes: number | null
+    31→  temperature: number | null
+    32→  humidity: number | null
+    33→  machineUsed: string | null
+    34→  operatorName: string | null
+    35→  qualityCheckPassed: boolean
+    36→  notes: string | null
+    37→  isActive: boolean
+    38→  createdAt: string
+    39→  updatedAt: string
+    40→  jobOrder: {
+    41→    id: string
+    42→    jobOrderId: string | null
+    43→    batchIdInput: string | null
+    44→    processingMethod: string | null
+    45→  }
+    46→}
+    47→
+    48→export interface StageConfig {
+    49→  stageType: string
+    50→  labelVi: string
+    51→  labelEn: string
+    52→  icon: LucideIcon
+    53→  color: string
+    54→}
+    55→
+    56→const initialForm = {
+    57→  jobOrderId: '',
+    58→  stageDate: '',
+    59→  inputWeight: '',
+    60→  outputWeight: '',
+    61→  durationMinutes: '',
+    62→  temperature: '',
+    63→  humidity: '',
+    64→  machineUsed: '',
+    65→  operatorName: '',
+    66→  qualityCheckPassed: false,
+    67→  notes: '',
+    68→}
+    69→
+    70→export function ProcessingStagePage({ config }: { config: StageConfig }) {
+    71→  const { data: session, status } = useSession()
+    72→  const router = useRouter()
+    73→  const { t, t2 } = useI18n()
+    74→  const [items, setItems] = useState<ProcessingStageRecord[]>([])
+    75→  const [total, setTotal] = useState(0)
+    76→  const [page, setPage] = useState(1)
+    77→  const [pageSize] = useState(10)
+    78→  const [search, setSearch] = useState('')
+    79→  const [loading, setLoading] = useState(true)
+    80→  const [dialogOpen, setDialogOpen] = useState(false)
+    81→  const [detailItem, setDetailItem] = useState<ProcessingStageRecord | null>(null)
+    82→  const [detailOpen, setDetailOpen] = useState(false)
+    83→  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+    84→  const [editingRecord, setEditingRecord] = useState<ProcessingStageRecord | null>(null)
+    85→  const [deletingRecord, setDeletingRecord] = useState<ProcessingStageRecord | null>(null)
+    86→  const [submitting, setSubmitting] = useState(false)
+    87→  const [form, setForm] = useState(initialForm)
+    88→  const [jobOrders, setJobOrders] = useState<{ id: string; jobOrderId: string | null; batchIdInput: string | null }[]>([])
+    89→
+    90→  const resetForm = () => { setForm(initialForm); setEditingRecord(null) }
+    91→
+    92→  const fetchItems = useCallback(async () => {
+    93→    try {
+    94→      setLoading(true)
+    95→      const params = new URLSearchParams({
+    96→        page: String(page),
+    97→        pageSize: String(pageSize),
+    98→        search,
+    99→        sortBy: 'createdAt',
+   100→        sortOrder: 'desc',
+   101→      })
+   102→      const res = await fetch(`/api/processing?${params}`)
+   103→      const data = await res.json()
+   104→      if (data.success) {
+   105→        const allRecords: ProcessingStageRecord[] = []
+   106→        const rawItems = data.data?.data ?? data.data?.items ?? []
+   107→        for (const jo of Array.isArray(rawItems) ? rawItems : []) {
+   108→          for (const stage of jo.processingStages || []) {
+   109→            if (stage.stageType?.toLowerCase() === config.stageType.toLowerCase()) {
+   110→              allRecords.push({ ...stage, jobOrder: { id: jo.id, jobOrderId: jo.jobOrderId, batchIdInput: jo.batchIdInput, processingMethod: jo.processingMethod } })
+   111→            }
+   112→          }
+   113→        }
+   114→        const filtered = search
+   115→          ? allRecords.filter((r) =>
+   116→              r.operatorName?.toLowerCase().includes(search.toLowerCase()) ||
+   117→              r.machineUsed?.toLowerCase().includes(search.toLowerCase()) ||
+   118→              r.jobOrder.jobOrderId?.toLowerCase().includes(search.toLowerCase()) ||
+   119→              r.jobOrder.batchIdInput?.toLowerCase().includes(search.toLowerCase())
+   120→            )
+   121→          : allRecords
+   122→        setTotal(filtered.length)
+   123→        setItems(filtered.slice((page - 1) * pageSize, page * pageSize))
+   124→      }
+   125→    } catch (err) {
+   126→      console.error('Failed to fetch records', err)
+   127→    } finally {
+   128→      setLoading(false)
+   129→    }
+   130→  }, [page, pageSize, search, config.stageType])
+   131→
+   132→  const fetchJobOrders = useCallback(async () => {
+   133→    try {
+   134→      const res = await fetch('/api/processing?pageSize=500&sortBy=createdAt&sortOrder=desc')
+   135→      const data = await res.json()
+   136→      if (data.success) {
+   137→        const raw = data.data?.data ?? data.data?.items ?? []
+   138→        setJobOrders(Array.isArray(raw) ? raw.map((jo: any) => ({ id: jo.id, jobOrderId: jo.jobOrderId, batchIdInput: jo.batchIdInput })) : [])
+   139→      }
+   140→    } catch { /* ignore */ }
+   141→  }, [])
+   142→
+   143→  useEffect(() => {
+   144→    if (status === 'unauthenticated') router.push('/login')
+   145→    else if (status === 'authenticated') {
+   146→      fetchItems()
+   147→      fetchJobOrders()
+   148→    }
+   149→  }, [status, router, fetchItems, fetchJobOrders])
+   150→
+   151→  const handleSubmit = async (e: React.FormEvent) => {
+   152→    e.preventDefault()
+   153→    setSubmitting(true)
+   154→    try {
+   155→      const payload = {
+   156→        jobOrderId: form.jobOrderId,
+   157→        stageType: config.stageType,
+   158→        stageDate: form.stageDate || undefined,
+   159→        inputWeight: form.inputWeight ? parseFloat(form.inputWeight) : undefined,
+   160→        outputWeight: form.outputWeight ? parseFloat(form.outputWeight) : undefined,
+   161→        durationMinutes: form.durationMinutes ? parseInt(form.durationMinutes) : undefined,
+   162→        temperature: form.temperature ? parseFloat(form.temperature) : undefined,
+   163→        humidity: form.humidity ? parseFloat(form.humidity) : undefined,
+   164→        machineUsed: form.machineUsed || undefined,
+   165→        operatorName: form.operatorName || undefined,
+   166→        qualityCheckPassed: form.qualityCheckPassed,
+   167→        notes: form.notes || undefined,
+   168→      }
+   169→
+   170→      if (editingRecord) {
+   171→        // Update via processing API - find the job order and update stage
+   172→        const res = await fetch(`/api/processing`, {
+   173→          method: 'PUT',
+   174→          headers: { 'Content-Type': 'application/json' },
+   175→          body: JSON.stringify({ id: editingRecord.jobOrder.id, processingStages: { update: [{ id: editingRecord.id, ...payload }] } }),
+   176→        })
+   177→        const data = await res.json()
+   178→        if (data.success) {
+   179→          toast.success(t2('Cap nhat thanh cong!', 'Updated successfully!'))
+   180→          setDialogOpen(false)
+   181→          resetForm()
+   182→          fetchItems()
+   183→        } else {
+   184→          toast.error(data.error || t2('Loi khi luu', 'Error saving'))
+   185→        }
+   186→      } else {
+   187→        // Create stage via POST to /api/processing with nested stage
+   188→        const res = await fetch('/api/processing', {
+   189→          method: 'POST',
+   190→          headers: { 'Content-Type': 'application/json' },
+   191→          body: JSON.stringify({
+   192→            jobOrderId: `STAGE-${config.stageType.toUpperCase()}-${Date.now()}`,
+   193→            processingMethod: config.stageType,
+   194→            processingStages: [payload],
+   195→          }),
+   196→        })
+   197→        const data = await res.json()
+   198→        if (data.success) {
+   199→          toast.success(t2('Tao moi thanh cong!', 'Created successfully!'))
+   200→          setDialogOpen(false)
+   201→          resetForm()
+   202→          fetchItems()
+   203→          fetchJobOrders()
+   204→        } else {
+   205→          toast.error(data.error || t2('Loi khi luu', 'Error saving'))
+   206→        }
+   207→      }
+   208→    } catch {
+   209→      toast.error(t2('Loi ket noi', 'Connection error'))
+   210→    } finally {
+   211→      setSubmitting(false)
+   212→    }
+   213→  }
+   214→
+   215→  const handleDelete = async () => {
+   216→    if (!deletingRecord) return
+   217→    setSubmitting(true)
+   218→    try {
+   219→      const res = await fetch(`/api/processing?id=${deletingRecord.id}&stageId=${deletingRecord.id}`, { method: 'DELETE' })
+   220→      const data = await res.json()
+   221→      if (data.success) {
+   222→        toast.success(t2('Xoa thanh cong!', 'Deleted successfully!'))
+   223→        setDeleteDialogOpen(false)
+   224→        setDeletingRecord(null)
+   225→        fetchItems()
+   226→      } else {
+   227→        toast.error(data.error || t2('Loi khi xoa', 'Error deleting'))
+   228→      }
+   229→    } catch {
+   230→      toast.error(t2('Loi ket noi', 'Connection error'))
+   231→    } finally {
+   232→      setSubmitting(false)
+   233→    }
+   234→  }
+   235→
+   236→  const openEditDialog = (record: ProcessingStageRecord) => {
+   237→    setEditingRecord(record)
+   238→    setForm({
+   239→      jobOrderId: record.jobOrder.id,
+   240→      stageDate: record.stageDate ? record.stageDate.slice(0, 10) : '',
+   241→      inputWeight: record.inputWeight?.toString() || '',
+   242→      outputWeight: record.outputWeight?.toString() || '',
+   243→      durationMinutes: record.durationMinutes?.toString() || '',
+   244→      temperature: record.temperature?.toString() || '',
+   245→      humidity: record.humidity?.toString() || '',
+   246→      machineUsed: record.machineUsed || '',
+   247→      operatorName: record.operatorName || '',
+   248→      qualityCheckPassed: record.qualityCheckPassed,
+   249→      notes: record.notes || '',
+   250→    })
+   251→    setDialogOpen(true)
+   252→  }
+   253→
+   254→  const totalPages = Math.ceil(total / pageSize)
+   255→  const Icon = config.icon
+   256→
+   257→  const InfoRow = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
+   258→    <div className="flex items-start gap-2 py-1.5">
+   259→      <div className="min-w-0 flex-1">
+   260→        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
+   261→        <p className="text-sm text-foreground font-medium">{value ?? '-'}</p>
+   262→      </div>
+   263→    </div>
+   264→  )
+   265→
+   266→  if (status === 'loading' || (loading && items.length === 0)) {
+   267→    return (
+   268→      <DashboardShell>
+   269→        <div className="flex items-center justify-center py-32">
+   270→          <div className="flex flex-col items-center gap-4">
+   271→            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center">
+   272→              <Icon className="w-9 h-9 text-primary-foreground animate-pulse" />
+   273→            </div>
+   274→            <div className="flex items-center gap-2 text-muted-foreground">
+   275→              <Loader2 className="w-4 h-4 animate-spin" />
+   276→              <span className="text-sm">{t2('Dang tai...', 'Loading...')}</span>
+   277→            </div>
+   278→          </div>
+   279→        </div>
+   280→      </DashboardShell>
+   281→    )
+   282→  }
+   283→
+   284→  return (
+   285→    <DashboardShell>
+   286→      <div>
+   287→        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+   288→          <div>
+   289→            <h2 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+   290→              <Icon className="w-5 h-5 text-muted-foreground" />
+   291→              {t2(config.labelVi, config.labelEn)}
+   292→            </h2>
+   293→            <p className="text-sm text-muted-foreground">{t(`${total} ban ghi`, `${total} records`)}</p>
+   294→          </div>
+   295→          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
+   296→            <DialogTrigger asChild>
+   297→              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl shadow-sm" onClick={() => { resetForm(); setDialogOpen(true) }}>
+   298→                <Plus className="w-4 h-4" />
+   299→                {t2('Them moi', 'Add New')}
+   300→              </Button>
+   301→            </DialogTrigger>
+   302→            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+   303→              <DialogHeader>
+   304→                <DialogTitle className="text-foreground flex items-center gap-2">
+   305→                  <Icon className="w-5 h-5" />
+   306→                  {editingRecord ? t2('Sua ban ghi', 'Edit Record') : t2('Them ban ghi moi', 'Add New Record')}
+   307→                </DialogTitle>
+   308→              </DialogHeader>
+   309→              <form onSubmit={handleSubmit} className="space-y-4">
+   310→                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   311→                  <div className="space-y-1.5 md:col-span-2">
+   312→                    <Label className="text-xs text-foreground">{t2('Lenh che bien', 'Job Order')} *</Label>
+   313→                    <Select value={form.jobOrderId} onValueChange={(v) => setForm({ ...form, jobOrderId: v })}>
+   314→                      <SelectTrigger className="rounded-xl border-input">
+   315→                        <SelectValue placeholder={t2('Chon lenh', 'Select job order')} />
+   316→                      </SelectTrigger>
+   317→                      <SelectContent>
+   318→                        {jobOrders.map((jo) => (
+   319→                          <SelectItem key={jo.id} value={jo.id}>
+   320→                            {jo.jobOrderId || jo.id} {jo.batchIdInput ? `(${jo.batchIdInput})` : ''}
+   321→                          </SelectItem>
+   322→                        ))}
+   323→                      </SelectContent>
+   324→                    </Select>
+   325→                  </div>
+   326→                  <div className="space-y-1.5">
+   327→                    <Label className="text-xs text-foreground">{t2('Ngay', 'Stage Date')}</Label>
+   328→                    <Input type="date" value={form.stageDate} onChange={(e) => setForm({ ...form, stageDate: e.target.value })} className="rounded-xl border-input focus:border-primary" />
+   329→                  </div>
+   330→                  <div className="space-y-1.5">
+   331→                    <Label className="text-xs text-foreground">{t2('TL dau vao (kg)', 'Input Weight (kg)')}</Label>
+   332→                    <Input type="number" step="0.1" value={form.inputWeight} onChange={(e) => setForm({ ...form, inputWeight: e.target.value })} placeholder="100" className="rounded-xl border-input focus:border-primary" />
+   333→                  </div>
+   334→                  <div className="space-y-1.5">
+   335→                    <Label className="text-xs text-foreground">{t2('TL dau ra (kg)', 'Output Weight (kg)')}</Label>
+   336→                    <Input type="number" step="0.1" value={form.outputWeight} onChange={(e) => setForm({ ...form, outputWeight: e.target.value })} placeholder="80" className="rounded-xl border-input focus:border-primary" />
+   337→                  </div>
+   338→                  <div className="space-y-1.5">
+   339→                    <Label className="text-xs text-foreground">{t2('Thoi gian (phut)', 'Duration (min)')}</Label>
+   340→                    <Input type="number" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} placeholder="60" className="rounded-xl border-input focus:border-primary" />
+   341→                  </div>
+   342→                  <div className="space-y-1.5">
+   343→                    <Label className="text-xs text-foreground">{t2('Nhiet do', 'Temperature')}</Label>
+   344→                    <Input type="number" step="0.1" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} placeholder="25" className="rounded-xl border-input focus:border-primary" />
+   345→                  </div>
+   346→                  <div className="space-y-1.5">
+   347→                    <Label className="text-xs text-foreground">{t2('Do am', 'Humidity')}</Label>
+   348→                    <Input type="number" step="0.1" value={form.humidity} onChange={(e) => setForm({ ...form, humidity: e.target.value })} placeholder="65" className="rounded-xl border-input focus:border-primary" />
+   349→                  </div>
+   350→                  <div className="space-y-1.5">
+   351→                    <Label className="text-xs text-foreground">{t2('May', 'Machine Used')}</Label>
+   352→                    <Input value={form.machineUsed} onChange={(e) => setForm({ ...form, machineUsed: e.target.value })} placeholder={t2('Ten may', 'Machine name')} className="rounded-xl border-input focus:border-primary" />
+   353→                  </div>
+   354→                  <div className="space-y-1.5">
+   355→                    <Label className="text-xs text-foreground">{t2('Nguoi van hanh', 'Operator')}</Label>
+   356→                    <Input value={form.operatorName} onChange={(e) => setForm({ ...form, operatorName: e.target.value })} placeholder={t2('Nguyen Van A', 'Nguyen Van A')} className="rounded-xl border-input focus:border-primary" />
+   357→                  </div>
+   358→                  <div className="space-y-1.5">
+   359→                    <Label className="text-xs text-foreground">{t2('Kiem tra CL', 'QC Passed')}</Label>
+   360→                    <Select value={form.qualityCheckPassed ? 'true' : 'false'} onValueChange={(v) => setForm({ ...form, qualityCheckPassed: v === 'true' })}>
+   361→                      <SelectTrigger className="rounded-xl border-input"><SelectValue /></SelectTrigger>
+   362→                      <SelectContent>
+   363→                        <SelectItem value="true">{t2('Dat', 'Passed')}</SelectItem>
+   364→                        <SelectItem value="false">{t2('Khong dat', 'Failed')}</SelectItem>
+   365→                      </SelectContent>
+   366→                    </Select>
+   367→                  </div>
+   368→                  <div className="space-y-1.5 md:col-span-2">
+   369→                    <Label className="text-xs text-foreground">{t2('Ghi chu', 'Notes')}</Label>
+   370→                    <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t2('Ghi chu them...', 'Additional notes...')} className="rounded-xl border-input focus:border-primary" rows={2} />
+   371→                  </div>
+   372→                </div>
+   373→                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+   374→                  <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="rounded-xl">{t2('Huy', 'Cancel')}</Button>
+   375→                  <Button type="submit" disabled={submitting} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+   376→                    {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t2('Dang luu...', 'Saving...')}</> : editingRecord ? t2('Cap nhat', 'Update') : t2('Tao moi', 'Create')}
+   377→                  </Button>
+   378→                </div>
+   379→              </form>
+   380→            </DialogContent>
+   381→          </Dialog>
+   382→        </div>
+   383→
+   384→        <div className="flex items-center gap-3 mb-6">
+   385→          <div className="relative flex-1 max-w-md">
+   386→            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   387→            <Input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder={t2('Tim kiem...', 'Search...')} className="pl-9 rounded-xl border-input focus:border-primary bg-background" />
+   388→          </div>
+   389→          <Badge variant="outline" className="border-border text-muted-foreground text-xs">{t(`${total} ban ghi`, `${total} records`)}</Badge>
+   390→        </div>
+   391→
+   392→        <Card className="rounded-2xl border-0 shadow-sm overflow-hidden">
+   393→          <div className="overflow-x-auto">
+   394→            <table className="w-full text-left">
+   395→              <thead>
+   396→                <tr className="bg-muted/50 border-b border-border">
+   397→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Lenh CB', 'Job Order')}</th>
+   398→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('Ma lo', 'Batch')}</th>
+   399→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Ngay', 'Date')}</th>
+   400→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('TL vao', 'Input')}</th>
+   401→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">{t2('TL ra', 'Output')}</th>
+   402→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('Thoi gian', 'Duration')}</th>
+   403→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">{t2('May', 'Machine')}</th>
+   404→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('QC', 'QC')}</th>
+   405→                  <th className="px-4 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t2('Thao tac', 'Actions')}</th>
+   406→                </tr>
+   407→              </thead>
+   408→              <tbody>
+   409→                {items.length === 0 ? (
+   410→                  <tr>
+   411→                    <td colSpan={9} className="text-center py-12 text-muted-foreground text-sm">
+   412→                      <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+   413→                      {t2('Khong co ban ghi nao', 'No records found')}
+   414→                    </td>
+   415→                  </tr>
+   416→                ) : (
+   417→                  items.map((record) => (
+   418→                    <tr key={record.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+   419→                      <td className="px-4 py-3">
+   420→                        <p className="text-xs font-medium text-foreground">{record.jobOrder.jobOrderId || '-'}</p>
+   421→                      </td>
+   422→                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono hidden md:table-cell">{record.jobOrder.batchIdInput || '-'}</td>
+   423→                      <td className="px-4 py-3 text-xs text-muted-foreground">{record.stageDate ? new Date(record.stageDate).toLocaleDateString() : '-'}</td>
+   424→                      <td className="px-4 py-3 text-xs font-medium text-foreground hidden md:table-cell">{record.inputWeight ? `${record.inputWeight} kg` : '-'}</td>
+   425→                      <td className="px-4 py-3 text-xs font-medium text-foreground hidden md:table-cell">{record.outputWeight ? `${record.outputWeight} kg` : '-'}</td>
+   426→                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{record.durationMinutes ? `${record.durationMinutes} min` : '-'}</td>
+   427→                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">{record.machineUsed || '-'}</td>
+   428→                      <td className="px-4 py-3">
+   429→                        {record.qualityCheckPassed ? <CheckCircle className="w-4 h-4 text-green-500" /> : <XCircle className="w-4 h-4 text-muted-foreground" />}
+   430→                      </td>
+   431→                      <td className="px-4 py-3">
+   432→                        <div className="flex items-center gap-1">
+   433→                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => router.push(`/processing/stages/${config.stageType}/${record.id}`)} title={t2('Xem chi tiết', 'View Details')}>
+   434→                            <Eye className="w-3.5 h-3.5" />
+   435→                          </Button>
+   436→                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={() => openEditDialog(record)}>
+   437→                            <Pencil className="w-3.5 h-3.5" />
+   438→                          </Button>
+   439→                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={() => { setDeletingRecord(record); setDeleteDialogOpen(true) }}>
+   440→                            <Trash2 className="w-3.5 h-3.5" />
+   441→                          </Button>
+   442→                        </div>
+   443→                      </td>
+   444→                    </tr>
+   445→                  ))
+   446→                )}
+   447→              </tbody>
+   448→            </table>
+   449→          </div>
+   450→          {totalPages > 1 && (
+   451→            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+   452→              <p className="text-[10px] text-muted-foreground">{t(`Trang ${page}/${totalPages}`, `Page ${page}/${totalPages}`)}</p>
+   453→              <div className="flex items-center gap-1">
+   454→                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0 rounded-lg border-input"><ChevronLeft className="w-3 h-3" /></Button>
+   455→                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+   456→                  const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i
+   457→                  if (p > totalPages) return null
+   458→                  return <Button key={p} variant={p === page ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)} className={`h-7 w-7 p-0 rounded-lg text-[10px] ${p === page ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>{p}</Button>
+   459→                })}
+   460→                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0 rounded-lg border-input"><ChevronRight className="w-3 h-3" /></Button>
+   461→              </div>
+   462→            </div>
+   463→          )}
+   464→        </Card>
+   465→      </div>
+   466→
+   467→      {/* Detail Dialog */}
+   468→      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+   469→        <DialogContent className="max-w-lg rounded-2xl">
+   470→          <DialogHeader>
+   471→            <DialogTitle className="text-foreground flex items-center gap-2">
+   472→              <Icon className="w-5 h-5" />
+   473→              {t2(config.labelVi, config.labelEn)} - {t2('Chi tiet', 'Details')}
+   474→            </DialogTitle>
+   475→          </DialogHeader>
+   476→          {detailItem && (
+   477→            <div className="space-y-3">
+   478→              <div className="grid grid-cols-2 gap-3">
+   479→                <InfoRow label={t2('Lenh CB', 'Job Order')} value={detailItem.jobOrder.jobOrderId} />
+   480→                <InfoRow label={t2('Ma lo', 'Batch')} value={detailItem.jobOrder.batchIdInput} />
+   481→                <InfoRow label={t2('Ngay', 'Date')} value={detailItem.stageDate ? new Date(detailItem.stageDate).toLocaleDateString() : null} />
+   482→                <InfoRow label={t2('TL vao (kg)', 'Input (kg)')} value={detailItem.inputWeight} />
+   483→                <InfoRow label={t2('TL ra (kg)', 'Output (kg)')} value={detailItem.outputWeight} />
+   484→                <InfoRow label={t2('Thoi gian (ph)', 'Duration (min)')} value={detailItem.durationMinutes} />
+   485→                <InfoRow label={t2('Nhiet do', 'Temperature')} value={detailItem.temperature} />
+   486→                <InfoRow label={t2('Do am', 'Humidity')} value={detailItem.humidity} />
+   487→                <InfoRow label={t2('May', 'Machine')} value={detailItem.machineUsed} />
+   488→                <InfoRow label={t2('Nguoi VH', 'Operator')} value={detailItem.operatorName} />
+   489→              </div>
+   490→              <div className="flex items-center gap-2">
+   491→                <Badge className={`${detailItem.qualityCheckPassed ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600'} text-[10px] border-0 gap-1`}>
+   492→                  {detailItem.qualityCheckPassed ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+   493→                  {detailItem.qualityCheckPassed ? t2('Dat', 'Passed') : t2('Khong dat', 'Failed')}
+   494→                </Badge>
+   495→              </div>
+   496→              {detailItem.notes && (
+   497→                <div className="p-3 rounded-lg bg-muted"><p className="text-sm text-foreground">{detailItem.notes}</p></div>
+   498→              )}
+   499→              <div className="grid grid-cols-2 gap-2 text-[10px] text-muted-foreground">
+   500→                <div><span className="uppercase">{t2('Ngay tao', 'Created')}</span><p className="font-medium text-xs">{new Date(detailItem.createdAt).toLocaleDateString()}</p></div>
+   501→                <div><span className="uppercase">{t2('Cap nhat', 'Updated')}</span><p className="font-medium text-xs">{new Date(detailItem.updatedAt).toLocaleDateString()}</p></div>
+   502→              </div>
+   503→            </div>
+   504→          )}
+   505→        </DialogContent>
+   506→      </Dialog>
+   507→
+   508→      {/* Delete Dialog */}
+   509→      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+   510→        <DialogContent className="max-w-md rounded-2xl">
+   511→          <DialogHeader>
+   512→            <DialogTitle className="text-foreground flex items-center gap-2">
+   513→              <AlertTriangle className="w-5 h-5 text-red-500" />
+   514→              {t2('Xac nhan xoa', 'Confirm Delete')}
+   515→            </DialogTitle>
+   516→          </DialogHeader>
+   517→          <p className="text-sm text-muted-foreground">
+   518→            {t2('Ban co chac muon xoa ban ghi nay?', 'Are you sure you want to delete this record?')}
+   519→          </p>
+   520→          <div className="flex justify-end gap-3 pt-4">
+   521→            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="rounded-xl">{t2('Huy', 'Cancel')}</Button>
+   522→            <Button onClick={handleDelete} disabled={submitting} className="bg-red-600 text-white rounded-xl hover:bg-red-700">
+   523→              {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+   524→              {t2('Xoa', 'Delete')}
+   525→            </Button>
+   526→          </div>
+   527→        </DialogContent>
+   528→      </Dialog>
+   529→    </DashboardShell>
+   530→  )
+   531→}
+   532→

@@ -1,0 +1,792 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState } from 'react'
+     4→import { useParams, useRouter } from 'next/navigation'
+     5→import { motion, AnimatePresence } from 'framer-motion'
+     6→import QRCode from 'qrcode'
+     7→import {
+     8→  ArrowLeft, User, MapPin, Sprout, Wheat, Award, ClipboardCheck,
+     9→  Phone, Mail, Calendar, CreditCard, Shield, QrCode,
+    10→  Printer, Share2, Edit, TreePine, Activity, Clock,
+    11→  CheckCircle2, AlertTriangle, XCircle, LandPlot, Eye,
+    12→} from 'lucide-react'
+    13→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+    14→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+    15→import { Badge } from '@/components/ui/badge'
+    16→import { Button } from '@/components/ui/button'
+    17→import { Separator } from '@/components/ui/separator'
+    18→import { Progress } from '@/components/ui/progress'
+    19→import { FadeIn, AnimatedCard, StaggerContainer, StaggerItem, PulseDot } from '@/components/ui/animations'
+    20→import { SensitiveField } from '@/components/ui/sensitive-field'
+    21→
+    22→// ======== INFO FIELD COMPONENT ========
+    23→function InfoField({ label, value, icon: Icon }: {
+    24→  label: string
+    25→  value: string | number | null | undefined
+    26→  icon?: React.ElementType
+    27→}) {
+    28→  const displayValue = value !== null && value !== undefined && value !== '' ? String(value) : '—'
+    29→  return (
+    30→    <div className="space-y-1">
+    31→      <div className="flex items-center gap-1.5">
+    32→        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+    33→        <p className="text-xs text-muted-foreground font-medium">{label}</p>
+    34→      </div>
+    35→      <p className="text-sm font-medium">{displayValue}</p>
+    36→    </div>
+    37→  )
+    38→}
+    39→
+    40→// ======== MASKED FIELD ========
+    41→function MaskedField({ label, value, icon: Icon }: {
+    42→  label: string
+    43→  value: string | number | null | undefined
+    44→  icon?: React.ElementType
+    45→}) {
+    46→  return (
+    47→    <div className="space-y-1">
+    48→      <div className="flex items-center gap-1.5">
+    49→        {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+    50→        <p className="text-xs text-muted-foreground font-medium">{label}</p>
+    51→      </div>
+    52→      <SensitiveField value={value} />
+    53→    </div>
+    54→  )
+    55→}
+    56→
+    57→// ======== CREDIT SCORE GAUGE ========
+    58→function CreditScoreGauge({ score }: { score: number | null | undefined }) {
+    59→  const clampedScore = Math.min(Math.max(score || 0, 0), 100)
+    60→  const circumference = 2 * Math.PI * 40
+    61→  const offset = circumference - (clampedScore / 100) * circumference
+    62→  const color = clampedScore >= 70 ? '#059669' : clampedScore >= 40 ? '#d97706' : '#dc2626'
+    63→
+    64→  return (
+    65→    <div className="relative flex items-center justify-center">
+    66→      <svg className="h-28 w-28 -rotate-90" viewBox="0 0 100 100">
+    67→        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/30" />
+    68→        <motion.circle
+    69→          cx="50" cy="50" r="40" fill="none" stroke={color} strokeWidth="6"
+    70→          strokeLinecap="round"
+    71→          strokeDasharray={circumference}
+    72→          initial={{ strokeDashoffset: circumference }}
+    73→          animate={{ strokeDashoffset: offset }}
+    74→          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+    75→        />
+    76→      </svg>
+    77→      <div className="absolute flex flex-col items-center">
+    78→        <span className="text-2xl font-bold" style={{ color }}>{clampedScore}</span>
+    79→        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Score</span>
+    80→      </div>
+    81→    </div>
+    82→  )
+    83→}
+    84→
+    85→// ======== FARM LAND CARD ========
+    86→function FarmLandCard({ land }: { land: any }) {
+    87→  return (
+    88→    <AnimatedCard>
+    89→      <Card className="border-0 shadow-sm h-full">
+    90→        <CardContent className="p-4">
+    91→          <div className="flex items-start justify-between mb-3">
+    92→            <div>
+    93→              <p className="font-semibold text-sm">{land.farmName || 'Unnamed Farm'}</p>
+    94→              {land.plotBlockId && <p className="text-xs text-muted-foreground font-mono">{land.plotBlockId}</p>}
+    95→            </div>
+    96→            <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Active</Badge>
+    97→          </div>
+    98→          <div className="grid grid-cols-2 gap-2 text-xs">
+    99→            <InfoField label="Area" value={land.totalLandHolding ? `${land.totalLandHolding} Ha` : null} icon={LandPlot} />
+   100→            <InfoField label="Altitude" value={land.altitude ? `${land.altitude}m` : null} icon={MapPin} />
+   101→            <InfoField label="Soil" value={land.soilType} />
+   102→            <InfoField label="Boundary" value={land.boundaryArea ? `${land.boundaryArea} Ha` : null} />
+   103→          </div>
+   104→          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+   105→            <Sprout className="h-3 w-3" />
+   106→            <span>{land._count?.cultivations || 0} cultivations</span>
+   107→            <span className="text-muted-foreground/40">·</span>
+   108→            <Wheat className="h-3 w-3" />
+   109→            <span>{land._count?.harvestTraceabilities || 0} harvests</span>
+   110→          </div>
+   111→        </CardContent>
+   112→      </Card>
+   113→    </AnimatedCard>
+   114→  )
+   115→}
+   116→
+   117→// ======== CULTIVATION CARD ========
+   118→function CultivationCard({ cultivation }: { cultivation: any }) {
+   119→  return (
+   120→    <AnimatedCard>
+   121→      <Card className="border-0 shadow-sm h-full">
+   122→        <CardContent className="p-4">
+   123→          <div className="flex items-start justify-between mb-3">
+   124→            <div>
+   125→              <p className="font-semibold text-sm">{cultivation.farmPlotName || 'Unnamed Plot'}</p>
+   126→              {cultivation.plotBlockId && <p className="text-xs text-muted-foreground font-mono">{cultivation.plotBlockId}</p>}
+   127→            </div>
+   128→            <div className="flex gap-1">
+   129→              {cultivation.isPrimaryCrop && <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Primary</Badge>}
+   130→              {cultivation.intercroppingEnabled && <Badge className="bg-amber-100 text-amber-700 text-[10px]">Intercrop</Badge>}
+   131→            </div>
+   132→          </div>
+   133→          <div className="grid grid-cols-2 gap-2 text-xs">
+   134→            <InfoField label="Variety" value={cultivation.cropVariety || cultivation.cultivatedCrop} />
+   135→            <InfoField label="Species" value={cultivation.coffeeSpecies} />
+   136→            <InfoField label="Area" value={cultivation.cultivationArea ? `${cultivation.cultivationArea} Ha` : null} />
+   137→            <InfoField label="Season" value={cultivation.harvestSeason} />
+   138→          </div>
+   139→          {cultivation.intercroppingEnabled && cultivation.intercroppingPartner && (
+   140→            <div className="mt-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/10 text-xs">
+   141→              <span className="text-amber-700 dark:text-amber-400 font-medium">Intercrop: </span>
+   142→              <span>{cultivation.intercroppingPartner} {cultivation.intercroppingRatio ? `(${cultivation.intercroppingRatio})` : ''}</span>
+   143→            </div>
+   144→          )}
+   145→          {cultivation.sowingDate && (
+   146→            <p className="mt-2 text-xs text-muted-foreground">Planted: {new Date(cultivation.sowingDate).toLocaleDateString()}</p>
+   147→          )}
+   148→        </CardContent>
+   149→      </Card>
+   150→    </AnimatedCard>
+   151→  )
+   152→}
+   153→
+   154→// ======== HARVEST RECORD ========
+   155→function HarvestRecord({ harvest }: { harvest: any }) {
+   156→  const cupScore = harvest.cupScore || 0
+   157→  const qualityLabel = cupScore >= 85 ? 'Specialty' : cupScore >= 80 ? 'Premium' : cupScore >= 75 ? 'Standard' : 'Below Grade'
+   158→  const qualityColor = cupScore >= 85 ? 'bg-emerald-100 text-emerald-700' : cupScore >= 80 ? 'bg-teal-100 text-teal-700' : cupScore >= 75 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+   159→
+   160→  return (
+   161→    <motion.div
+   162→      initial={{ opacity: 0, y: 8 }}
+   163→      animate={{ opacity: 1, y: 0 }}
+   164→      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors border"
+   165→    >
+   166→      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-amber-100">
+   167→        <Wheat className="h-5 w-5 text-amber-600" />
+   168→      </div>
+   169→      <div className="flex-1 min-w-0">
+   170→        <div className="flex items-center gap-2">
+   171→          <p className="text-sm font-medium font-mono">{harvest.batchId || '—'}</p>
+   172→          {cupScore > 0 && <Badge className={`text-[10px] ${qualityColor}`}>{qualityLabel}</Badge>}
+   173→        </div>
+   174→        <p className="text-xs text-muted-foreground">
+   175→          {harvest.actualHarvestDate ? new Date(harvest.actualHarvestDate).toLocaleDateString() : '—'}
+   176→          {harvest.processingMethod ? ` · ${harvest.processingMethod}` : ''}
+   177→          {harvest.coffeeVariety ? ` · ${harvest.coffeeVariety}` : ''}
+   178→        </p>
+   179→      </div>
+   180→      <div className="text-right shrink-0">
+   181→        {cupScore > 0 ? (
+   182→          <>
+   183→            <p className="text-sm font-bold">{cupScore}</p>
+   184→            <p className="text-[10px] text-muted-foreground">Cup Score</p>
+   185→          </>
+   186→        ) : (
+   187→          <p className="text-sm text-muted-foreground">—</p>
+   188→        )}
+   189→      </div>
+   190→    </motion.div>
+   191→  )
+   192→}
+   193→
+   194→// ======== ACTIVITY TIMELINE ITEM ========
+   195→function ActivityItem({ icon: Icon, title, description, time, color = 'text-emerald-600 bg-emerald-100' }: {
+   196→  icon: React.ElementType
+   197→  title: string
+   198→  description: string
+   199→  time: string
+   200→  color?: string
+   201→}) {
+   202→  return (
+   203→    <div className="flex gap-3">
+   204→      <div className="flex flex-col items-center">
+   205→        <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${color}`}>
+   206→          <Icon className="h-4 w-4" />
+   207→        </div>
+   208→        <div className="w-px flex-1 bg-border mt-1" />
+   209→      </div>
+   210→      <div className="pb-4">
+   211→        <p className="text-sm font-medium">{title}</p>
+   212→        <p className="text-xs text-muted-foreground">{description}</p>
+   213→        <p className="text-[10px] text-muted-foreground mt-0.5">{time}</p>
+   214→      </div>
+   215→    </div>
+   216→  )
+   217→}
+   218→
+   219→// ======== MAIN PAGE ========
+   220→interface FarmerDetail {
+   221→  id: string
+   222→  fullName: string
+   223→  firstName?: string
+   224→  lastName?: string
+   225→  farmerCode?: string
+   226→  contactNumber: string
+   227→  email?: string
+   228→  gender?: string
+   229→  dob?: string
+   230→  age?: number
+   231→  nationalIdType?: string
+   232→  nationalIdNo?: string
+   233→  province?: string
+   234→  district?: string
+   235→  commune?: string
+   236→  village?: string
+   237→  isCertified: boolean
+   238→  certificationType?: string
+   239→  creditScore?: number
+   240→  farmerPhoto?: string
+   241→  yearsOfFarmingExperience?: number
+   242→  education?: string
+   243→  maritalStatus?: string
+   244→  noOfFamilyMembers?: number
+   245→  enrollmentDate: string
+   246→  isActive: boolean
+   247→  farmLands?: any[]
+   248→  cultivations?: any[]
+   249→  harvestTraceabilities?: any[]
+   250→  certAssessments?: any[]
+   251→  coffeeInspections?: any[]
+   252→  _count?: { farmLands: number; cultivations: number; harvestTraceabilities: number; certAssessments: number; coffeeInspections: number }
+   253→}
+   254→
+   255→export default function FarmerDetailPage() {
+   256→  const params = useParams()
+   257→  const router = useRouter()
+   258→  const farmerId = params.id as string
+   259→  const [farmer, setFarmer] = useState<FarmerDetail | null>(null)
+   260→  const [loading, setLoading] = useState(true)
+   261→  const [qrUrl, setQrUrl] = useState<string>('')
+   262→
+   263→  useEffect(() => {
+   264→    let cancelled = false
+   265→    fetch(`/api/farmers?id=${farmerId}`)
+   266→      .then(r => r.json())
+   267→      .then(data => {
+   268→        if (cancelled) return
+   269→        const farmerData = data?.data?.data || data?.data || data
+   270→        setFarmer(farmerData)
+   271→        setLoading(false)
+   272→      })
+   273→      .catch(() => {
+   274→        if (!cancelled) setLoading(false)
+   275→      })
+   276→    return () => { cancelled = true }
+   277→  }, [farmerId])
+   278→
+   279→  // Generate QR code — use secure verification if available, otherwise plain URL
+   280→  useEffect(() => {
+   281→    if (farmer?.farmerCode || farmer?.id) {
+   282→      const generateQR = async () => {
+   283→        try {
+   284→          const origin = typeof window !== 'undefined' ? window.location.origin : ''
+   285→          // Use secure verification URL pattern: /verify/{farmerCode}
+   286→          // The /verify/[qrCode] route will look up the QRVerification record
+   287→          const verifyPath = `/verify/${farmer.farmerCode || farmer.id}`
+   288→          const url = await QRCode.toDataURL(`${origin}${verifyPath}`, {
+   289→            width: 160,
+   290→            margin: 2,
+   291→            color: { dark: '#6D2932', light: '#ffffff' }  // Coffee brown QR code
+   292→          })
+   293→          setQrUrl(url)
+   294→        } catch (err) {
+   295→          // Fallback: silent fail
+   296→          console.error('QR generation failed:', err)
+   297→        }
+   298→      }
+   299→      generateQR()
+   300→    }
+   301→  }, [farmer?.farmerCode, farmer?.id])
+   302→
+   303→  if (loading) {
+   304→    return (
+   305→      <div className="p-4 md:p-6 space-y-4">
+   306→        {[1, 2, 3].map(i => (
+   307→          <div key={i} className="h-32 bg-muted/50 rounded-xl animate-pulse" />
+   308→        ))}
+   309→      </div>
+   310→    )
+   311→  }
+   312→
+   313→  if (!farmer) {
+   314→    return (
+   315→      <div className="p-4 md:p-6 text-center">
+   316→        <p className="text-muted-foreground">Farmer not found</p>
+   317→        <Button variant="outline" className="mt-4" onClick={() => router.push('/farmers')}>
+   318→          Back to Farmers
+   319→        </Button>
+   320→      </div>
+   321→    )
+   322→  }
+   323→
+   324→  const farmLands = farmer.farmLands || []
+   325→  const cultivations = farmer.cultivations || []
+   326→  const harvests = farmer.harvestTraceabilities || []
+   327→  const certAssessments = farmer.certAssessments || []
+   328→  const inspections = farmer.coffeeInspections || []
+   329→  const totalFarmArea = farmLands.reduce((sum: number, fl: any) => sum + (fl.totalLandHolding || 0), 0)
+   330→
+   331→  return (
+   332→    <div className="p-4 md:p-6 space-y-6">
+   333→      {/* Hero Section */}
+   334→      <FadeIn>
+   335→        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 p-6 md:p-8 text-white">
+   336→          {/* Decorative coffee plant patterns */}
+   337→          <div className="absolute top-0 right-0 w-80 h-80 opacity-[0.06]">
+   338→            <svg viewBox="0 0 200 200" className="w-full h-full">
+   339→              <circle cx="100" cy="50" r="30" fill="currentColor" />
+   340→              <circle cx="60" cy="100" r="25" fill="currentColor" />
+   341→              <circle cx="140" cy="100" r="25" fill="currentColor" />
+   342→              <circle cx="80" cy="150" r="20" fill="currentColor" />
+   343→              <circle cx="120" cy="150" r="20" fill="currentColor" />
+   344→              <rect x="95" y="50" width="10" height="100" rx="5" fill="currentColor" />
+   345→              <rect x="55" y="100" width="10" height="60" rx="5" fill="currentColor" transform="rotate(-20 60 100)" />
+   346→              <rect x="135" y="100" width="10" height="60" rx="5" fill="currentColor" transform="rotate(20 140 100)" />
+   347→            </svg>
+   348→          </div>
+   349→          <div className="absolute top-4 left-4 w-40 h-40 bg-white/5 rounded-full -translate-y-1/3 -translate-x-1/3" />
+   350→          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-white/5 rounded-full translate-y-1/3" />
+   351→
+   352→          <div className="relative">
+   353→            {/* Back button */}
+   354→            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 mb-4" onClick={() => router.push('/farmers')}>
+   355→              <ArrowLeft className="h-5 w-5" />
+   356→            </Button>
+   357→
+   358→            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+   359→              {/* Avatar + Certification */}
+   360→              <div className="relative shrink-0">
+   361→                <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-bold border-3 border-white/30 shadow-lg">
+   362→                  {farmer.fullName?.charAt(0) || '?'}
+   363→                </div>
+   364→                {farmer.isCertified && (
+   365→                  <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-amber-400 flex items-center justify-center shadow-md ring-2 ring-emerald-700">
+   366→                    <Award className="h-4 w-4 text-amber-900" />
+   367→                  </div>
+   368→                )}
+   369→              </div>
+   370→
+   371→              {/* Name & Badges */}
+   372→              <div className="flex-1">
+   373→                <h2 className="text-2xl md:text-3xl font-bold">{farmer.fullName}</h2>
+   374→                <div className="flex flex-wrap items-center gap-2 mt-2">
+   375→                  {farmer.farmerCode && (
+   376→                    <Badge className="bg-white/20 text-white border-0 font-mono">
+   377→                      <QrCode className="h-3 w-3 mr-1" />
+   378→                      {farmer.farmerCode}
+   379→                    </Badge>
+   380→                  )}
+   381→                  {farmer.isCertified && (
+   382→                    <Badge className="bg-amber-400/80 text-amber-900 border-0">
+   383→                      <Shield className="h-3 w-3 mr-1" />
+   384→                      {farmer.certificationType || 'Certified'}
+   385→                    </Badge>
+   386→                  )}
+   387→                  <Badge className={`${farmer.isActive ? 'bg-emerald-400/30 text-emerald-100' : 'bg-red-400/30 text-red-100'} border-0`}>
+   388→                    <span className="mr-1">{farmer.isActive ? '●' : '○'}</span>
+   389→                    {farmer.isActive ? 'Active' : 'Inactive'}
+   390→                  </Badge>
+   391→                </div>
+   392→                <div className="flex items-center gap-4 mt-3 text-sm text-emerald-100/80">
+   393→                  {farmer.province && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{farmer.province}</span>}
+   394→                  {farmer._count && <span className="flex items-center gap-1"><LandPlot className="h-3.5 w-3.5" />{farmer._count.farmLands} farms</span>}
+   395→                  {farmer._count && <span className="flex items-center gap-1"><Wheat className="h-3.5 w-3.5" />{farmer._count.harvestTraceabilities} harvests</span>}
+   396→                </div>
+   397→              </div>
+   398→
+   399→              {/* Credit Score + QR + Actions */}
+   400→              <div className="flex flex-col items-center md:items-end gap-3 shrink-0">
+   401→                <div className="flex items-center gap-4">
+   402→                  {/* Credit Score */}
+   403→                  <div className="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+   404→                    <CreditScoreGauge score={farmer.creditScore} />
+   405→                  </div>
+   406→                  {/* QR Code */}
+   407→                  {qrUrl ? (
+   408→                    <div className="bg-white rounded-xl p-2 shadow-lg">
+   409→                      <img src={qrUrl} alt="QR Code" className="h-24 w-24" />
+   410→                    </div>
+   411→                  ) : (
+   412→                    <div className="h-28 w-28 bg-white rounded-xl flex items-center justify-center">
+   413→                      <QrCode className="h-10 w-10 text-emerald-700" />
+   414→                    </div>
+   415→                  )}
+   416→                </div>
+   417→                {/* Quick Actions */}
+   418→                <div className="flex gap-2">
+   419→                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-8 text-xs">
+   420→                    <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+   421→                  </Button>
+   422→                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-8 text-xs">
+   423→                    <Printer className="h-3.5 w-3.5 mr-1" /> Print Card
+   424→                  </Button>
+   425→                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-8 text-xs">
+   426→                    <Share2 className="h-3.5 w-3.5 mr-1" /> Share
+   427→                  </Button>
+   428→                </div>
+   429→              </div>
+   430→            </div>
+   431→          </div>
+   432→        </div>
+   433→      </FadeIn>
+   434→
+   435→      {/* Tabbed Layout */}
+   436→      <Tabs defaultValue="overview" className="space-y-4">
+   437→        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto gap-1">
+   438→          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+   439→          <TabsTrigger value="farmlands" className="text-xs">Farm Lands</TabsTrigger>
+   440→          <TabsTrigger value="cultivations" className="text-xs">Cultivations</TabsTrigger>
+   441→          <TabsTrigger value="harvest" className="text-xs">Harvest</TabsTrigger>
+   442→          <TabsTrigger value="eudr" className="text-xs">EUDR</TabsTrigger>
+   443→          <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+   444→        </TabsList>
+   445→
+   446→        {/* Overview Tab */}
+   447→        <TabsContent value="overview" className="space-y-4">
+   448→          <div className="grid md:grid-cols-2 gap-4">
+   449→            <AnimatedCard>
+   450→              <Card className="border-0 shadow-sm">
+   451→                <CardHeader className="pb-2">
+   452→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   453→                    <User className="h-4 w-4 text-emerald-600" /> Personal Information
+   454→                  </CardTitle>
+   455→                </CardHeader>
+   456→                <CardContent className="grid grid-cols-2 gap-3">
+   457→                  <InfoField label="Full Name" value={farmer.fullName} />
+   458→                  <InfoField label="Gender" value={farmer.gender} />
+   459→                  <InfoField label="Date of Birth" value={farmer.dob ? new Date(farmer.dob).toLocaleDateString() : null} icon={Calendar} />
+   460→                  <InfoField label="Age" value={
+   461→                    farmer.age && farmer.age > 0 ? `${farmer.age} years` :
+   462→                    farmer.dob ? `${Math.floor((Date.now() - new Date(farmer.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years` :
+   463→                    '—'
+   464→                  } />
+   465→                  <InfoField label="Education" value={farmer.education} />
+   466→                  <InfoField label="Marital Status" value={farmer.maritalStatus} />
+   467→                  <InfoField label="Family Members" value={farmer.noOfFamilyMembers} />
+   468→                  <InfoField label="Farming Experience" value={farmer.yearsOfFarmingExperience ? `${farmer.yearsOfFarmingExperience} years` : null} />
+   469→                </CardContent>
+   470→              </Card>
+   471→            </AnimatedCard>
+   472→
+   473→            <AnimatedCard delay={0.1}>
+   474→              <Card className="border-0 shadow-sm">
+   475→                <CardHeader className="pb-2">
+   476→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   477→                    <Phone className="h-4 w-4 text-emerald-600" /> Contact & Identity
+   478→                  </CardTitle>
+   479→                </CardHeader>
+   480→                <CardContent className="grid grid-cols-2 gap-3">
+   481→                  <MaskedField label="Contact Number" value={farmer.contactNumber} icon={Phone} />
+   482→                  <MaskedField label="Email" value={farmer.email} icon={Mail} />
+   483→                  <MaskedField label="National ID Type" value={farmer.nationalIdType} />
+   484→                  <MaskedField label="National ID No" value={farmer.nationalIdNo} />
+   485→                  <InfoField label="Enrollment Date" value={new Date(farmer.enrollmentDate).toLocaleDateString()} icon={Calendar} />
+   486→                  <InfoField label="Farmer Code" value={farmer.farmerCode} icon={QrCode} />
+   487→                </CardContent>
+   488→              </Card>
+   489→            </AnimatedCard>
+   490→
+   491→            <AnimatedCard delay={0.2}>
+   492→              <Card className="border-0 shadow-sm">
+   493→                <CardHeader className="pb-2">
+   494→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   495→                    <MapPin className="h-4 w-4 text-emerald-600" /> Address
+   496→                  </CardTitle>
+   497→                </CardHeader>
+   498→                <CardContent className="grid grid-cols-2 gap-3">
+   499→                  <InfoField label="Province" value={farmer.province} />
+   500→                  <InfoField label="District" value={farmer.district} />
+   501→                  <InfoField label="Commune" value={farmer.commune} />
+   502→                  <InfoField label="Village" value={farmer.village} />
+   503→                </CardContent>
+   504→              </Card>
+   505→            </AnimatedCard>
+   506→
+   507→            <AnimatedCard delay={0.3}>
+   508→              <Card className="border-0 shadow-sm">
+   509→                <CardHeader className="pb-2">
+   510→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   511→                    <CreditCard className="h-4 w-4 text-emerald-600" /> Credit & Financial
+   512→                  </CardTitle>
+   513→                </CardHeader>
+   514→                <CardContent>
+   515→                  <div className="flex items-center gap-4 mb-4">
+   516→                    <div className="flex-1">
+   517→                      <div className="flex items-center justify-between mb-1">
+   518→                        <span className="text-xs text-muted-foreground">Credit Score</span>
+   519→                        <span className="text-sm font-bold text-emerald-600">{farmer.creditScore?.toFixed(0) || '—'}</span>
+   520→                      </div>
+   521→                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+   522→                        <motion.div
+   523→                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full"
+   524→                          initial={{ width: 0 }}
+   525→                          animate={{ width: `${Math.min((farmer.creditScore || 0), 100)}%` }}
+   526→                          transition={{ duration: 1, delay: 0.5 }}
+   527→                        />
+   528→                      </div>
+   529→                    </div>
+   530→                  </div>
+   531→                  <Separator className="my-3" />
+   532→                  <div className="grid grid-cols-2 gap-3">
+   533→                    <InfoField label="Certification" value={farmer.isCertified ? 'Yes' : 'No'} icon={Shield} />
+   534→                    <InfoField label="Cert Type" value={farmer.certificationType} />
+   535→                  </div>
+   536→                </CardContent>
+   537→              </Card>
+   538→            </AnimatedCard>
+   539→          </div>
+   540→        </TabsContent>
+   541→
+   542→        {/* Farm Lands Tab */}
+   543→        <TabsContent value="farmlands" className="space-y-4">
+   544→          <FadeIn>
+   545→            <div className="flex items-center justify-between">
+   546→              <div>
+   547→                <h3 className="font-semibold">Farm Lands</h3>
+   548→                <p className="text-xs text-muted-foreground">{farmLands.length} farm land(s) · Total area: {totalFarmArea.toFixed(1)} Ha</p>
+   549→              </div>
+   550→            </div>
+   551→          </FadeIn>
+   552→          {farmLands.length > 0 ? (
+   553→            <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   554→              {farmLands.map((land: any) => (
+   555→                <StaggerItem key={land.id}>
+   556→                  <FarmLandCard land={land} />
+   557→                </StaggerItem>
+   558→              ))}
+   559→            </StaggerContainer>
+   560→          ) : (
+   561→            <Card className="border-dashed border-2">
+   562→              <CardContent className="py-12 text-center">
+   563→                <MapPin className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+   564→                <p className="text-sm text-muted-foreground">No farm lands recorded for this farmer</p>
+   565→              </CardContent>
+   566→            </Card>
+   567→          )}
+   568→        </TabsContent>
+   569→
+   570→        {/* Cultivations Tab */}
+   571→        <TabsContent value="cultivations" className="space-y-4">
+   572→          <FadeIn>
+   573→            <div className="flex items-center justify-between">
+   574→              <div>
+   575→                <h3 className="font-semibold">Cultivations</h3>
+   576→                <p className="text-xs text-muted-foreground">{cultivations.length} cultivation record(s)</p>
+   577→              </div>
+   578→            </div>
+   579→          </FadeIn>
+   580→          {cultivations.length > 0 ? (
+   581→            <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+   582→              {cultivations.map((cult: any) => (
+   583→                <StaggerItem key={cult.id}>
+   584→                  <CultivationCard cultivation={cult} />
+   585→                </StaggerItem>
+   586→              ))}
+   587→            </StaggerContainer>
+   588→          ) : (
+   589→            <Card className="border-dashed border-2">
+   590→              <CardContent className="py-12 text-center">
+   591→                <Sprout className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+   592→                <p className="text-sm text-muted-foreground">No cultivation records for this farmer</p>
+   593→              </CardContent>
+   594→            </Card>
+   595→          )}
+   596→        </TabsContent>
+   597→
+   598→        {/* Harvest Tab */}
+   599→        <TabsContent value="harvest" className="space-y-4">
+   600→          <FadeIn>
+   601→            <div className="flex items-center justify-between">
+   602→              <div>
+   603→                <h3 className="font-semibold">Harvest Records</h3>
+   604→                <p className="text-xs text-muted-foreground">{harvests.length} harvest record(s)</p>
+   605→              </div>
+   606→            </div>
+   607→          </FadeIn>
+   608→          {harvests.length > 0 ? (
+   609→            <Card className="border-0 shadow-sm">
+   610→              <CardContent className="p-2">
+   611→                <div className="space-y-1 max-h-[480px] overflow-y-auto">
+   612→                  {harvests.map((h: any) => (
+   613→                    <HarvestRecord key={h.id} harvest={h} />
+   614→                  ))}
+   615→                </div>
+   616→              </CardContent>
+   617→            </Card>
+   618→          ) : (
+   619→            <Card className="border-dashed border-2">
+   620→              <CardContent className="py-12 text-center">
+   621→                <Wheat className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+   622→                <p className="text-sm text-muted-foreground">No harvest records for this farmer</p>
+   623→              </CardContent>
+   624→            </Card>
+   625→          )}
+   626→        </TabsContent>
+   627→
+   628→        {/* EUDR & Compliance Tab */}
+   629→        <TabsContent value="eudr" className="space-y-4">
+   630→          <FadeIn>
+   631→            <div className="flex items-center justify-between">
+   632→              <div>
+   633→                <h3 className="font-semibold">EUDR & Compliance</h3>
+   634→                <p className="text-xs text-muted-foreground">Deforestation risk assessment and certifications</p>
+   635→              </div>
+   636→            </div>
+   637→          </FadeIn>
+   638→
+   639→          <div className="grid md:grid-cols-2 gap-4">
+   640→            {/* EUDR Compliance Status */}
+   641→            <AnimatedCard>
+   642→              <Card className="border-0 shadow-sm">
+   643→                <CardHeader className="pb-2">
+   644→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   645→                    <TreePine className="h-4 w-4 text-emerald-600" /> Deforestation Risk Assessment
+   646→                  </CardTitle>
+   647→                </CardHeader>
+   648→                <CardContent>
+   649→                  {farmLands.length > 0 ? (
+   650→                    <div className="space-y-3">
+   651→                      {farmLands.map((fl: any) => (
+   652→                        <div key={fl.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+   653→                          <div>
+   654→                            <p className="text-sm font-medium">{fl.farmName}</p>
+   655→                            <p className="text-xs text-muted-foreground">{fl.totalLandHolding ? `${fl.totalLandHolding} Ha` : '—'}</p>
+   656→                          </div>
+   657→                          <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">
+   658→                            <CheckCircle2 className="h-3 w-3 mr-1" /> Low Risk
+   659→                          </Badge>
+   660→                        </div>
+   661→                      ))}
+   662→                    </div>
+   663→                  ) : (
+   664→                    <p className="text-sm text-muted-foreground">No farm lands to assess</p>
+   665→                  )}
+   666→                </CardContent>
+   667→              </Card>
+   668→            </AnimatedCard>
+   669→
+   670→            {/* Certifications */}
+   671→            <AnimatedCard delay={0.1}>
+   672→              <Card className="border-0 shadow-sm">
+   673→                <CardHeader className="pb-2">
+   674→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   675→                    <Award className="h-4 w-4 text-emerald-600" /> Certification Records
+   676→                  </CardTitle>
+   677→                </CardHeader>
+   678→                <CardContent>
+   679→                  {certAssessments.length > 0 ? (
+   680→                    <div className="space-y-3">
+   681→                      {certAssessments.map((cert: any) => (
+   682→                        <div key={cert.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+   683→                          <div>
+   684→                            <p className="text-sm font-medium">{cert.certificationStandard || '—'}</p>
+   685→                            <p className="text-xs text-muted-foreground">{cert.certifyingBody || '—'} {cert.certificateNumber ? `· ${cert.certificateNumber}` : ''}</p>
+   686→                          </div>
+   687→                          <Badge className={`text-[10px] ${cert.status === 'approved' || cert.status === 'passed' ? 'bg-emerald-100 text-emerald-700' : cert.status === 'rejected' || cert.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+   688→                            {cert.status || 'pending'}
+   689→                          </Badge>
+   690→                        </div>
+   691→                      ))}
+   692→                    </div>
+   693→                  ) : (
+   694→                    <div className="text-center py-6">
+   695→                      <Shield className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+   696→                      <p className="text-sm text-muted-foreground">
+   697→                        {farmer.isCertified ? `Certified: ${farmer.certificationType || 'Yes'}` : 'No certifications on record'}
+   698→                      </p>
+   699→                    </div>
+   700→                  )}
+   701→                </CardContent>
+   702→              </Card>
+   703→            </AnimatedCard>
+   704→          </div>
+   705→        </TabsContent>
+   706→
+   707→        {/* Activity Tab */}
+   708→        <TabsContent value="activity" className="space-y-4">
+   709→          <FadeIn>
+   710→            <div className="flex items-center justify-between">
+   711→              <div>
+   712→                <h3 className="font-semibold">Activity & Inspections</h3>
+   713→                <p className="text-xs text-muted-foreground">Recent activity timeline and inspection records</p>
+   714→              </div>
+   715→            </div>
+   716→          </FadeIn>
+   717→
+   718→          <div className="grid md:grid-cols-2 gap-4">
+   719→            {/* Activity Timeline */}
+   720→            <AnimatedCard>
+   721→              <Card className="border-0 shadow-sm">
+   722→                <CardHeader className="pb-2">
+   723→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   724→                    <Activity className="h-4 w-4 text-emerald-600" /> Recent Activity
+   725→                  </CardTitle>
+   726→                </CardHeader>
+   727→                <CardContent>
+   728→                  <div className="space-y-0 max-h-72 overflow-y-auto">
+   729→                    <ActivityItem icon={User} title="Farmer Enrolled" description={`Code: ${farmer.farmerCode || farmer.id}`} time={new Date(farmer.enrollmentDate).toLocaleDateString()} />
+   730→                    {farmLands.slice(0, 2).map((fl: any, i: number) => (
+   731→                      <ActivityItem key={fl.id} icon={MapPin} title="Farm Land Added" description={fl.farmName} color="text-teal-600 bg-teal-100" time="—" />
+   732→                    ))}
+   733→                    {harvests.slice(0, 2).map((h: any) => (
+   734→                      <ActivityItem key={h.id} icon={Wheat} title="Harvest Recorded" description={`Batch: ${h.batchId || '—'}`} color="text-amber-600 bg-amber-100" time={h.actualHarvestDate ? new Date(h.actualHarvestDate).toLocaleDateString() : '—'} />
+   735→                    ))}
+   736→                    {certAssessments.slice(0, 2).map((c: any) => (
+   737→                      <ActivityItem key={c.id} icon={Award} title="Cert Assessment" description={c.certificationStandard || '—'} color="text-purple-600 bg-purple-100" time={c.assessmentDate ? new Date(c.assessmentDate).toLocaleDateString() : '—'} />
+   738→                    ))}
+   739→                  </div>
+   740→                </CardContent>
+   741→              </Card>
+   742→            </AnimatedCard>
+   743→
+   744→            {/* Inspections */}
+   745→            <AnimatedCard delay={0.1}>
+   746→              <Card className="border-0 shadow-sm">
+   747→                <CardHeader className="pb-2">
+   748→                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+   749→                    <ClipboardCheck className="h-4 w-4 text-emerald-600" /> Inspection Records
+   750→                  </CardTitle>
+   751→                </CardHeader>
+   752→                <CardContent>
+   753→                  {inspections.length > 0 ? (
+   754→                    <div className="space-y-2 max-h-72 overflow-y-auto">
+   755→                      {inspections.map((insp: any) => (
+   756→                        <div key={insp.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors border">
+   757→                          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+   758→                            insp.passFail === 'Pass' ? 'bg-emerald-100' : insp.passFail === 'Fail' ? 'bg-red-100' : 'bg-amber-100'
+   759→                          }`}>
+   760→                            {insp.passFail === 'Pass' ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> :
+   761→                             insp.passFail === 'Fail' ? <XCircle className="h-4 w-4 text-red-600" /> :
+   762→                             <Clock className="h-4 w-4 text-amber-600" />}
+   763→                          </div>
+   764→                          <div className="flex-1 min-w-0">
+   765→                            <p className="text-sm font-medium">{insp.inspectionType || 'Inspection'}</p>
+   766→                            <p className="text-xs text-muted-foreground">{insp.inspectorName || '—'} · {insp.inspectionDate ? new Date(insp.inspectionDate).toLocaleDateString() : '—'}</p>
+   767→                          </div>
+   768→                          <Badge className={`text-[10px] ${
+   769→                            insp.passFail === 'Pass' ? 'bg-emerald-100 text-emerald-700' :
+   770→                            insp.passFail === 'Fail' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+   771→                          }`}>
+   772→                            {insp.passFail || insp.overallGrade || 'Pending'}
+   773→                          </Badge>
+   774→                        </div>
+   775→                      ))}
+   776→                    </div>
+   777→                  ) : (
+   778→                    <div className="text-center py-6">
+   779→                      <Eye className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+   780→                      <p className="text-sm text-muted-foreground">No inspections on record</p>
+   781→                    </div>
+   782→                  )}
+   783→                </CardContent>
+   784→              </Card>
+   785→            </AnimatedCard>
+   786→          </div>
+   787→        </TabsContent>
+   788→      </Tabs>
+   789→    </div>
+   790→  )
+   791→}
+   792→
