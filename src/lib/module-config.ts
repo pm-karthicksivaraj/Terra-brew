@@ -352,8 +352,12 @@ export function getFilteredModules(entityType: EntityType, role: TenantRole): Mo
   return MODULES.filter(mod => {
     const entityAccess = mod.entityTypeAccess[entityType]
     if (entityAccess === 'hidden') return false
+    // Unknown entity types (no entry in entityTypeAccess) → treat as hidden
+    if (!entityAccess) return false
     const roleAccess = mod.roleAccess[role]
     if (roleAccess === 'hidden') return false
+    // Unknown roles (no entry in roleAccess, e.g. 'super_admin') → treat as hidden
+    if (!roleAccess) return false
     return true
   })
 }

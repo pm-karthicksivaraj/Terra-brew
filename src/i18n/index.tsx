@@ -29,6 +29,7 @@ interface I18nContextValue {
   t: (key: string, fallback?: string) => string
   /** Inline translation: t2('Xin chào', 'Hello') — pick by current lang */
   t2: (vi: string, en: string) => string
+  supportedLocales: Locale[]
 }
 
 const I18nContext = createContext<I18nContextValue>({
@@ -36,6 +37,7 @@ const I18nContext = createContext<I18nContextValue>({
   setLang: () => {},
   t: (key: string) => key,
   t2: (vi: string, en: string) => vi,
+  supportedLocales: SUPPORTED_LOCALES as Locale[],
 })
 
 // ─── Provider ────────────────────────────────────────────────────
@@ -82,7 +84,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [lang])
 
   return (
-    <I18nContext.Provider value={{ lang, setLang, t, t2 }}>
+    <I18nContext.Provider value={{ lang, setLang, t, t2, supportedLocales: SUPPORTED_LOCALES as Locale[] }}>
       {children}
     </I18nContext.Provider>
   )
@@ -109,3 +111,21 @@ export function useI18n() {
  *   // t('auth.signIn') — new: lookup from JSON files
  */
 export { I18nProvider as default }
+
+// ─── Locale metadata ─────────────────────────────────────────────
+
+export const LOCALE_FLAGS: Record<string, string> = {
+  vi: '🇻🇳',
+  en: '🇬🇧',
+  pt: '🇧🇷',
+  am: '🇪🇹',
+  sw: '🇰🇪',
+}
+
+export const LOCALE_LABELS: Record<string, string> = {
+  vi: 'Tiếng Việt',
+  en: 'English',
+  pt: 'Português',
+  am: 'አማርኛ',
+  sw: 'Kiswahili',
+}

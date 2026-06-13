@@ -138,6 +138,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const { theme, setTheme } = useTheme()
   const { lang, setLang, t, t2 } = useI18n()
 
+  // Platform admins should never see the tenant sidebar.
+  // Redirect them to their own dashboard if they land on a tenant page.
+  const isPlatformAdmin = (session?.user as any)?.isPlatformAdmin === true
+  useEffect(() => {
+    if (isPlatformAdmin && typeof window !== 'undefined') {
+      window.location.href = '/super-admin/dashboard'
+    }
+  }, [isPlatformAdmin])
+
   // Hydration guard: only render dynamic layout after client mount.
   const [mounted, setMounted] = useState(false)
 
@@ -195,6 +204,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
   // Compute margin-left: only on desktop, matches sidebar width
   const marginLeft = mounted && isDesktop ? (collapsed ? 72 : 256) : 0
+
+  // Platform admin redirect — don't render the tenant shell at all
+  if (mounted && isPlatformAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground animate-pulse">Redirecting to admin dashboard...</p>
+      </div>
+    )
+  }
 
   // Before client mount, render a minimal shell that matches the server output.
   if (!mounted) {

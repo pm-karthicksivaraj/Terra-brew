@@ -53,3 +53,6 @@ server.log
 # Skills directory
 /skills/tool-results/
 upload/
+download/
+DEPLOYMENT.md
+tool-results/
