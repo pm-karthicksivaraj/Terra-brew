@@ -50,6 +50,17 @@ test
 prompt
 
 server.log
+
+# PostgreSQL data
+data/db/
+data/db_old/
+.pgdata/
+.pgdata2/
+
+# SQLite
+db/
+*.db
+
 # Skills directory
 /skills/tool-results/
 upload/
