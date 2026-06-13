@@ -26,14 +26,14 @@ import { toast } from 'sonner'
 import { TraceabilityMap } from '@/components/map'
 import type { TraceLocation } from '@/components/map'
 import { useI18n } from '@/i18n'
+import { getTraceBatchForTenant, type CountryTraceBatch, type CountryTraceStage, type TraceStageData } from '@/lib/traceability-mock-data'
 
 // ═══════════════════════════════════════════════════════════════════
-// MOCK DATA — Vietnamese Coffee Batch (14 Stages)
+// TRACEABILITY PAGE — Tenant-aware mock data
+// Data is selected based on the logged-in user's tenant country.
 // ═══════════════════════════════════════════════════════════════════
 
-interface TraceStageData {
-  [key: string]: string | number | boolean | null | undefined
-}
+// TraceStageData is imported from traceability-mock-data
 
 interface TraceStage {
   key: string
@@ -61,221 +61,26 @@ interface ChainBlock {
   dataHash: string
 }
 
-const MOCK_BATCH_ID = 'TB-2026-DL-00847'
+// ─── LUCIDE ICON MAP ────────────────────────────────────────
+const STAGE_ICON_MAP: Record<string, React.ElementType> = {
+  farmer: User, farmland: TreePine, cultivation: Sprout,
+  fertilizer: FlaskConical, crop_monitoring: Activity,
+  pest_disease: Bug, harvest: Scissors, procurement: Truck,
+  processing: Factory, sorting: ShieldCheck, export_prep: Package,
+  shipping: Ship, quality_check: ClipboardCheck, delivery: CheckCircle2,
+  roasting: Factory, packaging: Package, warehouse: Warehouse,
+  distribution: Truck, retail: Store,
+}
 
-const MOCK_STAGES: TraceStage[] = [
-  {
-    key: 'farmer', icon: '👨‍🌾', lucideIcon: User,
-    nameVi: 'Nông dân', nameEn: 'Farmer Registration',
-    status: 'completed', date: '2025-08-12T06:30:00+07:00',
-    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.857, lng: 108.162,
-    metrics: [
-      { label: 'Farmer ID', value: 'F-DL-2019-0342' },
-      { label: 'Co-op', value: 'Ea H\'Leo Cooperative' },
-      { label: 'Years Exp.', value: '18' },
-    ],
-    details: { farmerCode: 'F-DL-0342', fullName: 'Nguyễn Văn Minh', province: 'Đắk Lắk', isCertified: true, nationalIdNo: '****6789' },
-    hash: '0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d',
-  },
-  {
-    key: 'farmland', icon: '🏞️', lucideIcon: TreePine,
-    nameVi: 'Đất nông trại', nameEn: 'Farm Land',
-    status: 'completed', date: '2025-08-14T08:00:00+07:00',
-    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.862, lng: 108.168,
-    metrics: [
-      { label: 'Area', value: '2.4 ha' },
-      { label: 'Altitude', value: '820m' },
-      { label: 'Soil pH', value: '5.8' },
-    ],
-    details: { farmName: 'Gia Lộc Farm', area: 2.4, altitude: 820, soilType: 'Basaltic red', soilPhBefore: 5.8, gpsLat: 12.862, gpsLng: 108.168 },
-    hash: '1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e',
-  },
-  {
-    key: 'cultivation', icon: '🌱', lucideIcon: Sprout,
-    nameVi: 'Canh tác', nameEn: 'Cultivation',
-    status: 'completed', date: '2025-09-01T07:00:00+07:00',
-    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.862, lng: 108.168,
-    metrics: [
-      { label: 'Variety', value: 'Robusta' },
-      { label: 'Trees', value: '3,600' },
-      { label: 'Method', value: 'Intercrop' },
-    ],
-    details: { crop: 'Coffee Robusta', variety: 'CH1', method: 'Intercropping with pepper', plantingYear: 2017, trees: 3600 },
-    hash: '2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f',
-  },
-  {
-    key: 'fertilizer', icon: '🧪', lucideIcon: FlaskConical,
-    nameVi: 'Phân bón', nameEn: 'Fertilization',
-    status: 'completed', date: '2025-10-15T09:00:00+07:00',
-    operator: 'Lê Thị Hương', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.863, lng: 108.169,
-    metrics: [
-      { label: 'Type', value: 'Organic' },
-      { label: 'NPK', value: '16-16-8' },
-      { label: 'Qty/ha', value: '450 kg' },
-    ],
-    details: { isOrganic: true, type: 'NPK + Compost', quantity: 1080, soilPhAfter: 6.1, applicationDate: '2025-10-15' },
-    hash: '3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a',
-  },
-  {
-    key: 'crop_monitoring', icon: '📡', lucideIcon: Activity,
-    nameVi: 'Giám sát cây', nameEn: 'Crop Monitoring',
-    status: 'completed', date: '2025-11-20T10:30:00+07:00',
-    operator: 'IoT System', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.862, lng: 108.168,
-    metrics: [
-      { label: 'Health', value: '92/100' },
-      { label: 'Growth', value: 'Fruiting' },
-      { label: 'Temp', value: '24.5°C' },
-    ],
-    details: { growthStage: 'Fruiting', healthScore: 92, alertTriggered: false, temperature: 24.5, humidity: 78 },
-    hash: '4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b',
-  },
-  {
-    key: 'pest_disease', icon: '🐛', lucideIcon: Bug,
-    nameVi: 'Sâu bệnh', nameEn: 'Pest & Disease',
-    status: 'completed', date: '2025-11-25T14:00:00+07:00',
-    operator: 'Trần Đức Anh', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.861, lng: 108.167,
-    metrics: [
-      { label: 'Pest', value: 'CBB' },
-      { label: 'Severity', value: 'Low' },
-      { label: 'Treatment', value: 'Biological' },
-    ],
-    details: { pestOrDisease: 'Coffee Berry Borer', severity: 'Low', treatment: 'Beauveria bassiana', outcome: 'Controlled' },
-    hash: '5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c',
-  },
-  {
-    key: 'harvest', icon: '✂️', lucideIcon: Scissors,
-    nameVi: 'Thu hoạch', nameEn: 'Harvest',
-    status: 'completed', date: '2025-12-10T05:30:00+07:00',
-    operator: 'Nguyễn Văn Minh', location: 'Ea H\'Leo, Đắk Lắk',
-    lat: 12.862, lng: 108.168,
-    metrics: [
-      { label: 'Cherry Wt', value: '8,450 kg' },
-      { label: 'Cup Score', value: '83.5' },
-      { label: 'Moisture', value: '62%' },
-    ],
-    details: { batchId: MOCK_BATCH_ID, cupScore: 83.5, moisture: 62, netWeight: 8450, harvestMethod: 'Selective picking', actualHarvestDate: '2025-12-10' },
-    hash: '6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d',
-  },
-  {
-    key: 'procurement', icon: '🚛', lucideIcon: Truck,
-    nameVi: 'Thu mua', nameEn: 'Procurement',
-    status: 'completed', date: '2025-12-11T08:00:00+07:00',
-    operator: 'Phạm Quốc Bảo', location: 'Buôn Ma Thuột, Đắk Lắk',
-    lat: 12.668, lng: 108.038,
-    metrics: [
-      { label: 'Price/kg', value: '42,000₫' },
-      { label: 'Net Wt', value: '8,420 kg' },
-      { label: 'Payment', value: 'Paid' },
-    ],
-    details: { collectionCentre: 'BMT Central Hub', pricePerKg: 42000, totalAmount: 353640000, paymentStatus: 'Paid', inputWeight: 8450, outputWeight: 8420 },
-    hash: '7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e',
-  },
-  {
-    key: 'processing', icon: '🏭', lucideIcon: Factory,
-    nameVi: 'Chế biến', nameEn: 'Processing',
-    status: 'in_progress', date: '2025-12-14T07:00:00+07:00',
-    operator: 'Cà Phê Đắk Lắk JSC', location: 'Industrial Zone, BMT',
-    lat: 12.700, lng: 108.060,
-    metrics: [
-      { label: 'Stage', value: 'Drying' },
-      { label: 'Outturn', value: '18.2%' },
-      { label: 'Moisture', value: '13.5%' },
-    ],
-    details: { processingStage: 'Drying', inputWeight: 8420, outputWeight: 1532, outturn: 18.2, moisture: 13.5, processingMethod: 'Wet processing' },
-    hash: '8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f',
-  },
-  {
-    key: 'certification', icon: '✅', lucideIcon: ShieldCheck,
-    nameVi: 'Chứng nhận', nameEn: 'Certification',
-    status: 'pending', date: null,
-    operator: '—', location: 'Buôn Ma Thuột, Đắk Lắk',
-    lat: 12.710, lng: 108.070,
-    metrics: [
-      { label: 'Standard', value: 'UTZ' },
-      { label: 'Score', value: '—' },
-      { label: 'Valid Until', value: '—' },
-    ],
-    details: { standard: 'UTZ/Rainforest Alliance', certBody: 'Control Union', status: 'Pending assessment', score: null, validUntil: null },
-    hash: '9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a',
-  },
-  {
-    key: 'inspection', icon: '📋', lucideIcon: ClipboardCheck,
-    nameVi: 'Kiểm tra', nameEn: 'Inspection',
-    status: 'pending', date: null,
-    operator: '—', location: 'QC Lab, BMT',
-    lat: 12.715, lng: 108.075,
-    metrics: [
-      { label: 'Grade', value: '—' },
-      { label: 'Defects', value: '—' },
-      { label: 'Result', value: '—' },
-    ],
-    details: { grade: null, passFail: null, inspector: null, sampleId: 'QC-DL-00847-01' },
-    hash: '0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b',
-  },
-  {
-    key: 'packaging', icon: '📦', lucideIcon: Package,
-    nameVi: 'Đóng gói', nameEn: 'Packaging',
-    status: 'pending', date: null,
-    operator: '—', location: 'Packaging Line, BMT',
-    lat: 12.720, lng: 108.080,
-    metrics: [
-      { label: 'Format', value: '—' },
-      { label: 'Net Wt', value: '—' },
-      { label: 'Batch', value: MOCK_BATCH_ID },
-    ],
-    details: { coffeeType: 'Robusta Green Bean', packagingFormat: null, netWeight: null },
-    hash: '1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c',
-  },
-  {
-    key: 'warehouse', icon: '🏗️', lucideIcon: Warehouse,
-    nameVi: 'Kho bãi', nameEn: 'Warehouse',
-    status: 'pending', date: null,
-    operator: '—', location: 'Export Zone, BMT',
-    lat: 12.730, lng: 108.090,
-    metrics: [
-      { label: 'Zone', value: '—' },
-      { label: 'Temp', value: '—' },
-      { label: 'Humidity', value: '—' },
-    ],
-    details: { warehouseZone: null, temperature: null, humidity: null },
-    hash: '2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d',
-  },
-  {
-    key: 'retail', icon: '🏪', lucideIcon: Store,
-    nameVi: 'Bán lẻ', nameEn: 'Retail',
-    status: 'pending', date: null,
-    operator: '—', location: 'HCMC / Export',
-    lat: 10.823, lng: 106.630,
-    metrics: [
-      { label: 'Channel', value: '—' },
-      { label: 'Market', value: '—' },
-      { label: 'Price', value: '—' },
-    ],
-    details: { channel: null, targetMarket: null },
-    hash: '3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e',
-  },
-]
+// ─── Convert CountryTraceStage to TraceStage ────────────────
+function countryStageToTraceStage(stage: CountryTraceStage): TraceStage {
+  return {
+    ...stage,
+    nameVi: stage.nameEn, // Use English for now; can add Vi translations
+    lucideIcon: STAGE_ICON_MAP[stage.key] || Activity,
+  }
+}
 
-const MOCK_CHAIN_BLOCKS: ChainBlock[] = MOCK_STAGES.map((stage, i) => ({
-  index: i + 1,
-  stageKey: stage.key,
-  previousHash: i === 0 ? '000000000000000000000000000000000000' : MOCK_STAGES[i - 1].hash,
-  hash: stage.hash,
-  timestamp: stage.date || new Date().toISOString(),
-  dataHash: stage.hash.slice(0, 16) + stage.key.padEnd(16, '0').slice(0, 16),
-}))
-
-const QUICK_BATCHES = [
-  { id: MOCK_BATCH_ID, label: 'Robusta — Đắk Lắk 2026' },
-  { id: 'TB-2026-GI-01203', label: 'Arabica — Gia Lai 2026' },
-  { id: 'TB-2025-DN-00189', label: 'Robusta — Đắk Nông 2025' },
-]
 
 // ═══════════════════════════════════════════════════════════════════
 // SENSITIVE FIELD COMPONENT
@@ -358,7 +163,7 @@ function BatchSelector({
   setBatchId: (v: string) => void
   onSearch: () => void
   loading: boolean
-  quickBatches: typeof QUICK_BATCHES
+  quickBatches: { id: string; label: string }[]
   onQuickSelect: (id: string) => void
   recentBatches: { id: string; batchId: string; farmer?: string; variety?: string }[]
   onRecentSelect: (id: string) => void
@@ -1145,13 +950,29 @@ export default function TraceabilityPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { t2, lang } = useI18n()
-  const [batchId, setBatchId] = useState(MOCK_BATCH_ID)
+
+  // Resolve tenant-specific batch data
+  const tenantSlug = (session?.user as any)?.tenantSlug
+  const tenantCountry = (session?.user as any)?.entityType // not country, but we use tenantSlug
+  const batch = getTraceBatchForTenant(tenantSlug)
+  const tenantStages = batch.stages.map(countryStageToTraceStage)
+  const tenantChainBlocks: ChainBlock[] = tenantStages.map((stage, i) => ({
+    index: i + 1,
+    stageKey: stage.key,
+    previousHash: i === 0 ? '000000000000000000000000000000000000' : tenantStages[i - 1].hash,
+    hash: stage.hash,
+    timestamp: stage.date || new Date().toISOString(),
+    dataHash: stage.hash.slice(0, 16) + stage.key.padEnd(16, '0').slice(0, 16),
+  }))
+
+  const [batchId, setBatchId] = useState(batch.batchId)
   const [loading, setLoading] = useState(false)
   const [activeLocationId, setActiveLocationId] = useState<string | undefined>(undefined)
   const [recentBatches, setRecentBatches] = useState<RecentBatch[]>([])
   const [qrDialogOpen, setQrDialogOpen] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
-  const [stages, setStages] = useState<TraceStage[]>(MOCK_STAGES)
+  const [stages, setStages] = useState<TraceStage[]>(tenantStages)
+  const [chainBlocks, setChainBlocks] = useState<ChainBlock[]>(tenantChainBlocks)
   const [showMock, setShowMock] = useState(true)
 
   // Fetch recent batches on mount
@@ -1174,7 +995,7 @@ export default function TraceabilityPage() {
   useEffect(() => {
     const generateQR = async () => {
       try {
-        const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+        const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
         const dataUrl = await QRCode.toDataURL(verifyUrl, {
           width: 300, margin: 2,
           color: { dark: '#1a1a2e', light: '#ffffff' },
@@ -1246,12 +1067,12 @@ export default function TraceabilityPage() {
       } else {
         // Fallback to mock data
         setShowMock(true)
-        setStages(MOCK_STAGES)
+        setStages(tenantStages)
         toast.info(t2('Hiển thị dữ liệu mẫu', 'Showing demo data'))
       }
     } catch {
       setShowMock(true)
-      setStages(MOCK_STAGES)
+      setStages(tenantStages)
       toast.info(t2('Hiển thị dữ liệu mẫu', 'Showing demo data'))
     } finally {
       setLoading(false)
@@ -1260,9 +1081,9 @@ export default function TraceabilityPage() {
 
   const handleBatchSelect = useCallback((id: string) => {
     setBatchId(id)
-    if (id === MOCK_BATCH_ID) {
+    if (id === batch.batchId) {
       setShowMock(true)
-      setStages(MOCK_STAGES)
+      setStages(tenantStages)
       setActiveLocationId(undefined)
     } else {
       handleSearch()
@@ -1279,7 +1100,7 @@ export default function TraceabilityPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} — ${MOCK_BATCH_ID}</title>
+        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} — ${batch.batchId}</title>
         <style>
           body { font-family: 'Courier New', monospace; padding: 40px; color: #3C2415; max-width: 800px; margin: 0 auto; }
           h1 { font-size: 22px; margin-bottom: 4px; }
@@ -1303,10 +1124,10 @@ export default function TraceabilityPage() {
       <body>
         <h1>☕ ${t2('Báo cáo Truy xuất Nguồn gốc', 'End-to-End Traceability Report')}</h1>
         <div class="meta">
-          <p><strong>Batch ID:</strong> ${MOCK_BATCH_ID}</p>
-          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> Nguyễn Văn Minh</p>
-          <p><strong>${t2('Nông trại', 'Farm')}:</strong> Gia Lộc Farm</p>
-          <p><strong>${t2('Giống', 'Variety')}:</strong> Robusta CH1</p>
+          <p><strong>Batch ID:</strong> ${batch.batchId}</p>
+          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> batch.farmerName</p>
+          <p><strong>${t2('Nông trại', 'Farm')}:</strong> batch.farmName</p>
+          <p><strong>${t2('Giống', 'Variety')}:</strong> batch.coffeeType</p>
           <p><strong>${t2('Ngày xuất', 'Export Date')}:</strong> ${new Date().toLocaleDateString()}</p>
           <p><strong>${t2('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t2('giai đoạn', 'stages')}</p>
         </div>
@@ -1338,7 +1159,7 @@ export default function TraceabilityPage() {
             }).join('')}
           </tbody>
         </table>
-        <div class="chain-valid">🔗 ${t2('Chuỗi hash toàn vẹn', 'Hash Chain Intact')} — ${MOCK_CHAIN_BLOCKS.length} ${t2('khối', 'blocks')}</div>
+        <div class="chain-valid">🔗 ${t2('Chuỗi hash toàn vẹn', 'Hash Chain Intact')} — ${chainBlocks.length} ${t2('khối', 'blocks')}</div>
         <div class="footer">
           <p>Terra Brew Coffee Traceability Platform — ${t2('Báo cáo được tạo tự động', 'Report auto-generated')} — ${new Date().toISOString()}</p>
         </div>
@@ -1350,7 +1171,7 @@ export default function TraceabilityPage() {
   }, [stages, t2])
 
   const handleShareLink = useCallback(() => {
-    const url = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+    const url = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
     navigator.clipboard.writeText(url).then(() => {
       toast.success(t2('Đã sao chép liên kết!', 'Link copied!'))
     }).catch(() => {
@@ -1359,9 +1180,9 @@ export default function TraceabilityPage() {
   }, [t2])
 
   const handleGenerateQR = useCallback(async () => {
-    if (!MOCK_BATCH_ID) return
+    if (!batch.batchId) return
     try {
-      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(MOCK_BATCH_ID)}`
+      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
       const dataUrl = await QRCode.toDataURL(verifyUrl, {
         width: 300, margin: 2,
         color: { dark: '#1a1a2e', light: '#ffffff' },
@@ -1376,7 +1197,7 @@ export default function TraceabilityPage() {
   const handleDownloadQR = useCallback(() => {
     if (!qrDataUrl) return
     const link = document.createElement('a')
-    link.download = `qr-${MOCK_BATCH_ID}.png`
+    link.download = `qr-${batch.batchId}.png`
     link.href = qrDataUrl
     link.click()
   }, [qrDataUrl])
@@ -1454,23 +1275,23 @@ export default function TraceabilityPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg font-bold text-foreground font-mono">{MOCK_BATCH_ID}</h3>
+                <h3 className="text-lg font-bold text-foreground font-mono">{batch.batchId}</h3>
                 <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-0 text-[9px]">
                   {t2('Đang chế biến', 'Processing')}
                 </Badge>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <User className="w-3 h-3" /> Nguyễn Văn Minh
+                  <User className="w-3 h-3" /> batch.farmerName
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <TreePine className="w-3 h-3" /> Gia Lộc Farm
+                  <TreePine className="w-3 h-3" /> batch.farmName
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <Sprout className="w-3 h-3" /> Robusta CH1
+                  <Sprout className="w-3 h-3" /> batch.coffeeType
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> Ea H'Leo, Đắk Lắk
+                  <MapPin className="w-3 h-3" /> batch.location
                 </span>
               </div>
             </div>
@@ -1501,7 +1322,7 @@ export default function TraceabilityPage() {
           setBatchId={setBatchId}
           onSearch={handleSearch}
           loading={loading}
-          quickBatches={QUICK_BATCHES}
+          quickBatches={batch.quickTraceIds.map(id => ({ id, label: id }))}
           onQuickSelect={handleBatchSelect}
           recentBatches={recentBatches.map(b => ({
             id: b.id,
@@ -1580,14 +1401,14 @@ export default function TraceabilityPage() {
 
         {/* ── 5. QR Code & Verification ── */}
         <VerificationSection
-          batchId={MOCK_BATCH_ID}
-          chainBlocks={MOCK_CHAIN_BLOCKS}
+          batchId={batch.batchId}
+          chainBlocks={chainBlocks}
           qrDataUrl={qrDataUrl}
         />
 
         {/* ── 6. Export & Share ── */}
         <ExportShareSection
-          batchId={MOCK_BATCH_ID}
+          batchId={batch.batchId}
           onExportPDF={handleExportPDF}
           onShareLink={handleShareLink}
         />
@@ -1603,7 +1424,7 @@ export default function TraceabilityPage() {
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-4">
               {qrDataUrl && <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 rounded-xl" />}
-              <p className="text-xs text-muted-foreground text-center font-mono">{MOCK_BATCH_ID}</p>
+              <p className="text-xs text-muted-foreground text-center font-mono">{batch.batchId}</p>
               <Button
                 onClick={handleDownloadQR}
                 className="rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90"

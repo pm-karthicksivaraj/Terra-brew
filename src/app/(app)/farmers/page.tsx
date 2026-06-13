@@ -209,10 +209,11 @@ export default function FarmersListPage() {
       if (search.trim()) params.set('search', search.trim())
 
       const res = await fetch(`/api/farmers?${params}`)
-      const data: FarmerListResponse = await res.json()
-      setFarmers(data?.data || [])
-      setTotal(data?.total || 0)
-      setTotalPages(data?.totalPages || 1)
+      const data = await res.json()
+      const farmersArr = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.data) ? data.data.data : [])
+      setFarmers(farmersArr)
+      setTotal(data?.total ?? data?.data?.total ?? 0)
+      setTotalPages(data?.totalPages ?? data?.data?.totalPages ?? 1)
     } catch (err) {
       console.error('Failed to fetch farmers:', err)
       toast.error('Failed to load farmers')

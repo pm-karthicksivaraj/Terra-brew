@@ -64,7 +64,7 @@ export async function GET(req: Request) {
         : f.email,
     }))
 
-    return apiResponse({ data: maskedFarmers, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
+    return NextResponse.json({ success: true, data: maskedFarmers, total, page, pageSize, totalPages: Math.ceil(total / pageSize) })
   } catch (e: any) {
     return apiError(e.message, 500)
   }
