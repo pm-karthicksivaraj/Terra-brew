@@ -953,8 +953,8 @@ export default function TraceabilityPage() {
 
   // Resolve tenant-specific batch data
   const tenantSlug = (session?.user as any)?.tenantSlug
-  const tenantCountry = (session?.user as any)?.entityType // not country, but we use tenantSlug
-  const batch = getTraceBatchForTenant(tenantSlug)
+  const countryCode = (session?.user as any)?.countryCode
+  const batch = getTraceBatchForTenant(tenantSlug, countryCode)
   const tenantStages = batch.stages.map(countryStageToTraceStage)
   const tenantChainBlocks: ChainBlock[] = tenantStages.map((stage, i) => ({
     index: i + 1,

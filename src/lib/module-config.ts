@@ -347,16 +347,27 @@ export const MODULES: ModuleDef[] = [
 /**
  * Get filtered navigation items for a given entity type and role.
  * Returns only modules where access is not 'hidden'.
+ *
+ * SPECIAL: tenant_admin always sees ALL modules regardless of entity type,
+ * so they can demo the full platform to investors/clients.
  */
 export function getFilteredModules(entityType: EntityType, role: TenantRole): ModuleDef[] {
+  // tenant_admin sees ALL features (for demo/investor purposes)
+  const isTenantAdmin = role === 'tenant_admin'
+
   return MODULES.filter(mod => {
+    // Entity type check — tenant_admin bypasses entity type restrictions
     const entityAccess = mod.entityTypeAccess[entityType]
-    if (entityAccess === 'hidden') return false
-    // Unknown entity types (no entry in entityTypeAccess) → treat as hidden
-    if (!entityAccess) return false
+    if (!isTenantAdmin) {
+      if (entityAccess === 'hidden') return false
+      // Unknown entity types (no entry in entityTypeAccess) → treat as hidden
+      if (!entityAccess) return false
+    }
+
+    // Role check — applies to all roles including tenant_admin
     const roleAccess = mod.roleAccess[role]
     if (roleAccess === 'hidden') return false
-    // Unknown roles (no entry in roleAccess, e.g. 'super_admin') → treat as hidden
+    // Unknown roles (no entry in roleAccess) → treat as hidden
     if (!roleAccess) return false
     return true
   })

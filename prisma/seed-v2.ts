@@ -98,27 +98,56 @@ async function main() {
   console.log('  ✅ TenantModules')
 
   // ═══ 5. Users ═══
+  // Each tenant gets users for ALL roles relevant to their entity type,
+  // so every menu can be tested. tenant_admin always sees ALL features (demo mode).
   const userDefs = [
-    // Metrang Coffee (Vietnam)
+    // ─── Metrang Coffee (Vietnam) — producer ───
     { email: 'admin@metrang-coffee.terrabrew.com', name: 'Quản trị viên Metrang', role: 'tenant_admin', tenantSlug: 'metrang-coffee' },
-    { email: 'field_officer@metrang-coffee.terrabrew.com', name: 'Cán bộ hiện trường', role: 'field_officer', tenantSlug: 'metrang-coffee' },
-    { email: 'viewer@metrang-coffee.terrabrew.com', name: 'Người xem', role: 'viewer', tenantSlug: 'metrang-coffee' },
-    // Cooxupé (Brazil)
-    { email: 'admin@cooxupe.terrabrew.com', name: 'Administrador Cooxupé', role: 'tenant_admin', tenantSlug: 'cooxupe' },
-    { email: 'operations@cooxupe.terrabrew.com', name: 'Gerente de Operações', role: 'operations_manager', tenantSlug: 'cooxupe' },
-    { email: 'trader@cooxupe.terrabrew.com', name: 'Trader Cooxupé', role: 'trader', tenantSlug: 'cooxupe' },
-    // Yirgacheffe Union (Ethiopia)
-    { email: 'admin@yirgacheffe-union.terrabrew.com', name: 'Union Admin', role: 'tenant_admin', tenantSlug: 'yirgacheffe-union' },
-    { email: 'field_officer@yirgacheffe-union.terrabrew.com', name: 'Field Officer', role: 'field_officer', tenantSlug: 'yirgacheffe-union' },
-    // Othaya Cooperative (Kenya)
-    { email: 'admin@othaya-cooperative.terrabrew.com', name: 'Othaya Admin', role: 'tenant_admin', tenantSlug: 'othaya-cooperative' },
-    { email: 'field_officer@othaya-cooperative.terrabrew.com', name: 'Othaya Field Officer', role: 'field_officer', tenantSlug: 'othaya-cooperative' },
-    // Asunafo Cocoa & Coffee Export (Ghana)
-    { email: 'admin@asunafo-export.terrabrew.com', name: 'Asunafo Admin', role: 'tenant_admin', tenantSlug: 'asunafo-export' },
-    { email: 'trader@asunafo-export.terrabrew.com', name: 'Asunafo Trader', role: 'trader', tenantSlug: 'asunafo-export' },
-    // Nkusi Coffee Cooperative (Uganda)
-    { email: 'admin@nkusi-coffee.terrabrew.com', name: 'Nkusi Admin', role: 'tenant_admin', tenantSlug: 'nkusi-coffee' },
-    { email: 'field_officer@nkusi-coffee.terrabrew.com', name: 'Nkusi Field Officer', role: 'field_officer', tenantSlug: 'nkusi-coffee' },
+    { email: 'ops-manager@metrang-coffee.terrabrew.com', name: 'Nguyễn Minh Tâm — Ops Manager', role: 'operations_manager', tenantSlug: 'metrang-coffee' },
+    { email: 'field-officer@metrang-coffee.terrabrew.com', name: 'Trần Văn Hiếu — Field Officer', role: 'field_officer', tenantSlug: 'metrang-coffee' },
+    { email: 'qc@metrang-coffee.terrabrew.com', name: 'Lê Thị Ngọc — QC Controller', role: 'quality_controller', tenantSlug: 'metrang-coffee' },
+    { email: 'trader@metrang-coffee.terrabrew.com', name: 'Phạm Đức Anh — Trader', role: 'trader', tenantSlug: 'metrang-coffee' },
+    { email: 'finance@metrang-coffee.terrabrew.com', name: 'Hoàng Thị Mai — Finance Manager', role: 'finance_manager', tenantSlug: 'metrang-coffee' },
+    { email: 'viewer@metrang-coffee.terrabrew.com', name: 'Võ Thanh Sơn — Viewer', role: 'viewer', tenantSlug: 'metrang-coffee' },
+
+    // ─── Cooxupé (Brazil) — aggregator ───
+    { email: 'admin@cooxupe.terrabrew.com', name: 'Carlos Ribeiro — Admin', role: 'tenant_admin', tenantSlug: 'cooxupe' },
+    { email: 'ops-manager@cooxupe.terrabrew.com', name: 'Ana Paula Costa — Ops Manager', role: 'operations_manager', tenantSlug: 'cooxupe' },
+    { email: 'qc@cooxupe.terrabrew.com', name: 'Roberto Ferreira — QC Controller', role: 'quality_controller', tenantSlug: 'cooxupe' },
+    { email: 'trader@cooxupe.terrabrew.com', name: 'Fernanda Lima — Trader', role: 'trader', tenantSlug: 'cooxupe' },
+    { email: 'finance@cooxupe.terrabrew.com', name: 'Marcos Vieira — Finance Manager', role: 'finance_manager', tenantSlug: 'cooxupe' },
+    { email: 'viewer@cooxupe.terrabrew.com', name: 'Juliana Santos — Viewer', role: 'viewer', tenantSlug: 'cooxupe' },
+
+    // ─── Yirgacheffe Union (Ethiopia) — producer ───
+    { email: 'admin@yirgacheffe-union.terrabrew.com', name: 'Abebe Tadesse — Admin', role: 'tenant_admin', tenantSlug: 'yirgacheffe-union' },
+    { email: 'ops-manager@yirgacheffe-union.terrabrew.com', name: 'Tigist Haile — Ops Manager', role: 'operations_manager', tenantSlug: 'yirgacheffe-union' },
+    { email: 'field-officer@yirgacheffe-union.terrabrew.com', name: 'Dawit Mekonnen — Field Officer', role: 'field_officer', tenantSlug: 'yirgacheffe-union' },
+    { email: 'qc@yirgacheffe-union.terrabrew.com', name: 'Selamawit Girma — QC Controller', role: 'quality_controller', tenantSlug: 'yirgacheffe-union' },
+    { email: 'trader@yirgacheffe-union.terrabrew.com', name: 'Yonas Bekele — Trader', role: 'trader', tenantSlug: 'yirgacheffe-union' },
+    { email: 'viewer@yirgacheffe-union.terrabrew.com', name: 'Helen Alemu — Viewer', role: 'viewer', tenantSlug: 'yirgacheffe-union' },
+
+    // ─── Othaya Cooperative (Kenya) — producer ───
+    { email: 'admin@othaya-cooperative.terrabrew.com', name: 'Kamau Ndirangu — Admin', role: 'tenant_admin', tenantSlug: 'othaya-cooperative' },
+    { email: 'ops-manager@othaya-cooperative.terrabrew.com', name: 'Wanjiku Kamau — Ops Manager', role: 'operations_manager', tenantSlug: 'othaya-cooperative' },
+    { email: 'field-officer@othaya-cooperative.terrabrew.com', name: 'Omondi Otieno — Field Officer', role: 'field_officer', tenantSlug: 'othaya-cooperative' },
+    { email: 'qc@othaya-cooperative.terrabrew.com', name: 'Njeri Mwangi — QC Controller', role: 'quality_controller', tenantSlug: 'othaya-cooperative' },
+    { email: 'trader@othaya-cooperative.terrabrew.com', name: 'Maina Kariuki — Trader', role: 'trader', tenantSlug: 'othaya-cooperative' },
+    { email: 'finance@othaya-cooperative.terrabrew.com', name: 'Achieng Odhiambo — Finance', role: 'finance_manager', tenantSlug: 'othaya-cooperative' },
+    { email: 'viewer@othaya-cooperative.terrabrew.com', name: 'Wangari Njuguna — Viewer', role: 'viewer', tenantSlug: 'othaya-cooperative' },
+
+    // ─── Asunafo Export (Ghana) — exporter ───
+    { email: 'admin@asunafo-export.terrabrew.com', name: 'Kwame Asante — Admin', role: 'tenant_admin', tenantSlug: 'asunafo-export' },
+    { email: 'trader@asunafo-export.terrabrew.com', name: 'Abena Mensah — Trader', role: 'trader', tenantSlug: 'asunafo-export' },
+    { email: 'finance@asunafo-export.terrabrew.com', name: 'Kofi Boateng — Finance Manager', role: 'finance_manager', tenantSlug: 'asunafo-export' },
+    { email: 'viewer@asunafo-export.terrabrew.com', name: 'Ama Osei — Viewer', role: 'viewer', tenantSlug: 'asunafo-export' },
+
+    // ─── Nkusi Coffee Cooperative (Uganda) — aggregator ───
+    { email: 'admin@nkusi-coffee.terrabrew.com', name: 'Emmanuel Mukasa — Admin', role: 'tenant_admin', tenantSlug: 'nkusi-coffee' },
+    { email: 'ops-manager@nkusi-coffee.terrabrew.com', name: 'Grace Nalubega — Ops Manager', role: 'operations_manager', tenantSlug: 'nkusi-coffee' },
+    { email: 'qc@nkusi-coffee.terrabrew.com', name: 'James Ochieng — QC Controller', role: 'quality_controller', tenantSlug: 'nkusi-coffee' },
+    { email: 'trader@nkusi-coffee.terrabrew.com', name: 'Sarah Auma — Trader', role: 'trader', tenantSlug: 'nkusi-coffee' },
+    { email: 'finance@nkusi-coffee.terrabrew.com', name: 'Peter Wasswa — Finance Manager', role: 'finance_manager', tenantSlug: 'nkusi-coffee' },
+    { email: 'viewer@nkusi-coffee.terrabrew.com', name: 'Ruth Nabirye — Viewer', role: 'viewer', tenantSlug: 'nkusi-coffee' },
   ]
   const users: Record<string, any> = {}
   for (const ud of userDefs) {
@@ -134,9 +163,15 @@ async function main() {
   console.log('  ✅ Users')
 
   // ═══ 6. Farmers (per tenant, country-specific) ═══
+  const vnTid = tenants['metrang-coffee'].id
+  const brTid = tenants['cooxupe'].id
+  const etTid = tenants['yirgacheffe-union'].id
+  const keTid = tenants['othaya-cooperative'].id
+  const ghTid = tenants['asunafo-export'].id
+  const ugTid = tenants['nkusi-coffee'].id
+
   // Vietnam farmers
   const vnAdmin = users['admin@metrang-coffee.terrabrew.com']
-  const vnTid = tenants['metrang-coffee'].id
   const vnFarmers = [
     { farmerCode: 'FRM-VN-001', fullName: 'Nguyễn Văn Thanh', firstName: 'Thanh', lastName: 'Nguyễn', contactNumber: '0912345678', gender: 'Nam', country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Tam', village: "Buôn K'Mang", latitude: 12.668, longitude: 108.038, nationalIdType: 'CCCD', nationalIdNo: '795284610382', isCertified: true, certificationType: 'Cá nhân', cooperative: 'Hợp tác xã Cà phê Ea Tam', yearsOfFarmingExperience: 12, creditScore: 82, bankName: 'Vietcombank', bankBranch: 'Cư Mgar', accountNumber: '0912345678901', accountHolderName: 'Nguyễn Văn Thanh', sortCodeSwift: 'BFTVVNVX', paymentPreference: 'bank_transfer' },
     { farmerCode: 'FRM-VN-002', fullName: 'Trần Thị Hoa', firstName: 'Hoa', lastName: 'Trần', contactNumber: '0923456789', gender: 'Nữ', country: 'Việt Nam', province: 'Đắk Lắk', district: 'Cư Mgar', commune: 'Ea Drăng', village: 'Ea Pok', latitude: 12.692, longitude: 108.055, nationalIdType: 'CCCD', nationalIdNo: '794827364518', isCertified: true, certificationType: 'Tập thể', cooperative: 'Nông trại Hữu cơ Ea Drăng', yearsOfFarmingExperience: 8, creditScore: 76, loanTaken: true, loanTakenFrom: 'Vietcombank', loanAmount: 30000000, bankName: 'Agribank', bankBranch: 'Ea Drăng', accountNumber: '1209234567890', accountHolderName: 'Trần Thị Hoa', sortCodeSwift: 'VBAZVNVX', paymentPreference: 'bank_transfer' },
@@ -144,7 +179,6 @@ async function main() {
   ]
   // Brazil farmers
   const brAdmin = users['admin@cooxupe.terrabrew.com']
-  const brTid = tenants['cooxupe'].id
   const brFarmers = [
     { farmerCode: 'FRM-BR-001', fullName: 'João Silva', firstName: 'João', lastName: 'Silva', contactNumber: '+5535991234567', gender: 'Masculino', country: 'Brasil', province: 'Minas Gerais', district: 'Guaxupé', commune: 'Guaxupé', village: 'Fazenda São José', latitude: -21.307, longitude: -46.718, nationalIdType: 'CPF', nationalIdNo: '123.456.789-00', isCertified: true, certificationType: 'Coletiva', cooperative: 'Cooxupé', yearsOfFarmingExperience: 22, creditScore: 88, bankName: 'Banco do Brasil', bankBranch: 'Guaxupé', accountNumber: '0012345678', accountHolderName: 'João Silva', sortCodeSwift: 'BRASBRRJ', paymentPreference: 'bank_transfer' },
     { farmerCode: 'FRM-BR-002', fullName: 'Maria Oliveira', firstName: 'Maria', lastName: 'Oliveira', contactNumber: '+5535992345678', gender: 'Feminino', country: 'Brasil', province: 'Minas Gerais', district: 'São Sebastião do Paraíso', commune: 'Paraíso', village: 'Sítio Boa Vista', latitude: -20.916, longitude: -47.124, nationalIdType: 'CPF', nationalIdNo: '234.567.890-11', isCertified: true, certificationType: 'Individual', cooperative: 'Cooxupé', yearsOfFarmingExperience: 15, creditScore: 82, bankName: 'Itaú', bankBranch: 'São Sebastião do Paraíso', accountNumber: '0023456789', accountHolderName: 'Maria Oliveira', sortCodeSwift: 'ITAUUBR', paymentPreference: 'bank_transfer' },
@@ -152,7 +186,6 @@ async function main() {
   ]
   // Ethiopia farmers
   const etAdmin = users['admin@yirgacheffe-union.terrabrew.com']
-  const etTid = tenants['yirgacheffe-union'].id
   const etFarmers = [
     { farmerCode: 'FRM-ET-001', fullName: 'Abebe Tadesse', firstName: 'Abebe', lastName: 'Tadesse', contactNumber: '+251912345678', gender: 'Male', country: 'Ethiopia', province: 'Gedeo', district: 'Yirgacheffe', commune: 'Kochere', village: 'Biloya', latitude: 6.162, longitude: 38.202, nationalIdType: 'Kebele ID', nationalIdNo: 'ET-YG-4582', isCertified: true, certificationType: 'Cooperative', cooperative: 'Yirgacheffe Union', yearsOfFarmingExperience: 15, creditScore: 78, bankName: 'Commercial Bank of Ethiopia', bankBranch: 'Yirgacheffe', accountNumber: '0123456789', accountHolderName: 'Abebe Tadesse', sortCodeSwift: 'CBETETAA', paymentPreference: 'bank_transfer' },
     { farmerCode: 'FRM-ET-002', fullName: 'Tigist Haile', firstName: 'Tigist', lastName: 'Haile', contactNumber: '+251923456789', gender: 'Female', country: 'Ethiopia', province: 'Gedeo', district: 'Yirgacheffe', commune: 'Wenago', village: 'Chelbesa', latitude: 6.185, longitude: 38.215, nationalIdType: 'Kebele ID', nationalIdNo: 'ET-YG-6734', isCertified: true, certificationType: 'Cooperative', cooperative: 'Yirgacheffe Union', yearsOfFarmingExperience: 10, creditScore: 72, mobileMoneyProvider: 'telebirr', mobileMoneyNumber: '+251923456789', paymentPreference: 'mobile_money' },
@@ -160,7 +193,6 @@ async function main() {
   ]
   // Kenya farmers
   const keAdmin = users['admin@othaya-cooperative.terrabrew.com']
-  const keTid = tenants['othaya-cooperative'].id
   const keFarmers = [
     { farmerCode: 'FRM-KE-001', fullName: 'Kamau Ndirangu', firstName: 'Kamau', lastName: 'Ndirangu', contactNumber: '+254723456789', gender: 'Male', country: 'Kenya', province: 'Central', district: 'Nyeri', commune: 'Othaya', village: 'Gathaithi', latitude: -0.420, longitude: 36.951, nationalIdType: 'National ID', nationalIdNo: 'KE-28473950', isCertified: true, certificationType: 'Cooperative', cooperative: 'Othaya Farmers Cooperative Society', yearsOfFarmingExperience: 10, creditScore: 85, loanTaken: true, loanTakenFrom: 'Kenya Commercial Bank', loanAmount: 500000, bankName: 'Kenya Commercial Bank', bankBranch: 'Othaya', accountNumber: '0345678901', accountHolderName: 'Kamau Ndirangu', sortCodeSwift: 'KCABKENX', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'M-Pesa', mobileMoneyNumber: '+254723456789' },
     { farmerCode: 'FRM-KE-002', fullName: 'Wanjiku Kamau', firstName: 'Wanjiku', lastName: 'Kamau', contactNumber: '+254734567890', gender: 'Female', country: 'Kenya', province: 'Central', district: 'Nyeri', commune: 'Othaya', village: 'Kamoko', latitude: -0.430, longitude: 36.940, nationalIdType: 'National ID', nationalIdNo: 'KE-39584061', isCertified: true, certificationType: 'Cooperative', cooperative: 'Othaya Farmers Cooperative Society', yearsOfFarmingExperience: 12, creditScore: 79, mobileMoneyProvider: 'M-Pesa', mobileMoneyNumber: '+254734567890', paymentPreference: 'mobile_money' },
@@ -169,7 +201,6 @@ async function main() {
 
   // Ghana farmers
   const ghAdmin = users['admin@asunafo-export.terrabrew.com']
-  const ghTid = tenants['asunafo-export'].id
   const ghFarmers = [
     { farmerCode: 'FRM-GH-001', fullName: 'Kwame Asante', firstName: 'Kwame', lastName: 'Asante', contactNumber: '+233241234567', gender: 'Male', country: 'Ghana', province: 'Ahafo', district: 'Asunafo North', commune: 'Goaso', village: 'Acherensua', latitude: 6.892, longitude: -2.498, nationalIdType: 'Ghana Card', nationalIdNo: 'GHA-000123456-1', isCertified: true, certificationType: 'Cooperative', cooperative: 'Asunafo Cocoa & Coffee Export', yearsOfFarmingExperience: 14, creditScore: 80, mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+233241234567', paymentPreference: 'mobile_money' },
     { farmerCode: 'FRM-GH-002', fullName: 'Abena Mensah', firstName: 'Abena', lastName: 'Mensah', contactNumber: '+233242345678', gender: 'Female', country: 'Ghana', province: 'Ahafo', district: 'Sunyani', commune: 'Sunyani', village: 'Nkrankrom', latitude: 7.334, longitude: -2.327, nationalIdType: 'Ghana Card', nationalIdNo: 'GHA-000234567-2', isCertified: true, certificationType: 'Cooperative', cooperative: 'Asunafo Cocoa & Coffee Export', yearsOfFarmingExperience: 9, creditScore: 74, bankName: 'GCB Bank', bankBranch: 'Sunyani', accountNumber: '4012345678', accountHolderName: 'Abena Mensah', sortCodeSwift: 'GHCBGHAC', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+233242345678' },
@@ -177,7 +208,6 @@ async function main() {
   ]
   // Uganda farmers
   const ugAdmin = users['admin@nkusi-coffee.terrabrew.com']
-  const ugTid = tenants['nkusi-coffee'].id
   const ugFarmers = [
     { farmerCode: 'FRM-UG-001', fullName: 'Emmanuel Mukasa', firstName: 'Emmanuel', lastName: 'Mukasa', contactNumber: '+256771234567', gender: 'Male', country: 'Uganda', province: 'Eastern', district: 'Mbale', commune: 'Mbale', village: 'Bumasobo', latitude: 1.083, longitude: 34.175, nationalIdType: 'National ID', nationalIdNo: 'UG-89012345', isCertified: true, certificationType: 'Cooperative', cooperative: 'Nkusi Coffee Cooperative', yearsOfFarmingExperience: 16, creditScore: 82, mobileMoneyProvider: 'MTN MoMo', mobileMoneyNumber: '+256771234567', paymentPreference: 'mobile_money' },
     { farmerCode: 'FRM-UG-002', fullName: 'Grace Nalubega', firstName: 'Grace', lastName: 'Nalubega', contactNumber: '+256772345678', gender: 'Female', country: 'Uganda', province: 'Eastern', district: 'Kapchorwa', commune: 'Kapchorwa', village: 'Tulel', latitude: 1.397, longitude: 34.455, nationalIdType: 'National ID', nationalIdNo: 'UG-90123456', isCertified: true, certificationType: 'Cooperative', cooperative: 'Nkusi Coffee Cooperative', yearsOfFarmingExperience: 11, creditScore: 76, bankName: 'Centenary Bank', bankBranch: 'Kapchorwa', accountNumber: '1023456789', accountHolderName: 'Grace Nalubega', sortCodeSwift: 'CERBUGKA', paymentPreference: 'bank_transfer', mobileMoneyProvider: 'Airtel Money', mobileMoneyNumber: '+256772345678' },

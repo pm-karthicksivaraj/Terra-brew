@@ -35,7 +35,7 @@ interface TenantOption {
 }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@metrang-coffee.terrabrew.com')
+  const [email, setEmail] = useState('admin@nkusi-coffee.terrabrew.com')
   const [password, setPassword] = useState('Admin@2024')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -280,13 +280,15 @@ export default function LoginPage() {
                   <p className="font-medium mb-2">{t2('Tài khoản demo', 'Demo Accounts')} <span className="text-coffee-400">(Admin@2024)</span></p>
                   <div className="space-y-1.5 max-h-40 overflow-y-auto">
                     {[
-                      { email: 'admin@metrang-coffee.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Vietnam' },
-                      { email: 'admin@cooxupe.terrabrew.com', type: 'Aggregator', icon: '📦', country: 'Brazil' },
-                      { email: 'admin@yirgacheffe-union.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Ethiopia' },
-                      { email: 'admin@othaya-cooperative.terrabrew.com', type: 'Producer', icon: '🏭', country: 'Kenya' },
-                      { email: 'admin@euro-coffee-imports.terrabrew.com', type: 'Exporter', icon: '🚢', country: 'Netherlands' },
-                      { email: 'trader@euro-coffee-imports.terrabrew.com', type: 'Trader', icon: '📊', country: 'Netherlands' },
-                      { email: 'admin@sgs-inspection.terrabrew.com', type: 'Cert Body', icon: '✅', country: 'Switzerland' },
+                      { email: 'admin@metrang-coffee.terrabrew.com', type: 'Producer · Admin', icon: '🏭', country: 'Vietnam' },
+                      { email: 'ops-manager@metrang-coffee.terrabrew.com', type: 'Producer · Ops Mgr', icon: '🏭', country: 'Vietnam' },
+                      { email: 'field-officer@metrang-coffee.terrabrew.com', type: 'Producer · Field', icon: '🏭', country: 'Vietnam' },
+                      { email: 'admin@cooxupe.terrabrew.com', type: 'Aggregator · Admin', icon: '📦', country: 'Brazil' },
+                      { email: 'admin@yirgacheffe-union.terrabrew.com', type: 'Producer · Admin', icon: '🏭', country: 'Ethiopia' },
+                      { email: 'admin@othaya-cooperative.terrabrew.com', type: 'Producer · Admin', icon: '🏭', country: 'Kenya' },
+                      { email: 'admin@asunafo-export.terrabrew.com', type: 'Exporter · Admin', icon: '🚢', country: 'Ghana' },
+                      { email: 'admin@nkusi-coffee.terrabrew.com', type: 'Aggregator · Admin', icon: '📦', country: 'Uganda' },
+                      { email: 'viewer@nkusi-coffee.terrabrew.com', type: 'Aggregator · Viewer', icon: '📦', country: 'Uganda' },
                     ].map((acct) => (
                       <button
                         key={acct.email}
