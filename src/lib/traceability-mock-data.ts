@@ -934,13 +934,17 @@ const TENANT_COUNTRY_MAP: Record<string, string> = {
   'othaya-cooperative': 'KE',
   'asunafo-export': 'GH',
   'nkusi-coffee': 'UG',
+  'nordic-coffee-import': 'VN',    // Importer — shows supply origin (Vietnam)
+  'rainforest-cert': 'UG',        // Cert body — shows a producing country for demo
+  'cup-science-lab': 'BR',        // Lab — shows a producing country for demo
 }
 
 /**
  * Get traceability batch data for a tenant based on their country.
- * Falls back to Vietnam data if country not found.
+ * For non-producing countries (importer/cert_body/lab), shows supply origin data.
+ * Returns null if no matching data found — caller should show "no data" state.
  */
-export function getTraceBatchForTenant(tenantSlug?: string, countryCode?: string): CountryTraceBatch {
+export function getTraceBatchForTenant(tenantSlug?: string, countryCode?: string): CountryTraceBatch | null {
   // Try country code first
   if (countryCode && COUNTRY_BATCHES[countryCode]) {
     return COUNTRY_BATCHES[countryCode]
@@ -952,8 +956,8 @@ export function getTraceBatchForTenant(tenantSlug?: string, countryCode?: string
       return COUNTRY_BATCHES[cc]
     }
   }
-  // Default to Vietnam
-  return VIETNAM_BATCH
+  // No matching data — return null instead of defaulting to Vietnam
+  return null
 }
 
 

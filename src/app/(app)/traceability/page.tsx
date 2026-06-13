@@ -955,7 +955,7 @@ export default function TraceabilityPage() {
   const tenantSlug = (session?.user as any)?.tenantSlug
   const countryCode = (session?.user as any)?.countryCode
   const batch = getTraceBatchForTenant(tenantSlug, countryCode)
-  const tenantStages = batch.stages.map(countryStageToTraceStage)
+  const tenantStages = batch ? batch.stages.map(countryStageToTraceStage) : []
   const tenantChainBlocks: ChainBlock[] = tenantStages.map((stage, i) => ({
     index: i + 1,
     stageKey: stage.key,
@@ -965,7 +965,7 @@ export default function TraceabilityPage() {
     dataHash: stage.hash.slice(0, 16) + stage.key.padEnd(16, '0').slice(0, 16),
   }))
 
-  const [batchId, setBatchId] = useState(batch.batchId)
+  const [batchId, setBatchId] = useState(batch?.batchId || '')
   const [loading, setLoading] = useState(false)
   const [activeLocationId, setActiveLocationId] = useState<string | undefined>(undefined)
   const [recentBatches, setRecentBatches] = useState<RecentBatch[]>([])
@@ -973,7 +973,7 @@ export default function TraceabilityPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [stages, setStages] = useState<TraceStage[]>(tenantStages)
   const [chainBlocks, setChainBlocks] = useState<ChainBlock[]>(tenantChainBlocks)
-  const [showMock, setShowMock] = useState(true)
+  const [showMock, setShowMock] = useState(!!batch)
 
   // Fetch recent batches on mount
   useEffect(() => {
@@ -993,9 +993,10 @@ export default function TraceabilityPage() {
 
   // Generate QR code on mount for mock batch
   useEffect(() => {
+    if (!batch?.batchId) return
     const generateQR = async () => {
       try {
-        const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
+        const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(batch!.batchId)}`
         const dataUrl = await QRCode.toDataURL(verifyUrl, {
           width: 300, margin: 2,
           color: { dark: '#1a1a2e', light: '#ffffff' },
@@ -1081,7 +1082,7 @@ export default function TraceabilityPage() {
 
   const handleBatchSelect = useCallback((id: string) => {
     setBatchId(id)
-    if (id === batch.batchId) {
+    if (batch && id === batch.batchId) {
       setShowMock(true)
       setStages(tenantStages)
       setActiveLocationId(undefined)
@@ -1092,7 +1093,7 @@ export default function TraceabilityPage() {
 
   const handleExportPDF = useCallback(() => {
     const printWindow = window.open('', '_blank')
-    if (!printWindow) return
+    if (!printWindow || !batch) return
     const completedStages = stages.filter(s => s.status === 'completed').length
     const totalStages = stages.length
 
@@ -1100,7 +1101,7 @@ export default function TraceabilityPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} — ${batch.batchId}</title>
+        <title>${t2('Báo cáo Truy xuất', 'Traceability Report')} — ${batch!.batchId}</title>
         <style>
           body { font-family: 'Courier New', monospace; padding: 40px; color: #3C2415; max-width: 800px; margin: 0 auto; }
           h1 { font-size: 22px; margin-bottom: 4px; }
@@ -1124,10 +1125,10 @@ export default function TraceabilityPage() {
       <body>
         <h1>☕ ${t2('Báo cáo Truy xuất Nguồn gốc', 'End-to-End Traceability Report')}</h1>
         <div class="meta">
-          <p><strong>Batch ID:</strong> ${batch.batchId}</p>
-          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> batch.farmerName</p>
-          <p><strong>${t2('Nông trại', 'Farm')}:</strong> batch.farmName</p>
-          <p><strong>${t2('Giống', 'Variety')}:</strong> batch.coffeeType</p>
+          <p><strong>Batch ID:</strong> ${batch!.batchId}</p>
+          <p><strong>${t2('Nông dân', 'Farmer')}:</strong> ${batch!.farmerName}</p>
+          <p><strong>${t2('Nông trại', 'Farm')}:</strong> ${batch!.farmName}</p>
+          <p><strong>${t2('Giống', 'Variety')}:</strong> ${batch!.coffeeType}</p>
           <p><strong>${t2('Ngày xuất', 'Export Date')}:</strong> ${new Date().toLocaleDateString()}</p>
           <p><strong>${t2('Tiến độ', 'Progress')}:</strong> ${completedStages}/${totalStages} ${t2('giai đoạn', 'stages')}</p>
         </div>
@@ -1171,6 +1172,7 @@ export default function TraceabilityPage() {
   }, [stages, t2])
 
   const handleShareLink = useCallback(() => {
+    if (!batch?.batchId) return
     const url = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
     navigator.clipboard.writeText(url).then(() => {
       toast.success(t2('Đã sao chép liên kết!', 'Link copied!'))
@@ -1180,7 +1182,7 @@ export default function TraceabilityPage() {
   }, [t2])
 
   const handleGenerateQR = useCallback(async () => {
-    if (!batch.batchId) return
+    if (!batch?.batchId) return
     try {
       const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(batch.batchId)}`
       const dataUrl = await QRCode.toDataURL(verifyUrl, {
@@ -1197,7 +1199,7 @@ export default function TraceabilityPage() {
   const handleDownloadQR = useCallback(() => {
     if (!qrDataUrl) return
     const link = document.createElement('a')
-    link.download = `qr-${batch.batchId}.png`
+    link.download = `qr-${batch?.batchId || 'trace'}.png`
     link.href = qrDataUrl
     link.click()
   }, [qrDataUrl])
@@ -1268,6 +1270,7 @@ export default function TraceabilityPage() {
         </div>
 
         {/* ── Batch Overview Card ── */}
+        {batch && (
         <Card className="rounded-2xl border-0 shadow-sm p-4 md:p-6 mb-6 bg-gradient-to-br from-card to-emerald-50/30 dark:from-card dark:to-emerald-950/10">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
@@ -1282,16 +1285,16 @@ export default function TraceabilityPage() {
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <User className="w-3 h-3" /> batch.farmerName
+                  <User className="w-3 h-3" /> {batch.farmerName}
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <TreePine className="w-3 h-3" /> batch.farmName
+                  <TreePine className="w-3 h-3" /> {batch.farmName}
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <Sprout className="w-3 h-3" /> batch.coffeeType
+                  <Sprout className="w-3 h-3" /> {batch.coffeeType}
                 </span>
                 <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> batch.location
+                  <MapPin className="w-3 h-3" /> {batch.location}
                 </span>
               </div>
             </div>
@@ -1315,6 +1318,7 @@ export default function TraceabilityPage() {
             </div>
           </div>
         </Card>
+        )}
 
         {/* ── 1. Search & Batch Selector ── */}
         <BatchSelector
@@ -1322,7 +1326,7 @@ export default function TraceabilityPage() {
           setBatchId={setBatchId}
           onSearch={handleSearch}
           loading={loading}
-          quickBatches={batch.quickTraceIds.map(id => ({ id, label: id }))}
+          quickBatches={batch?.quickTraceIds?.map(id => ({ id, label: id })) || []}
           onQuickSelect={handleBatchSelect}
           recentBatches={recentBatches.map(b => ({
             id: b.id,
@@ -1401,14 +1405,14 @@ export default function TraceabilityPage() {
 
         {/* ── 5. QR Code & Verification ── */}
         <VerificationSection
-          batchId={batch.batchId}
+          batchId={batch?.batchId || ''}
           chainBlocks={chainBlocks}
           qrDataUrl={qrDataUrl}
         />
 
         {/* ── 6. Export & Share ── */}
         <ExportShareSection
-          batchId={batch.batchId}
+          batchId={batch?.batchId || ''}
           onExportPDF={handleExportPDF}
           onShareLink={handleShareLink}
         />
@@ -1424,7 +1428,7 @@ export default function TraceabilityPage() {
             </DialogHeader>
             <div className="flex flex-col items-center gap-4 py-4">
               {qrDataUrl && <img src={qrDataUrl} alt="QR Code" className="w-64 h-64 rounded-xl" />}
-              <p className="text-xs text-muted-foreground text-center font-mono">{batch.batchId}</p>
+              <p className="text-xs text-muted-foreground text-center font-mono">{batch?.batchId || ''}</p>
               <Button
                 onClick={handleDownloadQR}
                 className="rounded-xl gap-2 bg-primary text-primary-foreground hover:bg-primary/90"

@@ -2,34 +2,17 @@
 // MODULE CONFIGURATION SYSTEM
 // Defines all available modules, navigation groups, and
 // role-based access control for the Terra Brew sidebar.
-// ════════════════════════════════════════════════════════════════
-
-// ─── RBAC User Roles ─────────────────────────────────────────────
 //
-// Super Admin:      Platform operator managing all tenants, price tickers, platform settings.
-//                   Full platform access. Authenticates via /login → redirected to /super-admin/dashboard.
-//
-// Tenant Admin:     Organization administrator — manages their org's users, settings, all modules.
-//                   Full tenant access.
-//
-// Operations Manager: Oversees farm operations and processing.
-//                   Farm + Processing modules.
-//
-// Field Officer:    Collects data in the field, registers farmers.
-//                   Farm data entry only.
-//
-// Quality Controller: Manages inspections, QC, EUDR compliance.
-//                   Quality + Compliance modules.
-//
-// Trader:           Handles marketplace, RFQ, trading, shipments.
-//                   Trade + Logistics modules.
-//
-// Finance Manager:  Manages billing, payments, financial reports.
-//                   Finance + Billing modules.
-//
-// Viewer:           Read-only access to permitted modules.
-//                   View only.
+// Entity Type → Module Visibility Rules:
 // ──────────────────────────────────────────────────────────────────
+// Producer:          Farm Ops (full), Processing (view), Compliance, Trade, Finance
+// Aggregator:        Processing & Quality (full), Compliance, Trade, Finance — NO Farm Ops
+// Exporter:          Trade & Logistics (full), Compliance — NO Farm Ops, NO Processing
+// Importer:          Trade & Logistics (buyer side), Compliance
+// Certification Body: Inspections, Compliance only
+// Laboratory:        QC, Inspections only
+// Tenant Admin:      Sees ALL features (demo/investor bypass)
+// ════════════════════════════════════════════════════════════════
 
 // Entity types in the platform
 export type EntityType = 'producer' | 'aggregator' | 'exporter' | 'importer' | 'certification_body' | 'laboratory'
@@ -38,7 +21,7 @@ export type EntityType = 'producer' | 'aggregator' | 'exporter' | 'importer' | '
 export type AccessLevel = 'full' | 'view' | 'hidden'
 
 // Roles within each entity
-export type TenantRole = 'tenant_admin' | 'operations_manager' | 'field_officer' | 'quality_controller' | 'trader' | 'finance_manager' | 'buyer' | 'viewer'
+export type TenantRole = 'tenant_admin' | 'operations_manager' | 'field_officer' | 'quality_controller' | 'trader' | 'finance_manager' | 'buyer' | 'viewer' | 'inspector' | 'operator'
 
 // Module definition
 export interface ModuleDef {
@@ -93,254 +76,274 @@ export const ROLE_LABELS: Record<TenantRole, { en: string; vi: string; pt: strin
   finance_manager: { en: 'Finance Manager', vi: 'Quản lý tài chính', pt: 'Gerente Financeiro', am: 'የገንዘብ ሥራ አስኪያጅ', sw: 'Meneja wa Fedha' },
   buyer: { en: 'Buyer', vi: 'Người mua', pt: 'Comprador', am: 'ገዢ', sw: 'Mnunuzi' },
   viewer: { en: 'Viewer', vi: 'Người xem', pt: 'Visualizador', am: 'መመልከቻ', sw: 'Mtazamaji' },
+  inspector: { en: 'Inspector', vi: 'Kiểm định viên', pt: 'Inspetor', am: 'መመርመሪያ', sw: 'Mkaguzi' },
+  operator: { en: 'Operator', vi: 'Vận hành viên', pt: 'Operador', am: 'ኦፕሬተር', sw: 'Mwendeshaji' },
 }
 
+// ════════════════════════════════════════════════════════════════
+// MODULE DEFINITIONS
+//
+// Entity type access follows these rules:
+//   Producer:          Farm Ops (full), Processing (view), Compliance, Trade, Finance
+//   Aggregator:        Processing & Quality (full), Compliance, Trade, Finance — NO Farm Ops
+//   Exporter:          Trade & Logistics (full), Compliance — NO Farm Ops, NO Processing
+//   Importer:          Trade & Logistics (buyer side), Compliance
+//   Certification Body: Inspections, Compliance only
+//   Laboratory:        QC, Inspections only
+//   Tenant Admin role: bypasses entity type restrictions — sees ALL
+// ════════════════════════════════════════════════════════════════
+
 export const MODULES: ModuleDef[] = [
-  // OVERVIEW
+  // ─── OVERVIEW ────────────────────────────────────────────────────
   {
     slug: 'dashboard', label: 'Dashboard', labelVi: 'Bảng điều khiển', href: '/dashboard', icon: 'LayoutDashboard', color: '#059669',
     group: 'overview', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'full', trader: 'full', finance_manager: 'full', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'full', trader: 'full', finance_manager: 'full', buyer: 'full', viewer: 'view', inspector: 'full', operator: 'full' },
   },
   {
     slug: 'analytics', label: 'Analytics & Reports', labelVi: 'Phân tích & Báo cáo', href: '/analytics', icon: 'BarChart3', color: '#2563eb',
     group: 'overview', orderInGroup: 2,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'view' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'view', trader: 'view', finance_manager: 'full', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'view', trader: 'view', finance_manager: 'full', buyer: 'view', viewer: 'view', inspector: 'view', operator: 'view' },
   },
 
-  // FARM OPERATIONS — producers only (aggregators/exporters don't farm)
+  // ─── FARM OPERATIONS ─────────────────────────────────────────────
+  // Producer: full access | Aggregator: hidden | Exporter: hidden | Importer: hidden | Cert Body: view only | Lab: hidden
   {
     slug: 'farmers', label: 'Farmers', labelVi: 'Nông dân', href: '/farmers', icon: 'Users', color: '#059669',
     group: 'farm', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'farmlands', label: 'Farm Lands', labelVi: 'Đất nông trại', href: '/farmlands', icon: 'MapPin', color: '#d97706',
     group: 'farm', orderInGroup: 2,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'cultivations', label: 'Cultivations', labelVi: 'Canh tác', href: '/cultivations', icon: 'Sprout', color: '#2563eb',
     group: 'farm', orderInGroup: 3,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'nurseries', label: 'Nurseries', labelVi: 'Vườn ươm', href: '/nurseries', icon: 'TreePine', color: '#7c3aed',
     group: 'farm', orderInGroup: 4,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'land-preparations', label: 'Land Preparation', labelVi: 'Chuẩn bị đất', href: '/land-preparations', icon: 'Tractor', color: '#0891b2',
     group: 'farm', orderInGroup: 5,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'crop-monitorings', label: 'Crop Monitoring', labelVi: 'Giám sát cây trồng', href: '/crop-monitorings', icon: 'Activity', color: '#db2777',
     group: 'farm', orderInGroup: 6,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'fertilizer-apps', label: 'Fertilizer Management', labelVi: 'Quản lý phân bón', href: '/fertilizer-apps', icon: 'FlaskConical', color: '#65a30d',
     group: 'farm', orderInGroup: 7,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'pest-disease-mgmts', label: 'Pest & Disease', labelVi: 'Sâu bệnh', href: '/pest-disease', icon: 'Shield', color: '#dc2626',
     group: 'farm', orderInGroup: 8,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'harvest-traceabilities', label: 'Harvest Traceability', labelVi: 'Truy xuất thu hoạch', href: '/harvest', icon: 'Wheat', color: '#b45309',
     group: 'farm', orderInGroup: 9,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'climate-intelligence', label: 'Climate Intelligence', labelVi: 'Khí hậu thông minh', href: '/climate-intelligence', icon: 'Activity', color: '#00a3e0',
     group: 'farm', orderInGroup: 10,
     entityTypeAccess: { producer: 'full', aggregator: 'hidden', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'full', quality_controller: 'view', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
 
-  // PROCESSING & QUALITY
+  // ─── PROCESSING & QUALITY ────────────────────────────────────────
+  // Producer: view only | Aggregator: full | Exporter: hidden | Importer: hidden | Cert Body: view | Lab: full (QC)
   {
     slug: 'procurement', label: 'Procurement', labelVi: 'Thu mua', href: '/procurement', icon: 'Truck', color: '#4f46e5',
     group: 'processing', orderInGroup: 1,
     entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'full', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'full', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'processing', label: 'Processing Pipeline', labelVi: 'Dây chuyền chế biến', href: '/processing', icon: 'Factory', color: '#0d9488',
     group: 'processing', orderInGroup: 2,
-    entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'view', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'view', operator: 'full' },
   },
   {
     slug: 'coffee-inspections', label: 'Coffee Inspection', labelVi: 'Kiểm tra cà phê', href: '/coffee-inspections', icon: 'ClipboardCheck', color: '#9333ea',
     group: 'processing', orderInGroup: 3,
-    entityTypeAccess: { producer: 'view', aggregator: 'view', exporter: 'hidden', importer: 'hidden', certification_body: 'full', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    entityTypeAccess: { producer: 'view', aggregator: 'view', exporter: 'view', importer: 'view', certification_body: 'full', laboratory: 'full' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
   {
     slug: 'qc-verifications', label: 'QC Verifications', labelVi: 'Kiểm định CL', href: '/qc-verifications', icon: 'CheckCircle', color: '#059669',
     group: 'processing', orderInGroup: 4,
-    entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'view', importer: 'full', certification_body: 'hidden', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'view', importer: 'view', certification_body: 'hidden', laboratory: 'full' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
 
-  // COMPLIANCE & CERTIFICATION
+  // ─── COMPLIANCE & CERTIFICATION ──────────────────────────────────
+  // Producer: full | Aggregator: full | Exporter: full | Importer: full | Cert Body: full | Lab: hidden
   {
     slug: 'eudr-compliance', label: 'EUDR Records', labelVi: 'Hồ sơ EUDR', href: '/eudr-compliance', icon: 'Shield', color: '#dc2626',
     group: 'compliance', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
   {
     slug: 'cert-assessments', label: 'Certification Assessment', labelVi: 'Đánh giá chứng nhận', href: '/cert-assessments', icon: 'Award', color: '#be185d',
     group: 'compliance', orderInGroup: 2,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'view', importer: 'view', certification_body: 'full', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
   {
     slug: 'deforestation', label: 'Deforestation Monitoring', labelVi: 'Giám sát phá rừng', href: '/deforestation', icon: 'TreePine', color: '#059669',
     group: 'compliance', orderInGroup: 3,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'view', importer: 'hidden', certification_body: 'full', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
   {
     slug: 'trace-journey', label: 'EUDR Compliance', labelVi: 'Tuân thủ EUDR', href: '/traceability', icon: 'Route', color: '#7c3aed',
     group: 'compliance', orderInGroup: 4,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'view', trader: 'view', finance_manager: 'hidden', buyer: 'full', viewer: 'view', inspector: 'view', operator: 'view' },
   },
   {
     slug: 'carbon-tracking', label: 'Carbon Tracking', labelVi: 'Theo dõi Carbon', href: '/carbon-tracking', icon: 'Activity', color: '#059669',
     group: 'compliance', orderInGroup: 5,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'view', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'view', viewer: 'view' },
-  },
-  {
-    slug: 'esg-reporting', label: 'ESG Reporting', labelVi: 'Báo cáo ESG', href: '/esg-reporting', icon: 'BarChart3', color: '#6366f1',
-    group: 'compliance', orderInGroup: 7,
-    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'full', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'view', viewer: 'view', inspector: 'view', operator: 'view' },
   },
   {
     slug: 'trust-score', label: 'Trust Score™', labelVi: 'Trust Score™', href: '/trust-score', icon: 'Shield', color: '#ffc627',
     group: 'compliance', orderInGroup: 6,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'view', buyer: 'full', viewer: 'view', inspector: 'view', operator: 'view' },
+  },
+  {
+    slug: 'esg-reporting', label: 'ESG Reporting', labelVi: 'Báo cáo ESG', href: '/esg-reporting', icon: 'BarChart3', color: '#6366f1',
+    group: 'compliance', orderInGroup: 7,
+    entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'full', buyer: 'view', viewer: 'view', inspector: 'view', operator: 'view' },
   },
 
-  // TRADE & LOGISTICS
+  // ─── TRADE & LOGISTICS ───────────────────────────────────────────
+  // Producer: limited | Aggregator: full | Exporter: full | Importer: full | Cert Body: hidden | Lab: hidden
   {
     slug: 'marketplace', label: 'Marketplace', labelVi: 'Thị trường', href: '/marketplace', icon: 'Store', color: '#ea580c',
     group: 'trade', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'rfq', label: 'RFQ Management', labelVi: 'Quản lý RFQ', href: '/rfq', icon: 'FileQuestion', color: '#7c3aed',
     group: 'trade', orderInGroup: 2,
     entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'inspections', label: 'Inspection Service', labelVi: 'Dịch vụ kiểm tra', href: '/inspections', icon: 'ClipboardCheck', color: '#9333ea',
     group: 'trade', orderInGroup: 3,
-    entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    entityTypeAccess: { producer: 'view', aggregator: 'view', exporter: 'view', importer: 'view', certification_body: 'full', laboratory: 'full' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'full', operator: 'view' },
   },
   {
     slug: 'product-monitoring', label: 'Product Monitoring', labelVi: 'Giám sát sản phẩm', href: '/product-monitoring', icon: 'Activity', color: '#0d9488',
     group: 'trade', orderInGroup: 4,
     entityTypeAccess: { producer: 'view', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'full', trader: 'view', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'smart-contracts', label: 'Smart Contracts', labelVi: 'Hợp đồng thông minh', href: '/smart-contracts', icon: 'FileText', color: '#0369a1',
     group: 'trade', orderInGroup: 5,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'trading-desk', label: 'Trading Desk', labelVi: 'Sàn giao dịch', href: '/trading-desk', icon: 'TrendingUp', color: '#0d9488',
     group: 'trade', orderInGroup: 6,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'full', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'full', buyer: 'full', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'shipments', label: 'Shipments', labelVi: 'Vận chuyển', href: '/shipments', icon: 'Ship', color: '#2563eb',
     group: 'trade', orderInGroup: 7,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'logistics', label: 'Logistics Booking', labelVi: 'Đặt logistics', href: '/logistics', icon: 'Container', color: '#4f46e5',
     group: 'trade', orderInGroup: 8,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'export-docs', label: 'Export Documents', labelVi: 'Tài liệu xuất khẩu', href: '/export-docs', icon: 'FileOutput', color: '#0891b2',
     group: 'trade', orderInGroup: 9,
-    entityTypeAccess: { producer: 'hidden', aggregator: 'hidden', exporter: 'full', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'view', finance_manager: 'view', buyer: 'view', viewer: 'view' },
+    entityTypeAccess: { producer: 'hidden', aggregator: 'view', exporter: 'full', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'view', finance_manager: 'view', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'buyers', label: 'Buyers', labelVi: 'Người mua', href: '/buyers', icon: 'UserCheck', color: '#65a30d',
     group: 'trade', orderInGroup: 10,
     entityTypeAccess: { producer: 'hidden', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'view', buyer: 'full', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'buyer-portal', label: 'Buyer Portal', labelVi: 'Cổng người mua', href: '/buyer-portal', icon: 'UserCheck', color: '#00a3e0',
     group: 'trade', orderInGroup: 11,
-    entityTypeAccess: { producer: 'hidden', aggregator: 'view', exporter: 'view', importer: 'full', certification_body: 'view', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'hidden', buyer: 'full', viewer: 'view' },
+    entityTypeAccess: { producer: 'hidden', aggregator: 'view', exporter: 'view', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'full', finance_manager: 'hidden', buyer: 'full', viewer: 'view', inspector: 'hidden', operator: 'hidden' },
   },
-  // FINANCE & ADMIN
+
+  // ─── FINANCE & ADMIN ─────────────────────────────────────────────
   {
     slug: 'billing', label: 'Billing', labelVi: 'Thanh toán', href: '/billing', icon: 'CreditCard', color: '#be185d',
     group: 'finance', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'full', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'full', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'hidden' },
   },
   {
     slug: 'users', label: 'Users', labelVi: 'Người dùng', href: '/users', icon: 'UserCog', color: '#6366f1',
     group: 'finance', orderInGroup: 2,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'full', laboratory: 'full' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'view', buyer: 'hidden', viewer: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'view', buyer: 'hidden', viewer: 'hidden', inspector: 'hidden', operator: 'hidden' },
   },
 
-  // SYSTEM & INTEGRATIONS
+  // ─── SYSTEM & INTEGRATIONS ───────────────────────────────────────
   {
     slug: 'iot-sensors', label: 'IoT Sensors', labelVi: 'Cảm biến IoT', href: '/iot-sensors', icon: 'Radio', color: '#0891b2',
     group: 'system', orderInGroup: 1,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'hidden', importer: 'hidden', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'full', field_officer: 'view', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'view', inspector: 'hidden', operator: 'full' },
   },
   {
     slug: 'blockchain', label: 'Blockchain', labelVi: 'Blockchain', href: '/blockchain', icon: 'Link', color: '#7c3aed',
     group: 'system', orderInGroup: 2,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'view', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'view', viewer: 'view', inspector: 'hidden', operator: 'view' },
   },
   {
     slug: 'api-settings', label: 'API & Webhooks', labelVi: 'API & Webhooks', href: '/api-settings', icon: 'Webhook', color: '#6366f1',
     group: 'system', orderInGroup: 3,
     entityTypeAccess: { producer: 'full', aggregator: 'full', exporter: 'full', importer: 'full', certification_body: 'hidden', laboratory: 'hidden' },
-    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'hidden' },
+    roleAccess: { tenant_admin: 'full', operations_manager: 'hidden', field_officer: 'hidden', quality_controller: 'hidden', trader: 'hidden', finance_manager: 'hidden', buyer: 'hidden', viewer: 'hidden', inspector: 'hidden', operator: 'hidden' },
   },
 ]
 
@@ -402,7 +405,7 @@ export function getEntityTypeLabel(entityType: string, lang: 'vi' | 'en' | 'pt' 
 
 /**
  * Get the icon emoji for an entity type.
- * Returns emoji from ENTITY_TYPE_LABELS, falling back to '🏢'.
+ * Returns emoji from ENTITY_TYPE_LABELS, falling back to a default.
  */
 export function getEntityTypeIcon(entityType: string): string {
   const labels = ENTITY_TYPE_LABELS[entityType as EntityType]

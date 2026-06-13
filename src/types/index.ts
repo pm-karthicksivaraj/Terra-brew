@@ -8,7 +8,7 @@
 // ════════════════════════════════════════════════════════════════
 
 export type PlatformRole = 'super_admin' | 'support'
-export type TenantRole = 'tenant_admin' | 'manager' | 'inspector' | 'field_officer' | 'farmer' | 'viewer' | 'aggregator' | 'processor' | 'exporter' | 'operations_manager' | 'quality_controller' | 'trader' | 'finance_manager' | 'buyer'
+export type TenantRole = 'tenant_admin' | 'operations_manager' | 'field_officer' | 'quality_controller' | 'trader' | 'finance_manager' | 'buyer' | 'viewer' | 'inspector' | 'operator' | 'manager' | 'farmer' | 'aggregator' | 'processor' | 'exporter'
 
 export interface AuthenticatedUser {
   id: string

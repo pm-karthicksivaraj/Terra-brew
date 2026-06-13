@@ -11,7 +11,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
-    "db:seed": "npx tsx prisma/seed-v2.ts",
+    "db:seed": "npx tsx prisma/seed-v3.ts",
+    "db:seed:v2": "npx tsx prisma/seed-v2.ts",
+    "db:seed:v3": "npx tsx prisma/seed-v3.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -166,6 +166,19 @@ export const ROLE_PERMISSIONS: Record<string, PermissionMap> = {
     ...Object.fromEntries(ALL_MODULES.map(m => [m, READ_ONLY as Action[]])) as PermissionMap,
     ...Object.fromEntries(B2B_MODULES.map(m => [m, FULL_ACCESS])) as PermissionMap,
   } as PermissionMap,
+  operator: {
+    farmers: READ_WRITE, farmlands: READ_WRITE, cultivations: READ_WRITE,
+    nurseries: READ_WRITE, 'land-preparations': READ_WRITE,
+    'crop-monitorings': READ_WRITE, 'fertilizer-apps': READ_WRITE,
+    'pest-disease-mgmts': READ_WRITE, 'harvest-traceabilities': READ_WRITE,
+    procurement: READ_CREATE, processing: READ_ONLY,
+    'cert-assessments': READ_ONLY, 'coffee-inspections': READ_ONLY,
+    'smart-contracts': READ_ONLY, marketplace: READ_ONLY,
+    dashboard: READ_ONLY, reports: READ_ONLY, settings: READ_ONLY, users: READ_ONLY,
+    analytics: READ_ONLY, 'product-monitoring': READ_ONLY,
+    'eudr-compliance': READ_ONLY, 'deforestation': READ_ONLY,
+    logistics: READ_ONLY, shipments: READ_ONLY,
+  } as PermissionMap,
 }
 
 export function hasPermission(role: string, module: ModuleSlug, action: Action): boolean {
