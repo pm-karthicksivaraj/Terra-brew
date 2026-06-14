@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/domain/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/carbon/presentation/screens/carbon_tracking_screen.dart';
@@ -218,11 +219,11 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 /// Simple profile screen
-class _ProfileScreen extends StatelessWidget {
+class _ProfileScreen extends ConsumerWidget {
   const _ProfileScreen();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile & Settings')),
       body: ListView(
@@ -300,7 +301,13 @@ class _ProfileScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: OutlinedButton.icon(
-              onPressed: () => context.go('/login'),
+              onPressed: () async {
+                // Actually log out: clear tokens and auth state
+                await ref.read(authStateProvider.notifier).logout();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              },
               icon: const Icon(Icons.logout, color: Color(0xFFCC2F2F)),
               label: const Text(
                 'Sign Out',

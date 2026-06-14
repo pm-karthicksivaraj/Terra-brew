@@ -214,8 +214,13 @@ class ApiInterceptor extends Interceptor {
   }
 
   /// Checks if the given path is the refresh token endpoint.
+  ///
+  /// IMPORTANT: Only match the exact refresh endpoint.
+  /// Do NOT match all /mobile/auth paths — that would cause
+  /// login failures (wrong password) to trigger _handleAuthFailure(),
+  /// which wipes stored tokens and prevents login.
   bool _isRefreshEndpoint(String path) {
-    return path.contains('/mobile/auth/refresh') || path.contains('/mobile/auth');
+    return path.endsWith('/mobile/auth/refresh');
   }
 }
 

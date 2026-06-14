@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../../features/auth/domain/providers/auth_provider.dart';
+import '../../features/auth/data/models/user_model.dart';
 
 /// User role enum for RBAC
 enum UserRole {
@@ -22,7 +24,12 @@ enum EntityType {
   government,
 }
 
-/// Auth state model
+/// Auth state model used by routing and RBAC guards.
+///
+/// This is now a COMPUTED provider that derives its state from the
+/// features auth provider ([authStateProvider]). When login succeeds
+/// in the features layer, this provider automatically reflects the
+/// authenticated state, so route guards and tab visibility work correctly.
 class AuthState {
   final bool isAuthenticated;
   final String? token;
@@ -88,130 +95,113 @@ class AuthState {
   }
 }
 
-/// Auth notifier
-class AuthNotifier extends StateNotifier<AuthState> {
-  final FlutterSecureStorage _storage;
+// ── Role / Entity mapping helpers ─────────────────────────────────
 
-  AuthNotifier(this._storage) : super(const AuthState()) {
-    _loadFromStorage();
+/// Maps a string role from the server/API to the [UserRole] enum.
+///
+/// Handles common formats: "superAdmin", "super_admin", "SUPER_ADMIN", etc.
+UserRole _mapRole(String roleStr) {
+  // Try exact enum name match first (e.g. "superAdmin")
+  for (final role in UserRole.values) {
+    if (role.name == roleStr) return role;
   }
-
-  Future<void> _loadFromStorage() async {
-    final token = await _storage.read(key: 'auth_token');
-    final userId = await _storage.read(key: 'user_id');
-    final email = await _storage.read(key: 'user_email');
-    final name = await _storage.read(key: 'user_name');
-    final avatarUrl = await _storage.read(key: 'avatar_url');
-    final roleStr = await _storage.read(key: 'user_role');
-    final entityTypeStr = await _storage.read(key: 'entity_type');
-    final tenantId = await _storage.read(key: 'tenant_id');
-
-    if (token != null && userId != null) {
-      state = AuthState(
-        isAuthenticated: true,
-        token: token,
-        userId: userId,
-        email: email,
-        name: name,
-        avatarUrl: avatarUrl,
-        role: roleStr != null
-            ? UserRole.values.firstWhere(
-                (r) => r.name == roleStr,
-                orElse: () => UserRole.viewer,
-              )
-            : UserRole.viewer,
-        entityType: entityTypeStr != null
-            ? EntityType.values.firstWhere(
-                (e) => e.name == entityTypeStr,
-                orElse: () => EntityType.cooperative,
-              )
-            : EntityType.cooperative,
-        tenantId: tenantId,
-        permissions: _getPermissionsForRole(
-          roleStr != null
-              ? UserRole.values.firstWhere(
-                  (r) => r.name == roleStr,
-                  orElse: () => UserRole.viewer,
-                )
-              : UserRole.viewer,
-        ),
-      );
-    }
+  // Try snake_case match (e.g. "super_admin" → superAdmin)
+  final camelCase = roleStr
+      .split('_')
+      .asMap()
+      .entries
+      .map((e) => e.key == 0 ? e.value.toLowerCase() : _capitalize(e.value.toLowerCase()))
+      .join('');
+  for (final role in UserRole.values) {
+    if (role.name == camelCase) return role;
   }
-
-  Set<String> _getPermissionsForRole(UserRole role) {
-    switch (role) {
-      case UserRole.superAdmin:
-        return {...AppModules.allModules};
-      case UserRole.admin:
-        return {...AppModules.allModules}..remove('api-settings');
-      case UserRole.manager:
-        return {...AppModules.farmModules, ...AppModules.processingModules, ...AppModules.complianceModules, ...AppModules.tradeModules, 'dashboard', 'analytics'};
-      case UserRole.inspector:
-        return {'dashboard', 'analytics', 'coffee-inspections', 'qc-verifications', 'eudr-compliance', 'cert-assessments', 'trace-journey', 'trust-score'};
-      case UserRole.operator:
-        return {'dashboard', 'farmers', 'farmlands', 'cultivations', 'nurseries', 'procurement', 'processing', 'shipments', 'logistics'};
-      case UserRole.viewer:
-        return {'dashboard', 'analytics'};
-    }
+  // Try case-insensitive match
+  for (final role in UserRole.values) {
+    if (role.name.toLowerCase() == roleStr.toLowerCase()) return role;
   }
+  return UserRole.viewer;
+}
 
-  Future<void> login({
-    required String token,
-    required String userId,
-    String? email,
-    String? name,
-    String? avatarUrl,
-    required UserRole role,
-    required EntityType entityType,
-    String? tenantId,
-  }) async {
-    final permissions = _getPermissionsForRole(role);
+String _capitalize(String s) {
+  if (s.isEmpty) return s;
+  return s[0].toUpperCase() + s.substring(1);
+}
 
-    state = AuthState(
-      isAuthenticated: true,
-      token: token,
-      userId: userId,
-      email: email,
-      name: name,
-      avatarUrl: avatarUrl,
-      role: role,
-      entityType: entityType,
-      tenantId: tenantId,
-      permissions: permissions,
-    );
-
-    await _storage.write(key: 'auth_token', value: token);
-    await _storage.write(key: 'user_id', value: userId);
-    if (email != null) await _storage.write(key: 'user_email', value: email);
-    if (name != null) await _storage.write(key: 'user_name', value: name);
-    if (avatarUrl != null) await _storage.write(key: 'avatar_url', value: avatarUrl);
-    await _storage.write(key: 'user_role', value: role.name);
-    await _storage.write(key: 'entity_type', value: entityType.name);
-    if (tenantId != null) await _storage.write(key: 'tenant_id', value: tenantId);
+/// Maps a string entity type from the server to the [EntityType] enum.
+EntityType _mapEntityType(String entityStr) {
+  for (final et in EntityType.values) {
+    if (et.name == entityStr) return et;
   }
+  // Try snake_case → camelCase
+  final camelCase = entityStr
+      .split('_')
+      .asMap()
+      .entries
+      .map((e) => e.key == 0 ? e.value.toLowerCase() : _capitalize(e.value.toLowerCase()))
+      .join('');
+  for (final et in EntityType.values) {
+    if (et.name == camelCase) return et;
+  }
+  return EntityType.cooperative;
+}
 
-  Future<void> logout() async {
-    state = const AuthState();
-    await _storage.deleteAll();
+/// Computes the set of permission strings for a given [UserRole].
+Set<String> _getPermissionsForRole(UserRole role) {
+  switch (role) {
+    case UserRole.superAdmin:
+      return {...AppModules.allModules};
+    case UserRole.admin:
+      return {...AppModules.allModules}..remove('api-settings');
+    case UserRole.manager:
+      return {...AppModules.farmModules, ...AppModules.processingModules, ...AppModules.complianceModules, ...AppModules.tradeModules, 'dashboard', 'analytics'};
+    case UserRole.inspector:
+      return {'dashboard', 'analytics', 'coffee-inspections', 'qc-verifications', 'eudr-compliance', 'cert-assessments', 'trace-journey', 'trust-score'};
+    case UserRole.operator:
+      return {'dashboard', 'farmers', 'farmlands', 'cultivations', 'nurseries', 'procurement', 'processing', 'shipments', 'logistics'};
+    case UserRole.viewer:
+      return {'dashboard', 'analytics'};
   }
 }
 
-/// Secure storage provider
-final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
-  return const FlutterSecureStorage();
+// ── Providers ─────────────────────────────────────────────────────
+
+/// Core auth state provider.
+///
+/// DERIVED from the features-layer [authStateProvider]. This ensures
+/// that when login succeeds (updating the features provider), the
+/// core provider immediately reflects the authenticated state —
+/// fixing the bug where route guards read from a stale provider.
+final authProvider = Provider<AuthState>((ref) {
+  final featuresState = ref.watch(authStateProvider);
+
+  if (featuresState is AuthAuthenticated) {
+    final user = featuresState.user;
+    final role = _mapRole(user.role);
+    final entityType = _mapEntityType(user.entityType);
+
+    return AuthState(
+      isAuthenticated: true,
+      token: null, // Token is managed by AuthStorage / ApiInterceptor
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role: role,
+      entityType: entityType,
+      tenantId: user.tenantId.isNotEmpty ? user.tenantId : null,
+      permissions: _getPermissionsForRole(role),
+    );
+  }
+
+  // Not authenticated — return default unauthenticated state
+  return const AuthState();
 });
 
-/// Auth state provider
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.watch(secureStorageProvider));
-});
-
-/// Convenience providers
+/// Convenience provider: whether the user is authenticated.
 final isAuthenticatedProvider = Provider<bool>((ref) {
   return ref.watch(authProvider).isAuthenticated;
 });
 
+/// Convenience provider: the full auth state for the current user.
 final currentUserProvider = Provider<AuthState>((ref) {
   return ref.watch(authProvider);
 });

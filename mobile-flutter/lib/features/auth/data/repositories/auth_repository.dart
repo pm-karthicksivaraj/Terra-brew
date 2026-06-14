@@ -167,7 +167,10 @@ class AuthRepository {
     if (authResponse.refreshToken != null) {
       await AuthStorage.saveRefreshToken(authResponse.refreshToken!);
     }
-    await AuthStorage.saveTenantId(authResponse.user.tenantId);
+    // Only save tenant ID for tenant-scoped users (not platform admins)
+    if (authResponse.user.tenantId.isNotEmpty) {
+      await AuthStorage.saveTenantId(authResponse.user.tenantId);
+    }
     await AuthStorage.saveUserData(authResponse.user.toJson());
   }
 
