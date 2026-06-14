@@ -21,6 +21,14 @@ class AuthRepository {
         },
       );
 
+      // Check if the API explicitly returned a failure
+      // (API returns {success: false, error: "..."} with 401,
+      //  but Dio's validateStatus allows < 500 so it doesn't throw)
+      if (data['success'] == false) {
+        final errorMsg = data['error'] as String? ?? 'Login failed. Please try again.';
+        throw AuthException(errorMsg);
+      }
+
       // Check if tenant selection is required
       if (data['requiresTenantSelection'] == true) {
         throw TenantSelectionRequiredException(
@@ -39,6 +47,7 @@ class AuthRepository {
       throw AuthException(_mapApiException(e));
     } catch (e) {
       if (e is TenantSelectionRequiredException) rethrow;
+      if (e is AuthException) rethrow;
       throw AuthException('An unexpected error occurred. Please try again.');
     }
   }
@@ -59,6 +68,12 @@ class AuthRepository {
         },
       );
 
+      // Check if the API explicitly returned a failure
+      if (data['success'] == false) {
+        final errorMsg = data['error'] as String? ?? 'Tenant selection failed. Please try again.';
+        throw AuthException(errorMsg);
+      }
+
       final authResponse = AuthResponseModel.fromJson(data);
 
       await _persistAuthData(authResponse);
@@ -67,6 +82,7 @@ class AuthRepository {
     } on ApiException catch (e) {
       throw AuthException(_mapApiException(e));
     } catch (e) {
+      if (e is AuthException) rethrow;
       throw AuthException('An unexpected error occurred. Please try again.');
     }
   }
@@ -85,6 +101,12 @@ class AuthRepository {
         },
       );
 
+      // Check if the API explicitly returned a failure
+      if (data['success'] == false) {
+        final errorMsg = data['error'] as String? ?? 'Platform login failed. Please try again.';
+        throw AuthException(errorMsg);
+      }
+
       final authResponse = AuthResponseModel.fromJson(data);
 
       await _persistAuthData(authResponse);
@@ -93,6 +115,7 @@ class AuthRepository {
     } on ApiException catch (e) {
       throw AuthException(_mapApiException(e));
     } catch (e) {
+      if (e is AuthException) rethrow;
       throw AuthException('An unexpected error occurred. Please try again.');
     }
   }

@@ -12,10 +12,27 @@ class AuthResponseModel {
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    // Safely parse user object — the API wraps it under 'user'
+    final userJson = json['user'];
+    if (userJson == null || userJson is! Map<String, dynamic>) {
+      throw FormatException(
+        'Invalid auth response: missing user data. '
+        'Response keys: ${json.keys.toList()}',
+      );
+    }
+
+    final tokenValue = json['token'] as String? ?? '';
+    if (tokenValue.isEmpty) {
+      throw FormatException(
+        'Invalid auth response: missing token. '
+        'Response keys: ${json.keys.toList()}',
+      );
+    }
+
     return AuthResponseModel(
-      token: json['token'] as String? ?? '',
+      token: tokenValue,
       refreshToken: json['refreshToken'] as String?,
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>? ?? {}),
+      user: UserModel.fromJson(userJson),
     );
   }
 

@@ -99,26 +99,45 @@ class AuthState {
 
 /// Maps a string role from the server/API to the [UserRole] enum.
 ///
-/// Handles common formats: "superAdmin", "super_admin", "SUPER_ADMIN", etc.
+/// Handles common formats: "superAdmin", "super_admin", "tenant_admin", etc.
+/// The server returns snake_case roles like "tenant_admin", "super_admin",
+/// "operations_manager", etc.
 UserRole _mapRole(String roleStr) {
-  // Try exact enum name match first (e.g. "superAdmin")
+  // Explicit mapping from server role strings to app enum values.
+  // The server uses snake_case roles; the app enum uses camelCase.
+  const serverRoleMap = <String, UserRole>{
+    // Platform roles
+    'super_admin': UserRole.superAdmin,
+    'superAdmin': UserRole.superAdmin,
+    // Tenant roles
+    'tenant_admin': UserRole.admin,
+    'admin': UserRole.admin,
+    'operations_manager': UserRole.manager,
+    'manager': UserRole.manager,
+    'field_officer': UserRole.operator,
+    'quality_controller': UserRole.inspector,
+    'inspector': UserRole.inspector,
+    'operator': UserRole.operator,
+    'trader': UserRole.viewer,
+    'finance_manager': UserRole.manager,
+    'buyer': UserRole.viewer,
+    'viewer': UserRole.viewer,
+  };
+
+  // Direct lookup first
+  final mapped = serverRoleMap[roleStr];
+  if (mapped != null) return mapped;
+
+  // Try exact enum name match (e.g. "superAdmin")
   for (final role in UserRole.values) {
     if (role.name == roleStr) return role;
   }
-  // Try snake_case match (e.g. "super_admin" → superAdmin)
-  final camelCase = roleStr
-      .split('_')
-      .asMap()
-      .entries
-      .map((e) => e.key == 0 ? e.value.toLowerCase() : _capitalize(e.value.toLowerCase()))
-      .join('');
-  for (final role in UserRole.values) {
-    if (role.name == camelCase) return role;
-  }
+
   // Try case-insensitive match
   for (final role in UserRole.values) {
     if (role.name.toLowerCase() == roleStr.toLowerCase()) return role;
   }
+
   return UserRole.viewer;
 }
 
@@ -129,18 +148,26 @@ String _capitalize(String s) {
 
 /// Maps a string entity type from the server to the [EntityType] enum.
 EntityType _mapEntityType(String entityStr) {
+  // Explicit mapping from server entity strings to app enum values.
+  const serverEntityMap = <String, EntityType>{
+    'cooperative': EntityType.cooperative,
+    'producer': EntityType.cooperative,
+    'aggregator': EntityType.cooperative,
+    'processor': EntityType.processor,
+    'exporter': EntityType.exporter,
+    'importer': EntityType.importer,
+    'roaster': EntityType.roaster,
+    'certifier': EntityType.certifier,
+    'certification_body': EntityType.certifier,
+    'government': EntityType.government,
+  };
+
+  final mapped = serverEntityMap[entityStr];
+  if (mapped != null) return mapped;
+
+  // Fallback: try enum name match
   for (final et in EntityType.values) {
     if (et.name == entityStr) return et;
-  }
-  // Try snake_case → camelCase
-  final camelCase = entityStr
-      .split('_')
-      .asMap()
-      .entries
-      .map((e) => e.key == 0 ? e.value.toLowerCase() : _capitalize(e.value.toLowerCase()))
-      .join('');
-  for (final et in EntityType.values) {
-    if (et.name == camelCase) return et;
   }
   return EntityType.cooperative;
 }
